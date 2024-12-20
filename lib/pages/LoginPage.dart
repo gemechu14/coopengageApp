@@ -1,0 +1,818 @@
+// // ignore_for_file: use_build_context_synchronously
+
+// import 'dart:async';
+// import 'dart:convert';
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:flutter/gestures.dart';
+// import 'package:coopengageplus/pages/MainPage.dart';
+// import 'package:snippet_coder_utils/FormHelper.dart';
+// import 'package:snippet_coder_utils/ProgressHUD.dart';
+// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// import '../NetworkHandler.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:connectivity_plus/connectivity_plus.dart';
+
+// class LoginPage extends StatefulWidget {
+//   const LoginPage({
+//     Key? key,
+//   }) : super(key: key);
+
+//   @override
+//   State<LoginPage> createState() => _LoginPageState();
+// }
+
+// class _LoginPageState extends State<LoginPage> {
+//   bool isApiCallProcess = false;
+//   bool hidePassword = true;
+//   late String errorText;
+//   bool validate = false;
+//   bool circular = false;
+//   GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
+//   final TextEditingController _username = TextEditingController();
+//   final TextEditingController _password = TextEditingController();
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return SafeArea(
+//       child: Scaffold(
+//         body: ProgressHUD(
+//           key: UniqueKey(),
+//           inAsyncCall: isApiCallProcess,
+//           child: Form(
+//             key: globalFormKey,
+//             child: _loginUI(context),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _loginUI(BuildContext context) {
+//     NetworkHandler networkHandler = NetworkHandler();
+//     const storage = FlutterSecureStorage();
+//     double width = MediaQuery.of(context).size.width;
+
+//     return SingleChildScrollView(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         crossAxisAlignment: CrossAxisAlignment.center,
+//         children: [
+//           const SizedBox(height: 150),
+//           Column(
+//             children: [
+//               Align(
+//                 alignment: Alignment.center,
+//                 child: Image.asset(
+//                   "assets/logo.png",
+//                   width: 200,
+//                   height: 100,
+//                   fit: BoxFit.contain,
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const Padding(
+//             padding: EdgeInsets.only(top: 5, left: 20, bottom: 30, right: 20),
+//             child: Text(
+//               "Customer Onboarding",
+//               style: TextStyle(
+//                 fontWeight: FontWeight.bold,
+//                 fontSize: 22,
+//                 color: Colors.black,
+//               ),
+//             ),
+//           ),
+//           const SizedBox(height: 10),
+
+//           // Username Field
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+//             child: Container(
+//               width: width < 600
+//                   ? double.infinity
+//                   : width * 0.5, // Adjust width for tablet
+//               child: TextFormField(
+//                 decoration: const InputDecoration(
+//                   hintText: "Username",
+//                   labelText: "Username",
+//                   labelStyle: TextStyle(fontSize: 20),
+//                   contentPadding: EdgeInsets.fromLTRB(20, 2, 2, 4),
+//                   border: OutlineInputBorder(
+//                     borderRadius: BorderRadius.all(Radius.circular(10)),
+//                     borderSide: BorderSide(color: Colors.black),
+//                   ),
+//                   prefixIcon: Icon(Icons.person), // Leading icon
+//                 ),
+//                 controller: _username,
+//                 validator: (value) {
+//                   if (value == null || value.isEmpty) {
+//                     return 'Username cannot be empty';
+//                   }
+//                   return null;
+//                 },
+//               ),
+//             ),
+//           ),
+
+//           // Password Field
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+//             child: Container(
+//               width: width < 600
+//                   ? double.infinity
+//                   : width * 0.5, // Adjust width for tablet
+//               child: TextFormField(
+//                 obscureText: hidePassword,
+//                 decoration: InputDecoration(
+//                   hintText: "Password",
+//                   labelText: "Password",
+//                   suffixIcon: IconButton(
+//                     icon: Icon(
+//                         hidePassword ? Icons.visibility_off : Icons.visibility),
+//                     onPressed: () {
+//                       setState(() {
+//                         hidePassword = !hidePassword;
+//                       });
+//                     },
+//                   ),
+//                   labelStyle: const TextStyle(fontSize: 20),
+//                   contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
+//                   border: const OutlineInputBorder(
+//                     borderRadius: BorderRadius.all(Radius.circular(10)),
+//                     borderSide: BorderSide(color: Colors.black),
+//                   ),
+//                   prefixIcon: Icon(Icons.lock), // Leading icon
+//                 ),
+//                 controller: _password,
+//                 validator: (value) {
+//                   if (value == null || value.isEmpty) {
+//                     return 'Password cannot be empty';
+//                   }
+//                   return null;
+//                 },
+//               ),
+//             ),
+//           ),
+//           // Padding(
+//           //   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+//           //   child: Container(
+//           //     width: width < 600 ? double.infinity : width * 0.5,
+//           //     child: Align(
+//           //       alignment: Alignment.bottomRight,
+//           //       child: RichText(
+//           //         text: TextSpan(
+//           //           style: const TextStyle(
+//           //             color: Colors.black,
+//           //             fontSize: 14,
+//           //           ),
+//           //           children: <TextSpan>[
+//           //             TextSpan(
+//           //               text: 'Forget Password?',
+//           //               style: const TextStyle(
+//           //                 decoration: TextDecoration.underline,
+//           //                 color: Colors.blue,
+//           //               ),
+//           //               recognizer: TapGestureRecognizer()
+//           //                 ..onTap = () {
+//           //                   // Navigate to forget password page
+//           //                 },
+//           //             ),
+//           //           ],
+//           //         ),
+//           //       ),
+//           //     ),
+//           //   ),
+//           // ),
+//           // const SizedBox(height: 10),
+
+//           // Login Button
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+//             child: Container(
+//               width: width < 600
+//                   ? double.infinity
+//                   : width * 0.5, // Adjust width for tablet
+//               child: FormHelper.submitButton("Login",
+//                   btnColor: Colors.blueAccent,
+//                   borderColor: Colors.blueAccent, () async {
+//                 if (validateAndSave()) {
+//                   setState(() {
+//                     isApiCallProcess = true;
+//                   });
+
+//                   // Retrieve the text from the controllers
+//                   String username = _username.text.toString();
+//                   String password = _password.text.toString();
+
+//                   // Login Logic start here
+//                   Map<String, String> data = {
+//                     "username": username,
+//                     "password": password,
+//                   };
+
+//                 }
+//               }),
+//             ),
+//           ),
+//           SizedBox(height: 5),
+//           // Divider and Sign in with Google
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+//             child: Container(
+//               width: width < 600 ? double.infinity : width * 0.5,
+//               child: const Row(
+//                 children: [
+//                   Expanded(
+//                     child: Divider(thickness: 1, color: Colors.grey),
+//                   ),
+//                   Padding(
+//                     padding: EdgeInsets.symmetric(horizontal: 10),
+//                     child: Text("or sign in with",
+//                         style: TextStyle(color: Colors.grey)),
+//                   ),
+//                   Expanded(
+//                     child: Divider(thickness: 1, color: Colors.black),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//           Center(
+//             child: Image.asset(
+//               'assets/logo.png', // Replace with your Google logo path
+//               height: 70, // Adjust height as needed
+//               width: 70, // Adjust width as needed
+//             ),
+//           ),
+//           // Padding(
+//           //   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+//           //   child: Container(
+//           //     width: width < 600
+//           //         ? double.infinity
+//           //         : width * 0.5, // Adjust width for tablet
+//           //     child: ElevatedButton.icon(
+//           //       style: ElevatedButton.styleFrom(
+//           //         // primary: Colors.white, // Button background color
+//           //         // onPrimary: Colors.black, // Button text color
+//           //         side: const BorderSide(color: Colors.grey), // Button border
+//           //         minimumSize: const Size(double.infinity, 50),
+//           //         shape: RoundedRectangleBorder(
+//           //           borderRadius: BorderRadius.circular(20),
+//           //         ),
+//           //       ),
+//           //       icon: Image.asset(
+//           //         'assets/logo.png', // Path to your Google icon
+//           //         height: 28, // Icon height
+//           //         width: 28, // Icon width
+//           //       ),
+//           //       label: const Text(
+//           //         "Sign in with Suuq-Pass",
+//           //         style: TextStyle(
+//           //           color: Colors.black,
+//           //           fontWeight: FontWeight.bold,
+//           //         ),
+//           //       ),
+//           //       onPressed: () {
+//           //         // Handle Google sign-in logic here
+//           //       },
+//           //     ),
+//           //   ),
+//           // ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   bool validateAndSave() {
+//     final form = globalFormKey.currentState;
+//     if (form!.validate()) {
+//       form.save();
+//       return true;
+//     }
+//     return false;
+//   }
+
+//   Future<bool> isOnline() async {
+//     var connectivityResult = await (Connectivity().checkConnectivity());
+//     if (connectivityResult == ConnectivityResult.mobile ||
+//         connectivityResult == ConnectivityResult.wifi) {
+//       // The device is connected to a mobile network or Wi-Fi
+//       return true;
+//     }
+//     return false; // The device is offline
+//   }
+// }
+
+// ignore_for_file: use_build_context_synchronously, avoid_print
+
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:async';
+import 'dart:convert';
+import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:flutter/material.dart';
+
+import 'package:snippet_coder_utils/FormHelper.dart';
+import 'package:snippet_coder_utils/ProgressHUD.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../NetworkHandler.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+// Import your database helper here
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool isApiCallProcess = false;
+  bool hidePassword = true;
+  late String errorText;
+  bool validate = false;
+  bool circular = false;
+  GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
+  final TextEditingController _username = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+            gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          colors: [Color.fromARGB(255, 20, 169, 75), Colors.red],
+        )),
+        child: Scaffold(
+          body: ProgressHUD(
+            key: UniqueKey(),
+            inAsyncCall: isApiCallProcess,
+            child: Form(
+              key: globalFormKey,
+              child: _loginUI(context),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _loginUI(BuildContext context) {
+    NetworkHandler networkHandler = NetworkHandler();
+    const storage = FlutterSecureStorage();
+    double width = MediaQuery.of(context).size.width;
+
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 70),
+          Column(
+            children: [
+              Image.asset(
+                "assets/engage.png",
+                width: MediaQuery.of(context).size.width * 0.5,
+                height: 150,
+                fit: BoxFit.fill,
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.only(left: 20, bottom: 30, right: 20),
+            child: Text(
+              "Coop Engage +",
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 26,
+                  color: Color.fromARGB(255, 2, 107, 142)),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Username Field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: Container(
+              width: width < 600
+                  ? double.infinity
+                  : width * 0.5, // Adjust width for tablet
+              child: TextFormField(
+                decoration: const InputDecoration(
+                  hintText: "Username",
+                  labelText: "Username",
+                  labelStyle: TextStyle(fontSize: 20),
+                  contentPadding: EdgeInsets.fromLTRB(20, 2, 2, 4),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  prefixIcon: Icon(Icons.person), // Leading icon
+                ),
+                controller: _username,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Username cannot be empty';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+
+          // Password Field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: Container(
+              width: width < 600
+                  ? double.infinity
+                  : width * 0.5, // Adjust width for tablet
+              child: TextFormField(
+                obscureText: hidePassword,
+                decoration: InputDecoration(
+                  hintText: "Password",
+                  labelText: "Password",
+                  // fillColor: Colors.grey,
+                  // filled: true,
+
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                        hidePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () {
+                      setState(() {
+                        hidePassword = !hidePassword;
+                      });
+                    },
+                  ),
+                  labelStyle: const TextStyle(fontSize: 20),
+                  contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  prefixIcon: const Icon(Icons.lock), // Leading icon
+                ),
+                controller: _password,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password cannot be empty';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: Container(
+              width: width < 600
+                  ? double.infinity
+                  : width * 0.5, // Adjust width for tablet
+              child: FormHelper.submitButton("Login",
+                  btnColor: Colors.blueAccent,
+                  borderColor: Colors.blueAccent, () async {
+                if (validateAndSave()) {
+                  setState(() {
+                    isApiCallProcess = true;
+                  });
+
+                  // Retrieve the text from the controllers
+                  String username = _username.text.trim();
+                  String password = _password.text.trim();
+
+                  // Login Logic start here
+                  Map<String, String> data = {
+                    "username": username,
+                    "password": password,
+                  };
+
+                  if (await isOnline()) {
+                    try {
+                      var response = await networkHandler
+                          .post("/login", data)
+                          .timeout(const Duration(seconds: 9));
+
+                      if (response.statusCode == 200 ||
+                          response.statusCode == 201) {
+                        Map<String, dynamic> output =
+                            json.decode(response.body);
+                        await storage.write(
+                            key: "token", value: output["access_token"]);
+                        // Decode token to extract user data
+                        Map<String, dynamic> decodedToken = json.decode(
+                            utf8.decode(base64Url.decode(base64Url.normalize(
+                                output["access_token"].split(".")[1]))));
+
+                        // Extract user information from token
+                        // String username = decodedToken["sub"];
+                        String? clientId = decodedToken["clientId"];
+                        String role = decodedToken["role"][0];
+                        int userId = decodedToken["userId"];
+                        List<Map<String, dynamic>> branches =
+                            List<Map<String, dynamic>>.from(
+                                decodedToken["branch"]);
+
+                        // Check if the user is already registered in local storage
+                        DatabaseHelper dbHelper = DatabaseHelper();
+                        bool userExists = await dbHelper.userExists(username);
+
+                        if (!userExists) {
+                          // Register the user locally
+                          await dbHelper.insertUser1(
+                            username: username,
+                            password: password,
+                            userId: userId,
+                            clientId: clientId,
+                            role: role,
+                            branches: branches,
+                          );
+                          print("User registered locally for future use.");
+                        } else {
+                          print("User already exists in local storage.");
+                        }
+                        setState(() {
+                          validate = true;
+                          circular = false;
+                        });
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MainPage(),
+                            ),
+                            (route) => false);
+                      } else {
+                        setState(() {
+                          isApiCallProcess = false;
+                          validate = false;
+                          errorText = "Invalid Username or Password.";
+                          circular = false;
+                        });
+                        FormHelper.showSimpleAlertDialog(
+                          context,
+                          "Customer Onboarding",
+                          errorText,
+                          "OK",
+                          () {
+                            Navigator.of(context).pop();
+                          },
+                        );
+                      }
+                    } on TimeoutException catch (_) {
+                      setState(() {
+                        isApiCallProcess = false;
+                        validate = false;
+                        errorText = "Request timed out. Please try again.";
+                        circular = false;
+                      });
+                      FormHelper.showSimpleAlertDialog(
+                        context,
+                        "Customer Onboarding",
+                        errorText,
+                        "OK",
+                        () {
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    } catch (e) {
+                      setState(() {
+                        isApiCallProcess = false;
+                        validate = false;
+                        errorText = "An error occurred. Please try again.";
+                        circular = false;
+                      });
+                      FormHelper.showSimpleAlertDialog(
+                        context,
+                        "Customer Onboarding",
+                        errorText,
+                        "OK",
+                        () {
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    }
+                  } else {
+                    // Offline Login
+                    DatabaseHelper dbHelper = DatabaseHelper();
+                    bool userExists = await dbHelper.userExists(username);
+
+                    if (userExists) {
+                      // User is offline, retrieve credentials and log in locally
+                      try {
+                        List<Map<String, dynamic>> users = await dbHelper
+                            .getUsers()
+                            .timeout(const Duration(seconds: 4));
+
+                        bool loginSuccessful = false;
+
+                        // Check if the user exists in the local users list
+                        for (var user in users) {
+                          if (user['username'] == username &&
+                              user['password'] == password) {
+                            loginSuccessful = true;
+                            break;
+                          }
+                        }
+
+                        if (loginSuccessful) {
+                          // Navigate to the main page
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MainPage()),
+                          );
+                        } else {
+                          setState(() {
+                            isApiCallProcess = false;
+                            errorText = "Invalid Username or Password.";
+                          });
+                          FormHelper.showSimpleAlertDialog(
+                            context,
+                            "Customer Onboarding",
+                            errorText,
+                            "OK",
+                            () {
+                              Navigator.of(context).pop();
+                            },
+                          );
+                        }
+                      } on TimeoutException catch (_) {
+                        setState(() {
+                          isApiCallProcess = false;
+                          errorText =
+                              "Request timed out while accessing local storage.";
+                        });
+                        FormHelper.showSimpleAlertDialog(
+                          context,
+                          "Customer Onboarding",
+                          errorText,
+                          "OK",
+                          () {
+                            Navigator.of(context).pop();
+                          },
+                        );
+                      } catch (e) {
+                        setState(() {
+                          isApiCallProcess = false;
+                          errorText =
+                              "An error occurred while accessing local storage: $e";
+                        });
+                        FormHelper.showSimpleAlertDialog(
+                          context,
+                          "Customer Onboarding",
+                          errorText,
+                          "OK",
+                          () {
+                            Navigator.of(context).pop();
+                          },
+                        );
+                      }
+                    } else {
+                      setState(() {
+                        isApiCallProcess = false;
+                        errorText =
+                            "User is offline and does not exist in local storage.";
+                      });
+                      FormHelper.showSimpleAlertDialog(
+                        context,
+                        "Customer Onboarding",
+                        errorText,
+                        "OK",
+                        () {
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    }
+                  }
+                }
+              }),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Sign Up option
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Don't have an account?",
+                  style: TextStyle(color: Colors.black)),
+              TextButton(
+                onPressed: () {
+                  // Navigate to the Sign Up page
+                },
+                child: const Text("Sign Up",
+                    style: TextStyle(color: Colors.blueAccent)),
+              ),
+            ],
+          ),
+          SizedBox(height: 5),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: Container(
+              width: width < 600 ? double.infinity : width * 0.5,
+              child: const Row(
+                children: [
+                  Expanded(
+                    child: Divider(thickness: 1, color: Colors.grey),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Text("OR", style: TextStyle(color: Colors.grey)),
+                  ),
+                  Expanded(
+                    child: Divider(thickness: 1, color: Colors.black),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: GestureDetector(
+              onTap: () {},
+              child: Container(
+                width: width < 600
+                    ? double.infinity
+                    : width * 0.5, // Match login button width
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(color: Colors.grey),
+                ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 20.0), // Adjust space from left
+                      child: Container(
+                        height: 30, // Set a fixed height for the image
+                        width: 30, // Set a fixed width for the image
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit
+                              .contain, // Make the image fit the container
+                        ),
+                      ),
+                    ),
+                    const Expanded(
+                      child: Center(
+                        child: Text(
+                          "Sign In with Suuq-Pass",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool validateAndSave() {
+    final form = globalFormKey.currentState;
+    if (form!.validate()) {
+      form.save();
+      return true;
+    }
+    return false;
+  }
+
+  // Future<bool> isOnline() async {
+  //   var connectivityResult = await (Connectivity().checkConnectivity());
+  //   if (connectivityResult == ConnectivityResult.mobile ||
+  //       connectivityResult == ConnectivityResult.wifi) {
+  //     return true;
+  //   }
+  //   return false; // The device is offline
+  // }
+  Future<bool> isOnline() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    print("Connectivity Result: $connectivityResult"); // Debugging line
+
+    if (connectivityResult.contains(ConnectivityResult.mobile) ||
+        connectivityResult.contains(ConnectivityResult.wifi)) {
+      print("Hello from: $connectivityResult");
+      return true; // The device is online
+    }
+
+    return false; // The device is offline
+  }
+}

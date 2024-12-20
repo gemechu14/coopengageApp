@@ -1,0 +1,20 @@
+{
+  "appTitle": "",
+  "@appTitle": {
+    "description": ""
+  },
+  "home": "መነሻ",
+  "schedule": "መርሀግብር",
+  "notes": "ማስታወሻዎች",
+  "profile": "መገለጫ",
+  "newTask": "አዲስ ሥራ",
+  "newMeeting": "አዲስ ስብሰባ",
+  "textNote": "ጽሑፍ ማስታወሻ",
+  "voiceNote": "ድምጽ ማስታወሻ",
+  "upcoming": "በሚቀጥለው",
+  "passed": "ያልፏል",
+  "feedback": "አስተያየት",
+  "crmchangerequest": "የCRM የለውጥ ጥያቄ",
+  "profile": "ፕሮፋይል",
+  "listOfCustomers": ""
+}

@@ -1,0 +1,390 @@
+// ignore_for_file: unused_local_variable
+
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:logger/logger.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http_parser/http_parser.dart';
+
+// For base64 encoding/decoding
+// ignore_for_file: file_names
+
+// ignore_for_file: depend_on_referenced_packages
+
+class NetworkHandler {
+  String baseurl = "http://10.2.125.41:9060";
+  var log = Logger();
+  FlutterSecureStorage storage = const FlutterSecureStorage();
+  Future get(String url) async {
+    String? token = await storage.read(key: "token");
+    url = formater(url);
+    var uri = Uri.parse(url);
+    // /user/register
+    var response = await http.get(
+      uri,
+      // headers: {"Authorization": "Bearer $token"},
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // log.i(response.body);
+
+      return json.decode(response.body);
+    }
+    // log.i(response.body);
+    log.i(response.statusCode);
+  }
+
+  ///AGENT REGISTRATION
+  Future<http.Response> postAgent(String url, Map<String, dynamic> data) async {
+    String? token = await storage.read(key: "token");
+
+    if (token == null) {
+      url = formater(url);
+      var uri = Uri.parse(url);
+
+      var headers = {
+        'Content-Type': 'application/json',
+      };
+
+      // Send JSON-encoded body in the request
+      var response = await http.post(
+        uri,
+        headers: headers,
+        body: jsonEncode(data), // JSON encode the map directly
+      );
+
+      return response;
+    } else {
+      url = formater(url);
+      var uri = Uri.parse(url);
+
+      var headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      // Send JSON-encoded body in the request
+      var response = await http.post(
+        uri,
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      return response;
+    }
+  }
+
+  // Future<http.Response> post(String url, Map<String, String> body) async {
+  //   String? token = await storage.read(key: "token");
+  //   url = formater(url);
+  //   var uri = Uri.parse(url);
+  //   log.d(body);
+  //   var response = await http.post(
+  //     uri,
+  //     headers: {
+  //       "Content-type": "application/json",
+  //       // "Authorization": "Bearer $token"
+  //     },
+  //     body: json.encode(body),
+  //   );
+  //   return response;
+  // }
+
+  Future<http.Response> post(
+    String url,
+    Map<String, dynamic> body,
+  ) async {
+    // String? token = await storage.read(key: "token");
+    var uri = Uri.parse(url); // The complete URL is passed directly
+    log.d(body);
+
+    var response = await http.post(
+      uri,
+      headers: {
+        "Content-type": "application/json",
+        // Uncomment the Authorization header if you need to pass the token
+        // "Authorization": "Bearer $token"
+      },
+      body: json.encode(body),
+    );
+
+    return response;
+  }
+
+  Future<http.Response> postData(
+      String url, Map<String, dynamic> body, String token) async {
+    // String? token = await storage.read(key: "token");
+    var uri = Uri.parse(url); // The complete URL is passed directly
+    log.d(body);
+
+    var response = await http.post(
+      uri,
+      headers: {
+        "Content-type": "application/json",
+        // Uncomment the Authorization header if you need to pass the token
+        "Authorization": "Bearer $token"
+      },
+      body: json.encode(body),
+    );
+
+    return response;
+  }
+
+  Future<http.Response> postFormData(
+      String url, Map<String, dynamic> body, String token) async {
+    var uri = Uri.parse(url);
+
+    var request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token';
+
+    // Iterate over the body map and handle fields and files
+    body.forEach((key, value) {
+      if (value is Uint8List) {
+        // Handling file uploads
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: '$key.png', // Replace with appropriate file naming logic
+          contentType: MediaType('image', 'png'),
+        );
+        request.files.add(httpFile);
+      } else if (value is String) {
+        // Handling regular form fields
+        request.fields[key] = value;
+      }
+    });
+
+    // Send the request
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+
+    return response;
+  }
+
+  Future<http.Response> patch(String url, Map<String, String> body) async {
+    String? token = await storage.read(key: "token");
+    url = formater(url);
+    log.d(body);
+    var response = await http.patch(
+      url as Uri,
+      headers: {
+        "Content-type": "application/json",
+        // "Authorization": "Bearer $token"
+      },
+      body: json.encode(body),
+    );
+    return response;
+  }
+
+  Future<http.Response> post1(String url, Map<String, dynamic> data) async {
+    String? token = await storage.read(key: "token");
+    if (token == null) {
+      throw Exception("Token not found");
+    }
+
+    url = formater(url);
+    var uri = Uri.parse(url);
+
+    var request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token';
+
+    data.forEach((key, value) {
+      if (key == 'signature' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'signature.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'photo' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'photo.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'residenceCard' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'residenceCard.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'confirmationForm' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'confirmationForm.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'passport' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'passport.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (value is String) {
+        request.fields[key] = value;
+      }
+    });
+
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+
+    return response;
+  }
+
+  Future<http.Response> put1(String url, Map<String, dynamic> data) async {
+    String? token = await storage.read(key: "token");
+
+    if (token == null) {
+      throw Exception("Token not found");
+    }
+
+    url = formater(url);
+    var uri = Uri.parse(url);
+
+    var request = http.MultipartRequest('PUT', uri)
+      ..headers['Authorization'] = 'Bearer $token';
+
+    data.forEach((key, value) {
+      if (key == 'signature' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'signature.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'photo' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'photo.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'residenceCard' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'residenceCard.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'confirmationForm' && value is Uint8List) {
+        // Handle the confirmation form field if present
+        final httpFile = http.MultipartFile.fromBytes(
+          key, // Field name
+          value,
+          filename: 'confirmationForm.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (key == 'passport' && value is Uint8List) {
+        final httpFile = http.MultipartFile.fromBytes(
+          key,
+          value,
+          filename: 'passport.png',
+          contentType: MediaType.parse('image/png'),
+        );
+        request.files.add(httpFile);
+      } else if (value is String) {
+        request.fields[key] = value;
+      }
+    });
+
+    try {
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception(
+            "Failed to update data. Status code: ${response.statusCode}");
+      }
+
+      return response;
+    } catch (e) {
+      print("Request failed: $e");
+      rethrow;
+    }
+  }
+
+  Future<http.StreamedResponse> patchImage(String url, String filepath) async {
+    url = formater(url);
+    String? token = await storage.read(key: "token");
+    var request = http.MultipartRequest('PATCH', Uri.parse(url));
+    request.files.add(await http.MultipartFile.fromPath("img", filepath));
+    request.headers.addAll({
+      "Content-type": "multipart/form-data",
+      "Authorization": "Bearer $token"
+    });
+    var response = request.send();
+    return response;
+  }
+
+  String formater(String url) {
+    return baseurl + url;
+  }
+
+  NetworkImage getImage(String imageName) {
+    String url = formater("/uploads//$imageName.jpg");
+    return NetworkImage(url);
+  }
+
+  Future<http.Response> fetchData(String url) async {
+    String? token = await storage.read(key: "token");
+    url = formater(url);
+
+    var uri = Uri.parse(url);
+    var response = await http.get(
+      uri,
+      headers: {
+        "Content-type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+    );
+
+    return response;
+  }
+
+  Future<http.Response> getUserData(String url) async {
+    String? token = await storage.read(key: "token");
+    url = formater(url);
+
+    var uri = Uri.parse(url);
+    var response = await http.get(
+      uri,
+      headers: {
+        "Content-type": "application/json",
+        "Authorization": "Bearer $token"
+      },
+    );
+
+    return response;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAccountTypesFromDatabase() async {
+    try {
+      // Create an instance of DatabaseHelper
+      DatabaseHelper dbHelper = DatabaseHelper();
+
+      // Fetch all account types from the local database
+      List<Map<String, dynamic>> accountTypes =
+          await dbHelper.getAllAccountTypes();
+
+      return accountTypes; // Return the list of account types
+    } catch (error) {
+      print("Error fetching account types: $error");
+      return []; // Return an empty list in case of an error
+    }
+  }
+}

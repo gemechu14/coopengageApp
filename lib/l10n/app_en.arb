@@ -1,0 +1,21 @@
+{
+  "appTitle": "",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "home": "Home",
+  "schedule": "Schedule",
+  "notes": "Notes",
+  "profile": "Profile",
+  "newTask": "New Task",
+  "newMeeting": "New Meeting",
+  "textNote": "Text Note",
+  "voiceNote": "Voice Note",
+  "upcoming": "Upcoming",
+  "passed": "Passed",
+   "feedback": "Feedback",
+   "crmchangerequest": "CRM Change Request",
+   "profile": "Profile",
+    "listOfCustomers": "Customers List"
+  
+}
