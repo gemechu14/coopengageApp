@@ -13,6 +13,7 @@ import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
 import 'package:coopengageplus/features/onboarding/marchent/DownloadAndPrintPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/old/HomePage.dart';
+import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +33,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:pinput/pinput.dart';
+import 'package:printing/printing.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
 // import 'package:searchfield/searchfield.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -309,11 +311,11 @@ class _Registration extends State<Marchentregistration> {
                   controller: lastNameController,
                   errorMessage: "Last Name cannot be empty",
                 ),
-                TextLabel("Marchent Address *"),
+                TextLabel("Merchant Address *"),
                 CustomTextFormField(
-                  hintText: "Enter Marchent Address",
+                  hintText: "Enter Merchant Address",
                   controller: merchantCityController,
-                  errorMessage: "Marchent Address  cannot be empty",
+                  errorMessage: "Merchant Address  cannot be empty",
                   isRequired: true,
                 ),
                 TextLabel("Business Type"),
@@ -389,8 +391,8 @@ class _Registration extends State<Marchentregistration> {
                       });
                     },
                     child: SizedBox(
-                      width: 190, // Fixed width for consistency
-                      height: 20, // Fixed height for consistency
+                      width: 190,
+                      height: 20,
                       child: Center(
                         child: circular
                             ? const CircularProgressIndicator(
@@ -439,10 +441,57 @@ class _Registration extends State<Marchentregistration> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const Text("Available Documents",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 15),
                   englishQR != null
                       ? Column(
                           children: [
-                            Image.memory(englishQR!),
+                            Image.memory(
+                              englishQR!,
+                              height: 400,
+                              width: 270,
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await saveQRCodeToGallery(englishQR!, context);
+                              },
+                              icon: Icon(Icons.download),
+                              label: Text("Download QR Code"),
+                            ),
+                          ],
+                        )
+                      : Text("No QR code generated yet."),
+
+                  amharicQRCODE != null
+                      ? Column(
+                          children: [
+                            Image.memory(
+                              amharicQRCODE!,
+                              height: 400,
+                              width: 270,
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await saveQRCodeToGallery(
+                                    amharicQRCODE!, context);
+                              },
+                              icon: Icon(Icons.download),
+                              label: Text("Download QR Code"),
+                            ),
+                          ],
+                        )
+                      : Text("No QR code generated yet."),
+
+                  afaanOromoQR != null
+                      ? Column(
+                          children: [
+                            Image.memory(
+                              afaanOromoQR!,
+                              height: 400,
+                              width: 270,
+                            ),
                             SizedBox(height: 20),
                             ElevatedButton.icon(
                               onPressed: () async {
@@ -454,37 +503,33 @@ class _Registration extends State<Marchentregistration> {
                           ],
                         )
                       : Text("No QR code generated yet."),
-                  const Text("Available Documents",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 15),
 
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(3, (index) {
-                      return Column(
-                        children: [
-                          Image.asset(
-                            'assets/qr2.png',
-                            height: 200,
-                            width: MediaQuery.of(context).size.width * 0.65,
-                            fit: BoxFit.cover,
-                          ),
-                          TextButton.icon(
-                            onPressed: () {
-                              // Implement download functionality
-                              print("Download image ${index + 1}");
-                            },
-                            icon: const Icon(Icons.download, size: 15),
-                            label: const Text(
-                              "Download",
-                              style: TextStyle(fontSize: 15),
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
-                  ),
+                  // Column(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  //   children: List.generate(3, (index) {
+                  //     return Column(
+                  //       children: [
+                  //         Image.asset(
+                  //           'assets/qr2.png',
+                  //           height: 200,
+                  //           width: MediaQuery.of(context).size.width * 0.65,
+                  //           fit: BoxFit.cover,
+                  //         ),
+                  //         TextButton.icon(
+                  //           onPressed: () {
+                  //             // Implement download functionality
+                  //             print("Download image ${index + 1}");
+                  //           },
+                  //           icon: const Icon(Icons.download, size: 15),
+                  //           label: const Text(
+                  //             "Download",
+                  //             style: TextStyle(fontSize: 15),
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     );
+                  //   }),
+                  // ),
                   const SizedBox(height: 20),
 
                   CheckboxListTile(
@@ -617,62 +662,70 @@ class _Registration extends State<Marchentregistration> {
                 Expanded(
                   child: Form(
                     key: globalFormKey,
-                    child: Stepper(
-                      type: StepperType.horizontal,
-                      steps: stepList(),
-                      currentStep: _activeStepIndex,
-                      controlsBuilder:
-                          (BuildContext context, ControlsDetails details) {
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                              top: 30, left: 20, right: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              if (_activeStepIndex > 0)
+                    child: Theme(
+                      data: ThemeData(
+                        colorScheme: const ColorScheme.light(
+                          primary: Colors.blue,
+                          secondary: Colors.blue,
+                        ),
+                      ),
+                      child: Stepper(
+                        type: StepperType.horizontal,
+                        steps: stepList(),
+                        currentStep: _activeStepIndex,
+                        controlsBuilder:
+                            (BuildContext context, ControlsDetails details) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                top: 30, left: 20, right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                if (_activeStepIndex > 0)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton(
+                                      onPressed: onStepCancel,
+                                      style: TextButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                      ),
+                                      child: const Text(
+                                        '     Back     ',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                const Spacer(),
                                 Align(
-                                  alignment: Alignment.centerLeft,
+                                  alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: onStepCancel,
+                                    onPressed: onStepContinue,
                                     style: TextButton.styleFrom(
                                       backgroundColor: Colors.blue,
                                     ),
-                                    child: const Text(
-                                      '     Back     ',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              const Spacer(),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: onStepContinue,
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                  ),
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
+                                    child: isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(
+                                            _activeStepIndex == 3
+                                                ? 'Submit'
+                                                : 'Continue',
+                                            style: const TextStyle(
+                                                color: Colors.white),
                                           ),
-                                        )
-                                      : Text(
-                                          _activeStepIndex == 3
-                                              ? 'Submit'
-                                              : 'Continue',
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                        ),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -735,15 +788,13 @@ class _Registration extends State<Marchentregistration> {
       isLoading = true;
     });
 
-    final formIsValid =
-        validateData(); // Validate the form based on the active step
+    final formIsValid = validateData();
     print(formIsValid);
 
     if (formIsValid) {
       final isLastStep = _activeStepIndex == stepList().length - 1;
       print("isLastStep: $isLastStep");
 
-      // Perform actions based on the current step
       if (_activeStepIndex == 0) {
         if (phoneNumberController.text.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -757,7 +808,7 @@ class _Registration extends State<Marchentregistration> {
           _pinController.text = '';
 
           registerStatus = true;
-          // await handleRegistrationProcess();
+          await handleRegistrationProcess();
           // await handleFirstStep();
         }
       } else if (_activeStepIndex == 1) {
@@ -1022,35 +1073,51 @@ class _Registration extends State<Marchentregistration> {
   }
 
   Future<void> submitFormData1() async {
-    registrationData['phoneNumber'] = phoneNumberController.text;
-    registrationData['marchentName'] = firstNameController.text;
-    registrationData['merchantCity'] = businessAddressController.text;
-    registrationData['emailAddress'] = emailController.text;
-    registrationData['merchantAccountNumber'] = selectedAccountNumber;
-    registrationData['businessType'] = selectedBusinessType;
-    registrationData['businessName'] = businessNameController.text;
-    registrationData['tin'] = tinController.text;
-    registrationData['dateOfEstablishment'] =
-        dateOfEstablishmentController.text;
-    registrationData['transactionalAmount'] = transactionAmountController.text;
-    registrationData['storeLabel'] = storeLabelController.text;
-    registrationData['terminalLabel'] = terminalLabelController.text;
-    registrationData['paymentReason'] = paymentReasonController.text;
+    if (!deliveryOptionChecked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Thank you for your submission!")),
+      );
+      registerStatus = true;
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainPage(),
+          ),
+          (route) => false);
+    } else {
+      await orderDelivery();
+    }
 
-    registrationData['languagePreference'] = selectedLanguagePreference;
-    registrationData['localizedMarchentName'] =
-        localizedMerchantNameController.text;
-    registrationData['localizedMarchentAddress'] =
-        localizedMerchantCityController.text;
-    registrationData['qrcode'] = 'assets/qr2.png';
+    print("final stage");
+    // registrationData['phoneNumber'] = phoneNumberController.text;
+    // registrationData['marchentName'] = firstNameController.text;
+    // registrationData['merchantCity'] = businessAddressController.text;
+    // registrationData['emailAddress'] = emailController.text;
+    // registrationData['merchantAccountNumber'] = selectedAccountNumber;
+    // registrationData['businessType'] = selectedBusinessType;
+    // registrationData['businessName'] = businessNameController.text;
+    // registrationData['tin'] = tinController.text;
+    // registrationData['dateOfEstablishment'] =
+    //     dateOfEstablishmentController.text;
+    // registrationData['transactionalAmount'] = transactionAmountController.text;
+    // registrationData['storeLabel'] = storeLabelController.text;
+    // registrationData['terminalLabel'] = terminalLabelController.text;
+    // registrationData['paymentReason'] = paymentReasonController.text;
 
-    registrationData['countryCode'] = 'ET';
-    registrationData['currency'] = "230";
-    registrationData['transactionReason'] = "Payment";
-    registrationData['doingBusinessAsName'] = firstNameController.text;
-    registrationData['ttc'] = 400;
-    registrationData['mcc'] = 1234;
-    await qrCodeRequest();
+    // registrationData['languagePreference'] = selectedLanguagePreference;
+    // registrationData['localizedMarchentName'] =
+    //     localizedMerchantNameController.text;
+    // registrationData['localizedMarchentAddress'] =
+    //     localizedMerchantCityController.text;
+    // registrationData['qrcode'] = 'assets/qr2.png';
+
+    // registrationData['countryCode'] = 'ET';
+    // registrationData['currency'] = "230";
+    // registrationData['transactionReason'] = "Payment";
+    // registrationData['doingBusinessAsName'] = firstNameController.text;
+    // registrationData['ttc'] = 400;
+    // registrationData['mcc'] = 1234;
+    // await qrCodeRequest();
   }
 
   Future<void> validatePin(String pin) async {
@@ -1157,7 +1224,7 @@ class _Registration extends State<Marchentregistration> {
       }
     } catch (e) {
       print("object");
-
+      print(e);
       registerStatus = false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: Registration failed")),
@@ -1291,39 +1358,219 @@ class _Registration extends State<Marchentregistration> {
   //   );
   // }
 
-  Future<void> callFinalQrAPI(Uint8List qrImage) async {
-    String finalQrUrl1 = 'http://10.12.53.40:5000/process_qr_eng';
+  // Future<void> callFinalQrAPI(Uint8List qrImage) async {
+  //   String finalQrUrl1 = 'http://10.12.53.40:5000/process_qr_oro';
+
+  //   try {
+  //     englishQR = null;
+  //     amharicQRCODE = null;
+  //     afaanOromoQR = null;
+  //     final Map<String, dynamic> finalQRCODE = {};
+  //     finalQRCODE['merchant_name'] =
+  //         firstNameController.text + " " + lastNameController.text;
+  //     finalQRCODE['merchant_id'] = selectedAccountNumber;
+  //     finalQRCODE['qr_code'] = qrImage;
+
+  //     var response = await networkHandler
+  //         .postWithFormData(finalQrUrl1, finalQRCODE)
+  //         .timeout(const Duration(seconds: 20));
+
+  //     print("response");
+
+  //     // Check the response status
+  //     if (response.statusCode == 200) {
+  //       registerStatus = true;
+  //       englishQR = response.bodyBytes;
+  //       print("Final QR uploaded successfully");
+  //       print(englishQR);
+  //       print("Final QR uploaded successfully");
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text("Final QR uploaded successfully")),
+  //       );
+  //     } else {
+  //       registerStatus = false;
+  //       print("Failed to upload final QR: ${response.statusCode}");
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //             content: Text(
+  //                 "Failed to upload final QR  failed with status code  ${response.statusCode}")),
+  //       );
+  //     }
+  //   } on TimeoutException catch (_) {
+  //     registerStatus = false;
+  //     print("The request timed out.");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("The request timed out.")),
+  //     );
+  //   } catch (e) {
+  //     // Catch all other exceptions
+  //     registerStatus = false;
+  //     print("Error during the request: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error: $e")),
+  //     );
+  //   }
+  // }
+
+  Future<void> callFinalQrAPIs(Uint8List qrImage) async {
+    // Define the list of URLs for the APIs
+    List<String> apiUrls = [
+      'http://10.12.53.40:5000/process_qr_oro',
+      'http://10.12.53.40:5000/process_qr_eng',
+      'http://10.12.53.40:5000/process_qr_amh',
+    ];
 
     try {
+      englishQR = null;
+      amharicQRCODE = null;
+      afaanOromoQR = null;
+      // Prepare the data for all requests
+      final Map<String, dynamic> finalQRCODE = {
+        'merchant_name':
+            firstNameController.text + " " + lastNameController.text,
+        'merchant_id': selectedAccountNumber,
+        'qr_code': qrImage,
+      };
+
+      // Loop through the URLs and send the requests
+      for (String url in apiUrls) {
+        var response = await networkHandler
+            .postWithFormData(url, finalQRCODE)
+            .timeout(const Duration(seconds: 20));
+
+        // Process the response
+        if (response.statusCode == 200) {
+          registerStatus = true;
+          print("QR uploaded successfully for $url");
+          SnackBar(content: Text("QR code successfully processed."));
+
+          // Handle specific responses (e.g., storing `response.bodyBytes`)
+          if (url.contains('process_qr_oro')) {
+            afaanOromoQR = response.bodyBytes;
+          } else if (url.contains('process_qr_eng')) {
+            englishQR = response.bodyBytes;
+            // Add additional logic for English QR processing if needed
+          } else if (url.contains('process_qr_amh')) {
+            amharicQRCODE = response.bodyBytes;
+          }
+        } else {
+          registerStatus = false;
+          print("Failed to upload QR for $url: ${response.statusCode}");
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  "Failed to process the QR code. Please try again later.")));
+        }
+      }
+    } on TimeoutException catch (_) {
+      registerStatus = false;
+      print("The request timed out.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("The request timed out.")),
+      );
+    } catch (e) {
+      registerStatus = false;
+      print("Error during the request: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            "An error occurred while processing the request. Please try again."),
+      ));
+    }
+  }
+
+  Future<void> callMultipleApis(Uint8List qrImage) async {
+    String qrUrlEng = 'http://10.12.53.40:5000/process_qr_eng';
+    String qrUrlAmh = 'http://10.12.53.40:5000/process_qr_amh';
+    String qrUrlOro = 'http://10.12.53.40:5000/process_qr_oro';
+
+    try {
+      englishQR = null;
+      amharicQRCODE = null;
+      afaanOromoQR = null;
       final Map<String, dynamic> finalQRCODE = {};
-      finalQRCODE['merchant_name'] = 'Gemechu';
-      finalQRCODE['merchant_id'] = '1551';
+      finalQRCODE['merchant_name'] =
+          firstNameController.text + " " + lastNameController.text;
+      finalQRCODE['merchant_id'] = selectedAccountNumber;
       finalQRCODE['qr_code'] = qrImage;
 
-      // Assuming you have a postWithFormData method
-      var response = await networkHandler
-          .postWithFormData(finalQrUrl1, finalQRCODE)
-          .timeout(const Duration(seconds: 20));
+      var firstdata;
+      var seconddata;
+      var thirddata;
 
-      print("response");
+      registerStatus = false;
 
-      // Check the response status
-      if (response.statusCode == 200) {
-        registerStatus = true;
-        englishQR = response.bodyBytes;
-        print("Final QR uploaded successfully");
-        print(englishQR);
-        print("Final QR uploaded successfully");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Final QR uploaded successfully")),
-        );
+      var responses = await Future.wait([
+        networkHandler
+            .postWithFormData(qrUrlEng, finalQRCODE)
+            .timeout(const Duration(seconds: 20)),
+        networkHandler
+            .postWithFormData(qrUrlAmh, finalQRCODE)
+            .timeout(const Duration(seconds: 20)),
+        networkHandler
+            .postWithFormData(qrUrlOro, finalQRCODE)
+            .timeout(const Duration(seconds: 20)),
+      ]);
+
+      bool allSuccessful = true;
+
+      firstdata = responses[0];
+      seconddata = responses[1];
+      thirddata = responses[2];
+
+      // Check the status of each response and assign data accordingly
+      if (firstdata.statusCode == 200) {
+        englishQR = firstdata.bodyBytes;
+        print("firstdata.bodyBytes");
+        print(firstdata.bodyBytes);
+
+        // Store English QR
       } else {
-        registerStatus = false;
-        print("Failed to upload final QR: ${response.statusCode}");
+        allSuccessful = false;
+        print("Failed to upload English QR: ${firstdata.statusCode}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  "Failed to upload final QR  failed with status code  ${response.statusCode}")),
+                  "Failed to upload English QR with status code: ${firstdata.statusCode}")),
+        );
+      }
+
+      if (seconddata.statusCode == 200) {
+        amharicQRCODE = seconddata.bodyBytes; // Store Amharic QR
+        print("seconddata.bodyBytes");
+        print(seconddata.bodyBytes);
+      } else {
+        allSuccessful = false;
+        print("Failed to upload Amharic QR: ${seconddata.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "Failed to upload Amharic QR with status code: ${seconddata.statusCode}")),
+        );
+      }
+
+      if (thirddata.statusCode == 200) {
+        afaanOromoQR = thirddata.bodyBytes; // Store Oromo QR
+        print("thirddata.bodyBytes");
+        print(thirddata.bodyBytes);
+      } else {
+        allSuccessful = false;
+        print("Failed to upload Oromo QR: ${thirddata.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "Failed to upload Oromo QR with status code: ${thirddata.statusCode}")),
+        );
+      }
+
+      // Set registerStatus based on whether all API calls were successful
+      if (allSuccessful) {
+        registerStatus = true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("All QR codes uploaded successfully")),
+        );
+      } else {
+        registerStatus = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Some QR codes failed to upload.")),
         );
       }
     } on TimeoutException catch (_) {
@@ -1333,7 +1580,6 @@ class _Registration extends State<Marchentregistration> {
         const SnackBar(content: Text("The request timed out.")),
       );
     } catch (e) {
-      // Catch all other exceptions
       registerStatus = false;
       print("Error during the request: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1823,7 +2069,7 @@ class _Registration extends State<Marchentregistration> {
         String errorMessage = responseData['message'] ??
             'Invalid username or password. Please try again.';
         print("Error: $errorMessage");
-
+        registerStatus = false;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
@@ -1854,13 +2100,13 @@ class _Registration extends State<Marchentregistration> {
 
     try {
       Map<String, dynamic> merchantData = {
-        "merchantAccountNumber": "1000026595928",
+        "merchantAccountNumber": selectedAccountNumber,
         "countryCode": 'ET',
         "currency": '230',
         "transactionReason": 'MP2M',
         "mcc": '1234',
-        "doingBusinessAsName": 'gemechu',
-        "merchantCity": "Addis Ababa",
+        "doingBusinessAsName": businessNameController.text,
+        "merchantCity": merchantCityController.text,
         "ttc": 400,
       };
 
@@ -1877,7 +2123,8 @@ class _Registration extends State<Marchentregistration> {
         qrcodeImage = response.bodyBytes;
         // registerStatus = true;
 
-        await callFinalQrAPI(qrcodeImage!);
+        await callFinalQrAPIs(qrcodeImage!);
+        // await callMultipleApis(qrcodeImage!);
 
         print(qrcodeImage);
         setState(() {
@@ -2114,5 +2361,18 @@ class _Registration extends State<Marchentregistration> {
     //     );
     //   }
     // }
+  }
+
+  orderDelivery() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Order delivery successful!")),
+    );
+
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MainPage(),
+        ),
+        (route) => false);
   }
 }
