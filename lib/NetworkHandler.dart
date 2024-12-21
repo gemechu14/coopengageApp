@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:printing/printing.dart';
 
 // For base64 encoding/decoding
 // ignore_for_file: file_names
@@ -177,6 +178,133 @@ class NetworkHandler {
     );
     return response;
   }
+
+  // Future<http.Response> postWithFormData(
+  //     String qrcodeUrl, Map<String, dynamic> body) async {
+  //   // Convert the URL string to a Uri object
+  //   var uri = Uri.parse(qrcodeUrl);
+  //   var request = http.MultipartRequest('POST', uri);
+
+  //   body.forEach((key, value) {
+  //     if (value is String) {
+  //       request.fields[key] = value;
+  //     } else if (value is Uint8List) {
+  //       request.files.add(http.MultipartFile.fromBytes(
+  //         key, // The key for the file field (e.g., 'qr_code')
+  //         value, // The byte data of the image
+  //         filename: '$key.jpg', // You can customize the filename here
+  //         contentType:
+  //             MediaType('image', 'jpeg'), // Content type for JPEG image
+  //       ));
+  //     }
+  //   });
+
+  //   request.headers['accept'] = 'application/json';
+
+  //   // Send the request and get the response
+  //   var response = await request.send();
+
+  //   // Convert the response stream to a regular response object
+  //   final responseData = await http.Response.fromStream(response);
+  //   print("responseData");
+  //   print(responseData.statusCode);
+
+  //   return responseData;
+  // }
+
+  Future<http.Response> postWithFormData(
+      String qrcodeUrl, Map<String, dynamic> body) async {
+    // Convert the URL string to a Uri object
+    var uri = Uri.parse(qrcodeUrl);
+    var request = http.MultipartRequest('POST', uri);
+
+    // Add the fields and files from the original body
+    body.forEach((key, value) {
+      if (value is String) {
+        request.fields[key] = value;
+      } else if (value is Uint8List) {
+        request.files.add(http.MultipartFile.fromBytes(
+          key, // The key for the file field (e.g., 'qr_code')
+          value, // The byte data of the image
+          filename: '$key.jpg', // You can customize the filename here
+          contentType:
+              MediaType('image', 'jpeg'), // Content type for JPEG image
+        ));
+      }
+    });
+
+    request.headers['accept'] = 'application/json';
+
+    // Send the request and get the response
+    var response = await request.send();
+
+    if (response.statusCode == 307) {
+      // Get the new URL from the Location header
+      String redirectUrl = response.headers['location']!;
+      print("Redirected to: $redirectUrl");
+
+      // Prepare the redirected request with the same body
+      var redirectRequest =
+          http.MultipartRequest('POST', Uri.parse(redirectUrl));
+      body.forEach((key, value) {
+        if (value is String) {
+          redirectRequest.fields[key] = value;
+        } else if (value is Uint8List) {
+          redirectRequest.files.add(http.MultipartFile.fromBytes(
+            key, // The key for the file field (e.g., 'qr_code')
+            value, // The byte data of the image
+            filename: '$key.jpg', // You can customize the filename here
+            contentType:
+                MediaType('image', 'jpeg'), // Content type for JPEG image
+          ));
+        }
+      });
+
+      redirectRequest.headers['accept'] = 'application/json';
+
+      // Send the redirected request
+      var redirectResponse = await redirectRequest.send();
+
+      // Convert the response stream to a regular response object
+      final responseData = await http.Response.fromStream(redirectResponse);
+      print("Redirect Response Data: ${responseData.statusCode}");
+
+      return responseData;
+    } else {
+      // Convert the response stream to a regular response object if no redirect
+      final responseData = await http.Response.fromStream(response);
+      print("Response Data: ${responseData.statusCode}");
+      return responseData;
+    }
+  }
+
+  // Future<http.Response> postWithFormData(
+  //     String url, Map<String, String> body, Uint8List qrImage) async {
+  //   url = formater(url);
+  //   var request = http.MultipartRequest('POST', Uri.parse(url));
+
+  //   body.forEach((key, value) {
+  //     request.fields[key] = value;
+  //   });
+
+  //   if (qrImage.isNotEmpty) {
+  //     request.files.add(http.MultipartFile.fromBytes(
+  //       'qr_code',
+  //       qrImage,
+  //       filename: 'qrcode.jpg',
+  //       contentType: MediaType('image', 'jpeg'),
+  //     ));
+  //   }
+
+  //   request.headers['accept'] = 'application/json';
+
+  //   // Send the request and get the response
+  //   var response = await request.send();
+
+  //   // Handle the response
+  //   final responseData = await http.Response.fromStream(response);
+  //   return responseData;
+  // }
 
   Future<http.Response> post1(String url, Map<String, dynamic> data) async {
     String? token = await storage.read(key: "token");

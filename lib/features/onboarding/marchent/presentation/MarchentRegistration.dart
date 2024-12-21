@@ -17,6 +17,7 @@ import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:intl_phone_field/countries.dart';
@@ -26,7 +27,9 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:pinput/pinput.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
@@ -37,6 +40,8 @@ import 'package:snippet_coder_utils/FormHelper.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'package:image/image.dart' as img;
 
 class Marchentregistration extends StatefulWidget {
   const Marchentregistration({super.key});
@@ -61,6 +66,13 @@ class _Registration extends State<Marchentregistration> {
 
   final Map<String, dynamic> phoneNUmber = {};
   final Map<String, dynamic> kycRegistrationData = {};
+
+  // Get the response body as bytes (image data)
+  Uint8List? englishQR;
+  Uint8List? amharicQRCODE;
+  Uint8List? afaanOromoQR;
+
+  Map<String, dynamic> finalQRCODE = {};
 
   String? selectedAccountNumber;
   List<String> accountNumbers = [];
@@ -195,6 +207,7 @@ class _Registration extends State<Marchentregistration> {
   TextEditingController localizedMerchantCityController =
       TextEditingController();
 
+  Uint8List? qrcodeImage;
   String? accountNumber;
   int numberOfFields = 5;
   bool isVerified = false;
@@ -303,15 +316,6 @@ class _Registration extends State<Marchentregistration> {
                   errorMessage: "Marchent Address  cannot be empty",
                   isRequired: true,
                 ),
-                // TextLabel("Email Address"),
-                // CustomTextFormField(
-                //   hintText: "Enter Marchent Address",
-                //   controller: emailController,
-                //   errorMessage: "Marchent Address  cannot be empty",
-                //   isRequired: false,
-
-                //   // leadingIcon: Icons.person,
-                // ),
                 TextLabel("Business Type"),
                 ReusableDropdown(
                   selectedValue: selectedBusinessType,
@@ -335,7 +339,6 @@ class _Registration extends State<Marchentregistration> {
                   errorMessage: "Business Type  cannot be empty",
                   isRequired: true,
                 ),
-
                 TextLabel("Business Address *"),
                 CustomTextFormField(
                   hintText: "Enter business Address",
@@ -343,31 +346,6 @@ class _Registration extends State<Marchentregistration> {
                   errorMessage: "business Address  cannot be empty",
                   isRequired: true,
                 ),
-                // TextLabel("TIN"),
-                // CustomTextFormField(
-                //   hintText: "Enter TIN",
-                //   controller: tinController,
-                //   errorMessage: "TIN cannot be empty",
-                //   isRequired: true,
-
-                //   // leadingIcon: Icons.person,
-                // ),
-                // TextLabel("Date of Estabilishment"),
-                // DatePickerField(
-                //   controller: dateOfEstablishmentController,
-                //   hintText: 'Date of Establishment',
-                //   // prefixIcon: Icons.date_range,
-                //   suffixIcon: Icons.date_range,
-                //   initialDate: DateTime.now(),
-                //   firstDate: DateTime(1540),
-                //   lastDate: DateTime.now(),
-                //   isRequired: true,
-                //   isGreyBorder: true,
-                //   errorMessage: 'Please select a date of Establishment',
-                // ),
-                // const SizedBox(
-                //   height: 40,
-                // )
               ],
             )),
       ),
@@ -391,11 +369,10 @@ class _Registration extends State<Marchentregistration> {
                 Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Colors.blue, // Set background color to blue
-                      foregroundColor: Colors.white, // Set text color to white
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12), // Adjust padding
+                          horizontal: 24, vertical: 12),
                     ),
                     onPressed: () async {
                       setState(() {
@@ -462,81 +439,33 @@ class _Registration extends State<Marchentregistration> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // TextLabel("Transactional Amount"),
-                  // CustomTextFormField(
-                  //   hintText: "100",
-                  //   controller: transactionAmountController,
-                  //   isRequired: false,
-                  // ),
-                  // TextLabel("Store Label"),
-                  // CustomTextFormField(
-                  //   hintText: "Enter store Label",
-                  //   controller: storeLabelController,
-                  //   isRequired: false,
-                  // ),
-                  // TextLabel("Terminal Label"),
-                  // CustomTextFormField(
-                  //   hintText: "Enter Terminal Label",
-                  //   controller: terminalLabelController,
-                  //   isRequired: false,
-                  // ),
-                  // TextLabel("Payment Reason  *"),
-                  // CustomTextFormField(
-                  //   hintText: "Enter Payment Reason ",
-                  //   errorMessage: "Payment reason is required",
-                  //   controller: paymentReasonController,
-                  //   isRequired: true,
-                  // ),
-                  // TextLabel("Language Preference"),
-                  // ReusableDropdown(
-                  //   selectedValue: selectedLanguagePreference,
-                  //   items: ListContants.languagePreference,
-                  //   hintText: 'Select Language Preference',
-                  //   onChanged: (newStatus) {
-                  //     setState(() {
-                  //       selectedLanguagePreference = newStatus!;
-                  //     });
-                  //   },
-                  //   isGreyBorder: true,
-                  //   // prefixIcon: Icons.family_restroom,
-                  //   errorMessage:
-                  //       'Please select a Additional Customer data request', // Pass the custom error message
-                  //   isRequired: false, // Make the field required
-                  // ),
-                  // if (selectedLanguagePreference == 'AM')
-                  //   TextLabel("Localized Merchant Name "),
-                  // if (selectedLanguagePreference == 'AM')
-                  //   CustomTextFormField(
-                  //     hintText: "Enter Merchant Name",
-                  //     controller: localizedMerchantNameController,
-                  //     errorMessage: "Merchant Name cannot be empty",
-                  //     isRequired: true,
-                  //     // leadingIcon: Icons.person,
-                  //   ),
-                  // if (selectedLanguagePreference == 'AM')
-                  //   TextLabel("Localized Merchant Address "),
-                  // if (selectedLanguagePreference == 'AM')
-                  //   CustomTextFormField(
-                  //     hintText: "Enter Merchant Address",
-                  //     controller: localizedMerchantCityController,
-                  //     errorMessage: "Merchant Address cannot be  empty",
-                  //     isRequired: true,
-                  //     // leadingIcon: Icons.person,
-                  //   ),
-
-                  // Section to display images with download option
+                  englishQR != null
+                      ? Column(
+                          children: [
+                            Image.memory(englishQR!),
+                            SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await saveQRCodeToGallery(englishQR!, context);
+                              },
+                              icon: Icon(Icons.download),
+                              label: Text("Download QR Code"),
+                            ),
+                          ],
+                        )
+                      : Text("No QR code generated yet."),
                   const Text("Available Documents",
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
+
                   Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(3, (index) {
-                      // Placeholder for images, replace `AssetImage` with NetworkImage when integrating API
                       return Column(
                         children: [
                           Image.asset(
-                            'assets/qr2.png', // Replace with API image
+                            'assets/qr2.png',
                             height: 200,
                             width: MediaQuery.of(context).size.width * 0.65,
                             fit: BoxFit.cover,
@@ -1240,18 +1169,6 @@ class _Registration extends State<Marchentregistration> {
     }
   }
 
-  // // // Mock function to send OTP
-  // Future<void> sendOtp(String phoneNumber) async {
-  //   // Simulate sending OTP
-  //   print("Sending OTP to: $phoneNumber");
-  //   setState(() {
-  //     isOtpSent = true;
-  //   });
-  //   await Future.delayed(Duration(seconds: 2));
-  //   print("OTP sent successfully!");
-  //   showOtpDialog(); // Automatically show OTP dialog after sending OTP
-  // }
-
   // Mock function to verify OTP
   Future<void> verifyOtp(String otp) async {
     // Simulate OTP verification
@@ -1372,6 +1289,97 @@ class _Registration extends State<Marchentregistration> {
   //       );
   //     },
   //   );
+  // }
+
+  Future<void> callFinalQrAPI(Uint8List qrImage) async {
+    String finalQrUrl1 = 'http://10.12.53.40:5000/process_qr_eng';
+
+    try {
+      final Map<String, dynamic> finalQRCODE = {};
+      finalQRCODE['merchant_name'] = 'Gemechu';
+      finalQRCODE['merchant_id'] = '1551';
+      finalQRCODE['qr_code'] = qrImage;
+
+      // Assuming you have a postWithFormData method
+      var response = await networkHandler
+          .postWithFormData(finalQrUrl1, finalQRCODE)
+          .timeout(const Duration(seconds: 20));
+
+      print("response");
+
+      // Check the response status
+      if (response.statusCode == 200) {
+        registerStatus = true;
+        englishQR = response.bodyBytes;
+        print("Final QR uploaded successfully");
+        print(englishQR);
+        print("Final QR uploaded successfully");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Final QR uploaded successfully")),
+        );
+      } else {
+        registerStatus = false;
+        print("Failed to upload final QR: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "Failed to upload final QR  failed with status code  ${response.statusCode}")),
+        );
+      }
+    } on TimeoutException catch (_) {
+      registerStatus = false;
+      print("The request timed out.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("The request timed out.")),
+      );
+    } catch (e) {
+      // Catch all other exceptions
+      registerStatus = false;
+      print("Error during the request: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  // Future<void> callFinalQrAPI(Uint8List qrImage) async {
+  //   String finalQrUrl1 = 'http://10.12.53.40:5000/process_qr';
+
+  //   try {
+  //     finalQRCODE = {};
+  //     finalQRCODE['qr_code '] = base64Encode(qrImage);
+  //     finalQRCODE['merchant_name'] = 'Gemechu';
+  //     finalQRCODE['merchant_id'] = '1551';
+
+  //     var response = await networkHandler
+  //         .postWithFormData(finalQrUrl1, finalQRCODE)
+  //         .timeout(const Duration(seconds: 20));
+  //     // var response = await networkHandler
+  //     //     .postFormData(finalQrUrl, finalQRCODE, token)
+  //     //     .timeout(const Duration(seconds: 20));
+
+  //     print("dataa11");
+
+  //     if (response.statusCode == 200) {
+  //       registerStatus = true;
+  //       print("Final QR uploaded successfully");
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text("Final QR uploaded successfully")),
+  //       );
+  //     } else {
+  //       registerStatus = false;
+  //       print("Failed to upload final QR: ${response.statusCode}");
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text("Failed to upload final QR")),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     registerStatus = false;
+  //     print("Error uploading final QR: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error uploading final QR: $e")),
+  //     );
+  //   }
   // }
 
   Future<void> sendOtp() async {
@@ -1842,7 +1850,7 @@ class _Registration extends State<Marchentregistration> {
   qrCodeRequest() async {
     // Replace with your API endpoint
     String fullUrl =
-        'https://h03k5fls-8080.euw.devtunnels.ms/api/v1/qr-code/generate-static';
+        'https://souqpass.coopbankoromiasc.com/generate/v1/qr-code/generate-static';
 
     try {
       Map<String, dynamic> merchantData = {
@@ -1858,7 +1866,7 @@ class _Registration extends State<Marchentregistration> {
 
       // Make the POST request
       var response = await networkHandler
-          .post(fullUrl, registrationData)
+          .post(fullUrl, merchantData)
           .timeout(const Duration(seconds: 20));
 
       // var responseData = json.decode(response.body);
@@ -1866,32 +1874,17 @@ class _Registration extends State<Marchentregistration> {
       print(response.body);
 
       if (response.headers['content-type']?.contains('image/png') == true) {
-        Uint8List bytes = response.bodyBytes;
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DownloadAndPrintPage(
-              registrationData: registrationData,
-              imageBytes: bytes,
-              title: 'Print',
-            ),
-          ),
-        );
+        qrcodeImage = response.bodyBytes;
+        // registerStatus = true;
 
-        if (result != null) {
-          setState(() async {
-            isLoading = false;
-            await Future.delayed(const Duration(milliseconds: 100));
-            FocusScope.of(context).unfocus();
-            userId = result;
-            isLoading = false;
-          });
-        }
-        print(bytes);
+        await callFinalQrAPI(qrcodeImage!);
+
+        print(qrcodeImage);
         setState(() {
-          _image = Image.memory(bytes);
+          _image = Image.memory(qrcodeImage!);
         });
       } else {
+        registerStatus = false;
         // If the response is not an image, attempt to decode as JSON
         var responseData = json.decode(response.body);
         print(responseData);
@@ -1906,6 +1899,7 @@ class _Registration extends State<Marchentregistration> {
             content: Text("The request timed out. Please try again.")),
       );
     } catch (e) {
+      registerStatus = false;
       // Handle other exceptions
       print("An error occurreddddd: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1978,5 +1972,147 @@ class _Registration extends State<Marchentregistration> {
             content: Text("An error occurred while processing your request.")),
       );
     }
+  }
+
+  // Future<void> downloadQRCode(
+  //     Uint8List qrCodeBytes, BuildContext context) async {
+  //   try {
+  //     // Request storage permission
+  //     if (await Permission.storage.request().isGranted) {
+  //       // Get directory to save the file
+  //       Directory directory;
+  //       if (Platform.isAndroid) {
+  //         directory = Directory('/storage/emulated/0/Download');
+  //       } else if (Platform.isIOS) {
+  //         directory = await getApplicationDocumentsDirectory();
+  //       } else {
+  //         throw Exception("Unsupported platform");
+  //       }
+
+  //       if (!directory.existsSync()) {
+  //         directory.createSync(recursive: true);
+  //       }
+
+  //       // Create file path
+  //       final filePath = '${directory.path}/qrcode.png';
+
+  //       // Write QR code bytes to file
+  //       final file = File(filePath);
+  //       await file.writeAsBytes(qrCodeBytes);
+
+  //       // Show success message
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text("QR Code saved to $filePath")),
+  //       );
+  //     } else {
+  //       // Permission denied
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text("Storage permission denied.")),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     // Log the error for debugging
+  //     print("Error saving QR Code: $e");
+
+  //     // Show error message
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Failed to save QR Code: $e")),
+  //     );
+  //   }
+  // }
+  Future<void> saveQRCodeToGallery(
+      Uint8List imageBytes, BuildContext context) async {
+    try {
+      // Get a temporary directory to save the file
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/QRCode.png';
+
+      // Save the image to a file
+      final file = File(filePath);
+      await file.writeAsBytes(imageBytes);
+
+      // Save the file directly to the gallery
+      final isSaved =
+          await GallerySaver.saveImage(file.path, albumName: "QR Codes");
+
+      // Provide feedback to the user
+      if (isSaved == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("QR Code image saved to gallery successfully!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Failed to save QR Code image to gallery.")),
+        );
+      }
+    } catch (e) {
+      // Handle errors
+      print("Error saving image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save QR Code image: $e")),
+      );
+    }
+  }
+
+  Future<void> downloadQRCode(
+      Uint8List qrCodeBytes, BuildContext context) async {
+    try {
+      // Use app's internal documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/qrcode.png';
+
+      // Write the QR code bytes to the file
+      final file = File(filePath);
+      await file.writeAsBytes(qrCodeBytes);
+
+      // Show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("QR Code saved to app's directory: $filePath")),
+      );
+
+      // // Optionally open the file location
+      // print("File saved at: $filePath");
+    } catch (e) {
+      // Handle errors
+      print("Error saving QR Code: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save QR Code: $e")),
+      );
+    }
+
+    // Future<void> saveQRCodeImage(
+    //     Uint8List imageBytes, BuildContext context) async {
+    //   try {
+    //     // Let the user pick a location to save the file
+    //     String? filePath = await FilePicker.platform.saveFile(
+    //       dialogTitle: 'Save QR Code',
+    //       fileName: 'QRCode.png',
+    //       type: FileType.custom,
+    //       allowedExtensions: ['png'],
+    //     );
+
+    //     if (filePath != null) {
+    //       // Save the file
+    //       final file = File(filePath);
+    //       await file.writeAsBytes(imageBytes);
+
+    //       // Notify the user
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(content: Text("QR Code saved at: $filePath")),
+    //       );
+    //     } else {
+    //       // User canceled the picker
+    //       print("File saving was canceled.");
+    //     }
+    //   } catch (e) {
+    //     // Handle errors
+    //     print("Error saving image: $e");
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text("Failed to save QR Code: $e")),
+    //     );
+    //   }
+    // }
   }
 }
