@@ -37,6 +37,21 @@ class NetworkHandler {
     log.i(response.statusCode);
   }
 
+  Future getData(String url, String token) async {
+    // url = formater(url);
+    // var uri = Uri.parse(url);
+
+    var uri = Uri.parse(url);
+    // /user/register
+    var response = await http.get(
+      uri,
+      headers: {"Authorization": "Bearer $token"},
+    );
+    return response;
+
+    // log.i(response.statusCode);
+  }
+
   ///AGENT REGISTRATION
   Future<http.Response> postAgent(String url, Map<String, dynamic> data) async {
     String? token = await storage.read(key: "token");

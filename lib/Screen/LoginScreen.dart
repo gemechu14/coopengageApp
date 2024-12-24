@@ -12,7 +12,6 @@ import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import 'package:snippet_coder_utils/FormHelper.dart';
 import 'package:snippet_coder_utils/ProgressHUD.dart';
 
@@ -39,14 +38,7 @@ class _LoginscreenState extends State<Loginscreen> {
       body: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
-              // gradient: LinearGradient(
-              //   begin: Alignment.topCenter,
-              //   colors: [
-              //     Colors.white,
-              //     Colors.blue,
-              //     Color.fromARGB(255, 185, 218, 245),
-              //   ],
-              // ),
+            
               ),
           child: ProgressHUD(
             key: UniqueKey(),
@@ -207,7 +199,6 @@ class _LoginscreenState extends State<Loginscreen> {
                       isApiCallProcess = true;
                     });
 
-                    // Retrieve the text from the controllers
                     String username = _username.text.trim();
                     String password = _password.text.trim();
 
@@ -223,11 +214,6 @@ class _LoginscreenState extends State<Loginscreen> {
                             .post('${AppConstants.baseURL}/login', data)
                             .timeout(const Duration(seconds: 19));
 
-                        print("gemechu ");
-
-                        print(response.body);
-
-                        print(response.statusCode);
                         if (response.statusCode == 200 ||
                             response.statusCode == 201) {
                           Map<String, dynamic> output =
@@ -237,7 +223,7 @@ class _LoginscreenState extends State<Loginscreen> {
                           Map<String, dynamic> decodedToken = json.decode(
                               utf8.decode(base64Url.decode(base64Url.normalize(
                                   output["access_token"].split(".")[1]))));
-
+                          String? token = output["access_token"];
                           String? clientId =
                               decodedToken["clientId"].toString();
                           String role = decodedToken["role"][0];
@@ -248,26 +234,26 @@ class _LoginscreenState extends State<Loginscreen> {
 
                           DatabaseHelper dbHelper = DatabaseHelper();
                           bool userExists = await dbHelper.userExists(username);
-
+                          await dbHelper.insertToken(token!);
+// await dbHelper ensureLanguageSet();
                           if (!userExists) {
                             // Register the user locally
                             await dbHelper.insertUser1(
-                              username: username,
-                              password: password,
-                              userId: userId,
-                              clientId: clientId,
-                              role: role,
-                              branches: branches,
-                            );
+                                username: username,
+                                password: password,
+                                userId: userId,
+                                clientId: clientId,
+                                role: role,
+                                // token: token,
+                                branches: branches);
+
                             print("User registered locally for future use.");
                           } else {
                             print("User already exists in local storage.");
                           }
 
                           /////////CHECK ACCOUNT TYPE
-                          ///
-                          ///
-                          // Check if the account types table is empty
+                      
                           bool isTableEmpty =
                               await dbHelper.isAccountTypeTableEmpty();
                           if (isTableEmpty) {
@@ -281,24 +267,6 @@ class _LoginscreenState extends State<Loginscreen> {
                             if (accountTypesResponse is List<dynamic>) {
                               print("Fetched account types successfully.");
 
-                              // List<Map<String, dynamic>> accountTypesToSave =
-                              //     accountTypesResponse.map((e) {
-                              //   return {
-                              //     "id": e["id"],
-                              //     "name": e["name"],
-                              //     "type": e["type"],
-                              //     "minAge": e["minAge"] ?? "",
-                              //     "maxAge": e["maxAge"] ?? "",
-                              //     "minAmount": e["minAmount"] ?? "",
-                              //     "sex": e["sex"] ?? "",
-                              //     "bankingType": e["bankingType"],
-                              //   };
-                              // }).toList();
-
-                              // // Save the data to the database
-                              // await dbHelper
-                              //     .insertAccountTypes(accountTypesToSave);
-                              // print("Account types saved successfully.");
 
                               List<Map<String, dynamic>> accountTypesToSave =
                                   accountTypesResponse.map((e) {
@@ -315,7 +283,6 @@ class _LoginscreenState extends State<Loginscreen> {
                                 };
                               }).toList();
 
-// Save the data to the database
                               await dbHelper
                                   .insertAccountTypes(accountTypesToSave);
                               print("Account types saved successfully.");

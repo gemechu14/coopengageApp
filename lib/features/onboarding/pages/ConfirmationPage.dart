@@ -334,6 +334,7 @@ class ConfirmationPage extends StatelessWidget {
       'motherName',
       'sex',
       'dateOfBirth',
+      // "phoneNumber",
       'phone',
       'branch',
       'email',
@@ -346,7 +347,6 @@ class ConfirmationPage extends StatelessWidget {
       "monthlyIncome",
       "issueDate",
       "expirayDate",
-      "currency",
       "currency",
       "percentageCompleted",
       "accountType",
@@ -460,7 +460,8 @@ class ConfirmationPage extends StatelessWidget {
 
   // Check if phone number needs the +251 prefix
   String getFormattedPhoneNumber(String? phoneNumber) {
-    if (phoneNumber != null && !phoneNumber.startsWith('+251')) {
+    if (phoneNumber != null && !phoneNumber.startsWith('+251') ||
+        phoneNumber != null && !phoneNumber.startsWith('251')) {
       return '+251 $phoneNumber';
     }
     return phoneNumber ?? '';

@@ -4,17 +4,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
-// import 'package:csc_picker/csc_picker.dart';
+
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/common_widgets/textField/CustomTextFormField.dart';
 import 'package:coopengageplus/common_widgets/textField/PhoneNumberWidget.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/features/onboarding/marchent/DownloadAndPrintPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/old/HomePage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
+import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
@@ -54,6 +54,8 @@ class Marchentregistration extends StatefulWidget {
 class _Registration extends State<Marchentregistration> {
   String? userId;
   int? userID;
+  int? selectedDocument;
+
   List<String> branches = [];
   bool deliverDocument1 = false;
   bool deliverDocument2 = false;
@@ -68,6 +70,7 @@ class _Registration extends State<Marchentregistration> {
 
   final Map<String, dynamic> phoneNUmber = {};
   final Map<String, dynamic> kycRegistrationData = {};
+  final Map<String, dynamic> orderDeliveryData = {};
 
   // Get the response body as bytes (image data)
   Uint8List? englishQR;
@@ -117,6 +120,7 @@ class _Registration extends State<Marchentregistration> {
     selectedSector = ListContants.sectors.first;
     selectedBusinessType = ListContants.businessTypes.first;
     issueAuthorityController.text = 'ET';
+    // numberOfPring.text = "1";
   }
 
   bool isApiCallProcess = false;
@@ -174,10 +178,9 @@ class _Registration extends State<Marchentregistration> {
   TextEditingController expireDateController = TextEditingController();
   TextEditingController issueAuthorityController = TextEditingController();
   TextEditingController specificAddressController = TextEditingController();
-
   FocusNode focusNode = FocusNode();
   NetworkHandler networkHandler = NetworkHandler();
-
+  TextEditingController numberOfPring = TextEditingController();
   String initialCountry = 'ET';
 
   GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
@@ -185,11 +188,6 @@ class _Registration extends State<Marchentregistration> {
   GlobalKey<FormState> globalFormKey2 = GlobalKey<FormState>();
   GlobalKey<FormState> globalFormKey3 = GlobalKey<FormState>();
   GlobalKey<FormState> globalFormKey4 = GlobalKey<FormState>();
-  GlobalKey<FormState> globalFormKey5 = GlobalKey<FormState>();
-  GlobalKey<FormState> globalFormKey6 = GlobalKey<FormState>();
-  GlobalKey<FormState> globalFormKey7 = GlobalKey<FormState>();
-  GlobalKey<FormState> globalFormKey8 = GlobalKey<FormState>();
-  GlobalKey<FormState> globalFormKey9 = GlobalKey<FormState>();
 
   TextEditingController marchentNameController = TextEditingController();
   TextEditingController businessNameController = TextEditingController();
@@ -212,12 +210,10 @@ class _Registration extends State<Marchentregistration> {
   Uint8List? qrcodeImage;
   String? accountNumber;
   int numberOfFields = 5;
-  bool isVerified = false;
+
   String? amount;
   String? description;
-  bool isBankTransferIconClicked = false;
-  bool clearText = false;
-  bool isValidPin = false;
+
   List<Map<String, dynamic>>? branches1 = GlobalData()?.branches;
   int? UserID = GlobalData()?.userId;
   final globalData = GlobalData();
@@ -395,14 +391,19 @@ class _Registration extends State<Marchentregistration> {
                       height: 20,
                       child: Center(
                         child: circular
-                            ? const CircularProgressIndicator(
-                                color: Colors.white, // Spinner color
-                                strokeWidth: 1, // Spinner thickness
+                            ? SizedBox(
+                                width: 24, // Width of the spinner
+                                height: 24, // Height of the spinner
+                                child: const CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                  strokeWidth:
+                                      2, // Optional: You can adjust the thickness of the spinner
+                                ),
                               )
                             : const Text(
                                 "Fetch Account Number",
-                                style: TextStyle(
-                                    fontSize: 16), // Optional: Adjust font size
+                                style: TextStyle(fontSize: 16),
                               ),
                       ),
                     ),
@@ -429,201 +430,493 @@ class _Registration extends State<Marchentregistration> {
               ],
             )),
       ),
-
-      /// INITIAL AMOUNT
       Step(
         title: Text(isSmallScreen ? "" : "Link Account "),
         isActive: _activeStepIndex >= 3,
         state: _activeStepIndex > 3 ? StepState.complete : StepState.indexed,
         content: Form(
-            key: globalFormKey3,
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text("Available Documents",
+          key: globalFormKey3,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text("Available Documents",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 15),
+              englishQR != null
+                  ? Column(
+                      children: [
+                        Image.memory(
+                          englishQR!,
+                          height: 340,
+                          width: 290,
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            await saveQRCodeToGallery(englishQR!, context);
+                          },
+                          icon: Icon(Icons.download),
+                          label: Text("Download QR Code"),
+                        ),
+                      ],
+                    )
+                  : Text("No QR code generated yet."),
+
+              amharicQRCODE != null
+                  ? Column(
+                      children: [
+                        Image.memory(
+                          amharicQRCODE!,
+                          height: 340,
+                          width: 290,
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            await saveQRCodeToGallery(amharicQRCODE!, context);
+                          },
+                          icon: Icon(Icons.download),
+                          label: Text("Download QR Code"),
+                        ),
+                      ],
+                    )
+                  : Text("No QR code generated yet."),
+
+              afaanOromoQR != null
+                  ? Column(
+                      children: [
+                        Image.memory(
+                          afaanOromoQR!,
+                          height: 340,
+                          width: 290,
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            await saveQRCodeToGallery(englishQR!, context);
+                          },
+                          icon: Icon(Icons.download),
+                          label: Text("Download QR Code"),
+                        ),
+                      ],
+                    )
+                  : Text("No QR code generated yet."),
+
+              // const Text(
+              //   "Available Documents",
+              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              // ),
+              // const SizedBox(height: 15),
+
+              // // English QR Code
+              // if (englishQR != null)
+              //   Column(
+              //     crossAxisAlignment: CrossAxisAlignment.start,
+              //     children: [
+              //       // const Text("English QR Code:"),
+              //       Image.memory(englishQR!, height: 400, width: 270),
+              //       ElevatedButton.icon(
+              //         onPressed: () async {
+              //           await saveQRCodeToGallery(englishQR!, context);
+              //         },
+              //         icon: const Icon(Icons.download),
+              //         label: const Text("Download QR Code"),
+              //       ),
+              //     ],
+              //   )
+              // else
+              //   const Text("No English QR code available."),
+
+              // const SizedBox(height: 10),
+
+              // // Amharic QR Code
+              // if (amharicQRCODE != null)
+              //   Column(
+              //     crossAxisAlignment: CrossAxisAlignment.start,
+              //     children: [
+              //       const Text("Amharic QR Code:"),
+              //       Image.memory(amharicQRCODE!, height: 200, width: 200),
+              //       ElevatedButton.icon(
+              //         onPressed: () async {
+              //           await saveQRCodeToGallery(amharicQRCODE!, context);
+              //         },
+              //         icon: const Icon(Icons.download),
+              //         label: const Text("Download QR Code"),
+              //       ),
+              //     ],
+              //   )
+              // else
+              //   const Text("No Amharic QR code available."),
+
+              // const SizedBox(height: 10),
+
+              // // Afaan Oromo QR Code
+              // if (afaanOromoQR != null)
+              //   Column(
+              //     crossAxisAlignment: CrossAxisAlignment.start,
+              //     children: [
+              //       const Text("Afaan Oromo QR Code:"),
+              //       Image.memory(afaanOromoQR!, height: 200, width: 200),
+              //       ElevatedButton.icon(
+              //         onPressed: () async {
+              //           await saveQRCodeToGallery(afaanOromoQR!, context);
+              //         },
+              //         icon: const Icon(Icons.download),
+              //         label: const Text("Download QR Code"),
+              //       ),
+              //     ],
+              //   )
+              // else
+              //   const Text("No Afaan Oromo QR code available."),
+
+              // const SizedBox(height: 20),
+
+              // Checkbox for Delivery Option
+
+              CheckboxListTile(
+                title: const Text(
+                  "Order Delivery ",
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                ),
+                value: deliveryOptionChecked,
+                onChanged: (value) {
+                  setState(() {
+                    deliveryOptionChecked = value ?? false;
+                  });
+                },
+              ),
+
+              if (deliveryOptionChecked) ...[
+                const Text(
+                  "Select Delivery Document",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+
+                RadioListTile<int>(
+                  title: const Text("English Document"),
+                  value: 1,
+                  groupValue: selectedDocument, // Shared state variable
+                  onChanged: englishQR != null
+                      ? (value) {
+                          setState(() {
+                            selectedDocument = value;
+                          });
+                        }
+                      : null,
+                ),
+                RadioListTile<int>(
+                  title: const Text("Amharic Document"),
+                  value: 2,
+                  groupValue: selectedDocument,
+                  onChanged: amharicQRCODE != null
+                      ? (value) {
+                          setState(() {
+                            selectedDocument = value;
+                          });
+                        }
+                      : null,
+                ),
+                RadioListTile<int>(
+                  title: const Text("Afaan Oromo Document"),
+                  value: 3,
+                  groupValue: selectedDocument,
+                  onChanged: afaanOromoQR != null
+                      ? (value) {
+                          setState(() {
+                            selectedDocument = value;
+                          });
+                        }
+                      : null,
+                ),
+
+                // CheckboxListTile(
+                //   title: const Text("English Document"),
+                //   value: deliverDocument1,
+                //   onChanged: englishQR != null
+                //       ? (value) {
+                //           setState(() {
+                //             deliverDocument1 = value ?? false;
+                //           });
+                //         }
+                //       : null,
+                // ),
+                // CheckboxListTile(
+                //   title: const Text("Amharic Document"),
+                //   value: deliverDocument2,
+                //   onChanged: amharicQRCODE != null
+                //       ? (value) {
+                //           setState(() {
+                //             deliverDocument2 = value ?? false;
+                //           });
+                //         }
+                //       : null,
+                // ),
+                // CheckboxListTile(
+                //   title: const Text("Afaan Oromo Document"),
+                //   value: deliverDocument3,
+                //   onChanged: afaanOromoQR != null
+                //       ? (value) {
+                //           setState(() {
+                //             deliverDocument3 = value ?? false;
+                //           });
+                //         }
+                //       : null,
+                // ),
+              ],
+
+              // Address Fields
+              if (deliveryOptionChecked && selectedDocument != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Delivery Address",
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 15),
-                  englishQR != null
-                      ? Column(
-                          children: [
-                            Image.memory(
-                              englishQR!,
-                              height: 400,
-                              width: 270,
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                await saveQRCodeToGallery(englishQR!, context);
-                              },
-                              icon: Icon(Icons.download),
-                              label: Text("Download QR Code"),
-                            ),
-                          ],
-                        )
-                      : Text("No QR code generated yet."),
-
-                  amharicQRCODE != null
-                      ? Column(
-                          children: [
-                            Image.memory(
-                              amharicQRCODE!,
-                              height: 400,
-                              width: 270,
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                await saveQRCodeToGallery(
-                                    amharicQRCODE!, context);
-                              },
-                              icon: Icon(Icons.download),
-                              label: Text("Download QR Code"),
-                            ),
-                          ],
-                        )
-                      : Text("No QR code generated yet."),
-
-                  afaanOromoQR != null
-                      ? Column(
-                          children: [
-                            Image.memory(
-                              afaanOromoQR!,
-                              height: 400,
-                              width: 270,
-                            ),
-                            SizedBox(height: 20),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                await saveQRCodeToGallery(englishQR!, context);
-                              },
-                              icon: Icon(Icons.download),
-                              label: Text("Download QR Code"),
-                            ),
-                          ],
-                        )
-                      : Text("No QR code generated yet."),
-
-                  // Column(
-                  //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  //   children: List.generate(3, (index) {
-                  //     return Column(
-                  //       children: [
-                  //         Image.asset(
-                  //           'assets/qr2.png',
-                  //           height: 200,
-                  //           width: MediaQuery.of(context).size.width * 0.65,
-                  //           fit: BoxFit.cover,
-                  //         ),
-                  //         TextButton.icon(
-                  //           onPressed: () {
-                  //             // Implement download functionality
-                  //             print("Download image ${index + 1}");
-                  //           },
-                  //           icon: const Icon(Icons.download, size: 15),
-                  //           label: const Text(
-                  //             "Download",
-                  //             style: TextStyle(fontSize: 15),
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     );
-                  //   }),
-                  // ),
-                  const SizedBox(height: 20),
-
-                  CheckboxListTile(
-                    title: const Text(
-                      "Order Delivery ",
-                      style:
-                          TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    value: deliveryOptionChecked,
-                    onChanged: (value) {
-                      setState(() {
-                        deliveryOptionChecked = value ?? false;
-                      });
-                    },
-                  ),
-                  // Delivery option with selection
-
-                  if (deliveryOptionChecked) ...[
-                    const Text("Select Delivery Document",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    CheckboxListTile(
-                      title: const Text("Document 1"),
-                      value: deliverDocument1,
-                      onChanged: (value) {
+                    const SizedBox(height: 10),
+                    TextLabel("Region"),
+                    ReusableDropdown(
+                      selectedValue: selectedState,
+                      items: ListContants.ethiopianStates,
+                      hintText: 'Select State',
+                      onChanged: (newState) {
                         setState(() {
-                          deliverDocument1 = value ?? false;
+                          selectedState = newState;
                         });
                       },
+                      errorMessage: 'Please select a state',
+                      isRequired: true,
                     ),
-                    CheckboxListTile(
-                      title: const Text(" Document 2"),
-                      value: deliverDocument2,
-                      onChanged: (value) {
-                        setState(() {
-                          deliverDocument2 = value ?? false;
-                        });
-                      },
+                    TextLabel("City"),
+                    CustomTextFormField(
+                      hintText: "Enter city ",
+                      errorMessage: "City is required",
+                      controller: cityController,
+                      isRequired: true,
                     ),
-                    CheckboxListTile(
-                      title: const Text(" Document 3"),
-                      value: deliverDocument3,
-                      onChanged: (value) {
-                        setState(() {
-                          deliverDocument3 = value ?? false;
-                        });
-                      },
+                    TextLabel("Specific Address"),
+                    CustomTextFormField(
+                      hintText: "Enter specific address ",
+                      errorMessage: "Specific address is required",
+                      controller: specificAddressController,
+                      isRequired: true,
                     ),
+                    TextLabel("Number of Print"),
+                    ReusableTextFormField(
+                      hintText: "Enter Number of Print",
+                      controller: numberOfPring,
+                      keyboardType: TextInputType.number,
+                      errorMessage: "Number of Print cannot be empty",
+                      // leadingIcon: Icons.trending_up,
+                      // return '';
+                      inputFormatters: [
+                        FilteringTextInputFormatter
+                            .digitsOnly, // Only allow numbers
+                      ],
+                      isRequired: true,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      )
 
-                    // Address fields for delivery
-                    if (deliverDocument1 ||
-                        deliverDocument2 ||
-                        deliverDocument3)
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 20),
-                            const Text("Delivery Address",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 10),
-                            TextLabel("Region"),
-                            ReusableDropdown(
-                              selectedValue: selectedState,
-                              items: ListContants.ethiopianStates,
-                              hintText: 'Select State',
-                              onChanged: (newState) {
-                                setState(() {
-                                  selectedState = newState;
-                                  print(selectedState);
-                                });
-                              },
-                              errorMessage: 'Please select a state',
-                              // prefixIcon: Icons.map,
-                              isRequired: false,
-                            ),
-                            TextLabel("City"),
-                            CustomTextFormField(
-                              hintText: "Enter city ",
-                              errorMessage: "city is required",
-                              controller: cityController,
-                              isRequired: true,
-                            ),
-                            TextLabel("Specific Address"),
-                            CustomTextFormField(
-                              hintText: "Enter specific Address ",
-                              errorMessage: "specific is required",
-                              controller: specificAddressController,
-                              isRequired: true,
-                            ),
-                          ])
-                  ]
-                ])),
-      ),
+      /// INITIAL AMOUNT
+      // Step(
+      //   title: Text(isSmallScreen ? "" : "Link Account "),
+      //   isActive: _activeStepIndex >= 3,
+      //   state: _activeStepIndex > 3 ? StepState.complete : StepState.indexed,
+      //   content: Form(
+      //       key: globalFormKey3,
+      //       child: Column(
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           crossAxisAlignment: CrossAxisAlignment.center,
+      //           children: [
+      //             const Text("Available Documents",
+      //                 style:
+      //                     TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      //             const SizedBox(height: 15),
+      //             englishQR != null
+      //                 ? Column(
+      //                     children: [
+      //                       Image.memory(
+      //                         englishQR!,
+      //                         height: 400,
+      //                         width: 270,
+      //                       ),
+      //                       ElevatedButton.icon(
+      //                         onPressed: () async {
+      //                           await saveQRCodeToGallery(englishQR!, context);
+      //                         },
+      //                         icon: Icon(Icons.download),
+      //                         label: Text("Download QR Code"),
+      //                       ),
+      //                     ],
+      //                   )
+      //                 : Text("No QR code generated yet."),
+
+      //             amharicQRCODE != null
+      //                 ? Column(
+      //                     children: [
+      //                       Image.memory(
+      //                         amharicQRCODE!,
+      //                         height: 400,
+      //                         width: 270,
+      //                       ),
+      //                       ElevatedButton.icon(
+      //                         onPressed: () async {
+      //                           await saveQRCodeToGallery(
+      //                               amharicQRCODE!, context);
+      //                         },
+      //                         icon: Icon(Icons.download),
+      //                         label: Text("Download QR Code"),
+      //                       ),
+      //                     ],
+      //                   )
+      //                 : Text("No QR code generated yet."),
+
+      //             afaanOromoQR != null
+      //                 ? Column(
+      //                     children: [
+      //                       Image.memory(
+      //                         afaanOromoQR!,
+      //                         height: 400,
+      //                         width: 270,
+      //                       ),
+      //                       SizedBox(height: 20),
+      //                       ElevatedButton.icon(
+      //                         onPressed: () async {
+      //                           await saveQRCodeToGallery(englishQR!, context);
+      //                         },
+      //                         icon: Icon(Icons.download),
+      //                         label: Text("Download QR Code"),
+      //                       ),
+      //                     ],
+      //                   )
+      //                 : Text("No QR code generated yet."),
+
+      //             // Column(
+      //             //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //             //   children: List.generate(3, (index) {
+      //             //     return Column(
+      //             //       children: [
+      //             //         Image.asset(
+      //             //           'assets/qr2.png',
+      //             //           height: 200,
+      //             //           width: MediaQuery.of(context).size.width * 0.65,
+      //             //           fit: BoxFit.cover,
+      //             //         ),
+      //             //         TextButton.icon(
+      //             //           onPressed: () {
+      //             //             // Implement download functionality
+      //             //             print("Download image ${index + 1}");
+      //             //           },
+      //             //           icon: const Icon(Icons.download, size: 15),
+      //             //           label: const Text(
+      //             //             "Download",
+      //             //             style: TextStyle(fontSize: 15),
+      //             //           ),
+      //             //         ),
+      //             //       ],
+      //             //     );
+      //             //   }),
+      //             // ),
+      //             const SizedBox(height: 20),
+
+      //             CheckboxListTile(
+      //               title: const Text(
+      //                 "Order Delivery ",
+      //                 style:
+      //                     TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+      //               ),
+      //               value: deliveryOptionChecked,
+      //               onChanged: (value) {
+      //                 setState(() {
+      //                   deliveryOptionChecked = value ?? false;
+      //                 });
+      //               },
+      //             ),
+      //             // Delivery option with selection
+
+      //             if (deliveryOptionChecked) ...[
+      //               const Text("Select Delivery Document",
+      //                   style: TextStyle(
+      //                       fontSize: 16, fontWeight: FontWeight.bold)),
+      //               CheckboxListTile(
+      //                 title: const Text("Document 1"),
+      //                 value: deliverDocument1,
+      //                 onChanged: (value) {
+      //                   setState(() {
+      //                     deliverDocument1 = value ?? false;
+      //                   });
+      //                 },
+      //               ),
+      //               CheckboxListTile(
+      //                 title: const Text(" Document 2"),
+      //                 value: deliverDocument2,
+      //                 onChanged: (value) {
+      //                   setState(() {
+      //                     deliverDocument2 = value ?? false;
+      //                   });
+      //                 },
+      //               ),
+      //               CheckboxListTile(
+      //                 title: const Text(" Document 3"),
+      //                 value: deliverDocument3,
+      //                 onChanged: (value) {
+      //                   setState(() {
+      //                     deliverDocument3 = value ?? false;
+      //                   });
+      //                 },
+      //               ),
+
+      //               // Address fields for delivery
+      //               if (deliverDocument1 ||
+      //                   deliverDocument2 ||
+      //                   deliverDocument3)
+      //                 Column(
+      //                     crossAxisAlignment: CrossAxisAlignment.start,
+      //                     children: [
+      //                       const SizedBox(height: 20),
+      //                       const Text("Delivery Address",
+      //                           style: TextStyle(
+      //                               fontSize: 16, fontWeight: FontWeight.bold)),
+      //                       const SizedBox(height: 10),
+      //                       TextLabel("Region"),
+      //                       ReusableDropdown(
+      //                         selectedValue: selectedState,
+      //                         items: ListContants.ethiopianStates,
+      //                         hintText: 'Select State',
+      //                         onChanged: (newState) {
+      //                           setState(() {
+      //                             selectedState = newState;
+      //                             print(selectedState);
+      //                           });
+      //                         },
+      //                         errorMessage: 'Please select a state',
+      //                         // prefixIcon: Icons.map,
+      //                         isRequired: false,
+      //                       ),
+      //                       TextLabel("City"),
+      //                       CustomTextFormField(
+      //                         hintText: "Enter city ",
+      //                         errorMessage: "city is required",
+      //                         controller: cityController,
+      //                         isRequired: true,
+      //                       ),
+      //                       TextLabel("Specific Address"),
+      //                       CustomTextFormField(
+      //                         hintText: "Enter specific Address ",
+      //                         errorMessage: "specific is required",
+      //                         controller: specificAddressController,
+      //                         isRequired: true,
+      //                       ),
+      //                     ])
+      //             ]
+      //           ])),
+      // ),
     ];
   }
 
@@ -812,8 +1105,8 @@ class _Registration extends State<Marchentregistration> {
           // await handleFirstStep();
         }
       } else if (_activeStepIndex == 1) {
-        registerStatus = true;
-        // await handleSecondStep();
+        // registerStatus = true;
+        await handleSecondStep();
       } else if (_activeStepIndex == 2) {
         if (selectedAccountNumber == null) {
           registerStatus = false;
@@ -952,11 +1245,11 @@ class _Registration extends State<Marchentregistration> {
 
           registerStatus = true;
         });
-        showOtpDialog();
+        // showOtpDialog();
       } else {
         String errorMessage =
             responseData['message'] ?? 'Error occurred. Please try again.';
-        showOtpDialog();
+        // showOtpDialog();
         registerStatus = false;
       }
     } on TimeoutException catch (_) {
@@ -1003,11 +1296,44 @@ class _Registration extends State<Marchentregistration> {
           registerStatus = true;
         });
       } else if (response.statusCode == 409) {
+        print("getData");
+        String fullUrl = '${AppConstants.soupBaseURL}/eky/getKyc';
+
+        var response = await networkHandler
+            .getData(fullUrl, token)
+            .timeout(const Duration(seconds: 20));
+
+        if (response.statusCode == 200) {
+          var responseBody = jsonDecode(response.body);
+
+          // Extract the relevant fields
+          String firstName = responseBody['first_name'] ?? '';
+          String lastName = responseBody['last_name'] ?? '';
+          String businessAddress = responseBody['business_address'] ?? '';
+          String businessName = responseBody['business_name'] ?? '';
+          String merchantCity = responseBody['merchant_city'] ?? '';
+
+          String businessType = responseBody['business_type'] ?? '';
+
+          setState(() {
+            firstNameController.text = firstName;
+            lastNameController.text = lastName;
+            businessAddressController.text = businessAddress;
+            businessNameController.text = businessName;
+            merchantCityController.text = merchantCity;
+            businessType = businessType;
+            registerStatus = true;
+          });
+        } else {
+          registerStatus = false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("An Error occor please try again.")),
+          );
+        }
         setState(() {
           validate = true;
           circular = false;
-
-          registerStatus = true;
+          // registerStatus = false;
         });
       } else {
         String errorMessage =
@@ -1073,6 +1399,16 @@ class _Registration extends State<Marchentregistration> {
   }
 
   Future<void> submitFormData1() async {
+    bool atLeastOneQRExists =
+        englishQR != null || amharicQRCODE != null || afaanOromoQR != null;
+    bool atLeastOneDocumentSelected = selectedDocument != null;
+
+    print(atLeastOneQRExists);
+    print(atLeastOneDocumentSelected);
+    print(deliveryOptionChecked);
+    print(deliveryOptionChecked &&
+        atLeastOneQRExists &&
+        !atLeastOneDocumentSelected);
     if (!deliveryOptionChecked) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Thank you for your submission!")),
@@ -1084,7 +1420,18 @@ class _Registration extends State<Marchentregistration> {
             builder: (context) => const MainPage(),
           ),
           (route) => false);
+    } else if (deliveryOptionChecked &&
+        atLeastOneQRExists &&
+        !atLeastOneDocumentSelected) {
+      registerStatus = false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select atleast one Documents!"),
+          backgroundColor: Colors.red,
+        ),
+      );
     } else {
+      registerStatus = false;
       await orderDelivery();
     }
 
@@ -1180,7 +1527,6 @@ class _Registration extends State<Marchentregistration> {
   Future<void> handleRegistrationProcess() async {
     print("token");
     print(token);
-    // Step 1: Validate phone number
     if (phoneNumberController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter Phone Number.")),
@@ -1188,7 +1534,6 @@ class _Registration extends State<Marchentregistration> {
       return;
     }
 
-    // Step 2: Start registration
     setState(() {
       isLoading = true;
     });
@@ -1220,7 +1565,7 @@ class _Registration extends State<Marchentregistration> {
       } else {
         print(response.statusCode);
         registerStatus = false;
-        throw Exception(responseData['message'] ?? "Registration failed.");
+        throw Exception(responseData['message'] ?? "Registration failed1.");
       }
     } catch (e) {
       print("object");
@@ -1249,114 +1594,6 @@ class _Registration extends State<Marchentregistration> {
       print("Invalid OTP");
     }
   }
-
-  // // Show OTP dialog
-  // void showOtpDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text("OTP  Verification"),
-  //         content: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             const SizedBox(
-  //               height: 14,
-  //             ),
-  //             RichText(
-  //               textAlign: TextAlign.justify,
-  //               text: TextSpan(
-  //                 style: const TextStyle(
-  //                   fontSize: 16,
-  //                   fontWeight: FontWeight.normal,
-  //                   color: Colors.black, // Ensure text color is set
-  //                 ),
-  //                 children: [
-  //                   const TextSpan(
-  //                     text: "An OTP has been sent to your phone number ",
-  //                   ),
-  //                   TextSpan(
-  //                     text: '+251' + phoneNumberController.text,
-  //                     style: const TextStyle(fontWeight: FontWeight.bold),
-  //                   ),
-  //                   const TextSpan(
-  //                     text: ". Please enter the OTP to verify.",
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             const SizedBox(
-  //               height: 30,
-  //             ),
-  //             const SizedBox(height: 30),
-  //             // Show the error message if there's any
-
-  //             Pinput(
-  //               controller: _pinController,
-  //               length: 6,
-  //               inputFormatters: [
-  //                 FilteringTextInputFormatter.digitsOnly,
-  //                 LengthLimitingTextInputFormatter(9),
-  //               ],
-  //               keyboardType: TextInputType.number,
-  //               focusNode: _pinFocusNode,
-  //               defaultPinTheme: PinTheme(
-  //                 width: 56,
-  //                 height: 56,
-  //                 textStyle: TextStyle(
-  //                   fontSize: 20,
-  //                   color: Colors.black,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //                 decoration: BoxDecoration(
-  //                   color: Colors.lightBlueAccent, // Box color
-  //                   borderRadius: BorderRadius.circular(8),
-  //                   border: Border.all(
-  //                     color: Colors.blue, // Border color
-  //                   ),
-  //                 ),
-  //               ),
-  //               focusedPinTheme: PinTheme(
-  //                   width: 56,
-  //                   height: 56,
-  //                   textStyle: TextStyle(
-  //                     fontSize: 20,
-  //                     color: Colors.black,
-  //                     fontWeight: FontWeight.bold,
-  //                   ),
-  //                   decoration: BoxDecoration(
-  //                     color: Colors.blueAccent, // Focused box color
-  //                     borderRadius: BorderRadius.circular(8),
-  //                   )),
-  //               onCompleted: (pin) async {
-  //                 print('Pin entered: $pin');
-
-  //                 await validatePin(pin);
-  //               },
-  //             ),
-  //             const SizedBox(
-  //               height: 40,
-  //             )
-  //           ],
-  //         ),
-  //         // actions: [
-  //         //   TextButton(
-  //         //     onPressed: () async {
-  //         //       await verifyOtp(otpController.text);
-  //         //     },
-  //         //     child: Text("Verify OTP"),
-  //         //   ),
-  //         //   TextButton(
-  //         //     onPressed: () {
-  //         //       Navigator.of(context).pop(); // Close the dialog
-  //         //     },
-  //         //     child: Text("Cancel"),
-  //         //   ),
-  //         // ],
-  //       );
-  //     },
-  //   );
-  // }
 
   // Future<void> callFinalQrAPI(Uint8List qrImage) async {
   //   String finalQrUrl1 = 'http://10.12.53.40:5000/process_qr_oro';
@@ -1424,7 +1661,7 @@ class _Registration extends State<Marchentregistration> {
       englishQR = null;
       amharicQRCODE = null;
       afaanOromoQR = null;
-      // Prepare the data for all requests
+
       final Map<String, dynamic> finalQRCODE = {
         'merchant_name':
             firstNameController.text + " " + lastNameController.text,
@@ -1432,7 +1669,6 @@ class _Registration extends State<Marchentregistration> {
         'qr_code': qrImage,
       };
 
-      // Loop through the URLs and send the requests
       for (String url in apiUrls) {
         var response = await networkHandler
             .postWithFormData(url, finalQRCODE)
@@ -1453,6 +1689,12 @@ class _Registration extends State<Marchentregistration> {
           } else if (url.contains('process_qr_amh')) {
             amharicQRCODE = response.bodyBytes;
           }
+
+          deliverDocument1 = false;
+          deliverDocument2 = false;
+          deliverDocument3 = false;
+          deliveryOptionChecked = false;
+          selectedDocument = null;
         } else {
           registerStatus = false;
           print("Failed to upload QR for $url: ${response.statusCode}");
@@ -1656,13 +1898,15 @@ class _Registration extends State<Marchentregistration> {
           const SnackBar(
               content: Text("OTP verified successfully! Logging in...")),
         );
-
+        registerStatus = false;
         // Proceed to login
         await loginUser();
       } else {
+        registerStatus = false;
         throw Exception(responseData['error'] ?? "OTP verification failed.");
       }
     } catch (e) {
+      registerStatus = false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: OTP verification failed")),
       );
@@ -1673,213 +1917,8 @@ class _Registration extends State<Marchentregistration> {
     }
   }
 
-  // Future<void> showOtpDialog() async {
-  //   await showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       bool isLoading = false;
-
-  //       return StatefulBuilder(
-  //         builder: (context, setState) {
-  //           return Stack(
-  //             children: [
-  //               AlertDialog(
-  //                 title: const Text("OTP Verification"),
-  //                 content: Column(
-  //                   mainAxisSize: MainAxisSize.min,
-  //                   children: [
-  //                     RichText(
-  //                       textAlign: TextAlign.justify,
-  //                       text: TextSpan(
-  //                         style: const TextStyle(
-  //                           fontSize: 16,
-  //                           fontWeight: FontWeight.normal,
-  //                           color: Colors.black,
-  //                         ),
-  //                         children: [
-  //                           const TextSpan(
-  //                             text:
-  //                                 "An OTP has been sent to your phone number ",
-  //                           ),
-  //                           TextSpan(
-  //                             text: '+251' + phoneNumberController.text,
-  //                             style:
-  //                                 const TextStyle(fontWeight: FontWeight.bold),
-  //                           ),
-  //                           const TextSpan(
-  //                             text: ". Please enter the OTP to verify.",
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 20),
-  //                     Pinput(
-  //                       controller: _pinController,
-  //                       length: 6,
-  //                       onCompleted: (pin) async {
-  //                         setState(() {
-  //                           isLoading = true; // Show loading spinner
-  //                         });
-
-  //                         await validateOtp(pin); // Call the validation method
-
-  //                         setState(() {
-  //                           isLoading = false; // Hide loading spinner
-  //                         });
-
-  //                         Navigator.of(context).pop(); // Close dialog
-  //                       },
-  //                       defaultPinTheme: PinTheme(
-  //                         width: 56,
-  //                         height: 56,
-  //                         textStyle: const TextStyle(
-  //                           fontSize: 20,
-  //                           color: Colors.black,
-  //                           fontWeight: FontWeight.bold,
-  //                         ),
-  //                         decoration: BoxDecoration(
-  //                           color: Colors.lightBlueAccent,
-  //                           borderRadius: BorderRadius.circular(8),
-  //                           border: Border.all(color: Colors.blue),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //               if (isLoading)
-  //                 Container(
-  //                   color: Colors.black
-  //                       .withOpacity(0.5), // Semi-transparent overlay
-  //                   child: const Center(
-  //                     child: CircularProgressIndicator(), // Loading spinner
-  //                   ),
-  //                 ),
-  //             ],
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
-
-  // Future<void> showOtpDialog() async {
-  //   int maxTrials = 3; // Maximum number of attempts allowed
-  //   int currentTrial = 0; // Counter for attempts
-  //   bool isLoading = false; // Local state for loading indicator
-
-  //   await showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return StatefulBuilder(
-  //         builder: (context, setState) {
-  //           return Stack(
-  //             children: [
-  //               AlertDialog(
-  //                 title: const Text("OTP Verification"),
-  //                 content: Column(
-  //                   mainAxisSize: MainAxisSize.min,
-  //                   children: [
-  //                     RichText(
-  //                       textAlign: TextAlign.justify,
-  //                       text: TextSpan(
-  //                         style: const TextStyle(
-  //                           fontSize: 16,
-  //                           fontWeight: FontWeight.normal,
-  //                           color: Colors.black,
-  //                         ),
-  //                         children: [
-  //                           const TextSpan(
-  //                             text:
-  //                                 "An OTP has been sent to your phone number ",
-  //                           ),
-  //                           TextSpan(
-  //                             text: '+251' + phoneNumberController.text,
-  //                             style:
-  //                                 const TextStyle(fontWeight: FontWeight.bold),
-  //                           ),
-  //                           const TextSpan(
-  //                             text: ". Please enter the OTP to verify.",
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 20),
-  //                     Pinput(
-  //                       controller: _pinController,
-  //                       length: 6,
-  //                       onCompleted: (pin) async {
-  //                         if (currentTrial < maxTrials) {
-  //                           setState(() {
-  //                             isLoading = true; // Show loading spinner
-  //                           });
-
-  //                           try {
-  //                             await validateOtp(pin); // Validate OTP
-  //                             // Navigator.of(context)
-  //                             //     .pop(); // Close dialog on success
-  //                           } catch (e) {
-  //                             currentTrial++; // Increment trial counter
-  //                             if (currentTrial >= maxTrials) {
-  //                               // Show error message if trials exceed
-  //                               ScaffoldMessenger.of(context).showSnackBar(
-  //                                 SnackBar(
-  //                                   content: Text(
-  //                                       "Maximum attempts reached. Please try again later."),
-  //                                 ),
-  //                               );
-  //                               Navigator.of(context).pop(); // Close dialog
-  //                             } else {
-  //                               // Show remaining attempts
-  //                               ScaffoldMessenger.of(context).showSnackBar(
-  //                                 SnackBar(
-  //                                   content: Text(
-  //                                       "Invalid OTP. You have ${maxTrials - currentTrial} attempts left."),
-  //                                 ),
-  //                               );
-  //                             }
-  //                           } finally {
-  //                             setState(() {
-  //                               isLoading = false; // Hide loading spinner
-  //                             });
-  //                           }
-  //                         }
-  //                       },
-  //                       defaultPinTheme: PinTheme(
-  //                         width: 56,
-  //                         height: 56,
-  //                         textStyle: const TextStyle(
-  //                           fontSize: 20,
-  //                           color: Colors.black,
-  //                           fontWeight: FontWeight.bold,
-  //                         ),
-  //                         decoration: BoxDecoration(
-  //                           color: Colors.lightBlueAccent,
-  //                           borderRadius: BorderRadius.circular(8),
-  //                           border: Border.all(color: Colors.blue),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //               if (isLoading)
-  //                 Container(
-  //                   color: Colors.black
-  //                       .withOpacity(0.5), // Semi-transparent overlay
-  //                   child: const Center(
-  //                     child: CircularProgressIndicator(), // Loading spinner
-  //                   ),
-  //                 ),
-  //             ],
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
-
   Future<void> showOtpDialog() async {
+    registerStatus = false;
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1915,40 +1954,79 @@ class _Registration extends State<Marchentregistration> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  if (isLoading)
-                    const CircularProgressIndicator() // Show loading spinner
-                  else
-                    Pinput(
-                      controller: _pinController,
-                      length: 6,
-                      onCompleted: (pin) async {
-                        setState(() {
-                          isLoading = true; // Show loading spinner
-                        });
+                  // if (isLoading)
+                  //   const CircularProgressIndicator() // Show loading spinner
+                  // else
+                  Pinput(
+                    controller: _pinController,
+                    length: 6,
+                    // onCompleted: (pin) async {
+                    //   setState(() {
+                    //     isLoading = true; // Show loading spinner
+                    //   });
 
-                        await validateOtp(pin);
+                    //   await validateOtp(pin);
 
-                        setState(() {
-                          isLoading = false; // Hide loading spinner
-                        });
+                    //   setState(() {
+                    //     isLoading = false; // Hide loading spinner
+                    //   });
 
-                        Navigator.of(context).pop(); // Close dialog
-                      },
-                      defaultPinTheme: PinTheme(
-                        width: 56,
-                        height: 56,
-                        textStyle: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.lightBlueAccent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue),
-                        ),
+                    //   Navigator.of(context).pop();
+                    // },
+                    defaultPinTheme: PinTheme(
+                      width: 56,
+                      height: 56,
+                      textStyle: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 212, 203, 203),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: const Color.fromARGB(255, 224, 217, 217)),
                       ),
                     ),
+                  ),
+
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.blue, // Text color
+                    ),
+                    onPressed: () async {
+                      if (_pinController.length == 6 &&
+                          _pinController != null) {
+                        setState(() {
+                          isLoading = true;
+                        });
+
+                        await validateOtp(_pinController.text);
+
+                        setState(() {
+                          isLoading = false;
+                        });
+
+                        // Navigator.of(context).pop();
+                      }
+                    },
+                    child: isLoading
+                        ? SizedBox(
+                            width: 24, // Width of the spinner
+                            height: 24, // Height of the spinner
+                            child: const CircularProgressIndicator(
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth:
+                                  3, // Optional: You can adjust the thickness of the spinner
+                            ),
+                          ) // Show loading spinner
+                        : Text("Continue"),
+                  ),
                 ],
               ),
             );
@@ -2030,10 +2108,8 @@ class _Registration extends State<Marchentregistration> {
   }
 
   Future<void> loginUser() async {
-    // Replace with your API endpoint
     String fullUrl = '${AppConstants.soupBaseURL}/merchant/login';
 
-    // Credentials for login
     Map<String, dynamic> loginData = {
       "username": "0" + phoneNumberController.text,
       "password": "123456"
@@ -2049,8 +2125,6 @@ class _Registration extends State<Marchentregistration> {
       print("response.statusCode: ${response.statusCode}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Successful login
-
         // Navigator.of(context).pop();
         setState(() {
           validate = true;
@@ -2221,52 +2295,6 @@ class _Registration extends State<Marchentregistration> {
     }
   }
 
-  // Future<void> downloadQRCode(
-  //     Uint8List qrCodeBytes, BuildContext context) async {
-  //   try {
-  //     // Request storage permission
-  //     if (await Permission.storage.request().isGranted) {
-  //       // Get directory to save the file
-  //       Directory directory;
-  //       if (Platform.isAndroid) {
-  //         directory = Directory('/storage/emulated/0/Download');
-  //       } else if (Platform.isIOS) {
-  //         directory = await getApplicationDocumentsDirectory();
-  //       } else {
-  //         throw Exception("Unsupported platform");
-  //       }
-
-  //       if (!directory.existsSync()) {
-  //         directory.createSync(recursive: true);
-  //       }
-
-  //       // Create file path
-  //       final filePath = '${directory.path}/qrcode.png';
-
-  //       // Write QR code bytes to file
-  //       final file = File(filePath);
-  //       await file.writeAsBytes(qrCodeBytes);
-
-  //       // Show success message
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text("QR Code saved to $filePath")),
-  //       );
-  //     } else {
-  //       // Permission denied
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Storage permission denied.")),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     // Log the error for debugging
-  //     print("Error saving QR Code: $e");
-
-  //     // Show error message
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Failed to save QR Code: $e")),
-  //     );
-  //   }
-  // }
   Future<void> saveQRCodeToGallery(
       Uint8List imageBytes, BuildContext context) async {
     try {
@@ -2363,16 +2391,56 @@ class _Registration extends State<Marchentregistration> {
     // }
   }
 
-  orderDelivery() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Order delivery successful!")),
-    );
+  orderDelivery() async {
+    const url = "https://souqpass.coopbankoromiasc.com/api/eky/qrRequest";
 
-    Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const MainPage(),
-        ),
-        (route) => false);
+    Uint8List? qrFile;
+    if (selectedDocument == 1) {
+      qrFile = englishQR;
+    } else if (selectedDocument == 2) {
+      qrFile = amharicQRCODE;
+    } else if (selectedDocument == 3) {
+      qrFile = afaanOromoQR;
+    }
+    final Map<String, dynamic> deliveryData = {
+      'merchantName': firstNameController.text + " " + lastNameController.text,
+      'merchantAccountNumber': selectedAccountNumber,
+      'transactionReason': "reason",
+      'mcc': "400",
+      'doingBusinessAsName': businessNameController.text,
+      'merchantCity': merchantCityController.text,
+      'ttc': "400",
+      'deliveryAddress': specificAddressController.text,
+      'numberOfPrints': numberOfPring.text,
+      'qrFile': qrFile,
+    };
+
+    var response = await networkHandler
+        .postFormData(url, deliveryData, token)
+        .timeout(const Duration(seconds: 20));
+
+    print(response.body);
+
+    print(response.statusCode);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      registerStatus = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Thanks for making the order!")),
+      );
+      if (registerStatus == true) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MainPage(),
+            ),
+            (route) => false);
+      }
+    } else {
+      registerStatus = false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Un expected error occur try again!")),
+      );
+    }
   }
 }

@@ -31,6 +31,7 @@ class DatabaseHelper {
             password TEXT NOT NULL,
             clientId TEXT,
             userId INTEGER UNIQUE,
+            token  TEXT,
             role TEXT
           )
         ''');
@@ -79,6 +80,21 @@ CREATE TABLE monthlytargets (
 )
 ''');
 
+        await db.execute('''
+CREATE TABLE auth_tokens  (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT NOT NULL
+
+)
+''');
+
+        await db.execute('''
+CREATE TABLE selected_language  (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  language_code TEXT NOT NULL
+
+)
+''');
         await db.execute('''CREATE TABLE Customers(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             firstName TEXT,
@@ -184,7 +200,7 @@ CREATE TABLE monthlytargets (
         'AccountTypes',
         {
           "id": accountType["id"],
-          "name": name, // Ensure name is sanitized before saving
+          "name": name,
           "type": accountType["type"],
           "minAge": accountType["minAge"] ?? "",
           "maxAge": accountType["maxAge"] ?? "",
@@ -192,15 +208,13 @@ CREATE TABLE monthlytargets (
           "sex": accountType["sex"] ?? "",
           "bankingType": accountType["bankingType"],
         },
-        conflictAlgorithm: ConflictAlgorithm.replace, // Prevent duplicates
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
   }
 
-// Function to sanitize or encode special characters in 'name'
   String sanitizeSpecialCharacters(String name) {
-    // Example: Convert any problematic characters or ensure proper UTF-8 encoding
-    name = name.replaceAll('’', ''); // You can replace problematic characters
+    name = name.replaceAll('’', '');
     name = name.replaceAll(
         RegExp(r'[^\x00-\x7F]+'), ''); // Remove non-ASCII characters
 
@@ -415,6 +429,114 @@ CREATE TABLE monthlytargets (
     });
   }
 
+  ///////////////////////
+  ///INSERT
+  // Future<void> insertAuthToken(String token) async {
+  //   final db = await _initDB();
+
+  //   await db.insert('auth_tokens', {
+  //     'token': token,
+  //   });
+  // }
+
+  // Future<void> insertAuthToken({
+  //   required String token,
+  // }) async {
+  //   final db = await database;
+
+  //   await db.insert(
+  //     'auth_tokens',
+  //     {
+  //       'token': token,
+  //     },
+  //     conflictAlgorithm: ConflictAlgorithm.replace,
+  //   );
+  // }
+
+  Future<void> insertAuthToken(String token) async {
+    final db = await database;
+
+    await db.insert(
+      'auth_tokens',
+      {
+        "id": token,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertLanguage(String languageCode) async {
+    final db = await database;
+
+    // Check if there's an existing record
+    final List<Map<String, dynamic>> existingLanguage =
+        await db.query('selected_language');
+
+    if (existingLanguage.isEmpty) {
+      await db.insert(
+        'selected_language',
+        {
+          'language_code': languageCode,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } else {
+      // If a record exists, update it
+      await db.update(
+        'selected_language',
+        {'language_code': languageCode},
+        where: 'id = ?', // We know there's only one row
+        whereArgs: [existingLanguage.first['id']], // Get the first row's id
+      );
+    }
+  }
+
+  Future<void> ensureLanguageSet() async {
+    final db = await database;
+
+    // Query the table to check if any record exists
+    final List<Map<String, dynamic>> existingLanguage =
+        await db.query('selected_language');
+
+    if (existingLanguage.isEmpty) {
+      // If the table is empty, insert the default language ('eng')
+      await db.insert(
+        'selected_language',
+        {
+          'language_code': 'eng', 
+        },
+        conflictAlgorithm: ConflictAlgorithm
+            .replace, // Replace if the record exists (although it won't in this case)
+      );
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSelectedLanguage() async {
+    final db = await _initDB();
+    return await db.query('selected_language');
+  }
+
+  Future<void> insertToken(String token) async {
+    final db = await database;
+
+    await db.delete('auth_tokens');
+    await db.insert(
+      'auth_tokens',
+      {
+        'token': token,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+////GET
+  Future<List<Map<String, dynamic>>> getAuthToken() async {
+    final db = await _initDB();
+    return await db.query('auth_tokens');
+  }
+
+  /////////////////////////
+
   Future<bool> userExists(String username) async {
     final db = await _initDB();
     final List<Map<String, dynamic>> result = await db.query(
@@ -436,6 +558,7 @@ CREATE TABLE monthlytargets (
     required String password,
     required int userId,
     String? clientId,
+    String? token,
     required String role,
     List<Map<String, dynamic>>? branches,
   }) async {
@@ -449,6 +572,7 @@ CREATE TABLE monthlytargets (
         'password': password,
         'userId': userId,
         'clientId': clientId,
+        "token": token,
         'role': role,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -483,6 +607,9 @@ CREATE TABLE monthlytargets (
   }
 
 /////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////
+
   Future<List<Map<String, dynamic>>> getCustomers(int userId) async {
     final db = await _initDB();
 
@@ -498,14 +625,12 @@ CREATE TABLE monthlytargets (
     return await db.query('Customers');
   }
 
-  // New method to fetch customers based on status
   Future<List<Map<String, dynamic>>> getCustomersByStatus(
       String status, int userId) async {
     print("data12");
     print(userId);
-    final db = await database; // Get the database instance
+    final db = await database;
 
-    // If the status is "Total", fetch all customers without any filter
     if (status == "Total") {
       final List<Map<String, dynamic>> result = await db.query(
         'customers',

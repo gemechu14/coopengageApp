@@ -1,4 +1,4 @@
-// ignore_for_file: file_names, use_super_parameters, library_private_types_in_public_api
+// ignore_for_file: file_names, use_super_parameters, library_private_types_in_public_api, deprecated_member_use, avoid_print, sized_box_for_whitespace
 
 import 'dart:convert';
 
@@ -22,13 +22,13 @@ class _HomeBodyState extends State<HomeBody> {
   bool isLoading = true;
   List<dynamic> users = []; // This will hold all the fetched users
   List<dynamic> filteredUsers = []; // This will hold the filtered users
-  String dropdownValue = 'ALL'; // Default dropdown value
-  bool isLoading1 = false; // Loading flag
+  String dropdownValue = 'ALL';
+  bool isLoading1 = false;
   String searchQuery = '';
   @override
   void initState() {
     super.initState();
-    fetchUserCounts(); // Fetch API data on initialization
+    fetchUserCounts();
     fetchUsers();
   }
 
@@ -110,9 +110,7 @@ class _HomeBodyState extends State<HomeBody> {
               ],
             ),
           ]),
-
           const SizedBox(height: 20),
-
           Padding(
             padding: const EdgeInsets.only(left: 30, right: 15),
             child: Text(
@@ -154,7 +152,7 @@ class _HomeBodyState extends State<HomeBody> {
                   onChanged: (String? newValue) {
                     setState(() {
                       dropdownValue = newValue!;
-                      fetchUsers(); // Fetch users when dropdown value changes
+                      fetchUsers();
                     });
                   },
                 ),
@@ -162,13 +160,12 @@ class _HomeBodyState extends State<HomeBody> {
               onChanged: (value) {
                 setState(() {
                   searchQuery = value;
-                  filterUsers(); // Filter users based on search input
+                  filterUsers();
                 });
               },
             ),
           ),
           const SizedBox(height: 12),
-          // Show loading spinner when data is fetching
           if (isLoading1)
             const Center(child: CircularProgressIndicator())
           else
@@ -232,19 +229,11 @@ class _HomeBodyState extends State<HomeBody> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    // Text(
-                                    //   '${index + 1}. ',
-                                    //   style: const TextStyle(
-                                    //     fontSize: 16,
-                                    //     fontWeight: FontWeight.bold,
-                                    //   ),
-                                    // ),
                                     Expanded(
                                       child: Column(
-                                        mainAxisSize: MainAxisSize
-                                            .min, // Allow Column to use minimum height
-                                        crossAxisAlignment: CrossAxisAlignment
-                                            .start, // Align text to the left
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             filteredUsers[index]['fullName'] +
@@ -343,11 +332,11 @@ class _HomeBodyState extends State<HomeBody> {
       isLoading1 = true; // Show loading
     });
 
-    String url = '/api/v1/accounts?clientId=1'; // Base URL for fetching users
+    String url = '/api/v1/accounts?clientId=1';
     if (dropdownValue == 'APPROVED') {
-      url += '&status=APPROVED'; // Append approved status
+      url += '&status=APPROVED';
     } else if (dropdownValue == 'PENDING') {
-      url += '&status=PENDING'; // Append pending status
+      url += '&status=PENDING';
     } else if (dropdownValue == 'INITIAL') {
       url += '&status=INITIAL';
     }
@@ -357,12 +346,11 @@ class _HomeBodyState extends State<HomeBody> {
 
       if (response.statusCode == 200) {
         print(response.body);
-        List<dynamic> fetchedUsers =
-            jsonDecode(response.body); // Parse JSON response
+        List<dynamic> fetchedUsers = jsonDecode(response.body);
         setState(() {
           users = fetchedUsers;
-          filterUsers(); // Apply search filtering
-          isLoading1 = false; // Hide loading
+          filterUsers();
+          isLoading1 = false;
         });
       } else {
         throw Exception('Failed to load users');
@@ -370,12 +358,11 @@ class _HomeBodyState extends State<HomeBody> {
     } catch (error) {
       print('Error fetching users: $error');
       setState(() {
-        isLoading1 = false; // Hide loading on error
+        isLoading1 = false;
       });
     }
   }
 
-  // Function to filter users based on search query
   void filterUsers() {
     setState(() {
       filteredUsers = users
