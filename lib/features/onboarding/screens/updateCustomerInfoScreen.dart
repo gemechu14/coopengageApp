@@ -53,6 +53,7 @@ String? selectedMaritalStatus;
 String? selectedCustomerType;
 String? selectedDocumentType;
 String? selectedSector;
+bool registerStatus = true;
 
 ///
 ///
@@ -1020,7 +1021,9 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     if (formIsValid) {
       final isLastStep = _activeStepIndex == stepList().length - 1;
 
-      if (_activeStepIndex == 0) {}
+      if (_activeStepIndex == 0) {
+        await handlefirstStep();
+      }
       if (_activeStepIndex == 1) {}
       if (_activeStepIndex == 2) {}
       if (_activeStepIndex == 3) {}
@@ -1030,9 +1033,11 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       if (isLastStep) {
         await submitFormData1();
       } else {
-        setState(() {
-          _activeStepIndex += 1;
-        });
+        if (registerStatus == true) {
+          setState(() {
+            _activeStepIndex += 1;
+          });
+        } else {}
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3628,5 +3633,22 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       accountTypes =
           fetchedAccountTypes; // Update the state with the fetched account types
     });
+  }
+
+  handlefirstStep() {
+    if (GlobalData().role != 'ACCOUNT-CREATOR' ||
+        GlobalData().role != 'BRANCH-ADMIN') {
+      print(GlobalData().role);
+      registerStatus = false;
+      FormHelper.showSimpleAlertDialog(
+        context,
+        "Coop Engage +",
+        "You dont have permission to create Account",
+        "OK",
+        () {
+          Navigator.of(context).pop();
+        },
+      );
+    }
   }
 }

@@ -1,4 +1,4 @@
-// ignore_for_file: sized_box_for_whitespace
+// ignore_for_file: sized_box_for_whitespace, unused_local_variable, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/crm12/ListOfCustomers.dart';
@@ -163,7 +163,6 @@ class _CRMDashboardState extends State<CRMDashboard> {
                                       int index =
                                           dataMap.keys.toList().indexOf(key);
                                       Color color = colorList[index];
-                                      double value = dataMap[key]!;
 
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(
@@ -203,7 +202,6 @@ class _CRMDashboardState extends State<CRMDashboard> {
                                     children: dataMap.keys.map((key) {
                                       int index =
                                           dataMap.keys.toList().indexOf(key);
-                                      Color color = colorList[index];
                                       double value = dataMap[key]!;
 
                                       return Padding(

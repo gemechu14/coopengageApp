@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, avoid_print
+// ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
 import 'dart:convert';
@@ -41,8 +41,8 @@ class _AgentPageState extends State<AgentPage> {
   bool isApiCallProcess = false;
   bool hidePassword = true;
   bool hideConfirmPassword = true; // For Confirm Password
-  TextEditingController _password = TextEditingController();
-  TextEditingController _confirmPassword = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+  final TextEditingController _confirmPassword = TextEditingController();
 
 // Function to toggle password visibility
   void togglePasswordVisibility(bool isPasswordField) {
@@ -191,6 +191,12 @@ class _AgentPageState extends State<AgentPage> {
                 child: CustomTextFormField(
                   hintText: "Enter TIN",
                   controller: tinController,
+                  keyboardType: TextInputType.number,
+                  // inputFormatters: [
+                  //   FilteringTextInputFormatter
+                  //       .digitsOnly, // Only allow numbers
+                  // ],
+
                   errorMessage: "TIN cannot be empty",
                   isRequired: true,
 
@@ -212,9 +218,8 @@ class _AgentPageState extends State<AgentPage> {
               TextLabel("Password"),
               // Password Field
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 25, vertical: 1),
-                child: Container(
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: SizedBox(
                   width: width < 600
                       ? double.infinity
                       : width * 0.5, // Adjust width for tablet
@@ -263,9 +268,8 @@ class _AgentPageState extends State<AgentPage> {
               TextLabel("Confirm Password"),
 
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 25, vertical: 1),
-                child: Container(
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: SizedBox(
                   width: width < 600 ? double.infinity : width * 0.5,
                   child: TextFormField(
                     obscureText: hideConfirmPassword,
@@ -315,10 +319,8 @@ class _AgentPageState extends State<AgentPage> {
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 1),
-                child: Container(
-                  width: width < 600
-                      ? double.infinity
-                      : width * 0.5, // Adjust width for tablet
+                child: SizedBox(
+                  width: width < 600 ? double.infinity : width * 0.5,
                   child: FormHelper.submitButton("Submit",
                       btnColor: Colors.blue,
                       txtColor: Colors.white,
@@ -331,32 +333,25 @@ class _AgentPageState extends State<AgentPage> {
                       // Retrieve the text from the controllers
                       String username = _username.text.trim();
                       String password = _password.text.trim();
-                      print("Selected Branches: $selectedBranches");
 
                       List<String> branchIdsList = selectedBranches.toList();
-                      print("branchIdsList");
-                      print(branchIdsList);
 
                       Map<String, dynamic> data = {
                         "fullName": fullNameController.text,
                         "phone": phoneNumberController.text,
-                        "branchIds":
-                            branchIdsList, // Directly assign the List<String>
-                        "mainBranchId": selectedBranchId.toString(),
+                        "business_name": businessNameController.text.toString(),
+                        "tin_number": tinController.text.toString(),
+                        // "branchIds":
+                        //     branchIdsList, // Directly assign the List<String>
+                        // "mainBranchId": selectedBranchId.toString(),
                         "password": password,
                       };
 
-                      print(data);
                       try {
                         var response = await networkHandler
                             .postAgent("/api/v1/agents", data)
-                            .timeout(const Duration(seconds: 5));
+                            .timeout(const Duration(seconds: 20));
 
-                        print('response');
-                        print("response.statusCode");
-                        // ignore: prefer_interpolation_to_compose_strings
-                        print("data123");
-                        print(data);
                         if (response.statusCode == 200 ||
                             response.statusCode == 201) {
                           setState(() {
@@ -376,15 +371,18 @@ class _AgentPageState extends State<AgentPage> {
                               ),
                               (route) => false);
                         } else {
+                          var errorResponse = jsonDecode(response.body);
+                          errorText = errorResponse['message'] ??
+                              "Unable to register, please try later";
                           setState(() {
                             isApiCallProcess = false;
                             validate = false;
-                            errorText = "Unable to register try later";
+                            // errorText = "Unable to register try later";
                             circular = false;
                           });
                           FormHelper.showSimpleAlertDialog(
                             context,
-                            "Customer Onboarding",
+                            "Coop Engage +",
                             errorText,
                             "OK",
                             () {
@@ -401,7 +399,7 @@ class _AgentPageState extends State<AgentPage> {
                         });
                         FormHelper.showSimpleAlertDialog(
                           context,
-                          "Customer Onboarding",
+                          "Coop Engage +",
                           errorText,
                           "OK",
                           () {
@@ -409,9 +407,6 @@ class _AgentPageState extends State<AgentPage> {
                           },
                         );
                       } catch (e) {
-                        print("error 123");
-                        print(data);
-                        print(e);
                         setState(() {
                           isApiCallProcess = false;
                           validate = false;
@@ -420,7 +415,7 @@ class _AgentPageState extends State<AgentPage> {
                         });
                         FormHelper.showSimpleAlertDialog(
                           context,
-                          "Customer Onboarding",
+                          "Coop Engage +",
                           errorText,
                           "OK",
                           () {
@@ -443,7 +438,7 @@ class _AgentPageState extends State<AgentPage> {
   Padding branchSelectorWidget(double width) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 1),
-      child: Container(
+      child: SizedBox(
         width: width < 600 ? double.infinity : width * 0.5,
         child: DropdownButtonFormField<int>(
           value: selectedBranchId, // Set the currently selected branch ID
@@ -464,7 +459,6 @@ class _AgentPageState extends State<AgentPage> {
           onChanged: (value) {
             setState(() {
               selectedBranchId = value; // Update selected branch ID
-              print(selectedBranchId);
             });
           },
 
@@ -498,7 +492,7 @@ class _AgentPageState extends State<AgentPage> {
   Padding passwordWidget(double width) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-      child: Container(
+      child: SizedBox(
         width: width < 600
             ? double.infinity
             : width * 0.5, // Adjust width for tablet
@@ -506,9 +500,6 @@ class _AgentPageState extends State<AgentPage> {
           obscureText: hidePassword,
           decoration: InputDecoration(
             hintText: "Password",
-            // labelText: "Password",
-            // fillColor: Colors.grey,
-            // filled: true,
 
             suffixIcon: IconButton(
               icon:
@@ -558,7 +549,7 @@ class _AgentPageState extends State<AgentPage> {
     double width = MediaQuery.of(context).size.width;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-      child: Container(
+      child: SizedBox(
         width: width < 600 ? double.infinity : width * 0.5,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,7 +601,7 @@ class _AgentPageState extends State<AgentPage> {
   Padding branchesWidget(double width) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-      child: Container(
+      child: SizedBox(
         width: width < 600 ? double.infinity : width * 0.5,
         child: Column(
           children: [
@@ -661,50 +652,6 @@ class _AgentPageState extends State<AgentPage> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          colors: [
-            Colors.blue,
-            Color.fromARGB(255, 185, 218, 245),
-          ],
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 30),
-            Align(
-              alignment: Alignment.center,
-              child: Image.asset(
-                "assets/logo.png",
-                width: 180,
-                height: 90,
-                color: Colors.white,
-                fit: BoxFit.contain,
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(top: 5, left: 20, bottom: 30, right: 20),
-              child: Text(
-                "Customer Onboarding",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   bool validateAndSave() {
     final form = globalFormKey.currentState;
     if (form!.validate()) {
@@ -714,14 +661,6 @@ class _AgentPageState extends State<AgentPage> {
     return false;
   }
 
-  // Future<bool> isOnline() async {
-  //   var connectivityResult = await (Connectivity().checkConnectivity());
-  //   if (connectivityResult == ConnectivityResult.mobile ||
-  //       connectivityResult == ConnectivityResult.wifi) {
-  //     return true;
-  //   }
-  //   return false; // The device is offline
-  // }
   Future<bool> isOnline() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
 
@@ -732,91 +671,6 @@ class _AgentPageState extends State<AgentPage> {
 
     return false; // The device is offline
   }
-
-  // Padding branchWidget() {
-  //   var branchController;
-  //   return Padding(
-  //     padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-  //     child: SearchField(
-  //       controller: branchController,
-  //       suggestions: filteredBranches.map((branch) {
-  //         return SearchFieldListItem(branch['companyName'],
-  //             item: branch); // Pass the entire branch object if needed
-  //       }).toList(),
-  //       suggestionState: Suggestion.expand,
-  //       hint: 'Search Branch',
-  //       itemHeight: 50,
-  //       searchInputDecoration: SearchInputDecoration(
-  //         isDense: true,
-  //         prefixIcon: const Icon(Icons.location_city),
-  //         contentPadding:
-  //             const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-  //         border: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //         ),
-  //         hintStyle: const TextStyle(
-  //           fontSize: 13,
-  //           color: Colors.black,
-  //         ),
-  //         enabledBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.black),
-  //         ),
-  //         focusedBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.blue),
-  //         ),
-  //         errorBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.red),
-  //         ),
-  //         focusedErrorBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.red),
-  //         ),
-  //       ),
-  //       onSuggestionTap: (x) {
-  //         setState(() {
-  //           // Cast x.item to Map<String, dynamic>
-  //           final branch =
-  //               x.item as Map<String, dynamic>?; // Safely cast to expected type
-  //           print(branch);
-  //           print(branch?['id']);
-  //           if (branch != null) {
-  //             // Access the 'id' and ensure it's properly set
-  //             selectedBranchId =
-  //                 branch?['id']; // This will work as 'id' is an int
-  //             print(branch?['id']);
-  //             print(selectedBrancId);
-  //             branchController.text =
-  //                 branch['companyName']; // Update with company name
-  //             FocusScope.of(context).unfocus(); // Dismiss the keyboard
-  //           }
-  //         });
-  //       },
-  //       validator: (String? value) {
-  //         if (value == null || value.isEmpty) {
-  //           return 'Branch cannot be empty';
-  //         }
-  //         if (!branches
-  //             .map((branch) => branch['companyName'])
-  //             .contains(value)) {
-  //           return 'Please select a valid branch';
-  //         }
-  //         return null;
-  //       },
-  //       onSearchTextChanged: (query) {
-  //         setState(() {
-  //           filteredBranches = branches
-  //               .where((branch) => branch['companyName']
-  //                   .toLowerCase()
-  //                   .contains(query.toLowerCase()))
-  //               .toList();
-  //         });
-  //       },
-  //     ),
-  //   );
-  // }
 
   Padding TextLabel(String text) {
     return Padding(
@@ -846,7 +700,7 @@ class _AgentPageState extends State<AgentPage> {
 
   Future<void> fetchMultipleBranches() async {
     const url =
-        'http://10.2.125.41:9060/api/branches'; // Replace with your actual URL
+        'http://10.2.125.41:9060/api/branches';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {

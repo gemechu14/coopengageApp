@@ -2280,7 +2280,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
           print(userId);
           response = await networkHandler
               .post1('/api/v1/accounts', registrationData)
-              .timeout(const Duration(seconds: 14));
+              .timeout(const Duration(seconds: 20));
 
           var responseData = json.decode(response.body);
           print("response.statusCode");
@@ -2294,13 +2294,26 @@ By accepting these terms, you agree to comply with all banking regulations and p
               registerStatus = true;
             });
           } else {
+            String errorText;
             print("response.body");
-
+            var errorResponse = jsonDecode(response.body);
+            errorText = errorResponse['message'] ??
+                "Unable to register, please try later";
             print("object");
             registerStatus = false;
-            const SnackBar(
-              content: Text('Error Occour while register please try'),
+
+            FormHelper.showSimpleAlertDialog(
+              context,
+              "Coop Engage +",
+              errorText,
+              "OK",
+              () {
+                Navigator.of(context).pop();
+              },
             );
+            // const SnackBar(
+            //   content: Text(errorText),
+            // );
           }
         } on TimeoutException catch (_) {
           registerStatus = false;
@@ -2341,29 +2354,45 @@ By accepting these terms, you agree to comply with all banking regulations and p
       print("Offline: Saving email and phoneNumber locally");
 
       try {
-        DatabaseHelper dbHelper = DatabaseHelper();
-        await dbHelper.database; // Ensure the database is initialized
-        print(UserID);
-        // Insert customer data
-        var data = await dbHelper.insertCustomer({
-          'phone': registrationData['phone'],
-          // 'customerType'
-          'email': registrationData['email'],
-          'customerType': registrationData['customerType'],
-          'status': 'INITIAL',
-          "userId": UserID
-        });
+        print("User iddd");
+        print(GlobalData().role);
+        print(GlobalData().role != 'ACCOUNT-CREATOR' &&
+            GlobalData().role != 'BRANCH-ADMIN');
+        if (GlobalData().role != 'ACCOUNT-CREATOR' &&
+            GlobalData().role != 'AGENT') {
+          print(GlobalData().role);
+          registerStatus = false;
+          FormHelper.showSimpleAlertDialog(
+            context,
+            "Coop Engage +",
+            "You dont have permission to create Account",
+            "OK",
+            () {
+              Navigator.of(context).pop();
+            },
+          );
+        } else {
+          DatabaseHelper dbHelper = DatabaseHelper();
+          await dbHelper.database;
+          print(UserID);
+          // Insert customer data
+          var data = await dbHelper.insertCustomer({
+            'phone': registrationData['phone'],
+            // 'customerType'
+            'email': registrationData['email'],
+            'customerType': registrationData['customerType'],
+            'status': 'INITIAL',
+            "userId": UserID
+          });
 
-        print("data");
-        print(data);
-
-        setState(() {
-          validate = true;
-          circular = false;
-          userID = data;
-        });
-        print(data);
-        print("Customer data inserted successfully.");
+          setState(() {
+            validate = true;
+            circular = false;
+            // userID = data;
+          });
+          // print(data);
+          print("Customer data inserted successfully.");
+        }
       } catch (e) {
         registerStatus = false;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2423,24 +2452,16 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
   // Step 1:
   Future<void> handleFirstStep() async {
-//     // Call the function to get the details
-//     var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
-
-// // Check if accountTypeDetails is not null and then get the id
-//     var id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
     registrationData['customerType'] = selectedCustomerType;
     registrationData['phone'] = '+251${phoneNumberController.text}';
     registrationData['email'] = emailController.text;
-    // registrationData['signature'] = _combinedSignature;
-    // registrationData['accountType1'] = id;
-
     registrationData["percentageCompleted"] = 12.5;
-
     registrationData['status'] = "INITIAL";
     isOnline
         ? registrationData['formCompleted'] = "false"
         : registrationData['formCompleted'] = 0;
     print(registrationData);
+
     await submitStepData();
   }
 

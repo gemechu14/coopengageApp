@@ -4,12 +4,12 @@ import 'dart:convert';
 
 import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
+import 'package:coopengageplus/features/hpc/presentation/language/changeLanguage.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
 
 bool isConventionalSelected = true;
 
@@ -249,6 +249,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   title: const Text("About"),
                   onTap: () {
                     // Navigate to About Page
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.help, color: Colors.blue),
+                  title: const Text("language"),
+                  onTap: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ChangeLanguagePage()),
+                      (route) => false,
+                    );
                   },
                 ),
                 const Divider(),

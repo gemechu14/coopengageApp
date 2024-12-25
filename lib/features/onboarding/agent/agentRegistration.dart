@@ -6,7 +6,9 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/Screen/LoginScreen.dart';
+import 'package:coopengageplus/common_widgets/textField/ConfirmPasswordTextField.dart';
 import 'package:coopengageplus/common_widgets/textField/CustomTextFormField.dart';
+import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -36,24 +38,23 @@ class _LoginscreenState extends State<AgentRegistration> {
   bool isDialogLoading = false;
   Set<String> selectedBranches = {};
   List<MultiSelectItem<String>> branchItems = [];
-  List<dynamic> branches = []; // Store the fetched branches
+  List<dynamic> branches = [];
   int? selectedBranchId;
   List<dynamic> filteredBranches = [];
-  int? selectedBrancId; // To hold the selected branch ID
+  int? selectedBrancId;
   bool isApiCallProcess = false;
   bool hidePassword = true;
-  bool hideConfirmPassword = true; // For Confirm Password
-  TextEditingController _password = TextEditingController();
-  TextEditingController _confirmPassword = TextEditingController();
+  bool hideConfirmPassword = true;
+  final TextEditingController _password = TextEditingController();
+  late TextEditingController _confirmPassword = TextEditingController();
 
 // Function to toggle password visibility
   void togglePasswordVisibility(bool isPasswordField) {
     setState(() {
       if (isPasswordField) {
-        hidePassword = !hidePassword; // Toggle Password visibility
+        hidePassword = !hidePassword;
       } else {
-        hideConfirmPassword =
-            !hideConfirmPassword; // Toggle Confirm Password visibility
+        hideConfirmPassword = !hideConfirmPassword;
       }
     });
   }
@@ -161,108 +162,66 @@ class _LoginscreenState extends State<AgentRegistration> {
             const SizedBox(
               height: 20,
             ),
-
             TextLabel("Full Name"),
-            CustomTextFormField(
-              hintText: "Enter Full Name",
-              controller: fullNameController,
-              errorMessage: "Full Name cannot be empty",
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+              child: CustomTextFormField(
+                hintText: "Enter Full Name",
+                controller: fullNameController,
+                errorMessage: "Full Name cannot be empty",
 
-              // leadingIcon: Icons.person,
+                // leadingIcon: Icons.person,
+              ),
             ),
             TextLabel("PhoneNumber"),
-            CustomTextFormField(
-              hintText: "Enter phonenumber or email",
-              controller: phoneNumberController,
-              errorMessage: "PhoneNumber empty",
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+              child: CustomTextFormField(
+                hintText: "Enter phonenumber or email",
+                controller: phoneNumberController,
+                errorMessage: "PhoneNumber empty",
 
-              // leadingIcon: Icons.person,
+                // leadingIcon: Icons.person,
+              ),
             ),
             TextLabel("Business Name"),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+              child: CustomTextFormField(
+                hintText: "Enter Business Name",
+                controller: businessNameController,
+                errorMessage: "Business Name empty",
+                isRequired: false,
 
-            CustomTextFormField(
-              hintText: "Enter Business Name",
-              controller: businessNameController,
-              errorMessage: "Business Name empty",
-              isRequired: false,
-
-              // leadingIcon: Icons.person,
+                // leadingIcon: Icons.person,
+              ),
             ),
             TextLabel("TIN"),
-            CustomTextFormField(
-              hintText: "Enter TIN",
-              controller: tinController,
-              errorMessage: "TIN cannot be empty",
-              isRequired: true,
-
-              // leadingIcon: Icons.person,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+              child: CustomTextFormField(
+                hintText: "Enter TIN",
+                keyboardType: TextInputType.number,
+                controller: tinController,
+                errorMessage: "TIN cannot be empty",
+                isRequired: true,
+              ),
             ),
-
-            // reusableTextFormField(
-            //   hintText: "Full Name",
-            //   controller: fullNameController,
-            //   errorMessage: "Full Name cannot be empty",
-            //   leadingIcon: Icons.person,
-            // ),
-            // TextLabel("PhoneNumber or username "),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-            //   child: Container(
-            //     width: width < 600 ? double.infinity : width * 0.5,
-            //     child: Column(
-            //       crossAxisAlignment: CrossAxisAlignment.start,
-            //       children: [
-            //         TextFormField(
-            //           controller: phoneNumberController,
-            //           decoration: const InputDecoration(
-            //             hintText: "PhoneNumber or username",
-            //             hintStyle: TextStyle(
-            //               fontSize: 13,
-            //               color: Colors.black,
-            //             ),
-            //             labelStyle: TextStyle(fontSize: 5),
-            //             isDense: true,
-            //             // contentPadding:
-            //             //     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-            //             border: OutlineInputBorder(
-            //               borderRadius: BorderRadius.all(Radius.circular(10)),
-            //             ),
-            //             enabledBorder: OutlineInputBorder(
-            //               borderRadius: BorderRadius.all(Radius.circular(10)),
-            //               borderSide: BorderSide(color: Colors.black),
-            //             ),
-            //             focusedBorder: OutlineInputBorder(
-            //               borderRadius: BorderRadius.all(Radius.circular(10)),
-            //               borderSide: BorderSide(color: Colors.blue),
-            //             ),
-            //             errorBorder: OutlineInputBorder(
-            //               borderRadius: BorderRadius.all(Radius.circular(10)),
-            //               borderSide: BorderSide(color: Colors.red),
-            //             ),
-            //             focusedErrorBorder: OutlineInputBorder(
-            //               borderRadius: BorderRadius.all(Radius.circular(10)),
-            //               borderSide: BorderSide(color: Colors.red),
-            //             ),
-            //             // prefixIcon:  Icon(leadingIcon) ,
-            //           ),
-            //           validator: (value) {
-            //             if (value == null || value.isEmpty) {
-            //               return 'This field is required';
-            //             }
-            //             // return errorMessage; // Return the error message if exists
-            //           },
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
-
+            TextLabel("Password"),
+            passwordWidget(width),
+            TextLabel("Confirm Password"),
+            ConfirmPasswordTextField(
+              title: "Confirm Password",
+              hint: "Re-enter your password",
+              textEditingController: _confirmPassword,
+              hidePassword: hideConfirmPassword,
+              togglePasswordVisibility: _togglePasswordVisibility,
+              passwordController: _password,
+            ),
             TextLabel("Main Branch"),
             branchSelectorWidget(width),
-
             TextLabel("Additional Branches"),
             branchesWidget(width),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
               child: Container(
@@ -295,20 +254,20 @@ class _LoginscreenState extends State<AgentRegistration> {
                     Map<String, dynamic> data = {
                       "fullName": fullNameController.text.toString(),
                       "phone": phoneNumberController.text.toString(),
-                      // "business_name": businessNameController.text.toString(),
-                      // "tin_number": tinController.text.toString(),
+                      "business_name": businessNameController.text.toString(),
+                      "tin_number": tinController.text.toString(),
 
                       "branchIds":
                           branchIdsList, // Directly assign the List<String>
-                      // "mainBranchId": selectedBranchId.toString(),
-                      "password": "123456uh"
+                      "mainBranchId": selectedBranchId.toString(),
+                      "password": _password.text
                     };
 
                     print(data);
                     try {
                       var response = await networkHandler
                           .postAgent("/api/v1/agents", data)
-                          .timeout(const Duration(seconds: 5));
+                          .timeout(const Duration(seconds: 20));
 
                       print('response');
                       print("response.statusCode");
@@ -334,7 +293,7 @@ class _LoginscreenState extends State<AgentRegistration> {
                             (route) => false);
                       } else {
                         var errorResponse = jsonDecode(response.body);
-                        errorText = errorResponse['password'] ??
+                        errorText = errorResponse['message'] ??
                             "Unable to register, please try later";
                         setState(() {
                           isApiCallProcess = false;
@@ -402,25 +361,31 @@ class _LoginscreenState extends State<AgentRegistration> {
       child: Container(
           width: width < 600 ? double.infinity : width * 0.5,
           child: DropdownButtonFormField<int>(
-              value: selectedBranchId, // Set the currently selected branch ID
+              value: selectedBranchId,
               hint: const Text(
                 "Select Branch",
                 style: TextStyle(fontSize: 14),
               ),
               items: branches.map((branch) {
                 return DropdownMenuItem<int>(
-                  value: branch['id'], // Use branch ID as the value
+                  value: branch['id'],
                   child: Text(branch['companyName'],
-                      style: TextStyle(
-                          fontSize: 14)), // Show company name in dropdown
+                      style: TextStyle(fontSize: 14)),
                 );
               }).toList(),
               isDense: true,
               onChanged: (value) {
                 setState(() {
-                  selectedBranchId = value; // Update selected branch ID
+                  selectedBranchId = value;
                   print(selectedBranchId);
                 });
+              },
+              validator: (value) {
+                // Check if value is null or 0 (or whatever indicates no selection)
+                if (value == null || value == 0) {
+                  return 'Please select a branch';
+                }
+                return null; // Return null if valid
               },
               decoration: const InputDecoration(
                 isDense: true,
@@ -477,7 +442,7 @@ class _LoginscreenState extends State<AgentRegistration> {
             contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.black),
+              borderSide: BorderSide(color: Colors.grey),
             ),
             focusedBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -487,7 +452,7 @@ class _LoginscreenState extends State<AgentRegistration> {
               borderRadius: BorderRadius.all(Radius.circular(10)),
               borderSide: BorderSide(color: Colors.red),
             ),
-            prefixIcon: const Icon(Icons.lock), // Leading icon
+            // prefixIcon: const Icon(Icons.lock), // Leading icon
           ),
           controller: _password,
           validator: (value) {
@@ -496,69 +461,6 @@ class _LoginscreenState extends State<AgentRegistration> {
             }
             return null;
           },
-        ),
-      ),
-    );
-  }
-
-  // Method to create a reusable TextFormField
-  Padding reusableTextFormField({
-    required String hintText,
-    required TextEditingController controller,
-    String? errorMessage,
-    IconData? leadingIcon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    double width = MediaQuery.of(context).size.width;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-      child: Container(
-        width: width < 600 ? double.infinity : width * 0.5,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: controller,
-              keyboardType: keyboardType,
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.black,
-                ),
-                labelStyle: const TextStyle(fontSize: 5),
-                isDense: true,
-                // contentPadding:
-                //     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  borderSide: BorderSide(color: Colors.black),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  borderSide: BorderSide(color: Colors.blue),
-                ),
-                errorBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  borderSide: BorderSide(color: Colors.red),
-                ),
-                focusedErrorBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  borderSide: BorderSide(color: Colors.red),
-                ),
-                prefixIcon: leadingIcon != null ? Icon(leadingIcon) : null,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return errorMessage ?? 'This field is required';
-                }
-                // return errorMessage; // Return the error message if exists
-              },
-            ),
-          ],
         ),
       ),
     );
@@ -585,12 +487,10 @@ class _LoginscreenState extends State<AgentRegistration> {
                   // width: 2,
                 ),
               ),
-// Add padding if needed for a 'dense' look
               chipDisplay: MultiSelectChipDisplay(
                 chipColor: Colors.blue[50],
                 textStyle: const TextStyle(color: Colors.black),
               ),
-              // isDismissible: true,
               buttonIcon: const Icon(
                 Icons.arrow_drop_down,
                 color: Colors.black,
@@ -618,50 +518,6 @@ class _LoginscreenState extends State<AgentRegistration> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          colors: [
-            Colors.blue,
-            Color.fromARGB(255, 185, 218, 245),
-          ],
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 30),
-            Align(
-              alignment: Alignment.center,
-              child: Image.asset(
-                "assets/logo.png",
-                width: 180,
-                height: 90,
-                color: Colors.white,
-                fit: BoxFit.contain,
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(top: 5, left: 20, bottom: 30, right: 20),
-              child: Text(
-                "Coop Engage+",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   bool validateAndSave() {
     final form = globalFormKey.currentState;
     if (form!.validate()) {
@@ -671,14 +527,6 @@ class _LoginscreenState extends State<AgentRegistration> {
     return false;
   }
 
-  // Future<bool> isOnline() async {
-  //   var connectivityResult = await (Connectivity().checkConnectivity());
-  //   if (connectivityResult == ConnectivityResult.mobile ||
-  //       connectivityResult == ConnectivityResult.wifi) {
-  //     return true;
-  //   }
-  //   return false; // The device is offline
-  // }
   Future<bool> isOnline() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
 
@@ -689,91 +537,6 @@ class _LoginscreenState extends State<AgentRegistration> {
 
     return false; // The device is offline
   }
-
-  // Padding branchWidget() {
-  //   var branchController;
-  //   return Padding(
-  //     padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-  //     child: SearchField(
-  //       controller: branchController,
-  //       suggestions: filteredBranches.map((branch) {
-  //         return SearchFieldListItem(branch['companyName'],
-  //             item: branch); // Pass the entire branch object if needed
-  //       }).toList(),
-  //       suggestionState: Suggestion.expand,
-  //       hint: 'Search Branch',
-  //       itemHeight: 50,
-  //       searchInputDecoration: SearchInputDecoration(
-  //         isDense: true,
-  //         prefixIcon: const Icon(Icons.location_city),
-  //         contentPadding:
-  //             const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-  //         border: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //         ),
-  //         hintStyle: const TextStyle(
-  //           fontSize: 13,
-  //           color: Colors.black,
-  //         ),
-  //         enabledBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.black),
-  //         ),
-  //         focusedBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.blue),
-  //         ),
-  //         errorBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.red),
-  //         ),
-  //         focusedErrorBorder: const OutlineInputBorder(
-  //           borderRadius: BorderRadius.all(Radius.circular(10)),
-  //           borderSide: BorderSide(color: Colors.red),
-  //         ),
-  //       ),
-  //       onSuggestionTap: (x) {
-  //         setState(() {
-  //           // Cast x.item to Map<String, dynamic>
-  //           final branch =
-  //               x.item as Map<String, dynamic>?; // Safely cast to expected type
-  //           print(branch);
-  //           print(branch?['id']);
-  //           if (branch != null) {
-  //             // Access the 'id' and ensure it's properly set
-  //             selectedBranchId =
-  //                 branch?['id']; // This will work as 'id' is an int
-  //             print(branch?['id']);
-  //             print(selectedBrancId);
-  //             branchController.text =
-  //                 branch['companyName']; // Update with company name
-  //             FocusScope.of(context).unfocus(); // Dismiss the keyboard
-  //           }
-  //         });
-  //       },
-  //       validator: (String? value) {
-  //         if (value == null || value.isEmpty) {
-  //           return 'Branch cannot be empty';
-  //         }
-  //         if (!branches
-  //             .map((branch) => branch['companyName'])
-  //             .contains(value)) {
-  //           return 'Please select a valid branch';
-  //         }
-  //         return null;
-  //       },
-  //       onSearchTextChanged: (query) {
-  //         setState(() {
-  //           filteredBranches = branches
-  //               .where((branch) => branch['companyName']
-  //                   .toLowerCase()
-  //                   .contains(query.toLowerCase()))
-  //               .toList();
-  //         });
-  //       },
-  //     ),
-  //   );
-  // }
 
   Padding TextLabel(String text) {
     return Padding(
@@ -789,8 +552,9 @@ class _LoginscreenState extends State<AgentRegistration> {
   }
 
   Future<void> fetchBranches() async {
-    const url =
-        'http://10.2.125.41:9060/api/branches'; // Replace with your actual URL
+    const url = '${AppConstants.baseURL}/api/branches';
+    // const url =
+    //     'http://10.2.125.41:9060/api/branches'; // Replace with your actual URL
     try {
       // print(url);
       final response = await http.get(Uri.parse(url));
@@ -809,8 +573,9 @@ class _LoginscreenState extends State<AgentRegistration> {
   }
 
   Future<void> fetchMultipleBranches() async {
-    const url =
-        'http://10.2.125.41:9060/api/branches'; // Replace with your actual URL
+    const url = '${AppConstants.baseURL}/api/branches';
+    // const url =
+    //     'http://10.2.125.41:9060/api/branches'; // Replace with your actual URL
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -836,5 +601,12 @@ class _LoginscreenState extends State<AgentRegistration> {
         isLoading = true;
       });
     }
+  }
+
+  // Toggle password visibility
+  void _togglePasswordVisibility() {
+    setState(() {
+      hideConfirmPassword = !hideConfirmPassword;
+    });
   }
 }
