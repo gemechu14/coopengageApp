@@ -1,80 +1,14 @@
-// ignore_for_file: constant_identifier_names
-
+// ignore_for_file: constant_identifier_names, use_build_context_synchronously, non_constant_identifier_names, use_super_parameters, library_private_types_in_public_api
 import 'dart:convert';
-
 import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
-import 'package:coopengageplus/features/hpc/presentation/language/changeLanguage.dart';
+import 'package:coopengageplus/features/onboarding/pages/help.dart';
+import 'package:coopengageplus/features/onboarding/pages/language.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
-bool isConventionalSelected = true;
-
-enum AccountType { DEPOSIT, FIXED_TIME_DEPOSIT, NON_REPATRIABLE_BIRR }
-
-enum AlhudaAccountType {
-  ECOLFL,
-  DIASPORA_WADIA_SAVING,
-  DIASPORA_MUDARABAH_SAVING,
-  DIASPORA_MUDARABAH_FIXED_TIME
-}
-
-// List of account types based on selection
-List<AccountType> conventionalAccounts = [
-  AccountType.DEPOSIT,
-  AccountType.FIXED_TIME_DEPOSIT,
-  AccountType.NON_REPATRIABLE_BIRR,
-];
-
-List<AlhudaAccountType> alhudaAccounts = [
-  AlhudaAccountType.ECOLFL,
-  AlhudaAccountType.DIASPORA_WADIA_SAVING,
-  AlhudaAccountType.DIASPORA_MUDARABAH_SAVING,
-  AlhudaAccountType.DIASPORA_MUDARABAH_FIXED_TIME,
-];
-AccountType? selectedAccountType;
-AlhudaAccountType? selectedAlhudaAccountType;
-// Map to get the display text and description for each account type
-Map<AccountType, String> accountTypeText = {
-  AccountType.DEPOSIT: "Deposit Account",
-  AccountType.FIXED_TIME_DEPOSIT: "Fixed Time Deposit Account",
-  AccountType.NON_REPATRIABLE_BIRR: "Non-Repatriable Birr Account",
-};
-
-Map<AccountType, String> accountTypeDescription = {
-  AccountType.DEPOSIT:
-      "A basic savings account where you can deposit and withdraw money  Additional Details"
-          "This account type is suitable for those who need to manage their savings effectively"
-          "It offers features such as interest rates, transaction limits, and more.",
-  AccountType.FIXED_TIME_DEPOSIT:
-      "A savings account with a fixed interest rate and maturiAdditional Details:\n"
-          "This account type is suitable for those who need to manage their savings effectively"
-          "It offers features such as interest rates, transaction limits, and more.",
-  AccountType.NON_REPATRIABLE_BIRR:
-      "A savings account for foreign currency that cannot be repatriated.",
-};
-
-Map<AlhudaAccountType, String> alhudaAccountTypeText = {
-  AlhudaAccountType.ECOLFL: "ECOLFL",
-  AlhudaAccountType.DIASPORA_WADIA_SAVING: "Diaspora Wadia Saving Account",
-  AlhudaAccountType.DIASPORA_MUDARABAH_SAVING:
-      "Diaspora Mudarabah Saving Account",
-  AlhudaAccountType.DIASPORA_MUDARABAH_FIXED_TIME:
-      "Diaspora Mudarabah Fixed Time",
-};
-
-Map<AlhudaAccountType, String> alhudaAccountTypeDescription = {
-  AlhudaAccountType.ECOLFL: "A special account for ECOLFL purposes.",
-  AlhudaAccountType.DIASPORA_WADIA_SAVING:
-      "A savings account for diaspora community with Wadia scheme.",
-  AlhudaAccountType.DIASPORA_MUDARABAH_SAVING:
-      "A savings account for diaspora community with Mudarabah scheme.",
-  AlhudaAccountType.DIASPORA_MUDARABAH_FIXED_TIME:
-      "A fixed-time savings account for diaspora community with Mudarabah scheme.",
-};
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -111,9 +45,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.white,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: AppBar(
+            backgroundColor: Colors.white,
             title: CustomNavHeading(
               text: translation(context).profile,
             ),
@@ -253,7 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const Divider(),
                 ListTile(
-                  leading: const Icon(Icons.help, color: Colors.blue),
+                  leading: const Icon(Icons.language, color: Colors.blue),
+                  
                   title: const Text("language"),
                   onTap: () {
                     Navigator.pushAndRemoveUntil(
@@ -269,6 +206,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: const Icon(Icons.help, color: Colors.blue),
                   title: const Text("Help"),
                   onTap: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => HelpPage()),
+                      (route) => false,
+                    );
                     // Navigate to Help Page
                   },
                 ),
@@ -306,7 +248,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (token != null && token.isNotEmpty) {
       // Decode the token to get user details
       var decodedToken = JwtDecoder.decode(token);
-      print(decodedToken);
       setState(() {
         username = decodedToken['sub'] ?? "User"; // Set username
         firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';

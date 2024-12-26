@@ -151,6 +151,9 @@ class _AgentPageState extends State<AgentPage> {
               // branchWidget(),
               // branchesWidget(width),
               TextLabel("Full Name"),
+              SizedBox(
+                height: 8,
+              ),
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
@@ -161,7 +164,13 @@ class _AgentPageState extends State<AgentPage> {
                   // leadingIcon: Icons.person,
                 ),
               ),
-              TextLabel("PhoneNumber"),
+              SizedBox(
+                height: 8,
+              ),
+              TextLabel("PhoneNumber or Email"),
+              SizedBox(
+                height: 8,
+              ),
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
@@ -172,8 +181,13 @@ class _AgentPageState extends State<AgentPage> {
                   // leadingIcon: Icons.person,
                 ),
               ),
+              SizedBox(
+                height: 8,
+              ),
               TextLabel("Business Name"),
-
+              SizedBox(
+                height: 8,
+              ),
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
@@ -185,7 +199,13 @@ class _AgentPageState extends State<AgentPage> {
                   // leadingIcon: Icons.person,
                 ),
               ),
+              SizedBox(
+                height: 8,
+              ),
               TextLabel("TIN"),
+              SizedBox(
+                height: 8,
+              ),
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
@@ -215,7 +235,13 @@ class _AgentPageState extends State<AgentPage> {
 
               // TextLabel("Additional Branches"),
               // branchesWidget(width),
+              SizedBox(
+                height: 8,
+              ),
               TextLabel("Password"),
+              SizedBox(
+                height: 8,
+              ),
               // Password Field
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
@@ -266,7 +292,9 @@ class _AgentPageState extends State<AgentPage> {
                 height: 7,
               ),
               TextLabel("Confirm Password"),
-
+              SizedBox(
+                height: 8,
+              ),
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: SizedBox(
@@ -314,7 +342,7 @@ class _AgentPageState extends State<AgentPage> {
               ),
 
               const SizedBox(
-                height: 20,
+                height: 24,
               ),
               Padding(
                 padding:
@@ -699,8 +727,7 @@ class _AgentPageState extends State<AgentPage> {
   }
 
   Future<void> fetchMultipleBranches() async {
-    const url =
-        'http://10.2.125.41:9060/api/branches';
+    const url = 'http://10.2.125.41:9060/api/branches';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {

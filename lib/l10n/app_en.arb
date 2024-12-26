@@ -14,8 +14,12 @@
   "upcoming": "Upcoming",
   "passed": "Passed",
    "feedback": "Feedback",
-   "crmchangerequest": "CRM Change Request",
-   "profile": "Profile",
-    "listOfCustomers": "Customers List"
+  "merchant": "merchant",
+  "ww": "",
+  "we": "",
+  "crmchangerequest": "CRM Change Request",
+  "profile": "Profile",
+  "listOfCustomers": "Customers List",
+  "customer" :"Customer"
   
 }

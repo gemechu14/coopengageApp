@@ -5,6 +5,7 @@ import 'package:coopengageplus/features/onboarding/marchent/presentation/Marchen
 import 'package:coopengageplus/features/onboarding/screens/CustomerRegistrationScreen.dart';
 import 'package:coopengageplus/features/onboarding/screens/profileScreen.dart';
 import 'package:coopengageplus/pages/LoginPage.dart';
+import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -54,7 +55,7 @@ class _MainPageState extends State<MainPage> {
         return Dashboard(onSettingsTap: () {
           setState(() {
             currentState = 2;
-            _pageController.jumpToPage(2); 
+            _pageController.jumpToPage(2);
           });
         });
       case 1:
@@ -123,9 +124,12 @@ class _MainPageState extends State<MainPage> {
                             index); // Move to the corresponding page
                       },
                       tabs: [
-                        _buildGNavItem(Icons.home, 'Home', 0),
-                        _buildGNavItem(Icons.assignment, 'Customer', 1),
-                        _buildGNavItem(Icons.store, "Merchant", 2),
+                        _buildGNavItem(
+                            Icons.home, translation(context).home, 0),
+                        _buildGNavItem(
+                            Icons.assignment, translation(context).customer, 1),
+                        _buildGNavItem(
+                            Icons.store, translation(context).merchant, 2),
                         if (role != 'AGENT')
                           _buildGNavItem(Icons.group, 'Agent', 3),
                         _buildGNavItem(Icons.person_2, 'Profile', 4),
@@ -147,8 +151,7 @@ class _MainPageState extends State<MainPage> {
                         currentState = index;
                       });
                     },
-                    physics:
-                        NeverScrollableScrollPhysics(), 
+                    physics: NeverScrollableScrollPhysics(),
                     children: [
                       _getCurrentWidget(0),
                       _getCurrentWidget(1),
@@ -171,7 +174,7 @@ class _MainPageState extends State<MainPage> {
         setState(() {
           currentState = index;
         });
-        _pageController.jumpToPage(index); 
+        _pageController.jumpToPage(index);
       },
     );
   }

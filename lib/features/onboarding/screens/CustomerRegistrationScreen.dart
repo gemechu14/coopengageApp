@@ -2354,10 +2354,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
       print("Offline: Saving email and phoneNumber locally");
 
       try {
-        print("User iddd");
-        print(GlobalData().role);
-        print(GlobalData().role != 'ACCOUNT-CREATOR' &&
-            GlobalData().role != 'BRANCH-ADMIN');
         if (GlobalData().role != 'ACCOUNT-CREATOR' &&
             GlobalData().role != 'AGENT') {
           print(GlobalData().role);
@@ -2373,26 +2369,72 @@ By accepting these terms, you agree to comply with all banking regulations and p
           );
         } else {
           DatabaseHelper dbHelper = DatabaseHelper();
-          await dbHelper.database;
+          await dbHelper.database; // Ensure the database is initialized
           print(UserID);
           // Insert customer data
           var data = await dbHelper.insertCustomer({
             'phone': registrationData['phone'],
-            // 'customerType'
             'email': registrationData['email'],
-            'customerType': registrationData['customerType'],
             'status': 'INITIAL',
             "userId": UserID
           });
 
+          print("data");
+          print(data);
+
           setState(() {
+            registerStatus = true;
             validate = true;
             circular = false;
-            // userID = data;
+            userID = data;
           });
-          // print(data);
+          print(data);
           print("Customer data inserted successfully.");
         }
+
+        // print("User iddd");
+        // print(GlobalData().role);
+        // print(GlobalData().role != 'ACCOUNT-CREATOR' &&
+        //     GlobalData().role != 'BRANCH-ADMIN');
+        // if (GlobalData().role != 'ACCOUNT-CREATOR' &&
+        //     GlobalData().role != 'AGENT') {
+        //   print(GlobalData().role);
+        //   registerStatus = false;
+        //   FormHelper.showSimpleAlertDialog(
+        //     context,
+        //     "Coop Engage +",
+        //     "You dont have permission to create Account",
+        //     "OK",
+        //     () {
+        //       Navigator.of(context).pop();
+        //     },
+        //   );
+        // } else {
+        //   registerStatus = true;
+
+        //   print("userid ");
+        //   print(UserID);
+        //   DatabaseHelper dbHelper = DatabaseHelper();
+        //   await dbHelper.database;
+        //   print(UserID);
+        //   // Insert customer data
+        //   var data = await dbHelper.insertCustomer({
+        //     'phone': registrationData['phone'],
+        //     // 'customerType'
+        //     'email': registrationData['email'],
+        //     'customerType': registrationData['customerType'],
+        //     'status': 'INITIAL',
+        //     "userId": UserID
+        //   });
+
+        //   setState(() {
+        //     validate = true;
+        //     circular = false;
+        //     // userID = data;
+        //   });
+        //   // print(data);
+        //   print("Customer data inserted successfully.");
+        // }
       } catch (e) {
         registerStatus = false;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2728,6 +2770,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
             .timeout(const Duration(seconds: 10));
 
         if (rowsAffected > 0) {
+          registerStatus = true;
           print("User updated successfully in the local database.");
         } else {
           registerStatus = false;

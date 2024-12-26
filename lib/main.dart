@@ -33,18 +33,21 @@ int? TOTALINITIAL;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   DatabaseHelper dbHelper = DatabaseHelper();
-
+  String initialLanguage = 'en';
   try {
     await dbHelper.database;
     await dbHelper.printTables();
+    initialLanguage = await dbHelper.getSelectedLanguage();
   } catch (e) {
     print("Error initializing the database: $e");
   }
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(ProviderScope(child: MyApp(initialLanguage: initialLanguage)));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final String initialLanguage;
+
+  const MyApp({Key? key, required this.initialLanguage}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +89,8 @@ class MyApp extends StatelessWidget {
         Locale('en', ''), // English
         Locale('am', ''), // Amharic
       ],
-      locale: Locale('en', ''),
+      locale: Locale(initialLanguage),
+      // locale: Locale('en'),
     );
   }
 }

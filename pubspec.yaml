@@ -115,6 +115,7 @@ dependencies:
   country_picker: ^2.0.25
   file_picker: ^8.1.6
   gallery_saver_plus: ^3.2.1
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

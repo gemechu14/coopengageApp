@@ -14,7 +14,9 @@
   "upcoming": "በሚቀጥለው",
   "passed": "ያልፏል",
   "feedback": "አስተያየት",
+   "merchant": "ነጋዴ",
   "crmchangerequest": "የCRM የለውጥ ጥያቄ",
   "profile": "ፕሮፋይል",
-  "listOfCustomers": ""
+  "listOfCustomers": "",
+  "customer":"ደንበኛ"
 }

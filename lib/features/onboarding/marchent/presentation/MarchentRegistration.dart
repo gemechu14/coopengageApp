@@ -2206,6 +2206,10 @@ class _Registration extends State<Marchentregistration> {
         });
       } else {
         registerStatus = false;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Unable to get the QR Code")),
+        );
         // If the response is not an image, attempt to decode as JSON
         var responseData = json.decode(response.body);
         print(responseData);

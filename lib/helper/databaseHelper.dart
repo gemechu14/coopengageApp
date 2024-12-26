@@ -326,7 +326,6 @@ CREATE TABLE selected_language  (
         }
         return true;
       } else {
-        print("Failed to sync customers. Status code: ${response.statusCode}");
         return false;
       }
     } catch (e) {
@@ -503,7 +502,7 @@ CREATE TABLE selected_language  (
       await db.insert(
         'selected_language',
         {
-          'language_code': 'eng', 
+          'language_code': 'eng',
         },
         conflictAlgorithm: ConflictAlgorithm
             .replace, // Replace if the record exists (although it won't in this case)
@@ -511,9 +510,18 @@ CREATE TABLE selected_language  (
     }
   }
 
-  Future<List<Map<String, dynamic>>> getSelectedLanguage() async {
-    final db = await _initDB();
-    return await db.query('selected_language');
+  Future<String> getSelectedLanguage() async {
+    final db = await database;
+    final List<Map<String, dynamic>> result =
+        await db.query('selected_language');
+
+    // Check if there is any result, then return the language code, else return a default value
+    if (result.isNotEmpty) {
+      return result.first['language_code'] as String;
+    } else {
+      // Default to English if no language is set
+      return 'en';
+    }
   }
 
   Future<void> insertToken(String token) async {
@@ -530,11 +538,21 @@ CREATE TABLE selected_language  (
   }
 
 ////GET
-  Future<List<Map<String, dynamic>>> getAuthToken() async {
-    final db = await _initDB();
-    return await db.query('auth_tokens');
-  }
+  // Future<List<Map<String, dynamic>>> getAuthToken() async {
+  //   final db = await _initDB();
+  //   return await db.query('auth_tokens');
+  // }
 
+  Future<String?> getAuthToken() async {
+    final db = await _initDB();
+    final result = await db.query('auth_tokens', limit: 1); // Limit to 1 row
+
+    if (result.isNotEmpty) {
+      return result.first['token'] as String?;
+    }
+
+    return null; // Return null if no token is found
+  }
   /////////////////////////
 
   Future<bool> userExists(String username) async {
