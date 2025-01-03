@@ -622,87 +622,96 @@ class AchievementBarChart extends StatelessWidget {
 
     return Column(
       children: [
+        const Text(
+          'Monthly Reports',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.start,
+        ),
         // Bar chart
-        Container(
-          height: 215,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceBetween,
-              maxY: adjustedMaxY,
-              titlesData: FlTitlesData(
-                show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      if (value.toInt() >= 0 && value.toInt() < data.length) {
-                        String title = data[value.toInt()]['name'];
+        Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5),
+          child: Container(
+            height: 180,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceBetween,
+                maxY: adjustedMaxY,
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= 0 && value.toInt() < data.length) {
+                          String title = data[value.toInt()]['name'];
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
                             ),
-                          ),
-                        );
-                      }
-                      return const Text('');
-                    },
-                    reservedSize: 20,
+                          );
+                        }
+                        return const Text('');
+                      },
+                      reservedSize: 25,
+                    ),
                   ),
-                ),
-                leftTitles: const AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 42,
+                    ),
                   ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                 ),
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              borderData: FlBorderData(show: false),
-              gridData: const FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                horizontalInterval: 20,
-              ),
-              barGroups: data.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
+                borderData: FlBorderData(show: false),
+                gridData: const FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 20,
+                ),
+                barGroups: data.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
 
-                return BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    // Achievement Bar: Blue
-                    // BarChartRodData(
-                    //   toY: item['achievements']?.toDouble() ?? 0,
-                    //   color: Colors.blue, // Achievement bar color
-                    //   width: 15,
-                    //   borderRadius: BorderRadius.circular(4),
-                    // ),
-                    // Target Bar: Green
-                    BarChartRodData(
-                      toY: item['target']?.toDouble() ?? 0,
-                      color: Colors.blue, // Target bar color
-                      width: 15,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    BarChartRodData(
-                      toY: item['achievements']?.toDouble() ?? 0,
-                      color: Colors.orange, // Achievement bar color
-                      width: 15,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                );
-              }).toList(),
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      // Achievement Bar: Blue
+                      // BarChartRodData(
+                      //   toY: item['achievements']?.toDouble() ?? 0,
+                      //   color: Colors.blue, // Achievement bar color
+                      //   width: 15,
+                      //   borderRadius: BorderRadius.circular(4),
+                      // ),
+                      // Target Bar: Green
+                      BarChartRodData(
+                        toY: item['target']?.toDouble() ?? 0,
+                        color: Colors.blue, // Target bar color
+                        width: 15,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      BarChartRodData(
+                        toY: item['achievements']?.toDouble() ?? 0,
+                        color: Colors.orange, // Achievement bar color
+                        width: 15,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ),

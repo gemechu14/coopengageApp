@@ -88,6 +88,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: [
         Locale('en', ''), // English
         Locale('am', ''), // Amharic
+        Locale('or', ''), // Amharic
       ],
       locale: Locale(initialLanguage),
       // locale: Locale('en'),

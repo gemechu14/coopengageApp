@@ -465,17 +465,33 @@ class _MeetingScheduleState extends ConsumerState<MeetingSchedule> {
     );
   }
 
+  // _setDateHandler(BuildContext context) async {
+  //   DateTime? picked = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now().add(const Duration(seconds: 1)),
+  //     firstDate: DateTime(1950),
+  //     lastDate: DateTime(2024, 12, 31),
+  //   );
+  //   if (picked != null) {
+  //     {
+  //       dateController.text = picked.toString().split(" ")[0];
+  //     }
+  //   }
+  // }
+
   _setDateHandler(BuildContext context) async {
+    DateTime now = DateTime.now();
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(seconds: 1)),
-      firstDate: DateTime(1950),
-      lastDate: DateTime(2024, 12, 31),
+      initialDate: now.add(const Duration(seconds: 1)),
+      firstDate:
+          DateTime(now.year - 10, now.month, now.day), // 10 years before today
+      lastDate:
+          DateTime(now.year + 10, now.month, now.day), // 10 years after today
     );
     if (picked != null) {
-      {
-        dateController.text = picked.toString().split(" ")[0];
-      }
+      dateController.text =
+          picked.toString().split(" ")[0]; // Format the picked date
     }
   }
 

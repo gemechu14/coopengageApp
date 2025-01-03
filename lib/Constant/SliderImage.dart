@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class SliderImages {
   static const List<Image> items = [
     Image(
-      image: AssetImage('assets/slider1.jpg'),
+      image: AssetImage('assets/coffee2.png'),
       fit: BoxFit.fill,
     ),
     Image(
@@ -23,15 +23,15 @@ class SliderImages {
       fit: BoxFit.fill,
     ),
     Image(
-      image: AssetImage('assets/slider6.png'),
+      image: AssetImage('assets/michu2.png'),
       fit: BoxFit.fill,
     ),
     Image(
-      image: AssetImage('assets/slider7.jpg'),
+      image: AssetImage('assets/callcenter.png'),
       fit: BoxFit.fill,
     ),
     Image(
-      image: AssetImage('assets/slider8.jpg'),
+      image: AssetImage('assets/sinqe2.png'),
       fit: BoxFit.fill,
     ),
   ];

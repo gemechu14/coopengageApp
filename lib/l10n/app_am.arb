@@ -18,5 +18,6 @@
   "crmchangerequest": "የCRM የለውጥ ጥያቄ",
   "profile": "ፕሮፋይል",
   "listOfCustomers": "",
-  "customer":"ደንበኛ"
+  "customer":"ደንበኛ",
+  "changeLanguage": "ቋንቋ ይቀይሩ"
 }

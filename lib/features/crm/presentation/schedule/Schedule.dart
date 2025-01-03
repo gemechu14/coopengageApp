@@ -1,3 +1,4 @@
+import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -99,16 +100,16 @@ class _ScheduleState extends ConsumerState<Schedule> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // EasyDateTimeLinePicker(
-              //   focusedDate: selectedDate,
-              //   firstDate: DateTime(2024, 1, 1),
-              //   lastDate: DateTime(2030, 3, 18),
-              //   onDateChange: (date) {
-              //     setState(() {
-              //       selectedDate = date;
-              //     });
-              //   },
-              // ),
+              EasyDateTimeLinePicker(
+                focusedDate: selectedDate,
+                firstDate: DateTime(2024, 1, 1),
+                lastDate: DateTime(2030, 3, 18),
+                onDateChange: (date) {
+                  setState(() {
+                    selectedDate = date;
+                  });
+                },
+              ),
               Column(
                 children: filteredData.map((event) {
                   final eventType = event['type']!;
@@ -143,6 +144,7 @@ class _ScheduleState extends ConsumerState<Schedule> {
                               eventType: eventType,
                             ));
                       },
+                      
                       child: ScheduleCard(
                         eventType: eventType,
                         time: time,

@@ -89,6 +89,8 @@ import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../utils/language_store.dart';
+
 class ChangeLanguagePage extends StatelessWidget {
   const ChangeLanguagePage({super.key});
 
@@ -118,7 +120,7 @@ class ChangeLanguagePage extends StatelessWidget {
           child: Scaffold(
             backgroundColor: Colors.white,
             appBar: AppBar(
-              title: const Text('Change Language'),
+              title: Text(translation(context).changeLanguage),
               backgroundColor: Colors.white,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -174,6 +176,22 @@ class ChangeLanguagePage extends StatelessWidget {
                         : null,
                     onTap: () {
                       _changeLanguage(Locale('am', ''));
+                    },
+                  ),
+                  ListTile(
+                    title: Text(
+                      'Afaan oromoo',
+                      style: TextStyle(
+                        color: selectedLanguage == 'or'
+                            ? Colors.blue
+                            : Colors.black,
+                      ),
+                    ),
+                    trailing: selectedLanguage == 'or'
+                        ? const Icon(Icons.check, color: Colors.blue)
+                        : null,
+                    onTap: () {
+                      _changeLanguage(Locale('or', ''));
                     },
                   ),
                 ],

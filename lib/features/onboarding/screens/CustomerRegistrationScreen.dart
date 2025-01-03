@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 // import 'package:csc_picker/csc_picker.dart';
@@ -1620,108 +1621,262 @@ By accepting these terms, you agree to comply with all banking regulations and p
     );
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: AppBar(
-          title: const Text(
-            "Customer Registration",
-            style: TextStyle(
-                fontSize: 19, fontWeight: FontWeight.bold, color: Colors.blue),
+        backgroundColor: Colors.white,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: AppBar(
+            title: const Text(
+              "Customer Registration",
+              style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue),
+            ),
+            actions: [
+              IconButton(
+                  icon: const Icon(Icons.sync_outlined), onPressed: () {}),
+            ],
+            // centerTitle: true,
+            backgroundColor: Colors.white,
           ),
-          actions: [
-            IconButton(icon: const Icon(Icons.sync_outlined), onPressed: () {}),
-          ],
-          // centerTitle: true,
-          backgroundColor: Colors.white,
         ),
-      ),
-      body: Container(
-        child: Center(
-          child: Container(
-            width: width < 600 ? double.infinity : width * 0.5,
-            color: Colors.white,
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 30,
-                ),
-                Expanded(
-                  child: Form(
-                    key: globalFormKey,
-                    child: Theme(
-                      data: ThemeData(
-                        colorScheme: const ColorScheme.light(
-                          primary: Colors.blue,
-                          secondary: Colors.blue,
-                        ),
-                      ),
-                      child: Stepper(
-                        type: StepperType.horizontal,
-                        steps: stepList(),
-                        currentStep: _activeStepIndex,
-                        controlsBuilder:
-                            (BuildContext context, ControlsDetails details) {
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                                top: 20, left: 20, right: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                if (_activeStepIndex > 0)
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: TextButton(
-                                      onPressed: onStepCancel,
-                                      style: TextButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                      ),
-                                      child: const Text(
-                                        '     Back     ',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                                const Spacer(),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: onStepContinue,
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: Colors.blue,
-                                    ),
-                                    child: isLoading
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                        : Text(
-                                            _activeStepIndex == 8
-                                                ? 'Submit'
-                                                : 'Continue',
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
+        //   body: Container(
+        //     child: Center(
+        //       child: Container(
+        //         width: width < 600 ? double.infinity : width * 0.5,
+        //         color: Colors.white,
+        //         child: Column(
+        //           children: [
+        //             const SizedBox(
+        //               height: 20,
+        //             ),
+        //             Expanded(
+        //               child: Form(
+        //                 key: globalFormKey,
+        //                 child: Theme(
+        //                   data: ThemeData(
+        //                     colorScheme: const ColorScheme.light(
+        //                       primary: Colors.blue,
+        //                       secondary: Colors.blue,
+        //                     ),
+        //                   ),
+        //                   child: Stepper(
+        //                     stepIconHeight: 25.0,
+        //                     stepIconWidth: 25.0,
+        //                     margin: EdgeInsets.zero,
+        //                     connectorThickness: 10,
+        //                     type: StepperType.horizontal,
+        //                     steps: stepList(),
+        //                     currentStep: _activeStepIndex,
+        //                     controlsBuilder:
+        //                         (BuildContext context, ControlsDetails details) {
+        //                       return Padding(
+        //                         padding: const EdgeInsets.only(
+        //                             top: 20, left: 20, right: 20),
+        //                         child: Row(
+        //                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //                           children: <Widget>[
+        //                             if (_activeStepIndex > 0)
+        //                               Align(
+        //                                 alignment: Alignment.centerLeft,
+        //                                 child: TextButton(
+        //                                   onPressed: onStepCancel,
+        //                                   style: TextButton.styleFrom(
+        //                                     backgroundColor: Colors.blue,
+        //                                   ),
+        //                                   child: const Text(
+        //                                     '     Back     ',
+        //                                     style: TextStyle(color: Colors.white),
+        //                                   ),
+        //                                 ),
+        //                               ),
+        //                             const Spacer(),
+        //                             Align(
+        //                               alignment: Alignment.centerRight,
+        //                               child: TextButton(
+        //                                 onPressed: onStepContinue,
+        //                                 style: TextButton.styleFrom(
+        //                                   backgroundColor: Colors.blue,
+        //                                 ),
+        //                                 child: isLoading
+        //                                     ? const SizedBox(
+        //                                         width: 20,
+        //                                         height: 20,
+        //                                         child: CircularProgressIndicator(
+        //                                           strokeWidth: 2,
+        //                                           color: Colors.white,
+        //                                         ),
+        //                                       )
+        //                                     : Text(
+        //                                         _activeStepIndex == 8
+        //                                             ? 'Submit'
+        //                                             : 'Continue',
+        //                                         style: const TextStyle(
+        //                                             color: Colors.white),
+        //                                       ),
+        //                               ),
+        //                             ),
+        //                           ],
+        //                         ),
+        //                       );
+        //                     },
+        //                   ),
+        //                 ),
+        //               ),
+        //             ),
+        //           ],
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // );
+
+        body: Container(
+          child: Center(
+            child: Container(
+              width: width < 600 ? double.infinity : width * 0.5,
+              color: Colors.white,
+              child: Column(
+                children: [
+                  const SizedBox(height: 30),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: SizedBox(
+                            width: max(constraints.maxWidth, 380),
+                            child: Form(
+                              key: globalFormKey,
+                              child: Theme(
+                                data: ThemeData(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: Colors.blue,
+                                    secondary: Colors.blue,
                                   ),
                                 ),
-                              ],
+                                child: Stepper(
+                                  type: StepperType.horizontal,
+                                  steps: stepList(),
+                                  currentStep: _activeStepIndex,
+                                  margin: EdgeInsets.zero,
+                                  // controlsBuilder: (BuildContext context,
+                                  //     ControlsDetails details) {
+                                  //   return Padding(
+                                  //     padding: const EdgeInsets.only(top: 20),
+                                  //     child: Wrap(
+                                  //       // Changed from Row to Wrap
+                                  //       spacing: 8,
+                                  //       children: <Widget>[
+                                  //         if (_activeStepIndex > 0)
+                                  //           TextButton(
+                                  //             onPressed: onStepCancel,
+                                  //             style: TextButton.styleFrom(
+                                  //               backgroundColor: Colors.blue,
+                                  //               minimumSize: const Size(80, 36),
+                                  //             ),
+                                  //             child: const Text(
+                                  //               'Back',
+                                  //               style: TextStyle(
+                                  //                   color: Colors.white),
+                                  //             ),
+                                  //           ),
+                                  //         TextButton(
+                                  //           onPressed: onStepContinue,
+                                  //           style: TextButton.styleFrom(
+                                  //             backgroundColor: Colors.blue,
+                                  //             minimumSize: const Size(80, 36),
+                                  //           ),
+                                  //           child: isLoading
+                                  //               ? const SizedBox(
+                                  //                   width: 20,
+                                  //                   height: 20,
+                                  //                   child:
+                                  //                       CircularProgressIndicator(
+                                  //                     strokeWidth: 2,
+                                  //                     color: Colors.white,
+                                  //                   ),
+                                  //                 )
+                                  //               : Text(
+                                  //                   _activeStepIndex == 8
+                                  //                       ? 'Submit'
+                                  //                       : 'Continue',
+                                  //                   style: const TextStyle(
+                                  //                       color: Colors.white),
+                                  //                 ),
+                                  //         ),
+                                  //       ],
+                                  //     ),
+
+                                  controlsBuilder: (BuildContext context,
+                                      ControlsDetails details) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 20, left: 20, right: 20),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          if (_activeStepIndex > 0)
+                                            Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: TextButton(
+                                                onPressed: onStepCancel,
+                                                style: TextButton.styleFrom(
+                                                  backgroundColor: Colors.blue,
+                                                ),
+                                                child: const Text(
+                                                  '     Back     ',
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              ),
+                                            ),
+                                          const Spacer(),
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: TextButton(
+                                              onPressed: onStepContinue,
+                                              style: TextButton.styleFrom(
+                                                backgroundColor: Colors.blue,
+                                              ),
+                                              child: isLoading
+                                                  ? const SizedBox(
+                                                      width: 20,
+                                                      height: 20,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: Colors.white,
+                                                      ),
+                                                    )
+                                                  : Text(
+                                                      _activeStepIndex == 8
+                                                          ? 'Submit'
+                                                          : 'Continue',
+                                                      style: const TextStyle(
+                                                          color: Colors.white),
+                                                    ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   void showImagePicker(BuildContext context, String imageTypes) {

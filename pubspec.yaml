@@ -109,7 +109,7 @@ dependencies:
   syncfusion_flutter_calendar: ^28.1.35
   easy_date_timeline: ^2.0.4
   # easy_date_timeline: ^2.0.6
-  flutter_sound: ^9.6.0
+  # flutter_sound: ^9.6.0
   build_runner:
   pdf: ^3.11.1
   country_picker: ^2.0.25

@@ -20,6 +20,7 @@
   "crmchangerequest": "CRM Change Request",
   "profile": "Profile",
   "listOfCustomers": "Customers List",
-  "customer" :"Customer"
+  "customer" :"Customer",
+  "changeLanguage": "Change Language"
   
 }

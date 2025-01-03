@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart'; // For audio recording
+// import 'package:flutter_sound/flutter_sound.dart'; // For audio recording
 import 'package:path_provider/path_provider.dart'; // To get temporary directory
 
 class RecordAudioWidget extends StatefulWidget {
@@ -11,7 +11,7 @@ class RecordAudioWidget extends StatefulWidget {
 }
 
 class _RecordAudioWidgetState extends State<RecordAudioWidget> {
-  late FlutterSoundRecorder _recorder;
+  // late FlutterSoundRecorder _recorder;
   bool isRecording = false;
   String formattedTime = "00:00:00";
   File? _audioFile;
@@ -19,45 +19,45 @@ class _RecordAudioWidgetState extends State<RecordAudioWidget> {
   @override
   void initState() {
     super.initState();
-    _recorder = FlutterSoundRecorder();
+    // _recorder = FlutterSoundRecorder();
   }
 
   @override
   void dispose() {
-    _recorder.closeRecorder();
+    // _recorder.closeRecorder();
     super.dispose();
   }
 
-  // Function to start recording
-  void startRecording() async {
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final filePath =
-          '${tempDir.path}/recorded_audio.wav'; // Save as .wav or .mp3
-      await _recorder.startRecorder(
-        toFile: filePath,
-        codec: Codec.pcm16WAV,
-      );
-      setState(() {
-        isRecording = true;
-        _audioFile = File(filePath);
-      });
-    } catch (e) {
-      print('Error starting recording: $e');
-    }
-  }
+  // // Function to start recording
+  // void startRecording() async {
+  //   try {
+  //     final tempDir = await getTemporaryDirectory();
+  //     final filePath =
+  //         '${tempDir.path}/recorded_audio.wav'; // Save as .wav or .mp3
+  //     await _recorder.startRecorder(
+  //       toFile: filePath,
+  //       // codec: Codec.pcm16WAV,
+  //     );
+  //     setState(() {
+  //       isRecording = true;
+  //       _audioFile = File(filePath);
+  //     });
+  //   } catch (e) {
+  //     print('Error starting recording: $e');
+  //   }
+  // }
 
-  // Function to stop recording
-  void stopRecording() async {
-    try {
-      await _recorder.stopRecorder();
-      setState(() {
-        isRecording = false;
-      });
-    } catch (e) {
-      print('Error stopping recording: $e');
-    }
-  }
+  // // Function to stop recording
+  // void stopRecording() async {
+  //   try {
+  //     await _recorder.stopRecorder();
+  //     setState(() {
+  //       isRecording = false;
+  //     });
+  //   } catch (e) {
+  //     print('Error stopping recording: $e');
+  //   }
+  // }
 
   // Function to upload the audio file
   // void uploadNote() async {
@@ -107,9 +107,9 @@ class _RecordAudioWidgetState extends State<RecordAudioWidget> {
             ),
             onPressed: () {
               if (isRecording) {
-                stopRecording();
+                // stopRecording();
               } else {
-                startRecording();
+                // startRecording();
               }
             },
           ),

@@ -1,0 +1,26 @@
+{
+  "appTitle": "",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+ "home": "Home",
+ "schedule": "Sagantaa",
+ "notes": "Yaadannoo",
+ "profile": "Piroofayilii",
+ "newTask": "Hojii Haaraa",
+ "newMeeting": "Walgahii Haaraa",
+ "textNote": "Yaadannoo Barreeffamaa",
+ "voiceNote": "Yaadannoo sagaleen",
+ "upcoming": "Kan Dhufu",
+ "passed": "Kan Darbe",
+ "feedback": "Duubdeebii",
+ "merchant": "Daldaalaa",
+ "ww": "",
+ "we": "",
+ "crmchangerequest": "Gaaffii Jijjiirraa CRM",
+ "profile": "Piroofayilii",
+ "listOfCustomers": "Galmee Miseensota",
+ "customer": "Maamila",
+ "changeLanguage": "Qooqa Jijjiruu"
+  
+}

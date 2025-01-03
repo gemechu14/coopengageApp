@@ -11,10 +11,10 @@ class SkeletonBarChart extends StatelessWidget {
         children: [
           // Simulate the bar chart
           Container(
-            height: 215,
+            height: 175,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(6, (index) {
+              children: List.generate(5, (index) {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [

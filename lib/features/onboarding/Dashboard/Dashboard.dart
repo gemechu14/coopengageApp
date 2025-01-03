@@ -1,4 +1,3 @@
-
 // ignore_for_file: sort_child_properties_last, unused_local_variable, use_super_parameters, library_private_types_in_public_api, unnecessary_cast, avoid_print
 
 import 'dart:convert';
@@ -42,9 +41,15 @@ class _DashboardState extends State<Dashboard> {
   }
 
   List<Map<String, dynamic>> currentMonthData1 = [
-    {'name': 'New Accounts', 'target': 100, 'achievements': 60},
+    {'name': 'New Accounts', 'target': 1000, 'achievements': 360},
     {'name': 'Inactive Accounts', 'target': 200, 'achievements': 30},
-    {'name': 'Agents', 'target': 10, 'achievements': 338},
+    {'name': 'Agents', 'target': 10, 'achievements': 0},
+  ];
+
+  List<Map<String, dynamic>> currentMonthData2 = [
+    {'name': 'New Accounts', 'target': 1000, 'achievements': 100},
+    {'name': 'Inactive Accounts', 'target': 200, 'achievements': 300},
+    {'name': 'Agents', 'target': 10, 'achievements': 0},
   ];
 
   List<Map<String, dynamic>>? currentMonthData;
@@ -188,7 +193,7 @@ class _DashboardState extends State<Dashboard> {
           child: Column(
             children: [
               Container(
-                height: isTablet ? 300 : 240,
+                height: isTablet ? 240 : 240,
                 child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
@@ -305,64 +310,116 @@ class _DashboardState extends State<Dashboard> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+              // if (!isOnline)
+              //   CarouselSlider(
+              //     items: SliderImages.items.map((item) {
+              //       return Container(
+              //         width: double.infinity,
+              //         height: carouselHeight,
+              //         decoration: BoxDecoration(
+              //           borderRadius: BorderRadius.circular(8.0),
+              //           image: DecorationImage(
+              //             image: (item as Image).image,
+              //             fit: BoxFit.cover,
+              //           ),
+              //         ),
+              //       );
+              //     }).toList(),
+              //     options: CarouselOptions(
+              //       autoPlay: true,
+              //       height: carouselHeight,
+              //       autoPlayCurve: Curves.fastOutSlowIn,
+              //       autoPlayAnimationDuration:
+              //           const Duration(milliseconds: 1100),
+              //       autoPlayInterval: const Duration(seconds: 4),
+              //       enlargeCenterPage: true,
+              //       onPageChanged: (index, reason) {
+              //         setState(() {
+              //           currentItem = index;
+              //         });
+              //       },
+              //     ),
+              //   ),
+
+              // if (!isOnline) const SizedBox(height: 20),
+              // if (!isOnline)
+              //   AnimatedSmoothIndicator(
+              //     activeIndex: currentItem,
+              //     count: SliderImages.items.length,
+              //     effect: const WormEffect(
+              //       dotHeight: 13,
+              //       dotWidth: 13,
+              //       spacing: 5,
+              //       activeDotColor: Colors.blue,
+              //       paintStyle: PaintingStyle.fill,
+              //     ),
+              //   ),
+
               if (!isOnline)
-                CarouselSlider(
-                  items: SliderImages.items.map((item) {
-                    return Container(
-                      width: double.infinity,
-                      height: carouselHeight,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.0),
-                        image: DecorationImage(
-                          image: (item as Image).image,
-                          fit: BoxFit.cover,
+                Container(
+                  height: 205, // Fixed height for the container
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: CarouselSlider(
+                          items: SliderImages.items.map((item) {
+                            return Container(
+                              width: double.infinity,
+                              // height: 90,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8.0),
+                                image: DecorationImage(
+                                  image: (item as Image).image,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          options: CarouselOptions(
+                            autoPlay: true,
+                            height: 190, // Fixed height
+                            autoPlayCurve: Curves.fastOutSlowIn,
+                            autoPlayAnimationDuration:
+                                const Duration(milliseconds: 1100),
+                            autoPlayInterval: const Duration(seconds: 4),
+                            enlargeCenterPage: true,
+                            onPageChanged: (index, reason) {
+                              setState(() {
+                                currentItem = index;
+                              });
+                            },
+                          ),
                         ),
                       ),
-                    );
-                  }).toList(),
-                  options: CarouselOptions(
-                    autoPlay: true,
-                    height: carouselHeight,
-                    autoPlayCurve: Curves.fastOutSlowIn,
-                    autoPlayAnimationDuration:
-                        const Duration(milliseconds: 1100),
-                    autoPlayInterval: const Duration(seconds: 4),
-                    enlargeCenterPage: true,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        currentItem = index;
-                      });
-                    },
-                  ),
-                ),
-
-              // const SizedBox(height: 20),
-              if (!isOnline)
-                AnimatedSmoothIndicator(
-                  activeIndex: currentItem,
-                  count: SliderImages.items.length,
-                  effect: const WormEffect(
-                    dotHeight: 13,
-                    dotWidth: 13,
-                    spacing: 5,
-                    activeDotColor: Colors.blue,
-                    paintStyle: PaintingStyle.fill,
+                      const SizedBox(height: 20),
+                      AnimatedSmoothIndicator(
+                        activeIndex: currentItem,
+                        count: SliderImages.items.length,
+                        effect: const WormEffect(
+                          dotHeight: 13,
+                          dotWidth: 13,
+                          spacing: 5,
+                          activeDotColor: Colors.blue,
+                          paintStyle: PaintingStyle.fill,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
               // AnalyticsSection(),
               if (isOnline)
                 Container(
-                    height: 250,
+                    height: 235,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 10, right: 15),
+                      padding: const EdgeInsets.only(left: 10, right: 10),
                       child: currentMonthData != null
                           ? AchievementBarChart(data: currentMonthData!)
                           : Center(child: SkeletonBarChart()),
                     )),
 
-              if (!isOnline) const SizedBox(height: 20),
+              if (!isOnline) const SizedBox(height: 30),
               if (localCustomers > 0)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -439,7 +496,7 @@ class _DashboardState extends State<Dashboard> {
 
               approvedUsers = data['APPROVED'];
               TOTALAPPROVED = approvedUsers;
-              pendingUsers = data['PENDING'];
+              pendingUsers = data['PENDING']  + data['UNAUTHORIZED'];
               TOTALPENDING = pendingUsers;
               initialStatus = data['INITIAL'];
               TOTALINITIAL = data['INITIAL'];

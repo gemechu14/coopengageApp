@@ -3636,8 +3636,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   }
 
   handlefirstStep() {
-    if (GlobalData().role != 'ACCOUNT-CREATOR' ||
-        GlobalData().role != 'BRANCH-ADMIN') {
+    if (GlobalData().role != 'ACCOUNT-CREATOR' ) {
       print(GlobalData().role);
       registerStatus = false;
       FormHelper.showSimpleAlertDialog(
