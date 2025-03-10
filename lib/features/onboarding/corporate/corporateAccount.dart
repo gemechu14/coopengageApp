@@ -6,20 +6,20 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
-// import 'package:csc_picker/csc_picker.dart';
+import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
+import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:intl_phone_field/countries.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
 // import 'package:searchfield/searchfield.dart';
@@ -30,15 +30,6 @@ import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:http/http.dart' as http;
 import '../../../common_widgets/dropDown/DatePickerField.dart';
 import 'dart:ui' as ui;
-
-///////////////////////////////////////////
-
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui';
-// import 'package:csc_picker/csc_picker.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/common_widgets/textField/PaymentMethod.dart';
@@ -51,46 +42,43 @@ import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/widget/ButtonUploadTakePhoto%20.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:coopengageplus/widget/SignatureButtons.dart';
-import 'package:email_validator/email_validator.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:intl/intl.dart';
-import 'package:intl_phone_field/countries.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
-
-import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
-
-import 'package:phonenumbers/phonenumbers.dart';
-import 'package:scrollable_table_view/scrollable_table_view.dart';
-// import 'package:searchfield/searchfield.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:signature/signature.dart';
-import 'package:snippet_coder_utils/FormHelper.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
-import 'package:http/http.dart' as http;
-import '../../../common_widgets/dropDown/DatePickerField.dart';
-import 'dart:ui' as ui;
-
+import '../../../common_widgets/dropDown/documentUploads.dart';
 import '../pages/old/HomePage.dart';
 
 bool isConventionalSelected = true;
-
 List<Map<String, dynamic>> allBranches = [];
 String? selectedBranch;
-
+List<List<bool>> isExpandedPersonalList = [];
+List<List<bool>> isExpandedAddressInfoList = [];
+List<List<bool>> isExpandedDocumentInfoList = [];
 String? selectedAccountTypeId;
+bool isFirstPersonExpanded = false;
+bool isSecondPersonExpanded = false;
+bool isExpandedPersonalInformation = false;
+List<bool> isExpandedList = [false, false];
 
-class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key});
+File? licenseFile;
+File? articleFile;
+
+List<File> selectedFiles = [];
+// List<bool> isExpandedList = [];
+List<GlobalKey<FormState>> formKeys = [];
+List<TextEditingController> fullNameControllers = [];
+List<TextEditingController> phoneControllers = [];
+List<TextEditingController> emailControllers = [];
+
+List<TextEditingController> monthlyIncomeControllers = [];
+List<TextEditingController> motherNameControllers = [];
+List<TextEditingController> DateofBirthControllers = [];
+List<TextEditingController> occupationControllers = [];
+
+class CorporateRegistration extends StatefulWidget {
+  const CorporateRegistration({super.key});
   @override
-  State<RegistrationScreen> createState() => _Registration();
+  State<CorporateRegistration> createState() => _Registration();
 }
 
-class _Registration extends State<RegistrationScreen> {
+class _Registration extends State<CorporateRegistration> {
   // final storage = FlutterSecureStorage();
   String? userId;
   int? userID;
@@ -119,7 +107,7 @@ class _Registration extends State<RegistrationScreen> {
       _signatureController3;
   final ImagePicker _picker = ImagePicker();
   List<XFile>? _signatureImages = [];
-  bool _isSigning = false; // To toggle between sign and upload
+  bool _isSigning = false;
   Uint8List? _combinedSignature;
 
   Future<void> _initializeGlobalData() async {
@@ -138,10 +126,28 @@ class _Registration extends State<RegistrationScreen> {
   @override
   void initState() {
     super.initState();
+    int membersCount = 2;
+    formKeys = List.generate(2, (index) => GlobalKey<FormState>());
+    motherNameControllers =
+        List.generate(2, (index) => TextEditingController());
+    fullNameControllers = List.generate(2, (index) => TextEditingController());
+    occupationControllers =
+        List.generate(2, (index) => TextEditingController());
+    monthlyIncomeControllers =
+        List.generate(2, (index) => TextEditingController());
+    phoneControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    emailControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    isExpandedPersonalList = List.generate(membersCount, (index) => [false]);
+
+    isExpandedAddressInfoList = List.generate(membersCount, (index) => [false]);
+    isExpandedDocumentInfoList =
+        List.generate(membersCount, (index) => [false]);
     _initializeGlobalData();
     _initializeGlobal();
     initializeBranches();
-
+    // NumberOfMembers = "2";
     _signatureController1 = SignatureController(
       penColor: Colors.black,
       penStrokeWidth: 5,
@@ -166,6 +172,9 @@ class _Registration extends State<RegistrationScreen> {
     selectedDocumentType = ListContants.documentName.first;
     selectedTitle = ListContants.title.first;
     selectedSector = ListContants.sectors.first;
+
+    AccountTypeSelection = ListContants.AccountTypeSelection.first;
+    NumberOfMembers = ListContants.NumberOfMembers.first;
     issueAuthorityController.text = 'ET';
   }
 
@@ -183,6 +192,9 @@ class _Registration extends State<RegistrationScreen> {
   String? selectedMaritalStatus;
   String? selectedCustomerType;
   String? selectedDocumentType;
+  String? selectedAccountType;
+  String? AccountTypeSelection;
+  String? NumberOfMembers;
   String? selectedSector;
   String imagePath = "";
   String passportPath = "";
@@ -284,97 +296,463 @@ class _Registration extends State<RegistrationScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextLabel("Customer Type"),
-            ReusableDropdown(
-              selectedValue: selectedCustomerType,
-
-              items: ListContants.customerType,
-              hintText: 'Select Customer Type',
-              onChanged: (newStatus) {
-                setState(() {
-                  selectedCustomerType = newStatus!;
-                });
-              },
-              prefixIcon: selectedCustomerType == 'INDIVIDUAL' ||
-                      selectedCustomerType == 'DIASPORA'
-                  ? Icons.person
-                  : Icons.business,
-              errorMessage:
-                  'Please select a marital status', // Pass the custom error message
-              isRequired: false, // Make the field required
+            TextLabel("Company Name"),
+            ReusableTextFormField(
+              hintText: "Company Name",
+              controller: fullNameControllers[0],
+              keyboardType: TextInputType.text,
+              errorMessage: "Company Name cannot be empty",
+              leadingIcon: Icons.business,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
+              ],
+              isRequired: true,
             ),
             TextLabel("PhoneNumber"),
-            PhoneNumberWidget(phoneNumberController: phoneNumberController),
-            TextLabel("Email"),
-            EmailWidget(emailController: emailController),
-            // emailWidget(),
+            PhoneNumberWidget(phoneNumberController: phoneControllers[0]),
+            TextLabel("TIN"),
+            ReusableTextFormField(
+              hintText: "TIN ",
+              controller: fullNameControllers[0],
+              keyboardType: TextInputType.text,
+              errorMessage: "TIN cannot be empty",
+              leadingIcon: Icons.badge,
+              // inputFormatters: [
+              //   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
+              // ],
+              isRequired: true,
+            ),
+            TextLabel("Date of Establishment"),
+
+            DatePickerField(
+              controller: dateOfBirthController,
+              hintText: 'Date of Establishment',
+              prefixIcon: Icons.date_range,
+              initialDate: DateTime.now().add(const Duration(days: -10000)),
+              firstDate: DateTime(1940),
+              lastDate: DateTime.now(),
+              isRequired: true,
+              isGreyBorder: true,
+              errorMessage: 'Please select a date of Establishment',
+            ),
+            TextLabel("Sector"),
+            ReusableDropdown(
+              selectedValue: selectedSector,
+              items: ListContants.sectors,
+              hintText: 'Select Sector',
+              onChanged: (newStatus) {
+                setState(() {
+                  selectedSector = newStatus!;
+                });
+              },
+              prefixIcon: Icons.category,
+              errorMessage:
+                  'Please select a Sector status', // Pass the custom error message
+              isRequired: true, // Make the field required
+            ),
+            TextLabel("Resident"),
+            ReusableTextFormField(
+              hintText: "Resident ",
+              controller: fullNameControllers[0],
+              keyboardType: TextInputType.text,
+              errorMessage: "Resident cannot be empty",
+              leadingIcon: Icons.location_city,
+              // inputFormatters: [
+              //   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
+              // ],
+              isRequired: true,
+            ),
+            // TextLabel("Select Number of Members"),
+            // ReusableDropdown(
+            //   selectedValue: NumberOfMembers,
+            //   items: ListContants.NumberOfMembers,
+            //   hintText: 'Select Number of Members',
+            //   onChanged: (newStatus) {
+            //     print("""Roobee""");
+            //     setState(() {
+            //       NumberOfMembers = newStatus!;
+            //       isExpandedList = List.generate(
+            //           int.parse(NumberOfMembers!), (index) => false);
+            //       int membersCount = int.parse(NumberOfMembers!);
+            //       print(membersCount);
+            //       print("gemechuuuu");
+            //       isExpandedList =
+            //           List.generate(membersCount, (index) => false);
+            //       isExpandedPersonalList =
+            //           List.generate(membersCount, (index) => [false]);
+            //       isExpandedAddressInfoList =
+            //           List.generate(membersCount, (index) => [false]);
+            //       formKeys = List.generate(
+            //           membersCount, (index) => GlobalKey<FormState>());
+            //       fullNameControllers = List.generate(
+            //           membersCount, (index) => TextEditingController());
+            //       phoneControllers = List.generate(
+            //           membersCount, (index) => TextEditingController());
+            //       emailControllers = List.generate(
+            //           membersCount, (index) => TextEditingController());
+            //     });
+            //   },
+            //   prefixIcon: Icons.person_add,
+            //   errorMessage: 'Please select Number of Members',
+            //   isRequired: true,
+            // ),
+
+            const SizedBox(height: 5),
           ],
         ),
       ),
       Step(
-        title: Text(
-          isSmallScreen ? "" : "ID TYPE",
-        ),
+        title: Text(isSmallScreen ? "" : "Signature"),
         isActive: _activeStepIndex >= 1,
         state: _activeStepIndex > 1 ? StepState.complete : StepState.indexed,
-        content: Form(
-          key: globalFormKey1,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextLabel("Branch"),
-              // branchSelectorWidget(),
-              branchSelectorWidget1(),
-              TextLabel("Document Type"),
-              ReusableDropdown(
-                selectedValue: selectedDocumentType,
-
-                items: ListContants.documentName,
-                hintText: 'Select Customer Type',
-                onChanged: (newStatus) {
-                  setState(() {
-                    selectedDocumentType = newStatus!;
-                  });
-                },
-                prefixIcon: Icons.document_scanner,
-                errorMessage:
-                    'Please select a Document  type', // Pass the custom error message
-                isRequired: false, // Make the field required
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              idCardPhoto(),
-            ],
-          ),
-        ),
-      ),
-      Step(
-        title: Text(isSmallScreen ? "" : "Signature"),
-        isActive: _activeStepIndex >= 2,
-        state: _activeStepIndex > 2 ? StepState.complete : StepState.indexed,
         content: Form(
           key: globalFormKey2,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextLabel("Mother Name"),
-              ReusableTextFormField(
-                hintText: "Mother Name",
-                controller: motherNameController,
-                keyboardType: TextInputType.text,
-                errorMessage: "Mother Name cannot be empty",
-                leadingIcon: Icons.person,
+              TextLabel("Branch"),
+              branchSelectorWidget1(),
+              TextLabel("State"),
+              ReusableDropdown(
+                selectedValue: selectedState,
+                items: ListContants.ethiopianStates,
+                hintText: 'Select State',
+                onChanged: (newState) {
+                  setState(() {
+                    selectedState = newState;
+                    print(selectedState);
+                  });
+                },
+                errorMessage: 'Please select a state',
+                prefixIcon: Icons.map,
                 isRequired: false,
               ),
-              TextLabel("Signature"),
-              // signatureWidget1(context),
-              signatureCard(),
-              signaturePadSelection(),
+              TextLabel("Zone Subcity"),
+              ReusableTextFormField(
+                hintText: "Zone Subcity",
+                controller: cityController,
+                // keyboardType: TextInputType.number,
+                errorMessage: "Zone Subcity cannot be empty",
+                leadingIcon: Icons.location_city,
+                isRequired: false,
+              ),
+              TextLabel("Woreda"),
+              ReusableTextFormField(
+                hintText: "Woreda",
+                controller: woredaController,
+                // keyboardType: TextInputType.number,
+                errorMessage: "Woreda cannot be empty",
+                leadingIcon: Icons.location_city,
+                isRequired: false,
+              ),
+              TextLabel("Select Number of Authorized Signers"),
+              ReusableDropdown(
+                selectedValue: NumberOfMembers,
+                items: ListContants.NumberOfMembers,
+                hintText: 'Select Number of Authorized Signers',
+                onChanged: (newStatus) {
+                  setState(() {
+                    NumberOfMembers = newStatus!;
+                    int membersCount = int.parse(NumberOfMembers!);
+                    isExpandedList =
+                        List.generate(membersCount, (index) => false);
+                    isExpandedPersonalList =
+                        List.generate(membersCount, (index) => [false]);
+                    isExpandedAddressInfoList =
+                        List.generate(membersCount, (index) => [false]);
+                    formKeys = List.generate(
+                        membersCount, (index) => GlobalKey<FormState>());
+                    fullNameControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    phoneControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    emailControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                  });
+                },
+                prefixIcon: Icons.person_add,
+                errorMessage: 'Please select the number of authorized signers',
+                isRequired: true,
+              ),
+              SizedBox(
+                height: 50,
+              )
             ],
           ),
+        ),
+      ),
+      Step(
+        title: Text(
+          isSmallScreen ? "" : "Personal Information",
+        ),
+        isActive: _activeStepIndex >= 2,
+        state: _activeStepIndex > 2 ? StepState.complete : StepState.indexed,
+        content: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < int.parse(NumberOfMembers!); i++)
+              Form(
+                key: formKeys[i],
+                child: _buildExpandableSection(
+                  "Person ${i + 1}",
+                  isExpandedList[i],
+                  () {
+                    setState(() {
+                      // If clicked section is already expanded, collapse it
+                      isExpandedList[i] = !isExpandedList[i];
+
+                      // Close all other sections
+                      for (int j = 0; j < isExpandedList.length; j++) {
+                        if (i != j) {
+                          isExpandedList[j] =
+                              false; // Collapse all other sections
+                        }
+                      }
+                    });
+                  },
+                  [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        _buildExpandablePersonalInformationSection(
+                            "Personal Information",
+                            isExpandedPersonalList[i][0], () {
+                          setState(() {
+                            isExpandedPersonalList[i][0] =
+                                !isExpandedPersonalList[i][0];
+                          });
+                        }, [
+                          // Text("Gemechu Bulti"),
+                          TextLabel("Full Name"),
+                          ReusableTextFormField(
+                            hintText: "Full Name",
+                            controller: fullNameControllers[i],
+                            isEnabled: i == 0 ? false : true,
+                            keyboardType: TextInputType.text,
+                            errorMessage: "Full Name cannot be empty",
+                            leadingIcon: Icons.person,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^[a-zA-Z\s]+$')),
+                            ],
+                            isRequired: true,
+                          ),
+
+                          TextLabel("Phone Number"),
+                          PhoneNumberWidget(
+                            phoneNumberController: phoneControllers[i],
+                            isEnabled: i == 0 ? false : true,
+                          ),
+                          TextLabel("Email"),
+                          EmailWidget(emailController: emailControllers[i]),
+
+                          TextLabel("Mother Name"),
+                          ReusableTextFormField(
+                            hintText: "Mother Name",
+                            controller: motherNameControllers[i],
+                            keyboardType: TextInputType.text,
+                            errorMessage: "Mother Name cannot be empty",
+                            leadingIcon: Icons.person,
+                            isRequired: false,
+                          ),
+
+                          TextLabel("Occupation "),
+                          ReusableTextFormField(
+                            hintText: "Enter Occupation",
+                            controller: occupationControllers[i],
+                            // keyboardType: TextInputType.number,
+                            errorMessage: "Occupation cannot be empty",
+                            leadingIcon: Icons.work,
+                            // return '';
+                            // inputFormatters: [
+                            //   FilteringTextInputFormatter.digitsOnly, // Only allow numbers
+                            // ],
+                            isRequired: true,
+                          ),
+                          TextLabel("Monthly Income"),
+                          ReusableTextFormField(
+                            hintText: "Enter Monthly Income",
+                            controller: monthlyIncomeControllers[i],
+                            keyboardType: TextInputType.number,
+                            errorMessage: "monthlyIncome cannot be empty",
+                            leadingIcon: Icons.trending_up,
+                            // return '';
+                            inputFormatters: [
+                              FilteringTextInputFormatter
+                                  .digitsOnly, // Only allow numbers
+                            ],
+                            isRequired: true,
+                          ),
+                          TextLabel("Gender"),
+                          genderWidget1(),
+                          TextLabel("Marital Status"),
+                          ReusableDropdown(
+                            selectedValue: selectedMaritalStatus,
+                            items: ListContants.maritalStatuses,
+                            hintText: 'Select Marital Status',
+                            onChanged: (newStatus) {
+                              setState(() {
+                                selectedMaritalStatus = newStatus!;
+                              });
+                            },
+                            prefixIcon: Icons.family_restroom,
+                            errorMessage:
+                                'Please select a marital status', // Pass the custom error message
+                            isRequired: false, // Make the field required
+                          ),
+                          TextLabel("Sector"),
+                          ReusableDropdown(
+                            selectedValue: selectedSector,
+                            items: ListContants.sectors,
+                            hintText: 'Select Sector',
+                            onChanged: (newStatus) {
+                              setState(() {
+                                selectedSector = newStatus!;
+                              });
+                            },
+                            prefixIcon: Icons.category,
+                            errorMessage:
+                                'Please select a Sector status', // Pass the custom error message
+                            isRequired: true, // Make the field required
+                          ),
+                          TextLabel("Date of Birth"),
+
+                          DatePickerField(
+                            controller: dateOfBirthController,
+                            hintText: 'Date of Birth',
+                            prefixIcon: Icons.date_range,
+                            initialDate: DateTime.now()
+                                .add(const Duration(days: -10000)),
+                            firstDate: DateTime(1940),
+                            lastDate: DateTime.now(),
+                            isRequired: true,
+                            errorMessage: 'Please select a date of birth',
+                          ),
+                        ]),
+                        _buildExpandablePersonalInformationSection(
+                            "Address Information",
+                            isExpandedAddressInfoList[i][0],
+                            // isExpandedPersonalList[i][0],
+                            () {
+                          setState(() {
+                            isExpandedAddressInfoList[i][0] =
+                                !isExpandedAddressInfoList[i][0];
+                            // isExpandedPersonalList[i][0] =
+                            //     !isExpandedPersonalList[i][0];
+                          });
+                        }, [
+                          TextLabel("State"),
+                          ReusableDropdown(
+                            selectedValue: selectedState,
+                            items: ListContants.ethiopianStates,
+                            hintText: 'Select State',
+                            onChanged: (newState) {
+                              setState(() {
+                                selectedState = newState;
+                                print(selectedState);
+                              });
+                            },
+                            errorMessage: 'Please select a state',
+                            prefixIcon: Icons.map,
+                            isRequired: false,
+                          ),
+                          TextLabel("Zone Subcity"),
+                          ReusableTextFormField(
+                            hintText: "Zone Subcity",
+                            controller: cityController,
+                            // keyboardType: TextInputType.number,
+                            errorMessage: "Zone Subcity cannot be empty",
+                            leadingIcon: Icons.location_city,
+                            isRequired: false,
+                          ),
+                          TextLabel("Woreda"),
+                          ReusableTextFormField(
+                            hintText: "Woreda",
+                            controller: woredaController,
+                            // keyboardType: TextInputType.number,
+                            errorMessage: "Woreda cannot be empty",
+                            leadingIcon: Icons.location_city,
+                            isRequired: false,
+                          ),
+                        ]),
+                        _buildExpandablePersonalInformationSection(
+                            "Document Information",
+                            isExpandedDocumentInfoList[i][0],
+                            // isExpandedPersonalList[i][0],
+                            () {
+                          setState(() {
+                            isExpandedDocumentInfoList[i][0] =
+                                !isExpandedDocumentInfoList[i][0];
+                            // isExpandedPersonalList[i][0] =
+                            //     !isExpandedPersonalList[i][0];
+                          });
+                        }, [
+                          TextLabel("Personal Photo"),
+                          personalPhoto(),
+                          idCardPhoto(),
+                          TextLabel("Signature"),
+                          // signatureWidget1(context),
+                          signatureCard(),
+                          signaturePadSelection(),
+                          TextLabel("Legal ID"),
+                          ReusableTextFormField(
+                            hintText: "Legal ID",
+                            controller: legalIDController,
+                            // keyboardType: TextInputType.number,
+                            errorMessage: "Legal ID cannot be empty",
+                            leadingIcon: Icons.badge,
+                            isRequired: true,
+                          ),
+                          TextLabel("ISSUE AUTHORITY"),
+
+                          ReusableTextFormField(
+                            hintText: "ISSUE AUTHORITY",
+                            controller: issueAuthorityController,
+                            // keyboardType: TextInputType.number,
+                            errorMessage: "ISSUE AUTHORITY cannot be empty",
+                            leadingIcon: Icons.verified,
+                            isRequired: false,
+                          ),
+
+                          TextLabel("ISSUE DATE"),
+                          DatePickerField(
+                            controller: issueDateController,
+                            hintText: 'Issue Date',
+                            prefixIcon: Icons.calendar_today,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now().subtract(const Duration(
+                                days: 365 * 15)), // 15 years before today
+                            lastDate: DateTime.now(),
+                            isRequired: false,
+                            errorMessage: 'Please select an issue date',
+                          ),
+
+                          TextLabel("EXPIRY DATE"),
+                          DatePickerField(
+                            controller: expireDateController,
+                            hintText: 'Expire Date',
+                            prefixIcon: Icons.event_busy,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(), // First date is today
+                            lastDate: DateTime.now()
+                                .add(const Duration(days: 365 * 12)),
+                            isRequired: false,
+                            errorMessage: 'Please select an expire date',
+                          ),
+                        ]),
+                        SizedBox(
+                          height: 50,
+                        ),
+                      ],
+                    ),
+                    // idCardPhoto(),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
       Step(
@@ -382,161 +760,11 @@ class _Registration extends State<RegistrationScreen> {
         isActive: _activeStepIndex >= 3,
         state: _activeStepIndex > 3 ? StepState.complete : StepState.indexed,
         content: Form(
-          key: globalFormKey3,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextLabel("Personal Photo"),
-              personalPhoto(),
-            ],
-          ),
-        ),
-      ),
-      Step(
-        title: Text(isSmallScreen ? "" : "Personal photo"),
-        isActive: _activeStepIndex >= 4,
-        state: _activeStepIndex > 4 ? StepState.complete : StepState.indexed,
-        content: Form(
           key: globalFormKey4,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextLabel("Sector"),
-              ReusableDropdown(
-                selectedValue: selectedSector,
-                items: ListContants.sectors,
-                hintText: 'Select Sector',
-                onChanged: (newStatus) {
-                  setState(() {
-                    selectedSector = newStatus!;
-                  });
-                },
-                prefixIcon: Icons.category,
-                errorMessage:
-                    'Please select a Sector status', // Pass the custom error message
-                isRequired: true, // Make the field required
-              ),
-              TextLabel("Occupation "),
-              ReusableTextFormField(
-                hintText: "Enter Occupation",
-                controller: occupationController,
-                // keyboardType: TextInputType.number,
-                errorMessage: "Occupation cannot be empty",
-                leadingIcon: Icons.work,
-                // return '';
-                // inputFormatters: [
-                //   FilteringTextInputFormatter.digitsOnly, // Only allow numbers
-                // ],
-                isRequired: true,
-              ),
-              TextLabel("Monthly Income"),
-              ReusableTextFormField(
-                hintText: "Enter Monthly Income",
-                controller: monthlyIncomeController,
-                keyboardType: TextInputType.number,
-                errorMessage: "monthlyIncome cannot be empty",
-                leadingIcon: Icons.trending_up,
-                // return '';
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly, // Only allow numbers
-                ],
-                isRequired: true,
-              ),
-              // TextLabel("Banking Type"),
-              // ReusableDropdown(
-              //   selectedValue: selectedBankingType,
-              //   items: ['Conventional', 'Alhuda'],
-              //   hintText: 'Select Banking Type',
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       selectedBankingType = newValue!;
-
-              //       _filterAccountTypes(
-              //           newValue); // Filter the account types based on the selected bankingType
-              //       selectedAccountTypeId = null;
-              //     });
-              //   },
-              //   prefixIcon: Icons.account_balance,
-              //   errorMessage: 'Please select a banking type',
-              //   isRequired: true, // Required field
-              // ),
-              // TextLabel(" Account Type"),
-              // DropdownButtonFormField<String>(
-              //   // value: selectedAccountTypeId != null
-              //   //     ? filteredAccountTypes[0]['name']!
-              //   //     : null,
-
-              //   value: (filteredAccountTypes.isNotEmpty &&
-              //           selectedAccountTypeId != null)
-              //       ? filteredAccountTypes[0]['name']
-              //       : null,
-
-              //   items: filteredAccountTypes
-              //       .map<DropdownMenuItem<String>>(
-              //         (accountType) => DropdownMenuItem<String>(
-              //           value: accountType['name'] as String,
-              //           child: Text(
-              //             accountType['name'] as String,
-              //             overflow: TextOverflow
-              //                 .visible, // Show full text in the dropdown
-              //           ),
-              //         ),
-              //       )
-              //       .toList(),
-              //   hint: const Text('Select Account Type'),
-              //   onChanged: (String? selectedAccountType) {
-              //     if (selectedAccountType != null) {
-              //       // Find the accountType object that matches the selected name
-              //       var selectedAccountTypeDetails =
-              //           filteredAccountTypes.firstWhere(
-              //         (accountType) =>
-              //             accountType['name'] == selectedAccountType,
-              //       );
-              //       selectedAccountTypeId = selectedAccountType;
-              //       // Save the selected account type ID
-              //       selectedAccountId = selectedAccountTypeDetails['id'];
-
-              //       // Print the selected account type ID (for debugging purposes)
-              //       print('Selected Account Type ID: $selectedAccountId');
-              //     }
-              //   },
-              //   decoration: const InputDecoration(
-              //     isDense: true,
-              //     enabledBorder: OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(
-              //         color: Colors.black,
-              //       ),
-              //     ),
-              //     focusedBorder: const OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(color: Colors.blue),
-              //     ),
-              //     errorBorder: const OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(color: Colors.red),
-              //     ),
-              //     focusedErrorBorder: const OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(color: Colors.red),
-              //     ),
-              //   ),
-              //   selectedItemBuilder: (BuildContext context) {
-              //     return filteredAccountTypes.map<Widget>((accountType) {
-              //       String accountName = accountType['name'] as String;
-              //       return Text(
-              //         accountName.length > 25
-              //             ? accountName.substring(0, 25) +
-              //                 '...' // Truncate to 20 chars
-              //             : accountName,
-              //         overflow: TextOverflow
-              //             .ellipsis, // Truncate with ellipsis in the selected value field
-              //       );
-              //     }).toList();
-              //   },
-              // ),
               TextLabel("InitialDeposit"),
               ReusableTextFormField(
                 hintText: "InitialDeposit",
@@ -560,397 +788,111 @@ class _Registration extends State<RegistrationScreen> {
         ),
       ),
       Step(
-        title: Text(isSmallScreen ? "" : "Payment"),
-        isActive: _activeStepIndex >= 5,
-        state: _activeStepIndex > 5 ? StepState.complete : StepState.indexed,
+        title: Text(isSmallScreen ? "" : "Financial Information"),
+        isActive: _activeStepIndex >= 4,
+        state: _activeStepIndex > 4 ? StepState.complete : StepState.indexed,
         content: Form(
           key: globalFormKey5,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextLabel("Title"),
-              ReusableDropdown(
-                selectedValue: selectedTitle,
-
-                items: ListContants.title,
-                hintText: 'Select title',
-                onChanged: (newStatus) {
-                  setState(() {
-                    selectedTitle = newStatus!;
-                  });
-                },
-                prefixIcon: Icons.person_outline,
-                errorMessage:
-                    'Please select a title', // Pass the custom error message
-                isRequired: false, // Make the field required
+              TextLabel("License"),
+              // pickLicense1(),
+              // Upload License Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: pickLicense,
+                  icon: Icon(Icons.upload_file, color: Colors.black),
+                  label: Text("Upload License",
+                      style: TextStyle(color: Colors.black)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                ),
               ),
-              TextLabel("Full Name"),
-              ReusableTextFormField(
-                hintText: "Full Name",
-                controller: fullNameController,
-                keyboardType: TextInputType.text,
-                errorMessage: "Full Name cannot be empty",
-                leadingIcon: Icons.person,
-                isRequired: true,
+              if (licenseFile != null)
+                Text("Selected: ${licenseFile!.path}"), // Show selected file
+
+              SizedBox(height: 10),
+
+              // Upload Article Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: pickArticle,
+                  icon: Icon(Icons.upload_file, color: Colors.black),
+                  label: Text("Upload Article",
+                      style: TextStyle(color: Colors.black)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                ),
               ),
+              if (articleFile != null) Text("Selected: ${articleFile!.path}"),
+              TextLabel("Upload Documents "),
 
-              TextLabel("SurName"),
-              ReusableTextFormField(
-                hintText: "SurName",
-                controller: surNameController,
-                keyboardType: TextInputType.text,
-                errorMessage: "SurName cannot be empty",
-                leadingIcon: Icons.person,
-                isRequired: false,
-              ),
+              // ElevatedButton.icon(
 
-              if (selectedCustomerType == 'INDIVIDUAL')
-                TextLabel("Date of Birth"),
-              if (selectedCustomerType == 'ORGANIZATION')
-                TextLabel("Date of Estabilishment"),
-
-              DatePickerField(
-                controller: dateOfBirthController,
-                hintText: (selectedCustomerType == 'INDIVIDUAL')
-                    ? 'Date of Birth'
-                    : "Date of Establishment",
-                prefixIcon: Icons.date_range,
-                initialDate: DateTime.now().add(const Duration(days: -10000)),
-                firstDate: DateTime(1940),
-                lastDate: DateTime.now(),
-                isRequired: true,
-                errorMessage: 'Please select a date of birth',
-              ),
-
-              // dateOfBirthWidget(),
-              if (selectedCustomerType == 'INDIVIDUAL')
-                TextLabel("Marital Status"),
-              if (selectedCustomerType == 'INDIVIDUAL')
-                ReusableDropdown(
-                  selectedValue: selectedMaritalStatus,
-                  items: ListContants.maritalStatuses,
-                  hintText: 'Select Marital Status',
-                  onChanged: (newStatus) {
-                    setState(() {
-                      selectedMaritalStatus = newStatus!;
-                    });
-                  },
-                  prefixIcon: Icons.family_restroom,
-                  errorMessage:
-                      'Please select a marital status', // Pass the custom error message
-                  isRequired: false, // Make the field required
-                ),
-              if (selectedCustomerType == 'INDIVIDUAL') TextLabel("Gender"),
-              //Gender
-              if (selectedCustomerType == 'INDIVIDUAL') genderWidget1(),
-            ],
-          ),
-        ),
-      ),
-      Step(
-        title: Text(isSmallScreen ? "" : "Personal Information "),
-        isActive: _activeStepIndex >= 6,
-        state: _activeStepIndex > 6 ? StepState.complete : StepState.indexed,
-        content: Form(
-            key: globalFormKey6,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // TextLabel("Country"),
-                // countryWidget(),
-                TextLabel("State"),
-                ReusableDropdown(
-                  selectedValue: selectedState,
-                  items: ListContants.ethiopianStates,
-                  hintText: 'Select State',
-                  onChanged: (newState) {
-                    setState(() {
-                      selectedState = newState;
-                      print(selectedState);
-                    });
-                  },
-                  errorMessage: 'Please select a state',
-                  prefixIcon: Icons.map,
-                  isRequired: false,
-                ),
-
-                TextLabel("Zone Subcity"),
-                ReusableTextFormField(
-                  hintText: "Zone Subcity",
-                  controller: cityController,
-                  // keyboardType: TextInputType.number,
-                  errorMessage: "Zone Subcity cannot be empty",
-                  leadingIcon: Icons.location_city,
-                  isRequired: false,
-                ),
-
-                TextLabel("Woreda"),
-                ReusableTextFormField(
-                  hintText: "Woreda",
-                  controller: woredaController,
-                  // keyboardType: TextInputType.number,
-                  errorMessage: "Woreda cannot be empty",
-                  leadingIcon: Icons.location_city,
-                  isRequired: false,
-                ),
-
-                TextLabel("Legal ID"),
-                ReusableTextFormField(
-                  hintText: "Legal ID",
-                  controller: legalIDController,
-                  // keyboardType: TextInputType.number,
-                  errorMessage: "Legal ID cannot be empty",
-                  leadingIcon: Icons.badge,
-                  isRequired: true,
-                ),
-                TextLabel("ISSUE AUTHORITY"),
-
-                ReusableTextFormField(
-                  hintText: "ISSUE AUTHORITY",
-                  controller: issueAuthorityController,
-                  // keyboardType: TextInputType.number,
-                  errorMessage: "ISSUE AUTHORITY cannot be empty",
-                  leadingIcon: Icons.verified,
-                  isRequired: false,
-                ),
-
-                TextLabel("ISSUE DATE"),
-                DatePickerField(
-                  controller: issueDateController,
-                  hintText: 'Issue Date',
-                  prefixIcon: Icons.calendar_today,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now().subtract(
-                      const Duration(days: 365 * 15)), // 15 years before today
-                  lastDate: DateTime.now(),
-                  isRequired: false,
-                  errorMessage: 'Please select an issue date',
-                ),
-
-                TextLabel("EXPIRY DATE"),
-                DatePickerField(
-                  controller: expireDateController,
-                  hintText: 'Expire Date',
-                  prefixIcon: Icons.event_busy,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now(), // First date is today
-                  lastDate: DateTime.now().add(const Duration(days: 365 * 12)),
-                  isRequired: false,
-                  errorMessage: 'Please select an expire date',
-                ),
-              ],
-            )),
-      ),
-
-      /// Account TYPE
-      Step(
-        title: Text(isSmallScreen ? "" : "Account Type "),
-        isActive: _activeStepIndex >= 7,
-        state: _activeStepIndex > 7 ? StepState.complete : StepState.indexed,
-        content: Form(
-            key: globalFormKey7,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Account Type',
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.end,
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: ['Conventional', 'Alhuda'].map((bankingType) {
-                    bool isSelected = selectedBankingType == bankingType;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedBankingType = bankingType;
-                          _filterAccountTypes(
-                              bankingType); // Filter account types based on selected banking type
-                          // selectedAccountTypeId =
-                          //     null; // Reset account type selection
-                        });
-                      },
-                      child: Card(
-                        color: isSelected ? Colors.blue : Colors.white,
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+              //   onPressed: pickFiles,
+              //   icon: Icon(Icons.upload_file),
+              //   label: Text("Select PDF Files"),
+              // ),
+              SizedBox(height: 10),
+              if (selectedFiles.isNotEmpty)
+                Column(
+                  children: selectedFiles.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    File file = entry.value;
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 5),
+                      child: ListTile(
+                        leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                        title: Text(
+                          file.path.split('/').last,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 20),
-                          child: Text(
-                            bankingType,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => removeFile(index),
                         ),
                       ),
                     );
                   }).toList(),
                 ),
-
-// Account Type List with Cards
-                // TextLabel("Account Type"),
-                Padding(
-                  padding: const EdgeInsets.only(left: 15, right: 15),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: filteredAccountTypes.map<Widget>((accountType) {
-                      bool isSelected =
-                          selectedAccountTypeId == accountType['name'];
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedAccountTypeId = accountType['name'];
-                            // selectedAccountId = accountType[
-                            //     'id']; // Save the selected account ID
-                            print(
-                                'Selected Account Type ID: $selectedAccountTypeId');
-                          });
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          child: Card(
-                            margin: const EdgeInsets.all(10),
-                            color: isSelected ? Colors.blue : Colors.white,
-                            // elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 1, horizontal: 2),
-                              child: ListTile(
-                                title: Text(
-                                  accountType['name'] as String,
-                                  style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                  (int.tryParse(accountType['maxAge']
-                                                      ?.toString() ??
-                                                  '') ??
-                                              0) >
-                                          100
-                                      ? 'Minimum Age: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'}\n'
-                                          'Min Amount: ${accountType['minAmount']}'
-                                      : 'Age Range: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'} - ${int.tryParse(accountType['maxAge']?.toString() ?? '0') ?? 0}\n'
-                                          'Min Amount: ${accountType['minAmount']}',
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            )),
-      ),
-
-      Step(
-        title: Text(isSmallScreen ? "" : "Terms & Conditions"),
-        isActive: _activeStepIndex >= 8,
-        state: _activeStepIndex > 8 ? StepState.complete : StepState.indexed,
-        content: Form(
-          key: globalFormKey8,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Terms and Conditions',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+              SizedBox(
+                height: 27,
               ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                height: 200,
-                child: const SingleChildScrollView(
-                  child: Text(
-                    // Replace with your actual terms and conditions
-                    '''
-1. Account Usage
-- This account is for personal/business use only
-- You must maintain minimum balance requirements
-- Regular account activity monitoring will be conducted
-
-2. Privacy Policy
-- Your personal information will be protected
-- Data sharing will comply with banking regulations
-- You will be notified of any policy changes
-
-3. Fees and Charges
-- Standard banking fees apply
-- Transaction limits may be imposed
-- Interest rates are subject to change
-
-4. Account Holder Responsibilities
-- Keep account information secure
-- Report unauthorized transactions
-- Update personal information as needed
-
-By accepting these terms, you agree to comply with all banking regulations and policies.
-                    ''',
-                    style: TextStyle(fontSize: 14),
+              SizedBox(
+                width: double.infinity, // Makes the button full width
+                child: ElevatedButton.icon(
+                  onPressed: pickFiles,
+                  icon: Icon(Icons.upload_file,
+                      color: Colors.white), // Set icon color
+                  label: Text(
+                    "Select PDF Files",
+                    style: TextStyle(
+                        color: Colors.white), // Set text color to black
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.blue, // Set background color to blue
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Checkbox(
-                    value: termsAccepted,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        termsAccepted = value ?? false;
-                      });
-                    },
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'I have read and agree to the terms and conditions',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
+
+              // SizedBox(
+              //   width: double.infinity, // Makes the button full width
+              //   child: ElevatedButton.icon(
+              //     onPressed: pickFiles,
+              //     icon: Icon(Icons.upload_file),
+              //     label: Text("Select PDF Files"),
+              //   ),
+              // ),
+              SizedBox(
+                height: 27,
               ),
             ],
           ),
         ),
-      )
+      ),
     ];
   }
 
@@ -1620,263 +1562,151 @@ By accepting these terms, you agree to comply with all banking regulations and p
       penColor: Colors.black,
     );
     double width = MediaQuery.of(context).size.width;
-    return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: AppBar(
-            title: const Text(
-              "Customer Registration",
-              style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => MainPage()),
+          (route) => false,
+        );
+        return false;
+      },
+      child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: AppBar(
+              title: const Text(
+                "Corporate Account Opening",
+                style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
+              ),
+
+              leading: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_outlined,
+                    color: Colors.blue,
+                  ),
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => MainPage()),
+                      (route) => false,
+                    );
+                  }),
+              // actions: [
+              //   IconButton(
+              //       icon: const Icon(Icons.sync_outlined), onPressed: () {}),
+              // ],
+              // centerTitle: true,
+              backgroundColor: Colors.white,
             ),
-            actions: [
-              IconButton(
-                  icon: const Icon(Icons.sync_outlined), onPressed: () {}),
-            ],
-            // centerTitle: true,
-            backgroundColor: Colors.white,
           ),
-        ),
-        //   body: Container(
-        //     child: Center(
-        //       child: Container(
-        //         width: width < 600 ? double.infinity : width * 0.5,
-        //         color: Colors.white,
-        //         child: Column(
-        //           children: [
-        //             const SizedBox(
-        //               height: 20,
-        //             ),
-        //             Expanded(
-        //               child: Form(
-        //                 key: globalFormKey,
-        //                 child: Theme(
-        //                   data: ThemeData(
-        //                     colorScheme: const ColorScheme.light(
-        //                       primary: Colors.blue,
-        //                       secondary: Colors.blue,
-        //                     ),
-        //                   ),
-        //                   child: Stepper(
-        //                     stepIconHeight: 25.0,
-        //                     stepIconWidth: 25.0,
-        //                     margin: EdgeInsets.zero,
-        //                     connectorThickness: 10,
-        //                     type: StepperType.horizontal,
-        //                     steps: stepList(),
-        //                     currentStep: _activeStepIndex,
-        //                     controlsBuilder:
-        //                         (BuildContext context, ControlsDetails details) {
-        //                       return Padding(
-        //                         padding: const EdgeInsets.only(
-        //                             top: 20, left: 20, right: 20),
-        //                         child: Row(
-        //                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //                           children: <Widget>[
-        //                             if (_activeStepIndex > 0)
-        //                               Align(
-        //                                 alignment: Alignment.centerLeft,
-        //                                 child: TextButton(
-        //                                   onPressed: onStepCancel,
-        //                                   style: TextButton.styleFrom(
-        //                                     backgroundColor: Colors.blue,
-        //                                   ),
-        //                                   child: const Text(
-        //                                     '     Back     ',
-        //                                     style: TextStyle(color: Colors.white),
-        //                                   ),
-        //                                 ),
-        //                               ),
-        //                             const Spacer(),
-        //                             Align(
-        //                               alignment: Alignment.centerRight,
-        //                               child: TextButton(
-        //                                 onPressed: onStepContinue,
-        //                                 style: TextButton.styleFrom(
-        //                                   backgroundColor: Colors.blue,
-        //                                 ),
-        //                                 child: isLoading
-        //                                     ? const SizedBox(
-        //                                         width: 20,
-        //                                         height: 20,
-        //                                         child: CircularProgressIndicator(
-        //                                           strokeWidth: 2,
-        //                                           color: Colors.white,
-        //                                         ),
-        //                                       )
-        //                                     : Text(
-        //                                         _activeStepIndex == 8
-        //                                             ? 'Submit'
-        //                                             : 'Continue',
-        //                                         style: const TextStyle(
-        //                                             color: Colors.white),
-        //                                       ),
-        //                               ),
-        //                             ),
-        //                           ],
-        //                         ),
-        //                       );
-        //                     },
-        //                   ),
-        //                 ),
-        //               ),
-        //             ),
-        //           ],
-        //         ),
-        //       ),
-        //     ),
-        //   ),
-        // );
-
-        body: Container(
-          child: Center(
-            child: Container(
-              width: width < 600 ? double.infinity : width * 0.5,
-              color: Colors.white,
-              child: Column(
-                children: [
-                  const SizedBox(height: 30),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: SizedBox(
-                            width: max(constraints.maxWidth, 380),
-                            child: Form(
-                              key: globalFormKey,
-                              child: Theme(
-                                data: ThemeData(
-                                  colorScheme: const ColorScheme.light(
-                                    primary: Colors.blue,
-                                    secondary: Colors.blue,
+          body: Container(
+            child: Center(
+              child: Container(
+                width: width < 600 ? double.infinity : width * 0.5,
+                color: Colors.white,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 30),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: SizedBox(
+                              width: max(constraints.maxWidth, 380),
+                              child: Form(
+                                key: globalFormKey,
+                                child: Theme(
+                                  data: ThemeData(
+                                    colorScheme: const ColorScheme.light(
+                                      primary: Colors.blue,
+                                      secondary: Colors.blue,
+                                    ),
                                   ),
-                                ),
-                                child: Stepper(
-                                  type: StepperType.horizontal,
-                                  steps: stepList(),
-                                  currentStep: _activeStepIndex,
-                                  margin: EdgeInsets.zero,
-                                  // controlsBuilder: (BuildContext context,
-                                  //     ControlsDetails details) {
-                                  //   return Padding(
-                                  //     padding: const EdgeInsets.only(top: 20),
-                                  //     child: Wrap(
-                                  //       // Changed from Row to Wrap
-                                  //       spacing: 8,
-                                  //       children: <Widget>[
-                                  //         if (_activeStepIndex > 0)
-                                  //           TextButton(
-                                  //             onPressed: onStepCancel,
-                                  //             style: TextButton.styleFrom(
-                                  //               backgroundColor: Colors.blue,
-                                  //               minimumSize: const Size(80, 36),
-                                  //             ),
-                                  //             child: const Text(
-                                  //               'Back',
-                                  //               style: TextStyle(
-                                  //                   color: Colors.white),
-                                  //             ),
-                                  //           ),
-                                  //         TextButton(
-                                  //           onPressed: onStepContinue,
-                                  //           style: TextButton.styleFrom(
-                                  //             backgroundColor: Colors.blue,
-                                  //             minimumSize: const Size(80, 36),
-                                  //           ),
-                                  //           child: isLoading
-                                  //               ? const SizedBox(
-                                  //                   width: 20,
-                                  //                   height: 20,
-                                  //                   child:
-                                  //                       CircularProgressIndicator(
-                                  //                     strokeWidth: 2,
-                                  //                     color: Colors.white,
-                                  //                   ),
-                                  //                 )
-                                  //               : Text(
-                                  //                   _activeStepIndex == 8
-                                  //                       ? 'Submit'
-                                  //                       : 'Continue',
-                                  //                   style: const TextStyle(
-                                  //                       color: Colors.white),
-                                  //                 ),
-                                  //         ),
-                                  //       ],
-                                  //     ),
-
-                                  controlsBuilder: (BuildContext context,
-                                      ControlsDetails details) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 20, left: 20, right: 20),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          if (_activeStepIndex > 0)
+                                  child: Stepper(
+                                    type: StepperType.horizontal,
+                                    steps: stepList(),
+                                    currentStep: _activeStepIndex,
+                                    margin: EdgeInsets.zero,
+                                    controlsBuilder: (BuildContext context,
+                                        ControlsDetails details) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                            top: 20, left: 20, right: 20),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: <Widget>[
+                                            if (_activeStepIndex > 0)
+                                              Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: TextButton(
+                                                  onPressed: onStepCancel,
+                                                  style: TextButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.blue,
+                                                  ),
+                                                  child: const Text(
+                                                    '     Back     ',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                ),
+                                              ),
+                                            const Spacer(),
                                             Align(
-                                              alignment: Alignment.centerLeft,
+                                              alignment: Alignment.centerRight,
                                               child: TextButton(
-                                                onPressed: onStepCancel,
+                                                onPressed: onStepContinue,
                                                 style: TextButton.styleFrom(
                                                   backgroundColor: Colors.blue,
                                                 ),
-                                                child: const Text(
-                                                  '     Back     ',
-                                                  style: TextStyle(
-                                                      color: Colors.white),
-                                                ),
-                                              ),
-                                            ),
-                                          const Spacer(),
-                                          Align(
-                                            alignment: Alignment.centerRight,
-                                            child: TextButton(
-                                              onPressed: onStepContinue,
-                                              style: TextButton.styleFrom(
-                                                backgroundColor: Colors.blue,
-                                              ),
-                                              child: isLoading
-                                                  ? const SizedBox(
-                                                      width: 20,
-                                                      height: 20,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                        color: Colors.white,
+                                                child: isLoading
+                                                    ? const SizedBox(
+                                                        width: 20,
+                                                        height: 20,
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color: Colors.white,
+                                                        ),
+                                                      )
+                                                    : Text(
+                                                        _activeStepIndex == 5
+                                                            ? 'Submit'
+                                                            : 'Continue',
+                                                        style: const TextStyle(
+                                                            color:
+                                                                Colors.white),
                                                       ),
-                                                    )
-                                                  : Text(
-                                                      _activeStepIndex == 8
-                                                          ? 'Submit'
-                                                          : 'Continue',
-                                                      style: const TextStyle(
-                                                          color: Colors.white),
-                                                    ),
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ));
+          )),
+    );
   }
 
   void showImagePicker(BuildContext context, String imageTypes) {
@@ -2147,35 +1977,37 @@ By accepting these terms, you agree to comply with all banking regulations and p
       isLoading = true;
     });
     final formIsValid = validateData();
+
     print("formIsValid");
     print(formIsValid);
 
     if (formIsValid) {
       final isLastStep = _activeStepIndex == stepList().length - 1;
-      print("isLastStep1");
+      print("isLastStep3451");
       print(isLastStep);
       print(_activeStepIndex);
+      registerStatus = true;
 
       if (_activeStepIndex == 0) {
-        await handleFirstStep();
+        // await handleFirstStep();
       } else if (_activeStepIndex == 1) {
-        handleSecondStep();
+        // validateAllForms();
+        // handleSecondStep();
       } else if (_activeStepIndex == 2) {
-        await handleThirdStep();
+        // await handleThirdStep();
       } else if (_activeStepIndex == 3) {
-        await handleStepFour();
+        // await handleStepFour();
       } else if (_activeStepIndex == 4) {
-        await handleStepFive();
+        // await handleStepFive();
       } else if (_activeStepIndex == 5) {
-        await basicInformation();
+        // await basicInformation();
       } else if (_activeStepIndex == 6) {
-        await addressInfo();
+        // await addressInfo();
       } else if (_activeStepIndex == 7) {
-        await handleStepSeven();
+        // await handleStepSeven();
       }
 
       if (isLastStep) {
-        print("step 999");
         await submitFormData1();
         // await submitFormData();
       } else {
@@ -2199,7 +2031,72 @@ By accepting these terms, you agree to comply with all banking regulations and p
     });
   }
 
+  bool validateAllForms() {
+    bool allValid = true;
+
+    if (formKeys.isEmpty) {
+      print("No forms available for validation.");
+      return false;
+    }
+
+    setState(() {
+      for (int i = 0; i < formKeys.length; i++) {
+        bool isMainValid = formKeys[i].currentState?.validate() ?? false;
+
+        if (!isMainValid) {
+          allValid = false;
+          isExpandedList[i] = true; // Expand the main section if invalid
+        }
+
+        // Check if personal information section has errors
+        bool isPersonalValid = true;
+        if (fullNameControllers[i].text.trim().isEmpty ||
+            phoneControllers[i].text.trim().isEmpty ||
+            emailControllers[i].text.trim().isEmpty) {
+          isPersonalValid = false;
+        }
+
+        if (!isPersonalValid) {
+          allValid = false;
+          isExpandedPersonalList[i][0] =
+              true; // Expand Personal Information section
+        }
+      }
+    });
+
+    if (allValid) {
+      print("All forms are valid. Proceeding to submission...");
+      return true;
+    } else {
+      showSnackBar(context, "Please fill in all required fields.");
+      return false;
+    }
+  }
+
+  void showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14), // Smaller font size
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating, // Keeps it compact
+        margin: EdgeInsets.symmetric(
+            horizontal: 20, vertical: 10), // Smaller margins
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8), // Rounded edges
+        ),
+        duration: Duration(seconds: 2), // Shorter display time
+      ),
+    );
+  }
+
   bool validateData() {
+    // bool data = validateAllForms();
+
+    // print("dhjddddjdjdjdjjdjdj");
+    // print(data);
     switch (_activeStepIndex) {
       case 0:
         isValid = true;
@@ -2211,24 +2108,20 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
         return (globalFormKey.currentState?.validate() ?? false) && isValid;
       case 1:
-        return globalFormKey1.currentState?.validate() ?? false;
+        return true;
       case 2:
-        return globalFormKey2.currentState?.validate() ?? false;
+        return true;
       case 3:
-        return globalFormKey3.currentState?.validate() ?? false;
+        return true;
       case 4:
-        return globalFormKey4.currentState?.validate() ?? false;
+        return true;
       case 5:
-        return globalFormKey5.currentState?.validate() ?? false;
+        return true;
       case 6:
-        return globalFormKey6.currentState?.validate() ?? false;
-      case 7:
-        return globalFormKey7.currentState?.validate() ?? false;
-      case 8:
-        return globalFormKey8.currentState?.validate() ?? false;
+        return true;
 
       default:
-        return false;
+        return true;
     }
   }
 
@@ -2546,50 +2439,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
           print(data);
           print("Customer data inserted successfully.");
         }
-
-        // print("User iddd");
-        // print(GlobalData().role);
-        // print(GlobalData().role != 'ACCOUNT-CREATOR' &&
-        //     GlobalData().role != 'BRANCH-ADMIN');
-        // if (GlobalData().role != 'ACCOUNT-CREATOR' &&
-        //     GlobalData().role != 'AGENT') {
-        //   print(GlobalData().role);
-        //   registerStatus = false;
-        //   FormHelper.showSimpleAlertDialog(
-        //     context,
-        //     "Coop Engage +",
-        //     "You dont have permission to create Account",
-        //     "OK",
-        //     () {
-        //       Navigator.of(context).pop();
-        //     },
-        //   );
-        // } else {
-        //   registerStatus = true;
-
-        //   print("userid ");
-        //   print(UserID);
-        //   DatabaseHelper dbHelper = DatabaseHelper();
-        //   await dbHelper.database;
-        //   print(UserID);
-        //   // Insert customer data
-        //   var data = await dbHelper.insertCustomer({
-        //     'phone': registrationData['phone'],
-        //     // 'customerType'
-        //     'email': registrationData['email'],
-        //     'customerType': registrationData['customerType'],
-        //     'status': 'INITIAL',
-        //     "userId": UserID
-        //   });
-
-        //   setState(() {
-        //     validate = true;
-        //     circular = false;
-        //     // userID = data;
-        //   });
-        //   // print(data);
-        //   print("Customer data inserted successfully.");
-        // }
       } catch (e) {
         registerStatus = false;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2637,14 +2486,14 @@ By accepting these terms, you agree to comply with all banking regulations and p
     registrationData['sex'] = selectedGender;
     registrationData['dateOfBirth'] = dateOfBirthController.text;
     registrationData["title"] = selectedTitle;
-    registrationData["maritalStatus"] = selectedMaritalStatus;
+    // registrationData["maritalStatus"] = selectedMaritalStatus;
     registrationData["percentageCompleted"] = 75;
     isOnline
         ? registrationData['formCompleted'] = "false"
         : registrationData['formCompleted'] = 0;
     print(registrationData);
-    registerStatus = true;
-    // await updateUser();
+    // registerStatus = true;
+    await updateUser();
   }
 
   // Step 1:
@@ -2692,12 +2541,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
 // STEP 3:
   Future<void> handleThirdStep() async {
-    // Uint8List? signatureBytes;
-    // if (signatureImagePath != null) {
-    //   signatureBytes = await _getImageBytes(signatureImagePath!);
-    // } else if (savedSignature != null) {
-    //   signatureBytes = await _signatureController.toPngBytes();
-    // }
     registrationData['signature'] = _combinedSignature;
     registrationData['motherName'] = motherNameController.text;
     // registrationData['branch'] = selectedBranch;
@@ -2810,21 +2653,11 @@ By accepting these terms, you agree to comply with all banking regulations and p
     isOnline
         ? registrationData['formCompleted'] = "false"
         : registrationData['formCompleted'] = 0;
-    registerStatus = true;
+    // registerStatus = true;
     await updateUser();
   }
 
   Future<void> submitFormData1() async {
-    //     // Call the function to get the details
-
-//     print(selectedAccountId);
-//     var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
-//     var id;
-//     if (accountTypeDetails != null) {
-// // // Check if accountTypeDetails is not null and then get the id
-//       id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
-//     }
-
     print("objectqwww");
     if (!termsAccepted) {
       registerStatus = false;
@@ -2844,7 +2677,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
     isOnline
         ? registrationData['formCompleted'] = "true"
         : registrationData['formCompleted'] = 1;
-    registerStatus = true;
+    // registerStatus = true;
     await updateUser();
 
     final result = await Navigator.push(
@@ -2894,27 +2727,11 @@ By accepting these terms, you agree to comply with all banking regulations and p
         registerStatus = false;
         print("The request timed out. Please try again.");
       } catch (e) {
-        registerStatus = true;
+        registerStatus = false;
         // Handle other exceptions
         print("An error occurred: $e");
       }
     } else if (isOnline == false) {
-      // final DatabaseHelper dbHelper = DatabaseHelper();
-      // registrationData['id'] = userID;
-      // print(registrationData);
-      // int rowsAffected = await dbHelper
-      //     .updateCustomer(userID!, registrationData)
-      //     .timeout(const Duration(seconds: 5));
-
-      // if (rowsAffected > 0) {
-      //   print("User updated successfully in the local database.");
-      // }
-      // else {
-      //   registerStatus = false;
-      //   // isLoading = false;
-      //   print("Failed to update user in the local database.");
-      // }
-
       try {
         final DatabaseHelper dbHelper = DatabaseHelper();
         registrationData['id'] = userID;
@@ -2950,240 +2767,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
           fetchedAccountTypes; // Update the state with the fetched account types
     });
   }
-
-  // void _filterAccountTypes(String bankingType) {
-  //   setState(() {
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       String safeBankingType = escapeSpecialChars(bankingType);
-  //       return accountType['bankingType'] == safeBankingType;
-  //     }).toList();
-  //   });
-  // }
-
-// void _filterAccountTypes(String bankingType) {
-//   print("Filtering account types...");
-//   setState(() {
-//     // Step 1: Parse Date of Birth
-//     DateTime? dateOfBirth;
-//     try {
-//       dateOfBirth = DateTime.parse(dateOfBirthController.text.trim());
-//     } catch (e) {
-//       print('Invalid date format: ${dateOfBirthController.text}');
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text('Invalid Date of Birth format. Use yyyy-MM-dd.'),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//       return;
-//     }
-
-//     // Step 2: Calculate Age
-//     int age = DateTime.now().year - dateOfBirth.year;
-//     if (DateTime.now().month < dateOfBirth.month ||
-//         (DateTime.now().month == dateOfBirth.month &&
-//             DateTime.now().day < dateOfBirth.day)) {
-//       age--;
-//     }
-
-//     print('User Age: $age, Selected Gender: $selectedGender');
-
-//     // Step 3: Filter Account Types
-//     filteredAccountTypes = accountTypes.where((accountType) {
-//       // Banking type check
-//       if (accountType['bankingType'] != bankingType) {
-//         return false;
-//       }
-
-//       // Age restrictions
-//       if (accountType['minAge'] != null &&
-//           accountType['minAge'].toString().isNotEmpty) {
-//         int minAge = int.tryParse(accountType['minAge'].toString()) ?? 0;
-//         if (age < minAge) {
-//           print('Excluded: Age is below minAge ${accountType['minAge']}');
-//           return false;
-//         }
-//       }
-
-//       if (accountType['maxAge'] != null &&
-//           accountType['maxAge'].toString().isNotEmpty) {
-//         int maxAge = int.tryParse(accountType['maxAge'].toString()) ?? 999;
-//         if (age > maxAge) {
-//           print('Excluded: Age is above maxAge ${accountType['maxAge']}');
-//           return false;
-//         }
-//       }
-
-//       // Gender check
-//       if (accountType['sex'] != null &&
-//           accountType['sex'].toString().isNotEmpty) {
-//         if (accountType['sex'].toString() != selectedGender) {
-//           print('Excluded: Gender does not match');
-//           return false;
-//         }
-//       }
-
-//       return true;
-//     }).toList();
-
-//     // Step 4: Clear selected account type if it's no longer valid
-//     if (!filteredAccountTypes
-//         .any((type) => type['name'] == selectedAccountTypeId)) {
-//       selectedAccountTypeId = null;
-//     }
-
-//     // Step 5: Show feedback if no accounts are found
-//     if (filteredAccountTypes.isEmpty) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text(
-//             'No account types available for your age ($age) and gender ($selectedGender).',
-//           ),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//     }
-
-//     print('Filtered Account Types: $filteredAccountTypes');
-//   });
-// }
-
-  // void _filterAccountTypes(String bankingType) {
-  //   print("Filtering account types...");
-  //   setState(() {
-  //     // Get user's age from date of birth
-  //     DateTime? dateOfBirth;
-  //     try {
-  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
-  //     } catch (e) {
-  //       print('Invalid date format: ${dateOfBirthController.text}');
-  //       return;
-  //     }
-
-  //     int age = DateTime.now().year - dateOfBirth.year;
-  //     // Adjust age if birthday hasn't occurred this year
-  //     if (DateTime.now().month < dateOfBirth.month ||
-  //         (DateTime.now().month == dateOfBirth.month &&
-  //             DateTime.now().day < dateOfBirth.day)) {
-  //       age--;
-  //     }
-
-  //     // Filter account types based on banking type, age, and gender
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       print("gammee12");
-  //       print(accountType);
-
-  //       print(selectedGender);
-  //       // Filter by banking type
-  //       if (accountType['bankingType'] != bankingType) return false;
-
-  //       // Validate age rang e
-  //       int minAge = int.tryParse(accountType['minAge'] ?? '0') ?? 0;
-  //       int maxAge = int.tryParse(accountType['maxAge'] ?? '999') ?? 999;
-
-  //       if (age < minAge || age > maxAge) {
-  //         return false; // Age out of range
-  //       }
-
-  //       // Validate sex: 'BOTH' applies to all genders
-  //       if (accountType['sex'] != null &&
-  //           accountType['sex'].isNotEmpty &&
-  //           accountType['sex'] != 'BOTH') {
-  //         if (accountType['sex'] != selectedGender.toUpperCase()) return false;
-  //       }
-
-  //       return true; // Passes all filters
-  //     }).toList();
-
-  //     // Clear selected account type if it's no longer in filtered list
-  //     // if (!filteredAccountTypes
-  //     //     .any((type) => type['name'] == selectedAccountTypeId)) {
-  //     //   selectedAccountTypeId = null;
-  //     // }
-
-  //     // Show feedback if no accounts are available
-  //     if (filteredAccountTypes.isEmpty) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'No account types available for your age ($age) and gender ($selectedGender)',
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
-
-  // void _filterAccountTypes(String bankingType) {
-  //   print("Filtering account types...");
-  //   setState(() {
-  //     // Get user's age from date of birth
-  //     DateTime? dateOfBirth;
-  //     try {
-  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
-  //     } catch (e) {
-  //       print('Invalid date format: ${dateOfBirthController.text}');
-  //       return;
-  //     }
-
-  //     int age = DateTime.now().year - dateOfBirth.year;
-  //     if (DateTime.now().month < dateOfBirth.month ||
-  //         (DateTime.now().month == dateOfBirth.month &&
-  //             DateTime.now().day < dateOfBirth.day)) {
-  //       age--;
-  //     }
-
-  //     // Normalize gender
-  //     String normalizedGender = selectedGender.trim().toUpperCase();
-
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       print("AccountType: ${accountType}");
-  //       print("Selected Gender: $normalizedGender");
-
-  //       // Check banking type
-  //       if (accountType['bankingType'] != bankingType) {
-  //         print(
-  //             "BankingType mismatch: ${accountType['bankingType']} != $bankingType");
-  //         return false;
-  //       }
-
-  //       // Validate age range
-  //       int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
-  //       int maxAge =
-  //           int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
-  //       if (age < minAge || age > maxAge) {
-  //         print("Age out of range: $age not in [$minAge, $maxAge]");
-  //         return false;
-  //       }
-
-  //       // Validate sex with 'BOTH' inclusion
-  //       String accountTypeSex =
-  //           accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
-  //       if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
-  //         print("Gender mismatch: $normalizedGender != $accountTypeSex");
-  //         return false;
-  //       }
-
-  //       print("Account type matches!");
-  //       return true;
-  //     }).toList();
-
-  //     // Show feedback if no account types match
-  //     if (filteredAccountTypes.isEmpty) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'No account types available for your age ($age) and gender ($selectedGender)',
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
 
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
@@ -3336,5 +2919,149 @@ By accepting these terms, you agree to comply with all banking regulations and p
     return _signatureController1.isNotEmpty &&
         _signatureController2.isNotEmpty &&
         _signatureController3.isNotEmpty;
+  }
+
+  Widget _buildExpandableSection(
+    String title,
+    bool isExpanded,
+    VoidCallback onTap,
+    List<Widget> children,
+  ) {
+    return Card(
+      color: Colors.grey[50],
+      // color: Colors.blue,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            decoration: BoxDecoration(
+              // color: const Color.fromARGB(255, 61, 68, 72),
+              color: Colors.grey.shade200, // Different title background color
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: ListTile(
+              title: Text(
+                title,
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+              ),
+              trailing: Icon(
+                isExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: isExpanded ? Colors.blue : Colors.black,
+                size: 35,
+              ),
+              onTap: onTap,
+            ),
+          ),
+          Visibility(
+            visible: true,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              height: isExpanded ? null : 0,
+              child: Column(children: children),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandablePersonalInformationSection(
+    String title,
+    bool isExpanded,
+    VoidCallback onTap,
+    List<Widget> children,
+  ) {
+    return Card(
+      color: Colors.white,
+      shadowColor: Colors.red,
+      surfaceTintColor: Colors.grey,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100, // Change title background color
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: ListTile(
+              title: Text(
+                title,
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+              ),
+              trailing: Icon(
+                isExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: isExpanded ? Colors.blue : Colors.black,
+                size: 35,
+              ),
+              onTap: onTap,
+            ),
+          ),
+          Visibility(
+            visible: true, // ✅ Always keep in tree, just control visibility
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              height: isExpanded ? null : 0, // Collapses smoothly
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> pickFiles() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+      allowMultiple: true, // Enable multiple file selection
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedFiles.addAll(result.paths.map((path) => File(path!)).toList());
+      });
+    }
+  }
+
+  void removeFile(int index) {
+    setState(() {
+      selectedFiles.removeAt(index);
+    });
+  }
+
+  // Function to pick a license file
+  void pickLicense() async {
+    File? selectedFile = await FilePickerService.pickSinglePDF("License");
+    if (selectedFile != null) {
+      setState(() {
+        licenseFile = selectedFile;
+      });
+    }
+  }
+
+  // Function to pick an article file
+  void pickArticle() async {
+    File? selectedFile = await FilePickerService.pickSinglePDF("Article");
+    if (selectedFile != null) {
+      setState(() {
+        articleFile = selectedFile;
+      });
+    }
   }
 }

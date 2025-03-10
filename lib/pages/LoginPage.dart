@@ -742,7 +742,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Container(
                 width: width < 600
                     ? double.infinity
-                    : width * 0.5, // Match login button width
+                    : width * 0.5, 
                 height: 50,
                 decoration: BoxDecoration(
                   color: Colors.white,

@@ -491,12 +491,15 @@ class _DashboardState extends State<Dashboard> {
           print(response.statusCode);
           if (response.statusCode == 200 || response.statusCode == 201) {
             final data = jsonDecode(response.body);
+
+            print("dhdhdhhdhdhd");
+            print(data);
             setState(() {
               totalUsers = data['APPROVED'] + data["PENDING"] + data["INITIAL"];
 
               approvedUsers = data['APPROVED'];
               TOTALAPPROVED = approvedUsers;
-              pendingUsers = data['PENDING']  + data['UNAUTHORIZED'];
+              pendingUsers = data['PENDING'] + data['AUTHORIZED'];
               TOTALPENDING = pendingUsers;
               initialStatus = data['INITIAL'];
               TOTALINITIAL = data['INITIAL'];

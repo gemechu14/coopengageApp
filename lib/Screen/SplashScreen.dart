@@ -245,6 +245,7 @@
 import 'dart:async';
 import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
+import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -269,6 +270,8 @@ class _SplashScreenState extends State<SplashScreen> {
       const storage = FlutterSecureStorage();
       String? token = await storage.read(key: "token");
 
+  
+
       if (token != null) {
         Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
         List<dynamic> roles = decodedToken['role'] ?? [];
@@ -281,11 +284,18 @@ class _SplashScreenState extends State<SplashScreen> {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const MainPage()),
           );
+          // Navigator.of(context).pushReplacement(
+          //   MaterialPageRoute(builder: (context) => AccountOpeningHomePage()),
+          // );
         }
       } else {
+        
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const Loginscreen()),
+          MaterialPageRoute(builder: (context) => MainPage()),
         );
+        // Navigator.of(context).pushReplacement(
+        //   MaterialPageRoute(builder: (context) => const Loginscreen()),
+        // );
       }
     } catch (e) {
       print("Error during navigation: $e");

@@ -85,6 +85,7 @@ class _ListofcustomersState extends ConsumerState<Listofcustomers> {
         return true;
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: whiteColor,
           title: Text(

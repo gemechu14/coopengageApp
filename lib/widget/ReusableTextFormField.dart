@@ -11,7 +11,7 @@ class ReusableTextFormField extends StatelessWidget {
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final bool isRequired; // New parameter to handle required validation
-
+  final bool isEnabled;
   const ReusableTextFormField({
     Key? key,
     required this.hintText,
@@ -20,6 +20,7 @@ class ReusableTextFormField extends StatelessWidget {
     this.leadingIcon,
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
+    this.isEnabled = true,
     this.isRequired = true, // Defaults to required
   }) : super(key: key);
 
@@ -28,10 +29,12 @@ class ReusableTextFormField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: TextFormField(
+        // textAlign: TextAlign.start,
         controller: controller,
         inputFormatters: inputFormatters,
         keyboardType: keyboardType,
         decoration: InputDecoration(
+          enabled: isEnabled,
           hintText: hintText,
           hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
           isDense: true,

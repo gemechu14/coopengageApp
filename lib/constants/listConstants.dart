@@ -4,9 +4,33 @@ class ListContants {
     'Single',
     'Married',
   ];
+
+  static const List<String> accountTypeofJoint = [
+    'Saving Account ',
+    'Checking Account',
+  ];
+
+  static const List<String> productType = [
+    'Conventional',
+    'Alhuda',
+  ];
+  static const List<String> gender = [
+    'MALE',
+    'FEMALE',
+  ];
   static const List<String> customerType = [
     'INDIVIDUAL',
     'ORGANIZATION',
+  ];
+
+  static const List<String> AccountTypeSelection = [
+    'AND',
+    'OR',
+  ];
+
+  static const List<String> NumberOfMembers = [
+    '2',
+    '3',
   ];
 
   static const List<String> languagePreference = [
