@@ -41,7 +41,7 @@ import 'package:coopengageplus/widget/ButtonUploadTakePhoto%20.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:coopengageplus/widget/SignatureButtons.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../pages/old/HomePage.dart';
+import '../pages/home/HomePage.dart';
 
 bool isConventionalSelected = true;
 List<Map<String, dynamic>> allBranches = [];
@@ -133,7 +133,6 @@ class _Registration extends State<RegistrationScreen> {
     selectedSector = ListContants.sectors.first;
 
     selectedProductType = ListContants.productType.first;
-    // _filterAccountTypes('Conventional');
     issueAuthorityController.text = 'ET';
   }
 

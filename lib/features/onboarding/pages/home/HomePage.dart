@@ -1,4 +1,4 @@
-// ignore_for_file: file_names, non_constant_identifier_names
+// ignore_for_file: file_names, non_constant_identifier_names, deprecated_member_use, use_build_context_synchronously
 
 import 'package:coopengageplus/pages/LoginPage.dart';
 import 'package:coopengageplus/pages/UserListPage.dart';
@@ -16,47 +16,11 @@ class Homepage extends StatefulWidget {
 }
 
 String dropdownValue = 'ALL';
-// final String username = "John Doe"; // Replace this with the actual username
-// final String firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
-// const storage = FlutterSecureStorage();
-
 final storage = FlutterSecureStorage();
 bool isLoading = true; // Loading state
 String username = ""; // Default username
 String firstLetter = "";
-List<String> users = [
-  // 'Alice Johnson',
-  // 'Bob Smith',
-  // 'Charlie Brown',
-  // 'David Wilson',
-  // 'Eve Davis',
-  // 'Frank Miller',
-  // 'Alice Johnson',
-  // 'Bob Smith',
-  // 'Charlie Brown',
-  // 'David Wilson',
-  // 'Eve Davis',
-  // 'Frank Miller',
-  // 'Alice Johnson',
-  // 'Bob Smith',
-  // 'Charlie Brown',
-  // 'David Wilson',
-  // 'Eve Davis',
-  // 'Frank Miller',
-  // 'Alice Johnson',
-  // 'Bob Smith',
-  // 'Charlie Brown',
-  // 'David Wilson',
-  // 'Eve Davis',
-  // 'Frank Miller',
-  // 'Alice Johnson',
-  // 'Bob Smith',
-  // 'Charlie Brown',
-  // 'David Wilson',
-  // 'Eve Davis',
-  // 'Frank Miller',
-  // Add more users as needed
-];
+List<String> users = [];
 
 List<String> filteredUsers = [];
 
@@ -71,7 +35,6 @@ class _HomepageState extends State<Homepage> {
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
-      // Decode the token to get user details
       var decodedToken = JwtDecoder.decode(token);
 
       setState(() {
@@ -83,7 +46,7 @@ class _HomepageState extends State<Homepage> {
       });
     } else {
       setState(() {
-        isLoading = false; // Set loading to false if no token found
+        isLoading = false;
       });
     }
   }
@@ -91,7 +54,7 @@ class _HomepageState extends State<Homepage> {
   void filterUsers(String query) {
     setState(() {
       if (query.isEmpty) {
-        filteredUsers = users; // Show all users if search is empty
+        filteredUsers = users;
       } else {
         filteredUsers = users
             .where((user) => user.toLowerCase().contains(query.toLowerCase()))
@@ -111,22 +74,17 @@ class _HomepageState extends State<Homepage> {
       body: HomeBody(),
       bottomNavigationBar: BottomAppBar(
         color: Colors.transparent,
-        shape: const CircularNotchedRectangle(), // Optional notch for a FAB
+        shape: const CircularNotchedRectangle(),
         child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 26.0, vertical: 7.0),
-            child: FormHelper.submitButton("Add New Customer",
+            child: FormHelper.submitButton(
+                "Add New Customer",
                 fontSize: 19,
                 width: MediaQuery.of(context).size.width * 0.5,
                 btnColor: Colors.blueAccent,
-                borderColor: Colors.blueAccent, () {
-              // Navigator.pushAndRemoveUntil(
-              //     context,
-              //     MaterialPageRoute(
-              //       builder: (context) => const Registration(),
-              //     ),
-              //     (route) => false);
-            })),
+                borderColor: Colors.blueAccent,
+                () {})),
       ),
     );
   }
@@ -150,7 +108,7 @@ class _HomepageState extends State<Homepage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8), // Space between text and value
+                  SizedBox(height: 8),
                   Text(
                     '0', // The value
                     style: TextStyle(
@@ -161,7 +119,6 @@ class _HomepageState extends State<Homepage> {
                   ),
                 ],
               ),
-              // Approved column
               Column(
                 children: [
                   Text(
@@ -182,7 +139,6 @@ class _HomepageState extends State<Homepage> {
                   ),
                 ],
               ),
-              // Pending column
               Column(
                 children: [
                   Text(
@@ -205,13 +161,11 @@ class _HomepageState extends State<Homepage> {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
-
           Padding(
             padding: const EdgeInsets.only(left: 30, right: 15),
             child: Text(
-              '$dropdownValue',
+              dropdownValue,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -256,84 +210,15 @@ class _HomepageState extends State<Homepage> {
               ),
             ),
           ),
-
-          // ListView to display filtered users
-          // ListView to display filtered users with dividers
-          // ListView to display filtered users with dividers
-          // Expanded(
-          //   child: ListView.separated(
-          //     itemCount: filteredUsers.length,
-          //     itemBuilder: (context, index) {
-          //       return Padding(
-          //         padding: const EdgeInsets.only(
-          //             left: 14.0, top: 8.0, bottom: 8.0),
-          //         child: GestureDetector(
-          //           onTap: () {
-          //             // Handle item tap
-          //             print("Tapped on: ${filteredUsers[index]}");
-          //           },
-          //           child: Container(
-          //             padding:
-          //                 EdgeInsets.all(12), // Inner padding for ListTile
-          //             decoration: BoxDecoration(
-          //               color: Colors.white,
-          //               borderRadius: BorderRadius.circular(8),
-          //               boxShadow: [
-          //                 BoxShadow(
-          //                   color: Colors.grey.withOpacity(0.2),
-          //                   spreadRadius: 1,
-          //                   blurRadius: 5,
-          //                   offset:
-          //                       Offset(0, 2), // changes position of shadow
-          //                 ),
-          //               ],
-          //             ),
-          //             child: Row(
-          //               children: [
-          //                 // Displaying the number
-          //                 Text(
-          //                   '${index + 1}.', // Numbering starts from 1
-          //                   style: const TextStyle(
-          //                       fontSize: 16, fontWeight: FontWeight.bold),
-          //                 ),
-          //                 SizedBox(width: 8), // Space between number and text
-          //                 Expanded(
-          //                   child: Text(
-          //                     filteredUsers[index],
-          //                     style: TextStyle(fontSize: 16),
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //         ),
-          //       );
-          //     },
-          //     separatorBuilder: (context, index) => Divider(
-          //       color: Colors.grey.shade300,
-          //       height: 0.1,
-          //       thickness: 0.5,
-          //       indent: 14,
-          //       endIndent: 14,
-          //     ),
-          //   ),
-          // ),
-
-          // Check if filteredUsers is empty
           Expanded(
             child: filteredUsers.isEmpty
                 ? const Padding(
-                    padding:
-                        EdgeInsets.only(top: 50), // Adjust this value as needed
+                    padding: EdgeInsets.only(top: 50),
                     child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.start, // Align to the top
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        SizedBox(
-                            height:
-                                50), // Add space from the top to push content down
+                        SizedBox(height: 50),
                         Center(
-                          // Center the content horizontally
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -368,8 +253,7 @@ class _HomepageState extends State<Homepage> {
                             left: 14.0, top: 8.0, bottom: 8.0),
                         child: GestureDetector(
                           onTap: () {
-                            // Handle item tap
-                            // print("Tapped on: ${filteredUsers[index]}");
+                         
                           },
                           child: Container(
                             padding: const EdgeInsets.all(12),
@@ -424,59 +308,14 @@ class _HomepageState extends State<Homepage> {
     return Drawer(
       child: ListView(
         children: <Widget>[
-          // DrawerHeader(
-          //   decoration: const BoxDecoration(
-          //     color:
-          //         Colors.blue, // Set the background color of the DrawerHeader
-          //   ),
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.start,
-          //     crossAxisAlignment: CrossAxisAlignment.center,
-          //     children: <Widget>[
-          //       Container(
-          //         decoration: BoxDecoration(
-          //           shape: BoxShape.circle,
-          //           border: Border.all(
-          //             color: Colors.white, // Border color
-          //             width: 3, // Border width
-          //           ),
-          //         ),
-          //         child: CircleAvatar(
-          //           radius: 30,
-          //           backgroundColor: Colors.black,
-          //           child: Text(
-          //             firstLetter,
-          //             style: TextStyle(
-          //               fontSize: 24,
-          //               color: Colors.white,
-          //               fontWeight: FontWeight.bold,
-          //             ),
-          //           ),
-          //         ),
-          //       ),
-          //       SizedBox(width: 10), // Spacing between avatar and text
-          //       Text(
-          //         username, // Full username
-          //         style: TextStyle(
-          //           fontSize: 20,
-          //           color: Colors.white, // Text color of the username
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-
           DrawerHeader(
             decoration: const BoxDecoration(
-              color:
-                  Colors.blue, // Set the background color of the DrawerHeader
+              color: Colors.blue,
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Circular Progress Indicator
-                if (isLoading)
-                  const CircularProgressIndicator(), // Show loading indicator when fetching token
+                if (isLoading) const CircularProgressIndicator(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -493,9 +332,7 @@ class _HomepageState extends State<Homepage> {
                         radius: 30,
                         backgroundColor: Colors.black,
                         child: Text(
-                          isLoading
-                              ? ''
-                              : firstLetter, // Show first letter only when not loading
+                          isLoading ? '' : firstLetter,
                           style: TextStyle(
                             fontSize: 24,
                             color: Colors.white,
@@ -504,17 +341,15 @@ class _HomepageState extends State<Homepage> {
                         ),
                       ),
                     ),
-                    const SizedBox(
-                        width: 10), // Spacing between avatar and text
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         isLoading ? '' : username,
-                        maxLines: 1, // Set maximum number of lines
-                        overflow: TextOverflow
-                            .ellipsis, // Show username only when not loading
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 17,
-                          color: Colors.black, // Text color of the username
+                          color: Colors.black,
                         ),
                       ),
                     ),
@@ -524,14 +359,13 @@ class _HomepageState extends State<Homepage> {
             ),
           ),
           const Padding(
-            padding: EdgeInsets.symmetric(
-                horizontal: 16.0), // Padding for the settings title
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               "Settings",
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.black, // Color of the settings title
+                color: Colors.black,
               ),
             ),
           ),
@@ -545,66 +379,46 @@ class _HomepageState extends State<Homepage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
-                color: Colors.black, // Color of the settings title
+                color: Colors.black,
               ),
             ),
-            // trailing: const Icon(Icons.launch),
-
-            // onTap: () {
-            //   Navigator.of(context).push(
-            //       MaterialPageRoute(builder: (context) => const Profile()));
-            // },
           ),
-          // ListTile(
-          //   title: const Text("News"),
-          //   leading: const Icon(Icons.launch),
-          //   onTap: () {
-          //     //  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddBlog()));
-          //   },
-          // ),
           const Divider(
             thickness: 0.3,
             color: Colors.blue,
-            indent: 16.0, // Add indentation to the left
-            endIndent: 16.0, // Add indentation to the right
+            indent: 16.0,
+            endIndent: 16.0,
           ),
           ListTile(
             title: const Text("Help",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
-                  color: Colors.black, // Color of the settings title
+                  color: Colors.black,
                 )),
             leading: const Icon(
               Icons.help,
               color: Colors.blue,
             ),
-            // onTap: () {
-            //   Navigator.push(context,
-            //       MaterialPageRoute(builder: (context) => const Setting()));
-            // },
           ),
           const Divider(
             thickness: 0.3,
             color: Colors.blue,
-            indent: 16.0, // Add indentation to the left
-            endIndent: 16.0, // Add indentation to the right
+            indent: 16.0,
+            endIndent: 16.0,
           ),
           ListTile(
             title: const Text("Logout",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
-                  color: Colors.black, // Color of the settings title
+                  color: Colors.black,
                 )),
-
             leading: const Icon(
               Icons.power_settings_new_outlined,
               color: Colors.blue,
             ),
             onTap: logout,
-
-            // onTap: logout,
           ),
         ],
       ),
@@ -613,9 +427,7 @@ class _HomepageState extends State<Homepage> {
 
   void logout() async {
     await storage.delete(key: "token");
-    // ignore: use_build_context_synchronously
     Navigator.pushAndRemoveUntil(
-        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
         (route) => false);

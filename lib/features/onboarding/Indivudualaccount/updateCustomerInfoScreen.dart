@@ -13,7 +13,7 @@ import 'package:coopengageplus/common_widgets/textField/PhoneNumberWidget.dart';
 import 'package:coopengageplus/common_widgets/textField/emailWidget.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
-import 'package:coopengageplus/features/onboarding/pages/old/HomePage.dart';
+import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/features/onboarding/pages/updateConfirmationPage.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
@@ -45,6 +45,8 @@ final List<String> iDType = [
   'DRIVING_LICENSE_ID',
   'NATIONAL_ID',
 ];
+
+String? selectedAccountTypeData;
 Uint8List? residenceFront;
 String? selectedMaritalStatus;
 String? selectedCustomerType;
@@ -89,6 +91,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       _signatureController3;
   String? selectedGender;
   String? selectedAccountTypeId;
+  String? selectedAccountTypeIdValue;
   List<Map<String, dynamic>> filteredAccountTypes =
       []; // Declare the selectedGender variable
   final List<String> genders = ['MALE', 'FEMALE'];
@@ -102,6 +105,9 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     setState(() {});
   }
 
+  bool isEditingAccountType = false;
+  late bool showAccountSelector;
+
   @override
   void initState() {
     loadSignature();
@@ -111,6 +117,8 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       penStrokeWidth: 5,
       exportBackgroundColor: Colors.transparent,
     );
+    showAccountSelector =
+        widget.userInfo['accountType'] == "1" || isEditingAccountType;
     _signatureController2 = SignatureController(
       penColor: Colors.black,
       penStrokeWidth: 5,
@@ -172,6 +180,11 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       selectedBranch = widget.userInfo['branch'];
     }
 
+    if (widget.userInfo['accountType'] != null &&
+        widget.userInfo['accountType']!.isNotEmpty) {
+      selectedAccountTypeData = widget.userInfo['accountType'].toString();
+    }
+
     selectedDocumentType =
         widget.userInfo['documentName'] ?? ListContants.documentName.first;
     fullNameController.text = widget.userInfo['fullName'] ?? '';
@@ -188,23 +201,19 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     zipCodeController.text = widget.userInfo['zipCode'] ?? '';
     accountCurrencyController.text = widget.userInfo['currency'] ?? '';
     occupationController.text = widget.userInfo['occupation'] ?? '';
-
     dateOfBirthController.text = widget.userInfo['dateOfBirth'] ?? '';
     selectedGender = widget.userInfo["sex"];
     surNameController.text = widget.userInfo['surName'] ?? '';
-
     expireDateController.text = widget.userInfo['expirayDate'] ?? '';
     woredaController.text = widget.userInfo['streetAddress'] ?? '';
     issueAuthorityController.text = widget.userInfo['issueAuthority'] ?? '';
     issueDateController.text = widget.userInfo['issueDate'] ?? '';
     legalIDController.text = widget.userInfo['legalId'] ?? '';
     cityController.text = widget.userInfo['zoneSubcity'] ?? '';
-
     initialDepositController.text =
         widget.userInfo['initialDeposit']?.toString() ?? '';
     monthlyIncomeController.text =
         widget.userInfo['monthlyIncome']?.toString() ?? '';
-
     if (widget.userInfo['photo'] != null && widget.userInfo['photo'] != '') {
       if (widget.userInfo['photo'] is String) {
         profilePath = widget.userInfo['photo'];
@@ -335,19 +344,19 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     'TAX ID'
   ];
   List<String> countries = ['Ethiopia'];
-  List<String> ethiopianStates = [
-    'Addis Ababa',
-    'Oromia',
-    'Amhara',
-    'Tigray',
-    'Sidama',
-    "Afar",
-    "Somale",
-    "Benishangul Gumuz",
-    "Gambela",
-    "Harar",
-    "Dire Dawa"
-  ];
+  // List<String> ethiopianStates = [
+  //   'Addis Ababa',
+  //   'Oromia',
+  //   'Amhara',
+  //   'Tigray',
+  //   'Sidama',
+  //   "Afar",
+  //   "Somale",
+  //   "Benishangul Gumuz",
+  //   "Gambela",
+  //   "Harar",
+  //   "Dire Dawa"
+  // ];
   GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
   GlobalKey<FormState> globalFormKey1 = GlobalKey<FormState>();
   GlobalKey<FormState> globalFormKey2 = GlobalKey<FormState>();
@@ -357,42 +366,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   GlobalKey<FormState> globalFormKey6 = GlobalKey<FormState>();
   GlobalKey<FormState> globalFormKey7 = GlobalKey<FormState>();
   List<Map<String, dynamic>> allBranches = [];
-  Padding stateWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: DropdownButtonFormField<String>(
-        value: selectedState, // Bind selectedState to the value
-        hint: const Text(
-          'Select State',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.black,
-          ),
-        ),
-        items: ethiopianStates.map((String state) {
-          return DropdownMenuItem<String>(
-            value: state,
-            child: Text(state),
-          );
-        }).toList(),
-        onChanged: (String? newState) {
-          setState(() {
-            selectedState = newState; // Store the selected state
-          });
-        },
-
-        decoration: const InputDecoration(
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          prefixIcon: Icon(Icons.map),
-        ),
-      ),
-    );
-  }
-
   Padding genderWidget1() {
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
@@ -416,7 +389,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
               Expanded(
                 child: RadioListTile<String>(
                   title: const Text('Female'),
-                  value: 'FEMALE', // Radio button value
+                  value: 'FEMALE',
                   groupValue: selectedGender, // Current selected gender
                   onChanged: (String? value) {
                     setState(() {
@@ -464,6 +437,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         return false;
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
             title: const Text(
               "Update",
@@ -770,9 +744,11 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         registerStatus = true;
       }
       if (_activeStepIndex == 6) {
+        isEditingAccountType = false;
         registerStatus = true;
       }
       if (isLastStep) {
+        isEditingAccountType = false;
         var id;
         if (selectedAccountTypeId != null) {
           var accountTypeDetails =
@@ -881,6 +857,15 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     Uint8List? profileBytes;
     String phoneNumber = phoneNumberController.text;
 
+    var id;
+    var selectedAccountTypeName;
+    if (selectedAccountTypeId != null) {
+      var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
+
+      id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
+      selectedAccountTypeName = accountTypeDetails?['name'];
+    }
+
     registrationFormData['fullName'] = fullNameController.text;
     registrationFormData['surname'] = surNameController.text;
     registrationFormData['motherName'] = motherNameController.text;
@@ -892,7 +877,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     registrationFormData['country'] = selectedCountry;
     registrationFormData['state'] = selectedState;
     registrationFormData['streetAddress'] = streetController.text;
-    registrationFormData['accountType'] = "$selectedAccountTypeValue";
+    registrationFormData['accountType'] = id.toString();
     registrationFormData['occupation'] = occupationController.text;
     registrationFormData['initialDeposit'] = initialDepositController.text;
     registrationFormData['monthlyIncome'] = monthlyIncomeController.text;
@@ -912,7 +897,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       registrationData['customerInfo.state'] = selectedState;
       // registrationData['zipCode'] = dateOfBirthController.text;
       registrationData['customerInfo.sreetAddress'] = streetController.text;
-      registrationData['accountType'] = "$selectedAccountTypeValue";
+      registrationData['accountType'] = "$selectedAccountTypeIdValue";
       registrationData['customerInfo.occupation'] = occupationController.text;
       registrationData['initialDeposit'] = initialDepositController.text;
       registrationData['customerInfo.monthlyIncome'] =
@@ -1004,7 +989,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       registrationData['country'] = selectedCountry;
       registrationData['state'] = selectedState;
       registrationData['streetAddress'] = streetController.text;
-      registrationData['accountType'] = "$selectedAccountTypeValue";
+      registrationData['accountType'] = "$selectedAccountTypeIdValue";
       registrationData['occupation'] = occupationController.text;
       registrationData['initialDeposit'] = initialDepositController.text;
       registrationData['monthlyIncome'] = monthlyIncomeController.text;
@@ -1371,6 +1356,15 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 hintText: "Full Name",
                 controller: fullNameController,
                 keyboardType: TextInputType.text,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp("[a-zA-Z ]")),
+                  TextInputFormatter.withFunction(
+                    (oldValue, newValue) {
+                      return newValue.copyWith(
+                          text: newValue.text.toUpperCase());
+                    },
+                  ),
+                ],
                 errorMessage: "Full Name cannot be empty",
                 leadingIcon: Icons.person,
                 isRequired: true,
@@ -1382,6 +1376,15 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 controller: surNameController,
                 keyboardType: TextInputType.text,
                 errorMessage: "SurName cannot be empty",
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp("[a-zA-Z ]")),
+                  TextInputFormatter.withFunction(
+                    (oldValue, newValue) {
+                      return newValue.copyWith(
+                          text: newValue.text.toUpperCase());
+                    },
+                  ),
+                ],
                 leadingIcon: Icons.person,
                 isRequired: false,
               ),
@@ -1509,19 +1512,201 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       ),
 
       /// INITIAL AMOUNT
+      ///
+
+      // Step(
+      //   title: Text(isSmallScreen ? "" : "Address "),
+      //   isActive: _activeStepIndex >= 7,
+      //   state: _activeStepIndex > 7 ? StepState.complete : StepState.indexed,
+      //   content: Form(
+      //     key: globalFormKey7,
+      //     child: Column(
+      //       mainAxisAlignment: MainAxisAlignment.start,
+      //       crossAxisAlignment: CrossAxisAlignment.start,
+      //       children: [
+      //         const SizedBox(height: 20),
+      //         Text(widget.userInfo[
+      //             'accountType']), // 🔍 Display current selection (if not type 1)
+      //         if (widget.userInfo['accountType'] != "1" &&
+      //             !isEditingAccountType) ...[
+      //           TextLabel("Selected Account Type"),
+      //           Padding(
+      //             padding:
+      //                 const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      //             child: Card(
+      //               child: Text(
+      //                 getAccountTypeNameById(widget.userInfo['accountType']),
+      //                 style: const TextStyle(
+      //                     fontSize: 21, fontWeight: FontWeight.w600),
+      //               ),
+      //             ),
+      //           ),
+      //           TextButton.icon(
+      //             icon: Icon(Icons.edit, size: 18),
+      //             label: Text("Change Account Type"),
+      //             onPressed: () {
+      //               setState(() {
+      //                 isEditingAccountType = true;
+      //               });
+      //             },
+      //           ),
+      //         ],
+
+      //         // 👇 Show product/account type selectors for type 1 or if editing
+      //         if (widget.userInfo['accountType'] == "1" ||
+      //             isEditingAccountType) ...[
+      //           TextLabel("Product Type"),
+      //           ReusableDropdown(
+      //             selectedValue: selectedProductType,
+      //             items: ListContants.productType,
+      //             hintText: 'Select Product Type',
+      //             onChanged: (newStatus) {
+      //               setState(() {
+      //                 selectedProductType = newStatus;
+      //                 selectedAccountTypeId = null;
+      //               });
+
+      //               if (selectedProductType != null) {
+      //                 _filterAccountTypes(selectedProductType!);
+      //               }
+      //             },
+      //             prefixIcon: Icons.business,
+      //             errorMessage: 'Please select a product type',
+      //             isRequired: true,
+      //           ),
+      //           const SizedBox(height: 10),
+      //           TextLabel("Account Type"),
+      //           TextLabel("Account Type"),
+      //           Padding(
+      //             padding: const EdgeInsets.only(left: 15, right: 15),
+      //             child: Column(
+      //               mainAxisAlignment: MainAxisAlignment.start,
+      //               crossAxisAlignment: CrossAxisAlignment.start,
+      //               children: filteredAccountTypes.map<Widget>((accountType) {
+      //                 bool isSelected =
+      //                     selectedAccountTypeId == accountType['name'];
+      //                 return GestureDetector(
+      //                   onTap: () {
+      //                     setState(() {
+      //                       selectedAccountTypeId = accountType['name'];
+
+      //                       // selectedAccountId = accountType[
+      //                       //     'id']; // Save the selected account ID
+      //                       print(
+      //                           'Selected Account Type ID: $selectedAccountTypeId');
+      //                     });
+      //                   },
+      //                   child: Container(
+      //                     width: MediaQuery.of(context).size.width,
+      //                     child: Card(
+      //                       margin: const EdgeInsets.all(10),
+      //                       color: isSelected ? Colors.blue : Colors.white,
+      //                       // elevation: 4,
+      //                       shape: RoundedRectangleBorder(
+      //                         borderRadius: BorderRadius.circular(10),
+      //                       ),
+      //                       child: Padding(
+      //                         padding: const EdgeInsets.symmetric(
+      //                             vertical: 1, horizontal: 2),
+      //                         child: ListTile(
+      //                           title: Text(
+      //                             accountType['name'] as String,
+      //                             style: TextStyle(
+      //                                 color: isSelected
+      //                                     ? Colors.white
+      //                                     : Colors.black,
+      //                                 fontWeight: FontWeight.bold),
+      //                           ),
+      //                           subtitle: Text(
+      //                             (int.tryParse(accountType['maxAge']
+      //                                                 ?.toString() ??
+      //                                             '') ??
+      //                                         0) >
+      //                                     100
+      //                                 ? 'Minimum Age: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'}\n'
+      //                                     'Min Amount: ${accountType['minAmount']}'
+      //                                 : 'Age Range: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'} - ${int.tryParse(accountType['maxAge']?.toString() ?? '0') ?? 0}\n'
+      //                                     'Min Amount: ${accountType['minAmount']}',
+      //                             style: TextStyle(
+      //                               color: isSelected
+      //                                   ? Colors.white
+      //                                   : Colors.black,
+      //                             ),
+      //                           ),
+      //                         ),
+      //                       ),
+      //                     ),
+      //                   ),
+      //                 );
+      //               }).toList(),
+      //             ),
+      //           ),
+      //         ]
+      //       ],
+      //     ),
+      //   ),
+      // )
+
+// Step 7 - Address
       Step(
         title: Text(isSmallScreen ? "" : "Address "),
         isActive: _activeStepIndex >= 7,
         state: _activeStepIndex > 7 ? StepState.complete : StepState.indexed,
         content: Form(
-            key: globalFormKey7,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 20,
+          key: globalFormKey7,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              if (widget.userInfo['accountType'] != "1" &&
+                  !isEditingAccountType) ...[
+                TextLabel("Selected Account Type"),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        getAccountTypeNameById(widget.userInfo['accountType']),
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      trailing: Icon(Icons.account_balance),
+                    ),
+                  ),
                 ),
+                Row(
+                  children: [
+                    TextButton.icon(
+                      icon: Icon(Icons.edit, size: 18),
+                      label: Text("Change Account Type"),
+                      onPressed: () {
+                        setState(() {
+                          isEditingAccountType = true;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
+
+              // Show dropdowns if type is 1 or if editing
+              if (widget.userInfo['accountType'] == "1" ||
+                  isEditingAccountType) ...[
                 TextLabel("Product Type"),
                 ReusableDropdown(
                   selectedValue: selectedProductType,
@@ -1534,23 +1719,18 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                     });
 
                     if (selectedProductType != null) {
-                      print("Gemechuuu");
-
-                      setState(() {
-                        _filterAccountTypes(selectedProductType!);
-                      });
+                      _filterAccountTypes(selectedProductType!);
                     }
                   },
                   prefixIcon: Icons.business,
                   errorMessage: 'Please select a product type',
                   isRequired: true,
                 ),
+                const SizedBox(height: 10),
                 TextLabel("Account Type"),
                 Padding(
-                  padding: const EdgeInsets.only(left: 15, right: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: filteredAccountTypes.map<Widget>((accountType) {
                       bool isSelected =
                           selectedAccountTypeId == accountType['name'];
@@ -1558,49 +1738,35 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                         onTap: () {
                           setState(() {
                             selectedAccountTypeId = accountType['name'];
-                            // selectedAccountId = accountType[
-                            //     'id']; // Save the selected account ID
-                            print(
-                                'Selected Account Type ID: $selectedAccountTypeId');
                           });
                         },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          child: Card(
-                            margin: const EdgeInsets.all(10),
-                            color: isSelected ? Colors.blue : Colors.white,
-                            // elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          elevation: 5,
+                          color:
+                              isSelected ? Colors.blue.shade100 : Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              accountType['name'] as String,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.blue : Colors.black,
+                              ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 1, horizontal: 2),
-                              child: ListTile(
-                                title: Text(
-                                  accountType['name'] as String,
-                                  style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                  (int.tryParse(accountType['maxAge']
-                                                      ?.toString() ??
-                                                  '') ??
-                                              0) >
-                                          100
-                                      ? 'Minimum Age: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'}\n'
-                                          'Min Amount: ${accountType['minAmount']}'
-                                      : 'Age Range: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'} - ${int.tryParse(accountType['maxAge']?.toString() ?? '0') ?? 0}\n'
-                                          'Min Amount: ${accountType['minAmount']}',
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.black,
-                                  ),
-                                ),
+                            subtitle: Text(
+                              (int.tryParse(accountType['maxAge']?.toString() ??
+                                              '') ??
+                                          0) >
+                                      100
+                                  ? 'Minimum Age: ${accountType['minAge']}\nMin Amount: ${accountType['minAmount']}'
+                                  : 'Age Range: ${accountType['minAge']} - ${accountType['maxAge']}\nMin Amount: ${accountType['minAmount']}',
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.blue.shade700
+                                    : Colors.black87,
                               ),
                             ),
                           ),
@@ -1609,9 +1775,130 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                     }).toList(),
                   ),
                 ),
-              ],
-            )),
-      ),
+                if (widget.userInfo['accountType'] != "1")
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      icon: Icon(Icons.cancel),
+                      label: Text("Cancel"),
+                      onPressed: () {
+                        setState(() {
+                          isEditingAccountType = false;
+                          selectedProductType = null;
+                          selectedAccountTypeId = null;
+                        });
+                      },
+                    ),
+                  ),
+              ]
+            ],
+          ),
+        ),
+      )
+
+      // Step(
+      //   title: Text(isSmallScreen ? "" : "Address "),
+      //   isActive: _activeStepIndex >= 7,
+      //   state: _activeStepIndex > 7 ? StepState.complete : StepState.indexed,
+      //   content: Form(
+      //       key: globalFormKey7,
+      //       child: Column(
+      //         mainAxisAlignment: MainAxisAlignment.start,
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //         children: [
+      //           const SizedBox(
+      //             height: 20,
+      //           ),
+      //           TextLabel("Product Type"),
+      //           ReusableDropdown(
+      //             selectedValue: selectedProductType,
+      //             items: ListContants.productType,
+      //             hintText: 'Select Product Type',
+      //             onChanged: (newStatus) {
+      //               setState(() {
+      //                 selectedProductType = newStatus;
+      //                 selectedAccountTypeId = null;
+      //               });
+
+      //               if (selectedProductType != null) {
+      //                 print("Gemechuuu");
+
+      //                 setState(() {
+      //                   _filterAccountTypes(selectedProductType!);
+      //                 });
+      //               }
+      //             },
+      //             prefixIcon: Icons.business,
+      //             errorMessage: 'Please select a product type',
+      //             isRequired: true,
+      //           ),
+      //           TextLabel("Account Type"),
+      //           Padding(
+      //             padding: const EdgeInsets.only(left: 15, right: 15),
+      //             child: Column(
+      //               mainAxisAlignment: MainAxisAlignment.start,
+      //               crossAxisAlignment: CrossAxisAlignment.start,
+      //               children: filteredAccountTypes.map<Widget>((accountType) {
+      //                 bool isSelected =
+      //                     selectedAccountTypeId == accountType['name'];
+      //                 return GestureDetector(
+      //                   onTap: () {
+      //                     setState(() {
+      //                       selectedAccountTypeId = accountType['name'];
+      //                       // selectedAccountId = accountType[
+      //                       //     'id']; // Save the selected account ID
+      //                       print(
+      //                           'Selected Account Type ID: $selectedAccountTypeId');
+      //                     });
+      //                   },
+      //                   child: Container(
+      //                     width: MediaQuery.of(context).size.width,
+      //                     child: Card(
+      //                       margin: const EdgeInsets.all(10),
+      //                       color: isSelected ? Colors.blue : Colors.white,
+      //                       // elevation: 4,
+      //                       shape: RoundedRectangleBorder(
+      //                         borderRadius: BorderRadius.circular(10),
+      //                       ),
+      //                       child: Padding(
+      //                         padding: const EdgeInsets.symmetric(
+      //                             vertical: 1, horizontal: 2),
+      //                         child: ListTile(
+      //                           title: Text(
+      //                             accountType['name'] as String,
+      //                             style: TextStyle(
+      //                                 color: isSelected
+      //                                     ? Colors.white
+      //                                     : Colors.black,
+      //                                 fontWeight: FontWeight.bold),
+      //                           ),
+      //                           subtitle: Text(
+      //                             (int.tryParse(accountType['maxAge']
+      //                                                 ?.toString() ??
+      //                                             '') ??
+      //                                         0) >
+      //                                     100
+      //                                 ? 'Minimum Age: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'}\n'
+      //                                     'Min Amount: ${accountType['minAmount']}'
+      //                                 : 'Age Range: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'} - ${int.tryParse(accountType['maxAge']?.toString() ?? '0') ?? 0}\n'
+      //                                     'Min Amount: ${accountType['minAmount']}',
+      //                             style: TextStyle(
+      //                               color: isSelected
+      //                                   ? Colors.white
+      //                                   : Colors.black,
+      //                             ),
+      //                           ),
+      //                         ),
+      //                       ),
+      //                     ),
+      //                   ),
+      //                 );
+      //               }).toList(),
+      //             ),
+      //           ),
+      //         ],
+      //       )),
+      // ),
     ];
   }
 
@@ -2546,7 +2833,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         final response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
           setState(() {
-            _combinedSignature = response.bodyBytes; // ✅ Convert to Uint8List
+            _combinedSignature = response.bodyBytes;
           });
         }
       } catch (e) {
@@ -2582,5 +2869,34 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       }
     }
     return null;
+  }
+
+  // String getAccountTypeNameById(String accountTypeId) {
+  //   try {
+  //     final match = accountTypes.firstWhere(
+  //       (type) => type['id'].toString() == accountTypeId,
+  //       orElse: () => {'name': 'Unknown'},
+  //     );
+  //     return match['name'] ?? 'Unknown';
+  //   } catch (e) {
+  //     print("Error finding account type name: $e");
+  //     return 'Unknown';
+  //   }
+  // }
+
+  String getAccountTypeNameById(String accountTypeId) {
+    try {
+      print("ddjjdjdjdjddjddjdjd");
+      print(accountTypeId);
+      final match = accountTypes.firstWhere(
+        (type) => type['id'].toString() == accountTypeId,
+        orElse: () =>
+            {'name': 'Unknown'}, // Return a real Map with expected keys
+      );
+      return match['name'] ?? "Unknown";
+    } catch (e) {
+      print("Error finding account type name: $e");
+      return "Unknown";
+    }
   }
 }

@@ -7,7 +7,7 @@ import 'package:coopengageplus/main.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 
-class UpdateConfirmationPage extends StatelessWidget {
+class UpdateConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> registrationData;
   final Map<String, dynamic> registrationFormData;
   final String? userId;
@@ -18,13 +18,25 @@ class UpdateConfirmationPage extends StatelessWidget {
     this.userId,
     this.className,
   });
+
+  @override
+  State<UpdateConfirmationPage> createState() => _UpdateConfirmationPageState();
+}
+
+class _UpdateConfirmationPageState extends State<UpdateConfirmationPage> {
   NetworkHandler networkHandler = NetworkHandler();
+  @override
+  void initState() {
+    _initializeGlobal();
+  }
+
+  List<Map<String, dynamic>> accountTypes = [];
 
   Widget _buildImageSection(
       BuildContext context, String title, dynamic imageData) {
     print('Residence Card Data: $imageData');
     print("dataaaaaa");
-    print(registrationData);
+    print(widget.registrationData);
     if (imageData == null ||
         (imageData is! Uint8List && imageData is! String)) {
       return const SizedBox.shrink();
@@ -72,14 +84,19 @@ class UpdateConfirmationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Uint8List? signatureBytes = registrationFormData['signature'];
-    final dynamic photoData = registrationFormData['photo'];
-    final dynamic residenceCardData = registrationFormData['residenceCard'];
-    final Uint8List? signatureData = registrationFormData['signature'];
-    final dynamic personalPhotoData = registrationFormData['photo'];
-    final dynamic residenceCard1 = registrationFormData['residenceCard'];
+    print("dkdkdkdkkdkdkdkkdkd");
+    print(widget.registrationData['accountType']);
+    String accountTypeName = getAccountTypeNameById(
+        widget.registrationFormData['accountType'].toString());
+    final Uint8List? signatureBytes = widget.registrationFormData['signature'];
+    final dynamic photoData = widget.registrationFormData['photo'];
+    final dynamic residenceCardData =
+        widget.registrationFormData['residenceCard'];
+    final Uint8List? signatureData = widget.registrationFormData['signature'];
+    final dynamic personalPhotoData = widget.registrationFormData['photo'];
+    final dynamic residenceCard1 = widget.registrationFormData['residenceCard'];
     final dynamic residenceCardBack1 =
-        registrationFormData['residenceCardBack'];
+        widget.registrationFormData['residenceCardBack'];
 
     print("residenceCardDadddddddddta");
 
@@ -110,7 +127,7 @@ class UpdateConfirmationPage extends StatelessWidget {
       onWillPop: () async {
         print('Residence Card Data: $residenceCardData');
         FocusScope.of(context).unfocus();
-        Navigator.pop(context, userId);
+        Navigator.pop(context, widget.userId);
         return true;
       },
       child: Scaffold(
@@ -128,7 +145,7 @@ class UpdateConfirmationPage extends StatelessWidget {
           centerTitle: true,
           leading: IconButton(
             onPressed: () {
-              Navigator.pop(context, userId);
+              Navigator.pop(context, widget.userId);
             },
             icon: const Icon(Icons.arrow_back_ios, color: Colors.blue),
           ),
@@ -172,14 +189,18 @@ class UpdateConfirmationPage extends StatelessWidget {
                           const Divider(thickness: 1.5),
                           const SizedBox(height: 15),
                           ...fieldsToShow.map((field) {
-                            if (registrationFormData.containsKey(field)) {
+                            if (widget.registrationFormData
+                                .containsKey(field)) {
                               String displayValue;
                               if (field == 'phone') {
                                 displayValue = getFormattedPhoneNumber(
-                                    registrationFormData[field]);
+                                    widget.registrationFormData[field]);
+                              } else if (field == 'accountType') {
+                                displayValue = accountTypeName;
                               } else {
-                                displayValue =
-                                    registrationFormData[field].toString();
+                                displayValue = widget
+                                    .registrationFormData[field]
+                                    .toString();
                               }
 
                               return Padding(
@@ -270,7 +291,7 @@ class UpdateConfirmationPage extends StatelessWidget {
           ),
           child: ElevatedButton(
             onPressed: () async {
-              if (className == 'update') {
+              if (widget.className == 'update') {
                 await updateUser(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -296,7 +317,7 @@ class UpdateConfirmationPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),
             child: Text(
-              className == 'update' ? 'Update' : 'Submit',
+              widget.className == 'update' ? 'Update' : 'Submit',
               style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -324,9 +345,10 @@ class UpdateConfirmationPage extends StatelessWidget {
       print("registrationData");
       print("jdjalddahhjdhadfdudfuduudsduh");
 
-      print(registrationData);
+      print(widget.registrationData);
       var response = await networkHandler.put1(
-          '/api/v1/accounts/individual/$userId', registrationData);
+          '/api/v1/accounts/individual/${widget.userId}',
+          widget.registrationData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -349,13 +371,13 @@ class UpdateConfirmationPage extends StatelessWidget {
         Future.delayed(const Duration(seconds: 1), () {});
       }
     } else if (isOnline == false) {
-      int? userID = userId != null ? int.tryParse(userId!) : null;
+      int? userID = widget.userId != null ? int.tryParse(widget.userId!) : null;
       print("no data found");
       print(userID);
       final DatabaseHelper dbHelper = DatabaseHelper();
 
       int rowsAffected =
-          await dbHelper.updateCustomer(userID!, registrationData);
+          await dbHelper.updateCustomer(userID!, widget.registrationData);
 
       if (rowsAffected > 0) {
         print("User updated successfully in the local database.");
@@ -379,5 +401,31 @@ class UpdateConfirmationPage extends StatelessWidget {
         );
       }
     }
+  }
+
+  String getAccountTypeNameById(String accountTypeId) {
+    try {
+      final match = accountTypes.firstWhere(
+        (type) => type['id'].toString() == accountTypeId,
+        orElse: () =>
+            {'name': 'Unknown'}, // Return a real Map with expected keys
+      );
+      return match['name'] ?? "Unknown";
+    } catch (e) {
+      print("Error finding account type name: $e");
+      return "Unknown";
+    }
+  }
+
+  Future<void> _initializeGlobal() async {
+    List<Map<String, dynamic>> fetchedAccountTypes =
+        await networkHandler.fetchAccountTypesFromDatabase();
+
+    print("Gemechu bulti ");
+    print(fetchedAccountTypes);
+
+    setState(() {
+      accountTypes = fetchedAccountTypes;
+    });
   }
 }

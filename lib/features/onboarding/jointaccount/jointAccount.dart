@@ -44,7 +44,7 @@ import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/widget/ButtonUploadTakePhoto%20.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:coopengageplus/widget/SignatureButtons.dart';
-import '../pages/old/HomePage.dart';
+import '../pages/home/HomePage.dart';
 
 import 'package:path_provider/path_provider.dart';
 

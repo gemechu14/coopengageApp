@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/features/onboarding/pages/ViewCustomerInfoPage.dart';
+import 'package:coopengageplus/features/onboarding/Indivudualaccount/ViewCustomerInfoPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/verifyCustomerInfo.dart';
 import 'package:coopengageplus/features/onboarding/Indivudualaccount/updateCustomerInfoScreen.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
@@ -285,8 +285,9 @@ class _UserInfoPageState extends State<UserListPage> {
                                                               SampleItem.edit,
                                                           child: Text('Edit'),
                                                         ),
-                                                      if (widget.title ==
-                                                          'Unsettled')
+                                                      if (isOnline &&
+                                                          widget.title ==
+                                                              'Unsettled')
                                                         const PopupMenuItem<
                                                             SampleItem>(
                                                           value:

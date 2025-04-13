@@ -10,7 +10,7 @@ import 'package:coopengageplus/common_widgets/textField/CustomTextFormField.dart
 import 'package:coopengageplus/common_widgets/textField/PhoneNumberWidget.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/features/onboarding/pages/old/HomePage.dart';
+import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
