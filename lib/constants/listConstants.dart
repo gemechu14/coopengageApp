@@ -33,6 +33,16 @@ class ListContants {
     '3',
   ];
 
+  static const List<String> NumberOfMembersForOrganization = [
+    '1',
+    '2',
+    '3',
+    '4',
+    "5",
+    "6",
+    '7',
+    '8'
+  ];
   static const List<String> languagePreference = [
     'AM',
     'ENG',

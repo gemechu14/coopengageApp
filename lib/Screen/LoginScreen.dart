@@ -37,9 +37,7 @@ class _LoginscreenState extends State<Loginscreen> {
       backgroundColor: Colors.white,
       body: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
-            
-              ),
+          decoration: const BoxDecoration(),
           child: ProgressHUD(
             key: UniqueKey(),
             inAsyncCall: isApiCallProcess,
@@ -217,6 +215,7 @@ class _LoginscreenState extends State<Loginscreen> {
                         if (response.statusCode == 200 ||
                             response.statusCode == 201) {
                           Map<String, dynamic> output =
+                          
                               json.decode(response.body);
                           await storage.write(
                               key: "token", value: output["access_token"]);
@@ -253,7 +252,7 @@ class _LoginscreenState extends State<Loginscreen> {
                           }
 
                           /////////CHECK ACCOUNT TYPE
-                      
+
                           bool isTableEmpty =
                               await dbHelper.isAccountTypeTableEmpty();
                           if (isTableEmpty) {
@@ -266,7 +265,6 @@ class _LoginscreenState extends State<Loginscreen> {
                             print(accountTypesResponse);
                             if (accountTypesResponse is List<dynamic>) {
                               print("Fetched account types successfully.");
-
 
                               List<Map<String, dynamic>> accountTypesToSave =
                                   accountTypesResponse.map((e) {
@@ -499,79 +497,79 @@ class _LoginscreenState extends State<Loginscreen> {
             const SizedBox(height: 5),
             // Divider and Sign in with Google
             // "or sign in with" Divider
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: Container(
-                width: width < 600 ? double.infinity : width * 0.5,
-                child: const Row(
-                  children: [
-                    Expanded(
-                      child: Divider(thickness: 1, color: Colors.grey),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text("OR", style: TextStyle(color: Colors.grey)),
-                    ),
-                    Expanded(
-                      child: Divider(thickness: 1, color: Colors.black),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SuuqPassLoginscreen(),
-                      ),
-                      (route) => false);
-                },
-                child: Container(
-                  width: width < 600
-                      ? double.infinity
-                      : width * 0.5, // Match login button width
-                  height: 50, // Match login button height
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20.0), // Adjust space from left
-                        child: Container(
-                          height: 30, // Set a fixed height for the image
-                          width: 30, // Set a fixed width for the image
-                          child: Image.asset(
-                            'assets/coop_engage.png',
-                            fit: BoxFit
-                                .contain, // Make the image fit the container
-                          ),
-                        ),
-                      ),
-                      const Expanded(
-                        child: Center(
-                          child: Text(
-                            "Sign In with Suuq-Pass",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            //   child: Container(
+            //     width: width < 600 ? double.infinity : width * 0.5,
+            //     child: const Row(
+            //       children: [
+            //         Expanded(
+            //           child: Divider(thickness: 1, color: Colors.grey),
+            //         ),
+            //         Padding(
+            //           padding: EdgeInsets.symmetric(horizontal: 10),
+            //           child: Text("OR", style: TextStyle(color: Colors.grey)),
+            //         ),
+            //         Expanded(
+            //           child: Divider(thickness: 1, color: Colors.black),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            //   child: GestureDetector(
+            //     onTap: () {
+            //       Navigator.pushAndRemoveUntil(
+            //           context,
+            //           MaterialPageRoute(
+            //             builder: (context) => const SuuqPassLoginscreen(),
+            //           ),
+            //           (route) => false);
+            //     },
+            //     child: Container(
+            //       width: width < 600
+            //           ? double.infinity
+            //           : width * 0.5, // Match login button width
+            //       height: 50, // Match login button height
+            //       decoration: BoxDecoration(
+            //         color: Colors.white,
+            //         borderRadius: BorderRadius.circular(25),
+            //         border: Border.all(color: Colors.grey),
+            //       ),
+            //       child: Row(
+            //         children: [
+            //           Padding(
+            //             padding: const EdgeInsets.only(
+            //                 left: 20.0), // Adjust space from left
+            //             child: Container(
+            //               height: 30, // Set a fixed height for the image
+            //               width: 30, // Set a fixed width for the image
+            //               child: Image.asset(
+            //                 'assets/coop_engage.png',
+            //                 fit: BoxFit
+            //                     .contain, // Make the image fit the container
+            //               ),
+            //             ),
+            //           ),
+            //           const Expanded(
+            //             child: Center(
+            //               child: Text(
+            //                 "Sign In with Suuq-Pass",
+            //                 style: TextStyle(
+            //                   fontSize: 16,
+            //                   color: Colors.black,
+            //                   fontWeight: FontWeight.bold,
+            //                 ),
+            //               ),
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:coopengageplus/constants/config/config.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'dart:convert';
@@ -239,36 +240,37 @@ CREATE TABLE selected_language  (
 
   Future<bool> syncCustomersToServer(
       List<Map<String, dynamic>> customers, String token) async {
-    const url = 'http://10.2.125.41:9060/api/v1/accounts/bulk';
-// Prepare the request body in the required format
+    const url = '${AppConstants.baseUrl}/accounts/bulk/individual';
     Map<String, String> requestBody = {};
 
     for (var i = 0; i < customers.length; i++) {
-      requestBody['accounts[$i].fullName'] =
+      requestBody['accounts[$i].customerInfo.fullName'] =
           customers[i]['fullName']?.toString() ?? '';
-      requestBody['accounts[$i].surname'] =
+      requestBody['accounts[$i].customerInfo.surname'] =
           customers[i]['surname']?.toString() ?? '';
-      requestBody['accounts[$i].phone'] =
+      requestBody['accounts[$i].customerInfo.phone'] =
           customers[i]['phone']?.toString() ?? '';
-      requestBody['accounts[$i].email'] =
+      requestBody['accounts[$i].customerInfo.email'] =
           customers[i]['email']?.toString() ?? '';
-      requestBody['accounts[$i].motherName'] =
+      requestBody['accounts[$i].customerInfo.motherName'] =
           customers[i]['motherName']?.toString() ?? '';
-      requestBody['accounts[$i].sex'] = customers[i]['sex']?.toString() ?? '';
-      requestBody['accounts[$i].streetAddress'] =
+      requestBody['accounts[$i].customerInfo.sex'] =
+          customers[i]['sex']?.toString() ?? '';
+      requestBody['accounts[$i].customerInfo.streetAddress'] =
           customers[i]['streetAddress']?.toString() ?? '';
-      requestBody['accounts[$i].city'] = customers[i]['city']?.toString() ?? '';
-      requestBody['accounts[$i].state'] =
+      requestBody['accounts[$i].customerInfo.city'] =
+          customers[i]['city']?.toString() ?? '';
+      requestBody['accounts[$i].customerInfo.state'] =
           customers[i]['state']?.toString() ?? '';
       requestBody['accounts[$i].accountCurrency'] =
           customers[i]['accountCurrency']?.toString() ?? '';
-      requestBody['accounts[$i].dateOfBirth'] =
+      requestBody['accounts[$i].customerInfo.dateOfBirth'] =
           customers[i]['dateOfBirth']?.toString() ?? '';
-      requestBody['accounts[$i].zipCode'] =
+      requestBody['accounts[$i].customerInfo.zipCode'] =
           customers[i]['zipCode']?.toString() ?? '';
-      requestBody['accounts[$i].country'] =
+      requestBody['accounts[$i].customerInfo.country'] =
           customers[i]['country']?.toString() ?? '';
-      requestBody['accounts[$i].occupation'] =
+      requestBody['accounts[$i].customerInfo.occupation'] =
           customers[i]['occupation']?.toString() ?? '';
       requestBody['accounts[$i].initialDeposit'] =
           customers[i]['initialDeposit']?.toString() ?? '';
@@ -287,22 +289,22 @@ CREATE TABLE selected_language  (
 
       requestBody['accounts[$i].customerType'] =
           customers[i]['customerType']?.toString() ?? '';
-      requestBody['accounts[$i].documentName'] =
+      requestBody['accounts[$i].customerInfo.documentName'] =
           customers[i]['documentName']?.toString() ?? '';
 
-      requestBody['accounts[$i].issueAuthority'] =
+      requestBody['accounts[$i].customerInfo.issueAuthority'] =
           customers[i]['issueAuthority']?.toString() ?? '';
 
-      requestBody['accounts[$i].issueDate'] =
+      requestBody['accounts[$i].customerInfo.issueDate'] =
           customers[i]['issueDate']?.toString() ?? '';
 
-      requestBody['accounts[$i].zoneSubCity'] =
+      requestBody['accounts[$i].customerInfo.zoneSubCity'] =
           customers[i]['zoneSubCity']?.toString() ?? '';
-      requestBody['accounts[$i].title'] =
+      requestBody['accounts[$i].customerInfo.title'] =
           customers[i]['title']?.toString() ?? '';
-      requestBody['accounts[$i].maritalStatus'] =
+      requestBody['accounts[$i].customerInfo.maritalStatus'] =
           customers[i]['maritalStatus']?.toString() ?? '';
-      requestBody['accounts[$i].expirayDate'] =
+      requestBody['accounts[$i].customerInfo.expirayDate'] =
           customers[i]['expirayDate']?.toString() ?? '';
     }
 

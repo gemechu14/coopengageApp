@@ -71,7 +71,8 @@ class ViewCustomerInfo extends StatelessWidget {
         appBar: AppBar(
           title: const Text(
             'Customer Information',
-            style: TextStyle(color: Colors.blue, fontSize: 19),
+            style: TextStyle(
+                color: Colors.blue, fontSize: 21, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
           leading: IconButton(
@@ -84,7 +85,11 @@ class ViewCustomerInfo extends StatelessWidget {
                 (route) => false,
               );
             },
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_outlined,
+              size: 25,
+              color: Colors.blue,
+            ),
           ),
         ),
         body: SingleChildScrollView(
@@ -309,11 +314,14 @@ class ViewCustomerInfo extends StatelessWidget {
 
   Widget _buildImageWidget(String title, Widget imageWidget) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20.0),
+      padding: const EdgeInsets.only(top: 20.0, left: 15, right: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(title),
+          Text(
+            title,
+            style: TextStyle(fontSize: 15, color: Colors.blue),
+          ),
           const SizedBox(height: 10),
           imageWidget,
         ],

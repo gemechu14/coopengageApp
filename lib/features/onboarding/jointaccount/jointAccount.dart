@@ -54,6 +54,8 @@ String? selectedBranch;
 List<List<bool>> isExpandedPersonalList = [];
 List<List<bool>> isExpandedAddressInfoList = [];
 List<List<bool>> isExpandedDocumentInfoList = [];
+List<List<bool>> isExpandedIDInfoList = [];
+
 String? selectedAccountTypeId;
 bool isFirstPersonExpanded = false;
 bool isSecondPersonExpanded = false;
@@ -151,18 +153,20 @@ class _Registration extends State<JointAccountStepperPage> {
     super.initState();
     selectedProductType = ListContants.productType.first;
     int membersCount = 2;
-    selectedSectors = List.generate(2, (index) => null);
-    selectedMaritalStatus = List.generate(2, (index) => null);
-    selectedState = List.generate(2, (index) => null);
-    selectedGender = List.generate(2, (index) => null);
-    formKeys = List.generate(2, (index) => GlobalKey<FormState>());
+    selectedSectors = List.generate(membersCount, (index) => null);
+    selectedMaritalStatus = List.generate(membersCount, (index) => null);
+    selectedDocumentType = List.generate(membersCount, (index) => null);
+    selectedTitle = List.generate(membersCount, (index) => null);
+    selectedState = List.generate(membersCount, (index) => null);
+    selectedGender = List.generate(membersCount, (index) => null);
+    formKeys = List.generate(membersCount, (index) => GlobalKey<FormState>());
     motherNameControllers =
-        List.generate(2, (index) => TextEditingController());
+        List.generate(membersCount, (index) => TextEditingController());
     fullNameControllers = List.generate(2, (index) => TextEditingController());
     occupationControllers =
-        List.generate(2, (index) => TextEditingController());
+        List.generate(membersCount, (index) => TextEditingController());
     monthlyIncomeControllers =
-        List.generate(2, (index) => TextEditingController());
+        List.generate(membersCount, (index) => TextEditingController());
     phoneControllers =
         List.generate(membersCount, (index) => TextEditingController());
     emailControllers =
@@ -193,6 +197,7 @@ class _Registration extends State<JointAccountStepperPage> {
     isExpandedAddressInfoList = List.generate(membersCount, (index) => [false]);
     isExpandedDocumentInfoList =
         List.generate(membersCount, (index) => [false]);
+    isExpandedIDInfoList = List.generate(membersCount, (index) => [false]);
     _initializeGlobalData();
     _initializeGlobal();
     initializeBranches();
@@ -218,8 +223,6 @@ class _Registration extends State<JointAccountStepperPage> {
     // selectedState = ListContants.ethiopianStates.first;
     // selectedMaritalStatus = ListContants.maritalStatuses.first;
     selectedCustomerType = ListContants.customerType.first;
-    selectedDocumentType = ListContants.documentName.first;
-    selectedTitle = ListContants.title.first;
     // selectedSector = ListContants.sectors.first;
 
     AccountTypeSelection = ListContants.AccountTypeSelection.first;
@@ -231,15 +234,14 @@ class _Registration extends State<JointAccountStepperPage> {
     penStrokeWidth: 5,
     penColor: Colors.black,
   );
-  bool isApiCallProcess = false;
+
   bool validate = false;
   bool circular = false;
   bool isValid = true;
-  String? selectedTitle;
+  // String? selectedTitle;
   // String selectedGender = 'FEMALE';
   String selectedIdType = 'KEBELE_ID';
   String? selectedCustomerType;
-  String? selectedDocumentType;
 
   String? selectedAccountType;
   String? AccountTypeSelection;
@@ -250,6 +252,8 @@ class _Registration extends State<JointAccountStepperPage> {
   // String? selectedSector;
   List<String?> selectedSectors = [];
   List<String?> selectedMaritalStatus = [];
+  List<String?> selectedDocumentType = [];
+  List<String?> selectedTitle = [];
   List<String?> selectedState = [];
   List<String?> selectedGender = [];
   List<String> profilePaths = List.generate(2, (index) => "");
@@ -419,6 +423,21 @@ class _Registration extends State<JointAccountStepperPage> {
                       List.generate(membersCount, (index) => [false]);
                   isExpandedAddressInfoList =
                       List.generate(membersCount, (index) => [false]);
+                  isExpandedPersonalList =
+                      List.generate(membersCount, (index) => [false]);
+                  isExpandedAddressInfoList =
+                      List.generate(membersCount, (index) => [false]);
+                  isExpandedDocumentInfoList =
+                      List.generate(membersCount, (index) => [false]);
+
+                  isExpandedIDInfoList =
+                      List.generate(membersCount, (index) => [false]);
+                  isExpandedList =
+                      List.generate(membersCount, (index) => false);
+                  isExpandedPersonalList =
+                      List.generate(membersCount, (index) => [false]);
+                  isExpandedAddressInfoList =
+                      List.generate(membersCount, (index) => [false]);
                   formKeys = List.generate(
                       membersCount, (index) => GlobalKey<FormState>());
                   fullNameControllers = List.generate(
@@ -427,6 +446,56 @@ class _Registration extends State<JointAccountStepperPage> {
                       membersCount, (index) => TextEditingController());
                   emailControllers = List.generate(
                       membersCount, (index) => TextEditingController());
+
+                  motherNameControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  occupationControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  monthlyIncomeControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+
+                  selectedState = List.generate(membersCount, (index) => null);
+                  selectedGender = List.generate(membersCount, (index) => null);
+                  selectedMaritalStatus =
+                      List.generate(membersCount, (index) => null);
+                  selectedSectors =
+                      List.generate(membersCount, (index) => null);
+                  selectedDocumentType =
+                      List.generate(membersCount, (index) => null);
+                  selectedTitle = List.generate(membersCount, (index) => null);
+
+                  issueAuthorityControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  zoneSubsityControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  woredaControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+
+                  expireDateControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  issueDateControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  legalIDControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  dateControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+
+                  signatureControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  photoControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  dateOfBirthControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+                  cityControllers = List.generate(
+                      membersCount, (index) => TextEditingController());
+
+                  profilePaths = List.generate(membersCount, (index) => "");
+                  passportPaths = List.generate(membersCount, (index) => "");
+                  residentPaths = List.generate(membersCount, (index) => "");
+                  residentCardBackPaths =
+                      List.generate(membersCount, (index) => "");
+                  combinedSignatures =
+                      List.generate(membersCount, (index) => Uint8List(0));
                 });
               },
               prefixIcon: Icons.person_add,
@@ -586,6 +655,7 @@ class _Registration extends State<JointAccountStepperPage> {
                                 'Please select Gender', // Pass the custom error message
                             isRequired: false, // Make the field required
                           ),
+                          TextLabel("Marital Status"),
                           ReusableDropdown(
                             selectedValue: selectedMaritalStatus[i],
                             items: ListContants.maritalStatuses,
@@ -599,6 +669,21 @@ class _Registration extends State<JointAccountStepperPage> {
                             errorMessage:
                                 'Please select a marital status', // Pass the custom error message
                             isRequired: false, // Make the field required
+                          ),
+                          TextLabel("Title"),
+                          ReusableDropdown(
+                            selectedValue: selectedTitle[
+                                i], // Use list index for each person
+                            items: ListContants.title,
+                            hintText: 'Select Title',
+                            onChanged: (newStatus) {
+                              setState(() {
+                                selectedTitle[i] = newStatus!;
+                              });
+                            },
+                            prefixIcon: Icons.category,
+                            errorMessage: 'Please select a Title',
+                            isRequired: true,
                           ),
                           TextLabel("Sector"),
                           ReusableDropdown(
@@ -686,13 +771,45 @@ class _Registration extends State<JointAccountStepperPage> {
                             //     !isExpandedPersonalList[i][0];
                           });
                         }, [
+                          TextLabel("Document Type"),
+                          ReusableDropdown(
+                            selectedValue: selectedDocumentType[
+                                i], // Use list index for each person
+                            items: ListContants.documentName,
+                            hintText: 'Select Document Type',
+                            onChanged: (newStatus) {
+                              setState(() {
+                                selectedDocumentType[i] = newStatus!;
+                              });
+                            },
+                            prefixIcon: Icons.category,
+                            errorMessage: 'Please select a Sector status',
+                            isRequired: true,
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
                           TextLabel("Personal Photo"),
+
                           personalPhoto(i),
+
                           idCardPhoto(i),
                           TextLabel("Signature"),
                           // signatureWidget1(context),
                           signatureCard(i),
                           signaturePadSelection(i),
+                        ]),
+                        _buildExpandablePersonalInformationSection(
+                            "ID Information", isExpandedIDInfoList[i][0],
+                            // isExpandedPersonalList[i][0],
+                            () {
+                          setState(() {
+                            isExpandedIDInfoList[i][0] =
+                                !isExpandedIDInfoList[i][0];
+                            // isExpandedPersonalList[i][0] =
+                            //     !isExpandedPersonalList[i][0];
+                          });
+                        }, [
                           TextLabel("Legal ID"),
                           ReusableTextFormField(
                             hintText: "Legal ID",
@@ -703,7 +820,6 @@ class _Registration extends State<JointAccountStepperPage> {
                             isRequired: true,
                           ),
                           TextLabel("ISSUE AUTHORITY"),
-
                           ReusableTextFormField(
                             hintText: "ISSUE AUTHORITY",
                             controller: issueAuthorityControllers[i],
@@ -712,7 +828,6 @@ class _Registration extends State<JointAccountStepperPage> {
                             leadingIcon: Icons.verified,
                             isRequired: false,
                           ),
-
                           TextLabel("ISSUE DATE"),
                           DatePickerField(
                             controller: issueDateControllers[i],
@@ -725,7 +840,6 @@ class _Registration extends State<JointAccountStepperPage> {
                             isRequired: false,
                             errorMessage: 'Please select an issue date',
                           ),
-
                           TextLabel("EXPIRY DATE"),
                           DatePickerField(
                             controller: expireDateControllers[i],
@@ -847,25 +961,7 @@ class _Registration extends State<JointAccountStepperPage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-
                                     subtitle: Text("                     "),
-                                    // subtitle: Text(
-                                    //   (int.tryParse(accountType['maxAge']
-                                    //                       ?.toString() ??
-                                    //                   '') ??
-                                    //               0) >
-                                    //           100
-                                    //       ? 'Minimum Age: ${int.tryParse(accountType['minAge']?.toString() ?? '') ?? '___'}\n'
-                                    //           'Min Amount: ${accountType['minAmount']}'
-                                    //       : 'Age Range: ${int.tryParse(accountType['minAge']?.toString() ?? '') ?? '___'} - ${int.tryParse(accountType['maxAge']?.toString() ?? '0') ?? 0}\n'
-                                    //           'Min Amount: ${accountType['minAmount']}',
-                                    // style: TextStyle(
-                                    //   color: isSelected
-                                    //       ? Colors.white
-                                    //       : Colors
-                                    //           .black, // Subtitle color changes when selected
-                                    // ),
-                                    // ),
                                   ),
                                 ),
                               ),
@@ -887,21 +983,6 @@ class _Registration extends State<JointAccountStepperPage> {
                         ),
                       ),
               ),
-              // TextLabel("Account Type"),
-              // ReusableDropdown(
-              //   selectedValue: accountTypeForJoint,
-              //   items: ListContants.accountTypeofJoint,
-              //   hintText: 'Select Account Type',
-              //   onChanged: (newStatus) {
-              //     setState(() {
-              //       accountTypeForJoint = newStatus!;
-              //     });
-              //   },
-              //   prefixIcon: Icons.person,
-              //   errorMessage:
-              //       'Please select Account Type', // Pass the custom error message
-              //   isRequired: true, // Make the field required
-              // ),
             ],
           ),
         ),
@@ -1192,7 +1273,7 @@ class _Registration extends State<JointAccountStepperPage> {
         Padding(
           padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
           child: Text(
-            "Front Photo of  $selectedDocumentType",
+            'Front Photo of ${selectedDocumentType[i] ?? "ID"}',
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -1260,7 +1341,7 @@ class _Registration extends State<JointAccountStepperPage> {
         Padding(
           padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
           child: Text(
-            "Back Photo of $selectedDocumentType",
+            'Back Photo of ${selectedDocumentType[i] ?? "ID"}',
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -1406,51 +1487,6 @@ class _Registration extends State<JointAccountStepperPage> {
         // Add regular branches
         allBranches.addAll(regularBranches);
       });
-    }
-  }
-
-  Future<void> callApiAndUpdateControllers(Uint8List residentBytes) async {
-    try {
-      // API endpoint
-      final url = Uri.parse('http://10.11.227.165:5000/process_id');
-      final request = http.MultipartRequest('POST', url);
-
-      request.files.add(http.MultipartFile.fromBytes(
-        'image', // Field name in the API
-        residentBytes,
-        filename: 'residence_card.png', // Optional: Provide a filename
-        contentType: MediaType('image', 'png'), // Set the appropriate MIME type
-      ));
-
-      // Send the multipart request
-      final response = await request.send();
-
-      if (response.statusCode == 200) {
-        // Parse the response JSON
-        final responseData = await response.stream.bytesToString();
-        final data = jsonDecode(responseData);
-
-        // Update TextEditingControllers
-        setState(() {
-          fullNameController.text =
-              '${data['first_name']} ${data['middle_name']}';
-          surNameController.text = data['surname'];
-          String formattedDate = "";
-          if (data['date_of_birth'] != null) {
-            DateTime parsedDate = DateTime.parse(data['date_of_birth']);
-            formattedDate = DateFormat('yyyy-MM-dd')
-                .format(parsedDate); // Change to '-' separator
-          }
-          selectedGender = data['gender'].toUpperCase();
-          dateController.text = formattedDate;
-        });
-
-        print("Controllers updated successfully");
-      } else {
-        print("Failed to call API: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error calling API: $e");
     }
   }
 
@@ -1764,85 +1800,54 @@ class _Registration extends State<JointAccountStepperPage> {
       }
     }
   }
-  // Future<void> _imgFromGallery(int i, String imageTypes) async {
-  //   final pickedFile =
-  //       await ImagePicker().pickImage(source: ImageSource.gallery);
-  //   if (pickedFile != null) {
+
+  // _cropImage(File imgFile, String imageTypes) async {
+  //   FocusScope.of(context).unfocus();
+  //   final croppedFile =
+  //       await ImageCropper().cropImage(sourcePath: imgFile.path, uiSettings: [
+  //     AndroidUiSettings(
+  //         toolbarTitle: "Image Cropper",
+  //         toolbarColor: Colors.deepOrange,
+  //         toolbarWidgetColor: Colors.white,
+  //         initAspectRatio: CropAspectRatioPreset.original,
+  //         lockAspectRatio: false),
+  //     IOSUiSettings(
+  //       title: "Image Cropper",
+  //     )
+  //   ]);
+  //   if (croppedFile != null) {
+  //     // imageCache.clear();
   //     setState(() {
-  //       if (imageTypes == 'profilePath') {
-  //         profilePaths[i] = pickedFile.path;
+  //       // imageFile = File(croppedFile.path);
+
+  //       if (imageTypes == 'passport') {
+  //         passportPath = croppedFile.path;
+  //       } else if (imageTypes == 'profile') {
+  //         // profilePath = croppedFile.path;
   //       } else if (imageTypes == 'resident') {
-  //         residentPaths[i] = pickedFile.path;
+  //         residentPath = croppedFile.path;
   //       } else if (imageTypes == 'residentCardBack') {
-  //         residentCardBackPaths[i] = pickedFile.path;
+  //         residentCardBackPath = croppedFile.path;
+  //       } else if (imageTypes == 'signature') {
+  //         // signatureImagePath = croppedFile.path;
+  //         // savedSignature = null;
+  //         // _signatureController.clear();
+
+  //         // Clear drawn signature
+  //         _signatureController1.clear();
+  //         _signatureController2.clear();
+  //         _signatureController3.clear();
+  //         savedSignature = null;
+
+  //         // Set the uploaded image as the combined signature
+  //         signatureImagePath = croppedFile.path;
+  //         _combinedSignature = File(croppedFile.path).readAsBytesSync();
+  //       } else if (imageTypes == 'form') {
+  //         formPath = croppedFile.path;
   //       }
   //     });
   //   }
   // }
-
-  // Future<void> _imgFromCamera(int i, String imageTypes) async {
-  //   final pickedFile =
-  //       await ImagePicker().pickImage(source: ImageSource.camera);
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       if (imageTypes == 'profilePath') {
-  //         profilePaths[i] = pickedFile.path;
-  //       } else if (imageTypes == 'resident') {
-  //         residentPaths[i] = pickedFile.path;
-  //       } else if (imageTypes == 'residentCardBack') {
-  //         residentCardBackPaths[i] = pickedFile.path;
-  //       }
-  //     });
-  //   }
-  // }
-
-  _cropImage(File imgFile, String imageTypes) async {
-    FocusScope.of(context).unfocus();
-    final croppedFile =
-        await ImageCropper().cropImage(sourcePath: imgFile.path, uiSettings: [
-      AndroidUiSettings(
-          toolbarTitle: "Image Cropper",
-          toolbarColor: Colors.deepOrange,
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false),
-      IOSUiSettings(
-        title: "Image Cropper",
-      )
-    ]);
-    if (croppedFile != null) {
-      // imageCache.clear();
-      setState(() {
-        // imageFile = File(croppedFile.path);
-
-        if (imageTypes == 'passport') {
-          passportPath = croppedFile.path;
-        } else if (imageTypes == 'profile') {
-          // profilePath = croppedFile.path;
-        } else if (imageTypes == 'resident') {
-          residentPath = croppedFile.path;
-        } else if (imageTypes == 'residentCardBack') {
-          residentCardBackPath = croppedFile.path;
-        } else if (imageTypes == 'signature') {
-          // signatureImagePath = croppedFile.path;
-          // savedSignature = null;
-          // _signatureController.clear();
-
-          // Clear drawn signature
-          _signatureController1.clear();
-          _signatureController2.clear();
-          _signatureController3.clear();
-          savedSignature = null;
-
-          // Set the uploaded image as the combined signature
-          signatureImagePath = croppedFile.path;
-          _combinedSignature = File(croppedFile.path).readAsBytesSync();
-        } else if (imageTypes == 'form') {
-          formPath = croppedFile.path;
-        }
-      });
-    }
-  }
 
   Future<Uint8List?> _getImageBytes(String imagePath) async {
     try {
@@ -1879,20 +1884,6 @@ class _Registration extends State<JointAccountStepperPage> {
       return null;
     }
   }
-
-  // Future<Uint8List> _getImageBytes(String path) async {
-  //   final imageFile = File(path);
-  //   print("hello there");
-
-  //   print(imageFile);
-  //   print(await imageFile.exists());
-
-  //   if (await imageFile.exists()) {
-  //     // throw Exception("File does not exist.");
-  //     print("file not exist");
-  //   }
-  //   return await imageFile.readAsBytes();
-  // }
 
   void clearSignature(int index) {
     setState(() {
@@ -2054,22 +2045,18 @@ class _Registration extends State<JointAccountStepperPage> {
           isLoading = false;
 
           DialogHelper.showErrorDialog(context, "Please select account type");
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   const SnackBar(
-          //     content: Text(
-          //       'Please select account type',
-          //     ),
-          //     backgroundColor: Colors.red,
-          //   ),
-          // );
+
           return;
         } else {
-          print("step 999");
-          registerAllUsers();
+          // registerAllUsers();
+          setState(() {
+            isLoading = true; // Start loading before registration
+          });
+          await registerAllUsers();
+          setState(() {
+            isLoading = false; // Stop loading after registration
+          });
         }
-
-        // await submitFormData1();
-        // await submitFormData();
       } else {
         if (!registerStatus) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -2598,8 +2585,6 @@ class _Registration extends State<JointAccountStepperPage> {
 
     print(registrationData);
 
-    // await callApiAndUpdateControllers(residentBytes!);
-
     await updateUser();
   }
 
@@ -2619,21 +2604,7 @@ class _Registration extends State<JointAccountStepperPage> {
   }
 
 //STEP: 4
-  Future<void> handleStepFour() async {
-    // Uint8List? profileBytes;
-    // if (profilePath.isNotEmpty) {
-    //   profileBytes = await _getImageBytes(profilePath);
-    // }
-
-    // registrationData['photo'] = profileBytes;
-    // registrationData["percentageCompleted"] = 50;
-    // isOnline
-    //     ? registrationData['formCompleted'] = "false"
-    //     : registrationData['formCompleted'] = 0;
-
-    // print(registrationData);
-    // await updateUser();
-  }
+  Future<void> handleStepFour() async {}
 
   Future<void> addressInfo() async {
     registrationData['country'] = selectedCountry;
@@ -2831,76 +2802,6 @@ class _Registration extends State<JointAccountStepperPage> {
           fetchedAccountTypes; // Update the state with the fetched account types
     });
   }
-
-  // void _filterAccountTypes(String bankingType) {
-  //   print("Filtering account types...");
-  //   setState(() {
-  //     // Get user's age from date of birth
-  //     DateTime? dateOfBirth;
-  //     try {
-  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
-  //     } catch (e) {
-  //       print('Invalid date format: ${dateOfBirthController.text}');
-  //       return;
-  //     }
-
-  //     int age = DateTime.now().year - dateOfBirth.year;
-  //     if (DateTime.now().month < dateOfBirth.month ||
-  //         (DateTime.now().month == dateOfBirth.month &&
-  //             DateTime.now().day < dateOfBirth.day)) {
-  //       age--;
-  //     }
-
-  //     // Parse initial deposit
-  //     double initialDeposit =
-  //         double.tryParse(initialDepositController.text) ?? 0;
-
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       // Check banking type
-  //       if (accountType['bankingType'] != bankingType) {
-  //         print(
-  //             "BankingType mismatch: ${accountType['bankingType']} != $bankingType");
-  //         return false;
-  //       }
-
-  //       // Validate age range
-  //       int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
-  //       int maxAge =
-  //           int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
-  //       if (age < minAge || age > maxAge) {
-  //         print("Age out of range: $age not in [$minAge, $maxAge]");
-  //         return false;
-  //       }
-
-  //       // Validate minimum amount
-  //       double minAmount =
-  //           double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
-  //       if (initialDeposit < minAmount) {
-  //         print(
-  //             "Initial deposit $initialDeposit less than required $minAmount");
-  //         return false;
-  //       }
-
-  //       // Validate sex with 'BOTH' inclusion
-
-  //       print("Account type matches!");
-  //       return true;
-  //     }).toList();
-
-  //     // Show feedback if no account types match
-  //     if (filteredAccountTypes.isEmpty) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'No account types available for your age ($age), gender ($selectedGender), and deposit ($initialDeposit)',
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
 
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
@@ -3161,107 +3062,7 @@ class _Registration extends State<JointAccountStepperPage> {
     );
   }
 
-  // void registerAllUsers() async {
-  //   List<Map<String, dynamic>> customers = [];
-
-  //   for (int i = 0; i < int.parse(NumberOfMembers!); i++) {
-  //     Uint8List? residentBytes;
-  //     Uint8List? residentCardBackBytes;
-  //     Uint8List? personalPhotoBytes;
-
-  //     if (residentPaths[i].isNotEmpty) {
-  //       residentBytes = await _getImageBytes(residentPaths[i]);
-  //     }
-  //     if (residentCardBackPaths[i].isNotEmpty) {
-  //       residentCardBackBytes = await _getImageBytes(residentCardBackPaths[i]);
-  //     }
-  //     if (profilePaths[i].isNotEmpty) {
-  //       print("Antony");
-  //       print(profilePaths[i]);
-  //       personalPhotoBytes = await _getImageBytes(
-  //           profilePaths[i]); // Fixed: using profilePaths[i]
-  //     }
-
-  //     // Create the customer object
-  //     Map<String, dynamic> customer = {
-  //       // "id": i, // You may change this to a unique identifier
-  //       "fullName": fullNameControllers[i].text,
-  //       "surname": "dkkddkkd", // Add surname if available
-  //       "motherName": motherNameControllers[i].text,
-  //       // "email": emailControllers[i].text,
-  //       "emailVerified": true,
-  //       "phone": phoneControllers[i].text,
-  //       "dateOfBirth": dateOfBirthControllers[i].text,
-  //       "country": "Ethiopia",
-  //       "state": selectedState[i],
-  //       "city": "", // Add city if available
-  //       "streetAddress": "",
-  //       "zipCode": "",
-  //       "occupation": occupationControllers[i].text,
-  //       "title": titles[i],
-  //       "maritalStatus": maritalStatus[i],
-  //       "postCode": '',
-  //       "zoneSubCity": "",
-  //       "houseNo": "",
-  //       "documentName": "KEBELEID",
-  //       "issueAuthority": "",
-  //       "issueDate": issueDateControllers[i].text,
-  //       "expiryDate": expireDateControllers[i].text,
-  //       "employeeStatus": "OTHER",
-  //       "legalId": legalIDControllers[i].text,
-  //       "salary": 0, // Adjust if needed
-  //       "sector": selectedSectors[i],
-  //       "industry": "",
-  //       "employerName": "",
-  //       "monthlyIncome": monthlyIncomeControllers[i].text,
-  //       "sex": selectedGender[i],
-  //       "photo":
-  //           personalPhotoBytes, // This should be base64 encoded for API requests if needed
-  //       "signature": combinedSignatures[i],
-  //       "residenceCard": residentBytes,
-  //       "residenceCardBack": residentCardBackBytes,
-  //       "passport": "", // Add if available
-  //       "confirmationForm": "", // Add if available
-  //       "percentageCompleted": 0
-  //     };
-
-  //     customers.add(customer);
-  //   }
-
-  //   // Construct the final payload
-  //   Map<String, dynamic> requestData = {
-  //     "customers": customers,
-  //     "primaryPhone": phoneControllers[0]
-  //         .text, // Assuming the first user's phone is primary
-  //     "branch": selectedBranch,
-  //     "currency": accountCurrencyController.text, // Adjust as needed
-  //     "accountType": "1",
-  //     "initialDeposit": '1000',
-  //     "percentageCompleted": 0,
-  //   };
-
-  //   print("Final JSON payload:");
-  //   // print(requestData);
-
-  //   // Send request
-  //   RegistrationService registrationService = RegistrationService();
-  //   var response = await registrationService.registerCustomers(requestData);
-
-  //   if (response["statusCode"] == 200) {
-  //     print("✅ Success: ${response["message"]}");
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text(response["error"]),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //     print("❌ Error1 (${response["statusCode"]}): ${response["message"]}");
-  //     print("Error Details: ${response["error"]}");
-  //   }
-  // }
-
-  void registerAllUsers() async {
+  registerAllUsers() async {
     List<Map<String, dynamic>> customers = [];
 
     for (int i = 0; i < int.parse(NumberOfMembers!); i++) {
@@ -3285,67 +3086,66 @@ class _Registration extends State<JointAccountStepperPage> {
         "fullName": fullNameControllers[i].text.isNotEmpty
             ? fullNameControllers[i].text
             : "", // Default value for empty fields
-        "surname": "dkkddkkd", // Add surname if available
+        "surname": "", // Add surname if available
         "motherName": motherNameControllers[i].text.isNotEmpty
             ? motherNameControllers[i].text
             : "", // Default value for empty fields
         "emailVerified": true,
         "phone":
             phoneControllers[i].text.isNotEmpty ? phoneControllers[i].text : "",
-        "email": emailControllers[i].text.isNotEmpty
-            ? emailControllers[i].text
-            : "", // Default value for empty fields
-        "dateOfBirth": dateOfBirthControllers[i].text.isNotEmpty
-            ? dateOfBirthControllers[i].text
-            : "", // Default value for empty fields
-        "country": "Ethiopia",
-        "state": selectedState[i] ?? "Unknown",
-        "city": "",
-        "streetAddress": "",
-        "zipCode": "",
-        "occupation": occupationControllers[i].text.isNotEmpty
-            ? occupationControllers[i].text
-            : "Unknown", // Default value for empty fields
-        "title": titles[i].isNotEmpty ? titles[i] : "", // Default title if null
-        "maritalStatus": maritalStatus[i].isNotEmpty
-            ? maritalStatus[i]
-            : "", // Default marital status if null
-        "postCode": '',
-        "zoneSubCity": "",
-        "houseNo": "",
-        "documentName": "KEBELEID",
-        "issueAuthority": "",
-        "issueDate": issueDateControllers[i].text.isNotEmpty
-            ? issueDateControllers[i].text
-            : "", // Default value for empty fields
-        "expiryDate": expireDateControllers[i].text.isNotEmpty
-            ? expireDateControllers[i].text
-            : "", // Default value for empty fields
-        "employeeStatus": "OTHER",
-        "legalId": legalIDControllers[i].text.isNotEmpty
-            ? legalIDControllers[i].text
-            : "Unknown", // Default value for empty fields
-        "salary": 0, // Adjust if needed
-        // "sector": selectedSectors[i] != null && selectedSectors[i].isNotEmpty
-        //     ? selectedSectors[i]
-        //     : "Unknown", // Default sector if null
-        "industry": "",
-        "employerName": "",
-        "monthlyIncome": monthlyIncomeControllers[i].text.isNotEmpty
-            ? monthlyIncomeControllers[i].text
-            : "", // Default value for empty fields
-        "sex": selectedGender[i] ?? "",
-        //     : "Unknown", // Default gender if null
-        "photo": personalPhotoBytes ??
-            [], // Handle null photo (use empty list instead)
-        "signature": combinedSignatures[i] ??
-            [], // Handle null signature (use empty list instead)
-        "residenceCard": residentBytes ??
-            [], // Handle null residence card (use empty list instead)
-        "residenceCardBack": residentCardBackBytes ??
-            [], // Handle null residence card back (use empty list instead)
-        "passport": "", // Add if available
-        "confirmationForm": "",
+        // "email": emailControllers[i].text.isNotEmpty
+        //     ? emailControllers[i].text
+        //     : "", // Default value for empty fields
+        // "dateOfBirth": dateOfBirthControllers[i].text.isNotEmpty
+        //     ? dateOfBirthControllers[i].text
+        //     : "", // Default value for empty fields
+        // "country": "Ethiopia",
+        // "state": selectedState[i] ?? "Unknown",
+        // "city": "",
+        // "streetAddress": "",
+        // "zipCode": "",
+        // "occupation": occupationControllers[i].text.isNotEmpty
+        //     ? occupationControllers[i].text
+        //     : "Unknown", // Default value for empty fields
+        // "title": selectedTitle[i], // Default title if null
+        // "maritalStatus": maritalStatus[i],
+        // // Default marital status if null
+        // "postCode": '',
+        // "zoneSubCity": "",
+        // "houseNo": "",
+        // "documentName": selectedDocumentType[i],
+        // "issueAuthority": "",
+        // "issueDate": issueDateControllers[i].text.isNotEmpty
+        //     ? issueDateControllers[i].text
+        //     : "", // Default value for empty fields
+        // "expiryDate": expireDateControllers[i].text.isNotEmpty
+        //     ? expireDateControllers[i].text
+        //     : "", // Default value for empty fields
+        // "employeeStatus": "OTHER",
+        // "legalId": legalIDControllers[i].text.isNotEmpty
+        //     ? legalIDControllers[i].text
+        //     : "Unknown", // Default value for empty fields
+        // "salary": 0, // Adjust if needed
+        // // "sector": selectedSectors[i] != null && selectedSectors[i].isNotEmpty
+        // //     ? selectedSectors[i]
+        // //     : "Unknown", // Default sector if null
+        // "industry": "",
+        // "employerName": "",
+        // "monthlyIncome": monthlyIncomeControllers[i].text.isNotEmpty
+        //     ? monthlyIncomeControllers[i].text
+        //     : "", // Default value for empty fields
+        // "sex": selectedGender[i] ?? "",
+        // //     : "Unknown", // Default gender if null
+        // "photo": personalPhotoBytes ??
+        //     [], // Handle null photo (use empty list instead)
+        // "signature": combinedSignatures[i] ??
+        //     [], // Handle null signature (use empty list instead)
+        // "residenceCard": residentBytes ??
+        //     [], // Handle null residence card (use empty list instead)
+        // "residenceCardBack": residentCardBackBytes ??
+        //     [], // Handle null residence card back (use empty list instead)
+        // "passport": "", // Add if available
+        // "confirmationForm": "",
         "percentageCompleted": 0
       };
 
@@ -3363,12 +3163,12 @@ class _Registration extends State<JointAccountStepperPage> {
           ? accountCurrencyController.text
           : "Unknown", // Default value for empty fields
       "accountType": "1",
-      "initialDeposit": '1000',
+      "initialDeposit": initialDepositController.text.toString(),
       "percentageCompleted": 0,
     };
 
     print("Final JSON payload:");
-    // print(requestData);
+    print(requestData);
 
     // Send request
     RegistrationService registrationService = RegistrationService();

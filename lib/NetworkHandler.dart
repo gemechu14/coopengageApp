@@ -1,22 +1,17 @@
-// ignore_for_file: unused_local_variable
+// ignore_for_file: unused_local_variable, avoid_print
 
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:coopengageplus/main.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:printing/printing.dart';
-
-// For base64 encoding/decoding
-// ignore_for_file: file_names
-
-// ignore_for_file: depend_on_referenced_packages
 
 class NetworkHandler {
-  String baseurl = "http://10.2.125.41:9060";
+  String baseurl = "http://10.2.125.41:9061";
   var log = Logger();
   FlutterSecureStorage storage = const FlutterSecureStorage();
   Future get(String url) async {
@@ -48,8 +43,6 @@ class NetworkHandler {
       headers: {"Authorization": "Bearer $token"},
     );
     return response;
-
-    // log.i(response.statusCode);
   }
 
   ///AGENT REGISTRATION
@@ -91,22 +84,6 @@ class NetworkHandler {
       return response;
     }
   }
-
-  // Future<http.Response> post(String url, Map<String, String> body) async {
-  //   String? token = await storage.read(key: "token");
-  //   url = formater(url);
-  //   var uri = Uri.parse(url);
-  //   log.d(body);
-  //   var response = await http.post(
-  //     uri,
-  //     headers: {
-  //       "Content-type": "application/json",
-  //       // "Authorization": "Bearer $token"
-  //     },
-  //     body: json.encode(body),
-  //   );
-  //   return response;
-  // }
 
   Future<http.Response> post(
     String url,
@@ -194,39 +171,6 @@ class NetworkHandler {
     return response;
   }
 
-  // Future<http.Response> postWithFormData(
-  //     String qrcodeUrl, Map<String, dynamic> body) async {
-  //   // Convert the URL string to a Uri object
-  //   var uri = Uri.parse(qrcodeUrl);
-  //   var request = http.MultipartRequest('POST', uri);
-
-  //   body.forEach((key, value) {
-  //     if (value is String) {
-  //       request.fields[key] = value;
-  //     } else if (value is Uint8List) {
-  //       request.files.add(http.MultipartFile.fromBytes(
-  //         key, // The key for the file field (e.g., 'qr_code')
-  //         value, // The byte data of the image
-  //         filename: '$key.jpg', // You can customize the filename here
-  //         contentType:
-  //             MediaType('image', 'jpeg'), // Content type for JPEG image
-  //       ));
-  //     }
-  //   });
-
-  //   request.headers['accept'] = 'application/json';
-
-  //   // Send the request and get the response
-  //   var response = await request.send();
-
-  //   // Convert the response stream to a regular response object
-  //   final responseData = await http.Response.fromStream(response);
-  //   print("responseData");
-  //   print(responseData.statusCode);
-
-  //   return responseData;
-  // }
-
   Future<http.Response> postWithFormData(
       String qrcodeUrl, Map<String, dynamic> body) async {
     // Convert the URL string to a Uri object
@@ -293,34 +237,7 @@ class NetworkHandler {
     }
   }
 
-  // Future<http.Response> postWithFormData(
-  //     String url, Map<String, String> body, Uint8List qrImage) async {
-  //   url = formater(url);
-  //   var request = http.MultipartRequest('POST', Uri.parse(url));
-
-  //   body.forEach((key, value) {
-  //     request.fields[key] = value;
-  //   });
-
-  //   if (qrImage.isNotEmpty) {
-  //     request.files.add(http.MultipartFile.fromBytes(
-  //       'qr_code',
-  //       qrImage,
-  //       filename: 'qrcode.jpg',
-  //       contentType: MediaType('image', 'jpeg'),
-  //     ));
-  //   }
-
-  //   request.headers['accept'] = 'application/json';
-
-  //   // Send the request and get the response
-  //   var response = await request.send();
-
-  //   // Handle the response
-  //   final responseData = await http.Response.fromStream(response);
-  //   return responseData;
-  // }
-
+  
   Future<http.Response> post1(String url, Map<String, dynamic> data) async {
     String? token = await storage.read(key: "token");
     if (token == null) {
@@ -399,49 +316,113 @@ class NetworkHandler {
       ..headers['Authorization'] = 'Bearer $token';
 
     data.forEach((key, value) {
-      if (key == 'signature' && value is Uint8List) {
-        final httpFile = http.MultipartFile.fromBytes(
-          key,
-          value,
-          filename: 'signature.png',
-          contentType: MediaType.parse('image/png'),
-        );
-        request.files.add(httpFile);
-      } else if (key == 'photo' && value is Uint8List) {
-        final httpFile = http.MultipartFile.fromBytes(
-          key,
-          value,
-          filename: 'photo.png',
-          contentType: MediaType.parse('image/png'),
-        );
-        request.files.add(httpFile);
-      } else if (key == 'residenceCard' && value is Uint8List) {
-        final httpFile = http.MultipartFile.fromBytes(
-          key,
-          value,
-          filename: 'residenceCard.png',
-          contentType: MediaType.parse('image/png'),
-        );
-        request.files.add(httpFile);
-      } else if (key == 'confirmationForm' && value is Uint8List) {
-        // Handle the confirmation form field if present
-        final httpFile = http.MultipartFile.fromBytes(
-          key, // Field name
-          value,
-          filename: 'confirmationForm.png',
-          contentType: MediaType.parse('image/png'),
-        );
-        request.files.add(httpFile);
-      } else if (key == 'passport' && value is Uint8List) {
-        final httpFile = http.MultipartFile.fromBytes(
-          key,
-          value,
-          filename: 'passport.png',
-          contentType: MediaType.parse('image/png'),
-        );
-        request.files.add(httpFile);
-      } else if (value is String) {
-        request.fields[key] = value;
+      if (isOnline) {
+        if (key == 'customerInfo.signature' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'signature.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'customerInfo.photo' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'photo.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'customerInfo.residenceCard' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'residenceCard.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'confirmationForm' && value is Uint8List) {
+          // Handle the confirmation form field if present
+          final httpFile = http.MultipartFile.fromBytes(
+            key, // Field name
+            value,
+            filename: 'confirmationForm.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'customerInfo.passport' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'passport.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'customerInfo.residenceCardBack' &&
+            value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'residenceCardBack.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (value is String) {
+          request.fields[key] = value;
+        }
+      } else {
+        if (key == 'signature' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'signature.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'photo' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'photo.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'residenceCard' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'residenceCard.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'confirmationForm' && value is Uint8List) {
+          // Handle the confirmation form field if present
+          final httpFile = http.MultipartFile.fromBytes(
+            key, // Field name
+            value,
+            filename: 'confirmationForm.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'passport' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'passport.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (key == 'residenceCardBack' && value is Uint8List) {
+          final httpFile = http.MultipartFile.fromBytes(
+            key,
+            value,
+            filename: 'residenceCardBack.jpeg',
+            contentType: MediaType.parse('image/jpeg'),
+          );
+          request.files.add(httpFile);
+        } else if (value is String) {
+          request.fields[key] = value;
+        }
       }
     });
 
@@ -479,7 +460,7 @@ class NetworkHandler {
   }
 
   NetworkImage getImage(String imageName) {
-    String url = formater("/uploads//$imageName.jpg");
+    String url = formater("/uploads//$imageName.jpeg");
     return NetworkImage(url);
   }
 

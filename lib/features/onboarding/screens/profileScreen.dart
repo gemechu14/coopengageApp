@@ -190,7 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.language, color: Colors.blue),
-                  
                   title: const Text("language"),
                   onTap: () {
                     Navigator.pushAndRemoveUntil(

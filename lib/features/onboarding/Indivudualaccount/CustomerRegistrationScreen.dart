@@ -6,7 +6,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
-// import 'package:csc_picker/csc_picker.dart';
 import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
@@ -16,15 +15,12 @@ import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:intl_phone_field/countries.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
-// import 'package:searchfield/searchfield.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signature/signature.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
@@ -32,15 +28,6 @@ import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:http/http.dart' as http;
 import '../../../common_widgets/dropDown/DatePickerField.dart';
 import 'dart:ui' as ui;
-
-///////////////////////////////////////////
-
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui';
-// import 'package:csc_picker/csc_picker.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/common_widgets/textField/PaymentMethod.dart';
@@ -53,37 +40,12 @@ import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/widget/ButtonUploadTakePhoto%20.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:coopengageplus/widget/SignatureButtons.dart';
-import 'package:email_validator/email_validator.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:intl/intl.dart';
-import 'package:intl_phone_field/countries.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
-
-import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
-
-import 'package:phonenumbers/phonenumbers.dart';
-import 'package:scrollable_table_view/scrollable_table_view.dart';
-// import 'package:searchfield/searchfield.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:signature/signature.dart';
-import 'package:snippet_coder_utils/FormHelper.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
-import 'package:http/http.dart' as http;
-import '../../../common_widgets/dropDown/DatePickerField.dart';
-import 'dart:ui' as ui;
-
 import '../pages/old/HomePage.dart';
 
 bool isConventionalSelected = true;
-
 List<Map<String, dynamic>> allBranches = [];
 String? selectedBranch;
-
 String? selectedAccountTypeId;
 
 class RegistrationScreen extends StatefulWidget {
@@ -104,6 +66,7 @@ class _Registration extends State<RegistrationScreen> {
   List<Map<String, dynamic>> mainBranches = [];
   int? idOne;
   final Map<String, dynamic> registrationData = {};
+  final Map<String, dynamic> registrationDataFile = {};
   bool registerStatus = true;
   var phoneNumber;
   bool isConventionalSelected = true;
@@ -300,7 +263,6 @@ class _Registration extends State<RegistrationScreen> {
                   selectedProductType = newStatus;
                 });
 
-                print("Gemechuuu123");
                 if (selectedProductType != null) {
                   print("Gemechuuu");
 
@@ -340,7 +302,6 @@ class _Registration extends State<RegistrationScreen> {
               TextLabel("Document Type"),
               ReusableDropdown(
                 selectedValue: selectedDocumentType,
-
                 items: ListContants.documentName,
                 hintText: 'Select Customer Type',
                 onChanged: (newStatus) {
@@ -349,9 +310,8 @@ class _Registration extends State<RegistrationScreen> {
                   });
                 },
                 prefixIcon: Icons.document_scanner,
-                errorMessage:
-                    'Please select a Document  type', // Pass the custom error message
-                isRequired: false, // Make the field required
+                errorMessage: 'Please select a Document  type',
+                isRequired: false,
               ),
               const SizedBox(
                 height: 5,
@@ -455,99 +415,7 @@ class _Registration extends State<RegistrationScreen> {
                 ],
                 isRequired: false,
               ),
-              // TextLabel("Banking Type"),
-              // ReusableDropdown(
-              //   selectedValue: selectedBankingType,
-              //   items: ['Conventional', 'Alhuda'],
-              //   hintText: 'Select Banking Type',
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       selectedBankingType = newValue!;
 
-              //       _filterAccountTypes(
-              //           newValue); // Filter the account types based on the selected bankingType
-              //       selectedAccountTypeId = null;
-              //     });
-              //   },
-              //   prefixIcon: Icons.account_balance,
-              //   errorMessage: 'Please select a banking type',
-              //   isRequired: true, // Required field
-              // ),
-              // TextLabel(" Account Type"),
-              // DropdownButtonFormField<String>(
-              //   // value: selectedAccountTypeId != null
-              //   //     ? filteredAccountTypes[0]['name']!
-              //   //     : null,
-
-              //   value: (filteredAccountTypes.isNotEmpty &&
-              //           selectedAccountTypeId != null)
-              //       ? filteredAccountTypes[0]['name']
-              //       : null,
-
-              //   items: filteredAccountTypes
-              //       .map<DropdownMenuItem<String>>(
-              //         (accountType) => DropdownMenuItem<String>(
-              //           value: accountType['name'] as String,
-              //           child: Text(
-              //             accountType['name'] as String,
-              //             overflow: TextOverflow
-              //                 .visible, // Show full text in the dropdown
-              //           ),
-              //         ),
-              //       )
-              //       .toList(),
-              //   hint: const Text('Select Account Type'),
-              //   onChanged: (String? selectedAccountType) {
-              //     if (selectedAccountType != null) {
-              //       // Find the accountType object that matches the selected name
-              //       var selectedAccountTypeDetails =
-              //           filteredAccountTypes.firstWhere(
-              //         (accountType) =>
-              //             accountType['name'] == selectedAccountType,
-              //       );
-              //       selectedAccountTypeId = selectedAccountType;
-              //       // Save the selected account type ID
-              //       selectedAccountId = selectedAccountTypeDetails['id'];
-
-              //       // Print the selected account type ID (for debugging purposes)
-              //       print('Selected Account Type ID: $selectedAccountId');
-              //     }
-              //   },
-              //   decoration: const InputDecoration(
-              //     isDense: true,
-              //     enabledBorder: OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(
-              //         color: Colors.black,
-              //       ),
-              //     ),
-              //     focusedBorder: const OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(color: Colors.blue),
-              //     ),
-              //     errorBorder: const OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(color: Colors.red),
-              //     ),
-              //     focusedErrorBorder: const OutlineInputBorder(
-              //       borderRadius: BorderRadius.all(Radius.circular(10)),
-              //       borderSide: BorderSide(color: Colors.red),
-              //     ),
-              //   ),
-              //   selectedItemBuilder: (BuildContext context) {
-              //     return filteredAccountTypes.map<Widget>((accountType) {
-              //       String accountName = accountType['name'] as String;
-              //       return Text(
-              //         accountName.length > 25
-              //             ? accountName.substring(0, 25) +
-              //                 '...' // Truncate to 20 chars
-              //             : accountName,
-              //         overflow: TextOverflow
-              //             .ellipsis, // Truncate with ellipsis in the selected value field
-              //       );
-              //     }).toList();
-              //   },
-              // ),
               TextLabel("InitialDeposit"),
               ReusableTextFormField(
                 hintText: "InitialDeposit",
@@ -561,7 +429,7 @@ class _Registration extends State<RegistrationScreen> {
                 ],
                 isRequired: true,
               ),
-              TextLabel("Payment Method"),
+              // TextLabel("Payment Method"),
               // PaymentMethodWidget(
               //   initialDepositController: initialDepositController,
               //   phoneNumberController: phoneNumberController,
@@ -792,114 +660,6 @@ class _Registration extends State<RegistrationScreen> {
                       fontWeight: FontWeight.bold),
                   textAlign: TextAlign.end,
                 ),
-//                 const SizedBox(
-//                   height: 20,
-//                 ),
-
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: ['Conventional', 'Alhuda'].map((bankingType) {
-//                     bool isSelected = selectedBankingType == bankingType;
-//                     return GestureDetector(
-//                       onTap: () {
-//                         setState(() {
-//                           selectedBankingType = bankingType;
-//                           _filterAccountTypes(
-//                               bankingType); // Filter account types based on selected banking type
-//                           // selectedAccountTypeId =
-//                           //     null; // Reset account type selection
-//                         });
-//                       },
-//                       child: Card(
-//                         color: isSelected ? Colors.blue : Colors.white,
-//                         elevation: 4,
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(10),
-//                         ),
-//                         child: Padding(
-//                           padding: const EdgeInsets.symmetric(
-//                               vertical: 10, horizontal: 20),
-//                           child: Text(
-//                             bankingType,
-//                             style: TextStyle(
-//                               color: isSelected ? Colors.white : Colors.black,
-//                               fontWeight: isSelected
-//                                   ? FontWeight.bold
-//                                   : FontWeight.normal,
-//                             ),
-//                           ),
-//                         ),
-//                       ),
-//                     );
-//                   }).toList(),
-//                 ),
-
-// // Account Type List with Cards
-//                 // TextLabel("Account Type"),
-//                 Padding(
-//                   padding: const EdgeInsets.only(left: 15, right: 15),
-//                   child: Column(
-//                     mainAxisAlignment: MainAxisAlignment.start,
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: filteredAccountTypes.map<Widget>((accountType) {
-//                       bool isSelected =
-//                           selectedAccountTypeId == accountType['name'];
-//                       return GestureDetector(
-//                         onTap: () {
-//                           setState(() {
-//                             selectedAccountTypeId = accountType['name'];
-//                             // selectedAccountId = accountType[
-//                             //     'id']; // Save the selected account ID
-//                             print(
-//                                 'Selected Account Type ID: $selectedAccountTypeId');
-//                           });
-//                         },
-//                         child: Container(
-//                           width: MediaQuery.of(context).size.width,
-//                           child: Card(
-//                             margin: const EdgeInsets.all(10),
-//                             color: isSelected ? Colors.blue : Colors.white,
-//                             // elevation: 4,
-//                             shape: RoundedRectangleBorder(
-//                               borderRadius: BorderRadius.circular(10),
-//                             ),
-//                             child: Padding(
-//                               padding: const EdgeInsets.symmetric(
-//                                   vertical: 1, horizontal: 2),
-//                               child: ListTile(
-//                                 title: Text(
-//                                   accountType['name'] as String,
-//                                   style: TextStyle(
-//                                       color: isSelected
-//                                           ? Colors.white
-//                                           : Colors.black,
-//                                       fontWeight: FontWeight.bold),
-//                                 ),
-//                                 subtitle: Text(
-//                                   (int.tryParse(accountType['maxAge']
-//                                                       ?.toString() ??
-//                                                   '') ??
-//                                               0) >
-//                                           100
-//                                       ? 'Minimum Age: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'}\n'
-//                                           'Min Amount: ${accountType['minAmount']}'
-//                                       : 'Age Range: ${int.tryParse(accountType['minAge']?.toString() ?? '') != null ? int.parse(accountType['minAge'].toString()) : '___'} - ${int.tryParse(accountType['maxAge']?.toString() ?? '0') ?? 0}\n'
-//                                           'Min Amount: ${accountType['minAmount']}',
-//                                   style: TextStyle(
-//                                     color: isSelected
-//                                         ? Colors.white
-//                                         : Colors.black,
-//                                   ),
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                       );
-//                     }).toList(),
-//                   ),
-//                 ),
-
                 Padding(
                   padding: const EdgeInsets.only(left: 15, right: 15),
                   child: filteredAccountTypes.isNotEmpty
@@ -1314,13 +1074,17 @@ By accepting these terms, you agree to comply with all banking regulations and p
                           )
                         ],
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(20.0),
-                        child: Image.file(
-                          File(profilePath),
-                          height: MediaQuery.of(context).size.height * 0.7,
-                          width: MediaQuery.of(context).size.width * 0.7,
-                          fit: BoxFit.fill,
+                    : GestureDetector(
+                        onTap: () =>
+                            {_showFullScreenImage(context, profilePath)},
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: Image.file(
+                            File(profilePath),
+                            height: MediaQuery.of(context).size.height * 0.7,
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
               ),
@@ -1417,13 +1181,17 @@ By accepting these terms, you agree to comply with all banking regulations and p
                           ),
                         ],
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(20.0),
-                        child: Image.file(
-                          File(residentPath),
-                          height: 180.0,
-                          width: MediaQuery.of(context).size.width * 0.7,
-                          fit: BoxFit.fill,
+                    : GestureDetector(
+                        onTap: () =>
+                            {_showFullScreenImage(context, residentPath)},
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: Image.file(
+                            File(residentPath),
+                            height: 180.0,
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
               ),
@@ -1481,13 +1249,18 @@ By accepting these terms, you agree to comply with all banking regulations and p
                           )
                         ],
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(20.0),
-                        child: Image.file(
-                          File(residentCardBackPath),
-                          height: 180.0,
-                          width: MediaQuery.of(context).size.width * 0.7,
-                          fit: BoxFit.fill,
+                    : GestureDetector(
+                        onTap: () => {
+                          _showFullScreenImage(context, residentCardBackPath)
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: Image.file(
+                            File(residentCardBackPath),
+                            height: 180.0,
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
               ),
@@ -2150,18 +1923,36 @@ By accepting these terms, you agree to comply with all banking regulations and p
     }
   }
 
-  Future<Uint8List> _getImageBytes(String path) async {
-    final imageFile = File(path);
-    print("hello there");
+  // Future<Uint8List> _getImageBytes(String path) async {
+  //   final imageFile = File(path);
+  //   print("hello there");
 
-    print(imageFile);
-    print(await imageFile.exists());
+  //   print(imageFile);
+  //   print(await imageFile.exists());
+
+  //   if (await imageFile.exists()) {
+  //     // throw Exception("File does not exist.");
+  //     print("file not exist");
+  //   }
+  //   return await imageFile.readAsBytes();
+  // }
+
+  Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
+    final imageFile = File(path);
 
     if (await imageFile.exists()) {
-      // throw Exception("File does not exist.");
-      print("file not exist");
+      Uint8List bytes = await imageFile.readAsBytes();
+
+      // Save the bytes as a temporary file
+      final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
+      await tempFile.writeAsBytes(bytes);
+
+      print("✅ Saved temporary image at: ${tempFile.path}");
+      return bytes; // Return the image bytes
+    } else {
+      print("❌ File does not exist at: $path");
+      return null;
     }
-    return await imageFile.readAsBytes();
   }
 
   void clearSignature(int index) {
@@ -2571,8 +2362,10 @@ By accepting these terms, you agree to comply with all banking regulations and p
           print("registrationData1");
           print("object");
           print(userId);
+
+          print(registrationData);
           response = await networkHandler
-              .post1('/api/v1/accounts', registrationData)
+              .post1('/api/v1/accounts/individual', registrationData)
               .timeout(const Duration(seconds: 20));
 
           var responseData = json.decode(response.body);
@@ -2684,50 +2477,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
           print(data);
           print("Customer data inserted successfully.");
         }
-
-        // print("User iddd");
-        // print(GlobalData().role);
-        // print(GlobalData().role != 'ACCOUNT-CREATOR' &&
-        //     GlobalData().role != 'BRANCH-ADMIN');
-        // if (GlobalData().role != 'ACCOUNT-CREATOR' &&
-        //     GlobalData().role != 'AGENT') {
-        //   print(GlobalData().role);
-        //   registerStatus = false;
-        //   FormHelper.showSimpleAlertDialog(
-        //     context,
-        //     "Coop Engage +",
-        //     "You dont have permission to create Account",
-        //     "OK",
-        //     () {
-        //       Navigator.of(context).pop();
-        //     },
-        //   );
-        // } else {
-        //   registerStatus = true;
-
-        //   print("userid ");
-        //   print(UserID);
-        //   DatabaseHelper dbHelper = DatabaseHelper();
-        //   await dbHelper.database;
-        //   print(UserID);
-        //   // Insert customer data
-        //   var data = await dbHelper.insertCustomer({
-        //     'phone': registrationData['phone'],
-        //     // 'customerType'
-        //     'email': registrationData['email'],
-        //     'customerType': registrationData['customerType'],
-        //     'status': 'INITIAL',
-        //     "userId": UserID
-        //   });
-
-        //   setState(() {
-        //     validate = true;
-        //     circular = false;
-        //     // userID = data;
-        //   });
-        //   // print(data);
-        //   print("Customer data inserted successfully.");
-        // }
       } catch (e) {
         registerStatus = false;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2768,18 +2517,36 @@ By accepting these terms, you agree to comply with all banking regulations and p
       );
       return; // Stop execution if invalid
     }
+    registrationDataFile['fullName'] = fullNameController.text;
+    registrationDataFile['surname'] = surNameController.text;
+    registrationDataFile['motherName'] = motherNameController.text;
+    registrationDataFile['sex'] = selectedGender;
+    registrationDataFile['dateOfBirth'] = dateOfBirthController.text;
+    registrationDataFile["title"] = selectedTitle;
 
-    registrationData['fullName'] = fullNameController.text;
-    registrationData['surname'] = surNameController.text;
-    registrationData['motherName'] = motherNameController.text;
-    registrationData['sex'] = selectedGender;
-    registrationData['dateOfBirth'] = dateOfBirthController.text;
-    registrationData["title"] = selectedTitle;
-    // registrationData["maritalStatus"] = selectedMaritalStatus;
-    registrationData["percentageCompleted"] = 75;
-    isOnline
-        ? registrationData['formCompleted'] = "false"
-        : registrationData['formCompleted'] = 0;
+    if (isOnline) {
+      registrationData['customerInfo.fullName'] = fullNameController.text;
+      registrationData['customerInfo.surname'] = surNameController.text;
+      registrationData['customerInfo.motherName'] = motherNameController.text;
+      registrationData['customerInfo.sex'] = selectedGender;
+      registrationData['customerInfo.dateOfBirth'] = dateOfBirthController.text;
+      registrationData["customerInfo.title"] = selectedTitle;
+      // registrationData["maritalStatus"] = selectedMaritalStatus;
+      registrationData["percentageCompleted"] = 75;
+      registrationData['formCompleted'] = "false";
+    } else {
+      registrationData['fullName'] = fullNameController.text;
+      registrationData['surname'] = surNameController.text;
+      registrationData['motherName'] = motherNameController.text;
+      registrationData['sex'] = selectedGender;
+      registrationData['dateOfBirth'] = dateOfBirthController.text;
+      registrationData["title"] = selectedTitle;
+      // registrationData["maritalStatus"] = selectedMaritalStatus;
+      registrationData["percentageCompleted"] = 75;
+
+      registrationData['formCompleted'] = 0;
+    }
+
     print(registrationData);
     // registerStatus = true;
     await updateUser();
@@ -2787,14 +2554,30 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
   // Step 1:
   Future<void> handleFirstStep() async {
-    registrationData['customerType'] = selectedCustomerType;
-    registrationData['phone'] = '+251${phoneNumberController.text}';
-    registrationData['email'] = emailController.text;
-    registrationData["percentageCompleted"] = 12.5;
-    registrationData['status'] = "INITIAL";
-    isOnline
-        ? registrationData['formCompleted'] = "false"
-        : registrationData['formCompleted'] = 0;
+    registrationData.clear();
+    registerStatus = true;
+    int index = 0;
+
+    registrationDataFile['phone'] = '0${phoneNumberController.text}';
+    registrationDataFile['email'] = emailController.text;
+    registrationDataFile['percentageCompleted'] = 12.5;
+    registrationDataFile['status'] = "INITIAL";
+    registrationDataFile['formCompleted'] = "false";
+    if (isOnline) {
+      registrationData['customerInfo.phone'] = '0${phoneNumberController.text}';
+      registrationData['customerInfo.email'] = emailController.text;
+      registrationData['customerInfo.percentageCompleted'] = 12.5;
+      registrationData['customerInfo.status'] = "INITIAL";
+      registrationData['accountType'] = "1";
+      registrationData['customerInfo.formCompleted'] = 0;
+    } else {
+      registrationData['phone'] = '0${phoneNumberController.text}';
+      registrationData['email'] = emailController.text;
+      registrationData['percentageCompleted'] = 12.5;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = "false";
+    }
+
     print(registrationData);
 
     await submitStepData();
@@ -2802,114 +2585,205 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
   //STEP 2:
   Future<void> handleSecondStep() async {
+    registrationData.clear();
+
     Uint8List? residentBytes;
     Uint8List? residentCardBackBytes;
+
     if (residentPath.isNotEmpty) {
-      residentBytes = await _getImageBytes(residentPath);
+      residentBytes = await _getImageBytes(residentPath, "resident_card.png");
     }
+
     if (residentCardBackPath.isNotEmpty) {
-      residentCardBackBytes = await _getImageBytes(residentCardBackPath);
+      residentCardBackBytes =
+          await _getImageBytes(residentCardBackPath, "resident_card_back.png");
     }
 
-    registrationData["branch"] = selectedBranch;
-    registrationData["documentName"] = selectedDocumentType;
-    registrationData['residenceCard'] = residentBytes;
-    registrationData['residenceCardBack'] = residentCardBackBytes;
-    registrationData["percentageCompleted"] = 25;
-    registrationData['status'] = "INITIAL";
-    isOnline
-        ? registrationData['formCompleted'] = false
-        : registrationData['formCompleted'] = 0;
+    print("📤 Resident Image Bytes: $residentBytes");
+    print("📤 Resident Card Back Image Bytes: $residentCardBackBytes");
 
-    print(registrationData);
+    registrationDataFile["branch"] = selectedBranch;
+    registrationDataFile["documentName"] = selectedDocumentType;
+    registrationDataFile['residenceCard'] = residentBytes;
+    registrationDataFile['accountType'] = "1";
+    registrationDataFile['residenceCardBack'] = residentCardBackBytes;
+    registrationDataFile["percentageCompleted"] = 25;
+    registrationDataFile['status'] = "INITIAL";
+    registrationDataFile['formCompleted'] = 0;
+    if (isOnline) {
+      registrationData["branch"] = selectedBranch;
+      registrationData["customerInfo.documentName"] = selectedDocumentType;
+      registrationData['customerInfo.residenceCard'] = residentBytes;
+      registrationData['accountType'] = "1";
+      registrationData['customerInfo.residenceCardBack'] =
+          residentCardBackBytes;
+      registrationData["percentageCompleted"] = 25;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = false;
+      // : registrationData['formCompleted'] = 0;
 
-    // await callApiAndUpdateControllers(residentBytes!);
+      print(registrationData);
+    } else {
+      registrationData["branch"] = selectedBranch;
+      registrationData["documentName"] = selectedDocumentType;
+      registrationData['residenceCard'] = residentBytes;
+      registrationData['accountType'] = "1";
+      registrationData['residenceCardBack'] = residentCardBackBytes;
+      registrationData["percentageCompleted"] = 25;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = 0;
+    }
 
     await updateUser();
   }
 
 // STEP 3:
   Future<void> handleThirdStep() async {
-    // Uint8List? signatureBytes;
-    // if (signatureImagePath != null) {
-    //   signatureBytes = await _getImageBytes(signatureImagePath!);
-    // } else if (savedSignature != null) {
-    //   signatureBytes = await _signatureController.toPngBytes();
-    // }
-    registrationData['signature'] = _combinedSignature;
-    registrationData['motherName'] = motherNameController.text;
-    // registrationData['branch'] = selectedBranch;
-    registrationData["percentageCompleted"] = 37.5;
-    registrationData['status'] = "INITIAL";
-    isOnline
-        ? registrationData['formCompleted'] = "false"
-        : registrationData['formCompleted'] = 0;
+    registrationData.clear();
 
+    registerStatus = true;
+    registrationDataFile['signature'] = _combinedSignature;
+
+    registrationDataFile['motherName'] = motherNameController.text;
+    // registrationData['branch'] = selectedBranch;
+    registrationDataFile["percentageCompleted"] = 37.5;
+    registrationDataFile['status'] = "INITIAL";
+    registrationDataFile['formCompleted'] = 0;
+    if (isOnline) {
+      registrationData['customerInfo.signature'] = _combinedSignature;
+      registrationData['customerInfo.surname'] = "Faasil";
+      registrationData['accountType'] = "1";
+      registrationData['customerInfo.motherName'] = motherNameController.text;
+      // registrationData['branch'] = selectedBranch;
+      registrationData["percentageCompleted"] = 37.5;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = "false";
+    } else {
+      registrationData['signature'] = _combinedSignature;
+      registrationData['accountType'] = "1";
+      registrationData['motherName'] = motherNameController.text;
+      // registrationData['branch'] = selectedBranch;
+      registrationData["percentageCompleted"] = 37.5;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = 0;
+    }
     print(registrationData);
     await updateUser();
   }
 
 //STEP: 4
   Future<void> handleStepFour() async {
+    print("dkddnjdjd");
+    registerStatus = true;
     Uint8List? profileBytes;
     if (profilePath.isNotEmpty) {
-      profileBytes = await _getImageBytes(profilePath);
+      profileBytes = await _getImageBytes(profilePath, "profile.png");
     }
-
-    registrationData['photo'] = profileBytes;
-    registrationData["percentageCompleted"] = 50;
-    isOnline
-        ? registrationData['formCompleted'] = "false"
-        : registrationData['formCompleted'] = 0;
-
+    registrationDataFile['photo'] = profileBytes;
     print(registrationData);
+
+    if (isOnline) {
+      registrationData['customerInfo.photo'] = profileBytes;
+      registrationData["percentageCompleted"] = 50;
+      registrationData['formCompleted'] = "false";
+    } else {
+      registrationData['photo'] = profileBytes;
+      registrationData["percentageCompleted"] = 50;
+      registrationData['formCompleted'] = 0;
+    }
     await updateUser();
   }
 
   Future<void> addressInfo() async {
-    registrationData['country'] = selectedCountry;
-    registrationData['issueAuthority'] = issueAuthorityController.text;
-    registrationData['issueDate'] = issueDateController.text;
-    registrationData['expirayDate'] = expireDateController.text;
-    registrationData['legalId'] = legalIDController.text;
-    registrationData['state'] = selectedState;
-    registrationData['zoneSubCity'] = cityController.text;
-    registrationData['streetAddress'] = woredaController.text;
-    registrationData["percentageCompleted"] = 87.5;
-    registrationData['status'] = "INITIAL";
+    registrationDataFile['country'] = selectedCountry;
+    registrationDataFile['issueAuthority'] = issueAuthorityController.text;
+    registrationDataFile['issueDate'] = issueDateController.text;
+    registrationDataFile['expirayDate'] = expireDateController.text;
+    registrationDataFile['legalId'] = legalIDController.text;
+    registrationDataFile['state'] = selectedState;
+    registrationDataFile['zoneSubCity'] = cityController.text;
+    registrationDataFile['streetAddress'] = woredaController.text;
+    registrationDataFile["percentageCompleted"] = 87.5;
+    registrationDataFile['status'] = "INITIAL";
+    if (isOnline) {
+      registrationData['customerInfo.country'] = selectedCountry;
+      registrationData['customerInfo.issueAuthority'] =
+          issueAuthorityController.text;
+      registrationData['customerInfo.issueDate'] = issueDateController.text;
+      registrationData['customerInfo.expirayDate'] = expireDateController.text;
+      registrationData['customerInfo.legalId'] = legalIDController.text;
+      registrationData['customerInfo.state'] = selectedState;
+      registrationData['customerInfo.zoneSubCity'] = cityController.text;
+      registrationData['customerInfo.streetAddress'] = woredaController.text;
+      registrationData["percentageCompleted"] = 87.5;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = false;
+    } else {
+      registrationData['country'] = selectedCountry;
+      registrationData['issueAuthority'] = issueAuthorityController.text;
+      registrationData['issueDate'] = issueDateController.text;
+      registrationData['expirayDate'] = expireDateController.text;
+      registrationData['legalId'] = legalIDController.text;
+      registrationData['state'] = selectedState;
+      registrationData['zoneSubCity'] = cityController.text;
+      registrationData['streetAddress'] = woredaController.text;
+      registrationData["percentageCompleted"] = 87.5;
+      registrationData['status'] = "INITIAL";
 
-    isOnline
-        ? registrationData['formCompleted'] = false
-        : registrationData['formCompleted'] = 0;
+      registrationData['formCompleted'] = 0;
+    }
+
     print(registrationData);
     await updateUser();
   }
 
   Future<void> handleStepThree() async {
-    registrationData['occupation'] = occupationController.text;
-    registrationData['monthlyIncome'] = monthlyIncomeController.text;
-    registrationData['branch'] = selectedBranch;
-    registrationData['currency'] = selectedCurrency;
-    registrationData['status'] = "INITIAL";
-    isOnline
-        ? registrationData['formCompleted'] = false
-        : registrationData['formCompleted'] = 0;
+    if (isOnline) {
+      registrationData['customerInfo.occupation'] = occupationController.text;
+      registrationData['customerInfo.monthlyIncome'] =
+          monthlyIncomeController.text;
+      registrationData['customerInfo.branch'] = selectedBranch;
+      registrationData['currency'] = selectedCurrency;
+      registrationData['status'] = "INITIAL";
+
+      registrationData['formCompleted'] = false;
+    } else {
+      registrationData['occupation'] = occupationController.text;
+      registrationData['monthlyIncome'] = monthlyIncomeController.text;
+      registrationData['branch'] = selectedBranch;
+      registrationData['currency'] = selectedCurrency;
+      registrationData['status'] = "INITIAL";
+
+      registrationData['formCompleted'] = 0;
+    }
 
     print(registrationData);
     await updateUser();
   }
 
   Future<void> handleStepFive() async {
+    registrationDataFile['occupation'] = occupationController.text;
+    registrationDataFile['monthlyIncome'] = monthlyIncomeController.text;
+    registrationDataFile['initialDeposit'] = initialDepositController.text;
+    registrationDataFile["percentageCompleted"] = 62.5;
+    registrationDataFile['status'] = "INITIAL";
+    if (isOnline) {
+      registrationData['customerInfo.occupation'] = occupationController.text;
+      registrationData['customerInfo.monthlyIncome'] =
+          monthlyIncomeController.text;
+      registrationData['initialDeposit'] = initialDepositController.text;
+      registrationData["percentageCompleted"] = 62.5;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = "false";
+    } else {
+      registrationData['occupation'] = occupationController.text;
+      registrationData['monthlyIncome'] = monthlyIncomeController.text;
+      registrationData['initialDeposit'] = initialDepositController.text;
+      registrationData["percentageCompleted"] = 62.5;
+      registrationData['status'] = "INITIAL";
+      registrationData['formCompleted'] = 0;
+    }
     //  registrationData['sector'] = selectedSector;
-    registrationData['occupation'] = occupationController.text;
-    registrationData['monthlyIncome'] = monthlyIncomeController.text;
-    registrationData['initialDeposit'] = initialDepositController.text;
-    registrationData["percentageCompleted"] = 62.5;
-    registrationData['status'] = "INITIAL";
-
-    isOnline
-        ? registrationData['formCompleted'] = "false"
-        : registrationData['formCompleted'] = 0;
 
     print(registrationData['occupation']);
     print(registrationData['monthlyIncome']);
@@ -2919,12 +2793,13 @@ By accepting these terms, you agree to comply with all banking regulations and p
   Future<void> handleStepSeven() async {
     print(selectedAccountId);
     print("daaaaa");
-
     var id;
+    var selectedAccountTypeName;
     if (selectedAccountTypeId != null) {
       var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
-// // Check if accountTypeDetails is not null and then get the id
+
       id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
+      selectedAccountTypeName = accountTypeDetails?['name'];
     }
 
     if (id == null) {
@@ -2939,8 +2814,9 @@ By accepting these terms, you agree to comply with all banking regulations and p
       );
       return; // Stop execution if invalid
     }
-
-    registrationData['accountType'] = id;
+    registrationDataFile['accountType'] = selectedAccountTypeName;
+    registrationDataFile["percentageCompleted"] = 90;
+    registrationData['accountType'] = id.toString();
     registrationData["percentageCompleted"] = 90;
     // registrationData['status'] = "UNSETTLED";
     registrationData['status'] = "INITIAL";
@@ -2953,17 +2829,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
   }
 
   Future<void> submitFormData1() async {
-    //     // Call the function to get the details
-
-//     print(selectedAccountId);
-//     var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
-//     var id;
-//     if (accountTypeDetails != null) {
-// // // Check if accountTypeDetails is not null and then get the id
-//       id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
-//     }
-
-    print("objectqwww");
     if (!termsAccepted) {
       registerStatus = false;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2976,7 +2841,8 @@ By accepting these terms, you agree to comply with all banking regulations and p
       );
       return; // Stop execution if invalid
     }
-
+    registrationDataFile["percentageCompleted"] = 100;
+    registrationDataFile['status'] = "UNSETTLED";
     registrationData["percentageCompleted"] = 100;
     registrationData['status'] = "UNSETTLED";
     isOnline
@@ -2989,7 +2855,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
       context,
       MaterialPageRoute(
         builder: (context) => ConfirmationPage(
-          registrationData: registrationData,
+          registrationData: registrationDataFile,
           userId: userId,
           className: "create",
         ),
@@ -3010,11 +2876,13 @@ By accepting these terms, you agree to comply with all banking regulations and p
   Future<void> updateUser() async {
     if (isOnline) {
       try {
+        print("geejjejejejejejejej");
+        print(registrationData);
         var response = await networkHandler
-            .put1('/api/v1/accounts/$userId', registrationData)
+            .put1('/api/v1/accounts/individual/$userId', registrationData)
             .timeout(const Duration(seconds: 15));
 
-        print("response.statusCode");
+        print("response.statusCodeddddddddddddd");
         print(response.statusCode);
 
         print("response");
@@ -3089,239 +2957,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
     });
   }
 
-  // void _filterAccountTypes(String bankingType) {
-  //   setState(() {
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       String safeBankingType = escapeSpecialChars(bankingType);
-  //       return accountType['bankingType'] == safeBankingType;
-  //     }).toList();
-  //   });
-  // }
-
-// void _filterAccountTypes(String bankingType) {
-//   print("Filtering account types...");
-//   setState(() {
-//     // Step 1: Parse Date of Birth
-//     DateTime? dateOfBirth;
-//     try {
-//       dateOfBirth = DateTime.parse(dateOfBirthController.text.trim());
-//     } catch (e) {
-//       print('Invalid date format: ${dateOfBirthController.text}');
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text('Invalid Date of Birth format. Use yyyy-MM-dd.'),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//       return;
-//     }
-
-//     // Step 2: Calculate Age
-//     int age = DateTime.now().year - dateOfBirth.year;
-//     if (DateTime.now().month < dateOfBirth.month ||
-//         (DateTime.now().month == dateOfBirth.month &&
-//             DateTime.now().day < dateOfBirth.day)) {
-//       age--;
-//     }
-
-//     print('User Age: $age, Selected Gender: $selectedGender');
-
-//     // Step 3: Filter Account Types
-//     filteredAccountTypes = accountTypes.where((accountType) {
-//       // Banking type check
-//       if (accountType['bankingType'] != bankingType) {
-//         return false;
-//       }
-
-//       // Age restrictions
-//       if (accountType['minAge'] != null &&
-//           accountType['minAge'].toString().isNotEmpty) {
-//         int minAge = int.tryParse(accountType['minAge'].toString()) ?? 0;
-//         if (age < minAge) {
-//           print('Excluded: Age is below minAge ${accountType['minAge']}');
-//           return false;
-//         }
-//       }
-
-//       if (accountType['maxAge'] != null &&
-//           accountType['maxAge'].toString().isNotEmpty) {
-//         int maxAge = int.tryParse(accountType['maxAge'].toString()) ?? 999;
-//         if (age > maxAge) {
-//           print('Excluded: Age is above maxAge ${accountType['maxAge']}');
-//           return false;
-//         }
-//       }
-
-//       // Gender check
-//       if (accountType['sex'] != null &&
-//           accountType['sex'].toString().isNotEmpty) {
-//         if (accountType['sex'].toString() != selectedGender) {
-//           print('Excluded: Gender does not match');
-//           return false;
-//         }
-//       }
-
-//       return true;
-//     }).toList();
-
-//     // Step 4: Clear selected account type if it's no longer valid
-//     if (!filteredAccountTypes
-//         .any((type) => type['name'] == selectedAccountTypeId)) {
-//       selectedAccountTypeId = null;
-//     }
-
-//     // Step 5: Show feedback if no accounts are found
-//     if (filteredAccountTypes.isEmpty) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text(
-//             'No account types available for your age ($age) and gender ($selectedGender).',
-//           ),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//     }
-
-//     print('Filtered Account Types: $filteredAccountTypes');
-//   });
-// }
-
-  // void _filterAccountTypes(String bankingType) {
-  //   print("Filtering account types...");
-  //   setState(() {
-  //     // Get user's age from date of birth
-  //     DateTime? dateOfBirth;
-  //     try {
-  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
-  //     } catch (e) {
-  //       print('Invalid date format: ${dateOfBirthController.text}');
-  //       return;
-  //     }
-
-  //     int age = DateTime.now().year - dateOfBirth.year;
-  //     // Adjust age if birthday hasn't occurred this year
-  //     if (DateTime.now().month < dateOfBirth.month ||
-  //         (DateTime.now().month == dateOfBirth.month &&
-  //             DateTime.now().day < dateOfBirth.day)) {
-  //       age--;
-  //     }
-
-  //     // Filter account types based on banking type, age, and gender
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       print("gammee12");
-  //       print(accountType);
-
-  //       print(selectedGender);
-  //       // Filter by banking type
-  //       if (accountType['bankingType'] != bankingType) return false;
-
-  //       // Validate age rang e
-  //       int minAge = int.tryParse(accountType['minAge'] ?? '0') ?? 0;
-  //       int maxAge = int.tryParse(accountType['maxAge'] ?? '999') ?? 999;
-
-  //       if (age < minAge || age > maxAge) {
-  //         return false; // Age out of range
-  //       }
-
-  //       // Validate sex: 'BOTH' applies to all genders
-  //       if (accountType['sex'] != null &&
-  //           accountType['sex'].isNotEmpty &&
-  //           accountType['sex'] != 'BOTH') {
-  //         if (accountType['sex'] != selectedGender.toUpperCase()) return false;
-  //       }
-
-  //       return true; // Passes all filters
-  //     }).toList();
-
-  //     // Clear selected account type if it's no longer in filtered list
-  //     // if (!filteredAccountTypes
-  //     //     .any((type) => type['name'] == selectedAccountTypeId)) {
-  //     //   selectedAccountTypeId = null;
-  //     // }
-
-  //     // Show feedback if no accounts are available
-  //     if (filteredAccountTypes.isEmpty) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'No account types available for your age ($age) and gender ($selectedGender)',
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
-
-  // void _filterAccountTypes(String bankingType) {
-  //   print("Filtering account types...");
-  //   setState(() {
-  //     // Get user's age from date of birth
-  //     DateTime? dateOfBirth;
-  //     try {
-  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
-  //     } catch (e) {
-  //       print('Invalid date format: ${dateOfBirthController.text}');
-  //       return;
-  //     }
-
-  //     int age = DateTime.now().year - dateOfBirth.year;
-  //     if (DateTime.now().month < dateOfBirth.month ||
-  //         (DateTime.now().month == dateOfBirth.month &&
-  //             DateTime.now().day < dateOfBirth.day)) {
-  //       age--;
-  //     }
-
-  //     // Normalize gender
-  //     String normalizedGender = selectedGender.trim().toUpperCase();
-
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       print("AccountType: ${accountType}");
-  //       print("Selected Gender: $normalizedGender");
-
-  //       // Check banking type
-  //       if (accountType['bankingType'] != bankingType) {
-  //         print(
-  //             "BankingType mismatch: ${accountType['bankingType']} != $bankingType");
-  //         return false;
-  //       }
-
-  //       // Validate age range
-  //       int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
-  //       int maxAge =
-  //           int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
-  //       if (age < minAge || age > maxAge) {
-  //         print("Age out of range: $age not in [$minAge, $maxAge]");
-  //         return false;
-  //       }
-
-  //       // Validate sex with 'BOTH' inclusion
-  //       String accountTypeSex =
-  //           accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
-  //       if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
-  //         print("Gender mismatch: $normalizedGender != $accountTypeSex");
-  //         return false;
-  //       }
-
-  //       print("Account type matches!");
-  //       return true;
-  //     }).toList();
-
-  //     // Show feedback if no account types match
-  //     if (filteredAccountTypes.isEmpty) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'No account types available for your age ($age) and gender ($selectedGender)',
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
     setState(() {
@@ -3398,89 +3033,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
     });
   }
 
-//******************************************************* */
-  // void _filterAccountTypes(String bankingType) {
-  //   print("Filtering account types...");
-  //   setState(() {
-  //     // Get user's age from date of birth
-  //     DateTime? dateOfBirth;
-  //     try {
-  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
-  //     } catch (e) {
-  //       print('Invalid date format: ${dateOfBirthController.text}');
-  //       return;
-  //     }
-
-  //     int age = DateTime.now().year - dateOfBirth.year;
-  //     if (DateTime.now().month < dateOfBirth.month ||
-  //         (DateTime.now().month == dateOfBirth.month &&
-  //             DateTime.now().day < dateOfBirth.day)) {
-  //       age--;
-  //     }
-
-  //     // Normalize gender
-  //     String normalizedGender = selectedGender.trim().toUpperCase();
-
-  //     // Parse initial deposit
-  //     double initialDeposit =
-  //         double.tryParse(initialDepositController.text) ?? 0;
-
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       print("AccountType: ${accountType}");
-  //       print("Selected Gender: $normalizedGender");
-
-  //       // Check banking type
-  //       if (accountType['bankingType'] != bankingType) {
-  //         print(
-  //             "BankingType mismatch: ${accountType['bankingType']} != $bankingType");
-  //         return false;
-  //       }
-
-  //       // Validate age range
-  //       int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
-  //       int maxAge =
-  //           int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
-  //       if (age < minAge || age > maxAge) {
-  //         print("Age out of range: $age not in [$minAge, $maxAge]");
-  //         return false;
-  //       }
-
-  //       // Validate minimum amount
-  //       double minAmount =
-  //           double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
-  //       if (initialDeposit < minAmount) {
-  //         print(
-  //             "Initial deposit $initialDeposit less than required $minAmount");
-  //         return false;
-  //       }
-
-  //       // Validate sex with 'BOTH' inclusion
-  //       String accountTypeSex =
-  //           accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
-  //       if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
-  //         print("Gender mismatch: $normalizedGender != $accountTypeSex");
-  //         return false;
-  //       }
-
-  //       print("Account type matches!");
-  //       return true;
-  //     }).toList();
-
-  //     // Show feedback if no account types match
-  //     if (filteredAccountTypes.isEmpty) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'No account types available for your age ($age), gender ($selectedGender), and deposit ($initialDeposit)',
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
-//************************************************************* */
   String escapeSpecialChars(String input) {
     return input.replaceAll("'", "\\'");
   }
@@ -3550,5 +3102,35 @@ By accepting these terms, you agree to comply with all banking regulations and p
     return _signatureController1.isNotEmpty &&
         _signatureController2.isNotEmpty &&
         _signatureController3.isNotEmpty;
+  }
+
+  void _showFullScreenImage(BuildContext context, String imagePath) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black.withOpacity(0.9),
+        insetPadding: EdgeInsets.zero, // Fullscreen effect
+        child: Stack(
+          children: [
+            Center(
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

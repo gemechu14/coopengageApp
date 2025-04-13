@@ -1,33 +1,9 @@
 class AppConstants {
-  static const baseUrl = "http://10.2.125.41:9060/api/v1";
-  static const baseURL = 'http://10.2.125.41:9060';
+  static const baseUrl = "http://10.2.125.41:9061/api/v1";
+  static const baseURL = 'http://10.2.125.41:9061';
   static const cacheDays = 60;
   static const soupBaseURL = 'https://souqpass.coopbankoromiasc.com/api';
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
   static const suuptoken =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjaGFudF9pZCI6MTAsImVtYWlsX2FkZHJlc3MiOiJtb3R1bWFnaXNodTI3QGdtYWlsLmNvbSIsInJvbGUiOiJtZXJjaGFudCIsInNlcnZpY2VfbmFtZSI6IkJOUEwiLCJpYXQiOjE3MzQ2NDM1NTUsImV4cCI6MTczNDcyOTk1NX0.DVN-TCIQd-uCtDyy2l9eVXiDCGF6nMx1UvNhIdHoOBg';
   // static const access_token =

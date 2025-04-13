@@ -330,3 +330,4 @@ class MonthlyBarChartWidget extends StatelessWidget {
     );
   }
 }
+  

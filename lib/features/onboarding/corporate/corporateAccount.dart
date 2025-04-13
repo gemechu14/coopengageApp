@@ -6,6 +6,8 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
+import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
+import 'package:coopengageplus/features/onboarding/corporate/RegistrationServices.dart';
 import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
@@ -20,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
 // import 'package:searchfield/searchfield.dart';
@@ -51,14 +54,19 @@ String? selectedBranch;
 List<List<bool>> isExpandedPersonalList = [];
 List<List<bool>> isExpandedAddressInfoList = [];
 List<List<bool>> isExpandedDocumentInfoList = [];
+List<List<bool>> isExpandedIDInfoList = [];
 String? selectedAccountTypeId;
 bool isFirstPersonExpanded = false;
 bool isSecondPersonExpanded = false;
 bool isExpandedPersonalInformation = false;
 List<bool> isExpandedList = [false, false];
 
-File? licenseFile;
-File? articleFile;
+// File? licenseFile;
+// File? articleFile;
+// File? letterOfRequestFile;
+String? licenseFile;
+String? articleFile;
+String? letterOfRequestFile;
 
 List<File> selectedFiles = [];
 // List<bool> isExpandedList = [];
@@ -126,24 +134,53 @@ class _Registration extends State<CorporateRegistration> {
   @override
   void initState() {
     super.initState();
-    int membersCount = 2;
-    formKeys = List.generate(2, (index) => GlobalKey<FormState>());
-    motherNameControllers =
-        List.generate(2, (index) => TextEditingController());
-    fullNameControllers = List.generate(2, (index) => TextEditingController());
-    occupationControllers =
-        List.generate(2, (index) => TextEditingController());
-    monthlyIncomeControllers =
-        List.generate(2, (index) => TextEditingController());
+    int membersCount = 1;
+    selectedProductType = ListContants.productType.first;
+    selectedStates = List.generate(membersCount, (index) => null);
+    selectedGender = List.generate(membersCount, (index) => null);
+    formKeys = List.generate(membersCount, (index) => GlobalKey<FormState>());
+
+    fullNameControllers =
+        List.generate(membersCount, (index) => TextEditingController());
     phoneControllers =
         List.generate(membersCount, (index) => TextEditingController());
     emailControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+
+    occupationControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    monthlyIncomeControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    motherNameControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    cityControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+
+    woredaControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+
+    dateOfBirthControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+
+    expireDateControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    issueAuthorityControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    issueAuthorityControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    issueDateControllers =
+        List.generate(membersCount, (index) => TextEditingController());
+    legalIDControllers =
         List.generate(membersCount, (index) => TextEditingController());
     isExpandedPersonalList = List.generate(membersCount, (index) => [false]);
 
     isExpandedAddressInfoList = List.generate(membersCount, (index) => [false]);
     isExpandedDocumentInfoList =
         List.generate(membersCount, (index) => [false]);
+    isExpandedIDInfoList = List.generate(membersCount, (index) => [false]);
+
+    selectedDocumentType = List.generate(membersCount, (index) => null);
+    selectedTitle = List.generate(membersCount, (index) => null);
     _initializeGlobalData();
     _initializeGlobal();
     initializeBranches();
@@ -169,12 +206,10 @@ class _Registration extends State<CorporateRegistration> {
     selectedState = ListContants.ethiopianStates.first;
     selectedMaritalStatus = ListContants.maritalStatuses.first;
     selectedCustomerType = ListContants.customerType.first;
-    selectedDocumentType = ListContants.documentName.first;
-    selectedTitle = ListContants.title.first;
     selectedSector = ListContants.sectors.first;
 
     AccountTypeSelection = ListContants.AccountTypeSelection.first;
-    NumberOfMembers = ListContants.NumberOfMembers.first;
+    NumberOfMembers = ListContants.NumberOfMembersForOrganization.first;
     issueAuthorityController.text = 'ET';
   }
 
@@ -186,12 +221,13 @@ class _Registration extends State<CorporateRegistration> {
   bool validate = false;
   bool circular = false;
   bool isValid = true;
-  String? selectedTitle;
-  String selectedGender = 'FEMALE';
+
+  // String selectedGender = 'FEMALE';
   String selectedIdType = 'KEBELE_ID';
   String? selectedMaritalStatus;
   String? selectedCustomerType;
-  String? selectedDocumentType;
+  List<String?> selectedDocumentType = [];
+  List<String?> selectedTitle = [];
   String? selectedAccountType;
   String? AccountTypeSelection;
   String? NumberOfMembers;
@@ -210,7 +246,7 @@ class _Registration extends State<CorporateRegistration> {
   TextEditingController fullNameController = TextEditingController();
   TextEditingController surNameController = TextEditingController();
   TextEditingController motherNameController = TextEditingController();
-  TextEditingController phoneNumberController = TextEditingController();
+
   TextEditingController emailController = TextEditingController();
   TextEditingController genderController = TextEditingController();
   TextEditingController addressController = TextEditingController();
@@ -237,6 +273,43 @@ class _Registration extends State<CorporateRegistration> {
   TextEditingController issueAuthorityController = TextEditingController();
   TextEditingController zoneSubsityController = TextEditingController();
   TextEditingController woredaController = TextEditingController();
+
+////************************************************/
+  TextEditingController companyNameController = TextEditingController();
+  TextEditingController tinNumberController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
+  TextEditingController dateOfEstabilishmentController =
+      TextEditingController();
+  TextEditingController residenceControllers = TextEditingController();
+  String? selectedProductType;
+
+  List<String?> selectedStates = [];
+  List<String?> selectedGender = [];
+
+  List<TextEditingController> issueAuthorityControllers = [];
+  List<TextEditingController> zoneSubsityControllers = [];
+  List<TextEditingController> woredaControllers = [];
+
+  List<TextEditingController> expireDateControllers = [];
+  List<TextEditingController> issueDateControllers = [];
+  List<TextEditingController> legalIDControllers = [];
+  List<TextEditingController> dateControllers = [];
+
+  List<TextEditingController> signatureControllers = [];
+  List<TextEditingController> photoControllers = [];
+  List<TextEditingController> dateOfBirthControllers = [];
+  List<TextEditingController> cityControllers = [];
+  List<Uint8List> combinedSignatures =
+      List.generate(2, (index) => Uint8List(0));
+  List<String> profilePaths = List.generate(2, (index) => "");
+  List<String> passportPaths = List.generate(2, (index) => "");
+  List<String> residentPaths = List.generate(2, (index) => "");
+  List<String> residentCardBackPaths = List.generate(2, (index) => "");
+  Uint8List? letterOfRequestBytes;
+  Uint8List? licenseFileBytes;
+  Uint8List? articleFileBytes;
+
+  ///********************************************** */
 
   FocusNode focusNode = FocusNode();
   NetworkHandler networkHandler = NetworkHandler();
@@ -296,107 +369,66 @@ class _Registration extends State<CorporateRegistration> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            TextLabel("Product Type"),
+            ReusableDropdown(
+              selectedValue: selectedProductType,
+              items: ListContants.productType,
+              hintText: 'Select Product Type',
+              onChanged: (newStatus) {
+                setState(() {
+                  selectedProductType = newStatus;
+                });
+
+                if (selectedProductType != null) {
+                  setState(() {
+                    // _filterAccountTypes(selectedProductType!);
+                  });
+                }
+              },
+              prefixIcon: Icons.business,
+              errorMessage: 'Please select a product type',
+              isRequired: true,
+            ),
             TextLabel("Company Name"),
             ReusableTextFormField(
               hintText: "Company Name",
-              controller: fullNameControllers[0],
+              controller: companyNameController,
               keyboardType: TextInputType.text,
               errorMessage: "Company Name cannot be empty",
               leadingIcon: Icons.business,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
               ],
-              isRequired: true,
+              isRequired: false,
             ),
             TextLabel("PhoneNumber"),
-            PhoneNumberWidget(phoneNumberController: phoneControllers[0]),
+            PhoneNumberWidget(phoneNumberController: phoneNumberController),
+            TextLabel("Email"),
+            EmailWidget(emailController: emailController),
             TextLabel("TIN"),
             ReusableTextFormField(
               hintText: "TIN ",
-              controller: fullNameControllers[0],
+              controller: tinNumberController,
               keyboardType: TextInputType.text,
               errorMessage: "TIN cannot be empty",
               leadingIcon: Icons.badge,
               // inputFormatters: [
               //   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
               // ],
-              isRequired: true,
+              isRequired: false,
             ),
             TextLabel("Date of Establishment"),
-
             DatePickerField(
-              controller: dateOfBirthController,
+              controller: dateOfEstabilishmentController,
               hintText: 'Date of Establishment',
               prefixIcon: Icons.date_range,
               initialDate: DateTime.now().add(const Duration(days: -10000)),
               firstDate: DateTime(1940),
               lastDate: DateTime.now(),
-              isRequired: true,
+              isRequired: false,
               isGreyBorder: true,
               errorMessage: 'Please select a date of Establishment',
             ),
-            TextLabel("Sector"),
-            ReusableDropdown(
-              selectedValue: selectedSector,
-              items: ListContants.sectors,
-              hintText: 'Select Sector',
-              onChanged: (newStatus) {
-                setState(() {
-                  selectedSector = newStatus!;
-                });
-              },
-              prefixIcon: Icons.category,
-              errorMessage:
-                  'Please select a Sector status', // Pass the custom error message
-              isRequired: true, // Make the field required
-            ),
-            TextLabel("Resident"),
-            ReusableTextFormField(
-              hintText: "Resident ",
-              controller: fullNameControllers[0],
-              keyboardType: TextInputType.text,
-              errorMessage: "Resident cannot be empty",
-              leadingIcon: Icons.location_city,
-              // inputFormatters: [
-              //   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
-              // ],
-              isRequired: true,
-            ),
-            // TextLabel("Select Number of Members"),
-            // ReusableDropdown(
-            //   selectedValue: NumberOfMembers,
-            //   items: ListContants.NumberOfMembers,
-            //   hintText: 'Select Number of Members',
-            //   onChanged: (newStatus) {
-            //     print("""Roobee""");
-            //     setState(() {
-            //       NumberOfMembers = newStatus!;
-            //       isExpandedList = List.generate(
-            //           int.parse(NumberOfMembers!), (index) => false);
-            //       int membersCount = int.parse(NumberOfMembers!);
-            //       print(membersCount);
-            //       print("gemechuuuu");
-            //       isExpandedList =
-            //           List.generate(membersCount, (index) => false);
-            //       isExpandedPersonalList =
-            //           List.generate(membersCount, (index) => [false]);
-            //       isExpandedAddressInfoList =
-            //           List.generate(membersCount, (index) => [false]);
-            //       formKeys = List.generate(
-            //           membersCount, (index) => GlobalKey<FormState>());
-            //       fullNameControllers = List.generate(
-            //           membersCount, (index) => TextEditingController());
-            //       phoneControllers = List.generate(
-            //           membersCount, (index) => TextEditingController());
-            //       emailControllers = List.generate(
-            //           membersCount, (index) => TextEditingController());
-            //     });
-            //   },
-            //   prefixIcon: Icons.person_add,
-            //   errorMessage: 'Please select Number of Members',
-            //   isRequired: true,
-            // ),
-
             const SizedBox(height: 5),
           ],
         ),
@@ -446,15 +478,38 @@ class _Registration extends State<CorporateRegistration> {
                 leadingIcon: Icons.location_city,
                 isRequired: false,
               ),
+              TextLabel("Resident"),
+              ReusableTextFormField(
+                hintText: "Resident ",
+                controller: residenceControllers,
+                keyboardType: TextInputType.text,
+                errorMessage: "Resident cannot be empty",
+                leadingIcon: Icons.location_city,
+                // inputFormatters: [
+                //   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
+                // ],
+                isRequired: true,
+              ),
               TextLabel("Select Number of Authorized Signers"),
               ReusableDropdown(
                 selectedValue: NumberOfMembers,
-                items: ListContants.NumberOfMembers,
+                items: ListContants.NumberOfMembersForOrganization,
                 hintText: 'Select Number of Authorized Signers',
                 onChanged: (newStatus) {
                   setState(() {
                     NumberOfMembers = newStatus!;
                     int membersCount = int.parse(NumberOfMembers!);
+                    isExpandedList =
+                        List.generate(membersCount, (index) => false);
+                    isExpandedPersonalList =
+                        List.generate(membersCount, (index) => [false]);
+                    isExpandedAddressInfoList =
+                        List.generate(membersCount, (index) => [false]);
+                    isExpandedDocumentInfoList =
+                        List.generate(membersCount, (index) => [false]);
+
+                    isExpandedIDInfoList =
+                        List.generate(membersCount, (index) => [false]);
                     isExpandedList =
                         List.generate(membersCount, (index) => false);
                     isExpandedPersonalList =
@@ -469,6 +524,49 @@ class _Registration extends State<CorporateRegistration> {
                         membersCount, (index) => TextEditingController());
                     emailControllers = List.generate(
                         membersCount, (index) => TextEditingController());
+
+                    selectedStates =
+                        List.generate(membersCount, (index) => null);
+                    selectedGender =
+                        List.generate(membersCount, (index) => null);
+
+                    selectedDocumentType =
+                        List.generate(membersCount, (index) => null);
+                    selectedTitle =
+                        List.generate(membersCount, (index) => null);
+
+                    issueAuthorityControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    zoneSubsityControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    woredaControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+
+                    expireDateControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    issueDateControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    legalIDControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    dateControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+
+                    signatureControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    photoControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    dateOfBirthControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+                    cityControllers = List.generate(
+                        membersCount, (index) => TextEditingController());
+
+                    profilePaths = List.generate(membersCount, (index) => "");
+                    passportPaths = List.generate(membersCount, (index) => "");
+                    residentPaths = List.generate(membersCount, (index) => "");
+                    residentCardBackPaths =
+                        List.generate(membersCount, (index) => "");
+                    combinedSignatures =
+                        List.generate(membersCount, (index) => Uint8List(0));
                   });
                 },
                 prefixIcon: Icons.person_add,
@@ -476,7 +574,7 @@ class _Registration extends State<CorporateRegistration> {
                 isRequired: true,
               ),
               SizedBox(
-                height: 50,
+                height: 10,
               )
             ],
           ),
@@ -525,12 +623,11 @@ class _Registration extends State<CorporateRegistration> {
                                 !isExpandedPersonalList[i][0];
                           });
                         }, [
-                          // Text("Gemechu Bulti"),
                           TextLabel("Full Name"),
                           ReusableTextFormField(
                             hintText: "Full Name",
                             controller: fullNameControllers[i],
-                            isEnabled: i == 0 ? false : true,
+                            // isEnabled: i == 0 ? false : true,
                             keyboardType: TextInputType.text,
                             errorMessage: "Full Name cannot be empty",
                             leadingIcon: Icons.person,
@@ -540,144 +637,95 @@ class _Registration extends State<CorporateRegistration> {
                             ],
                             isRequired: true,
                           ),
-
                           TextLabel("Phone Number"),
                           PhoneNumberWidget(
                             phoneNumberController: phoneControllers[i],
-                            isEnabled: i == 0 ? false : true,
+                            // isEnabled: i == 0 ? false : true,
                           ),
                           TextLabel("Email"),
                           EmailWidget(emailController: emailControllers[i]),
-
-                          TextLabel("Mother Name"),
-                          ReusableTextFormField(
-                            hintText: "Mother Name",
-                            controller: motherNameControllers[i],
-                            keyboardType: TextInputType.text,
-                            errorMessage: "Mother Name cannot be empty",
-                            leadingIcon: Icons.person,
-                            isRequired: false,
-                          ),
-
-                          TextLabel("Occupation "),
-                          ReusableTextFormField(
-                            hintText: "Enter Occupation",
-                            controller: occupationControllers[i],
-                            // keyboardType: TextInputType.number,
-                            errorMessage: "Occupation cannot be empty",
-                            leadingIcon: Icons.work,
-                            // return '';
-                            // inputFormatters: [
-                            //   FilteringTextInputFormatter.digitsOnly, // Only allow numbers
-                            // ],
-                            isRequired: true,
-                          ),
-                          TextLabel("Monthly Income"),
-                          ReusableTextFormField(
-                            hintText: "Enter Monthly Income",
-                            controller: monthlyIncomeControllers[i],
-                            keyboardType: TextInputType.number,
-                            errorMessage: "monthlyIncome cannot be empty",
-                            leadingIcon: Icons.trending_up,
-                            // return '';
-                            inputFormatters: [
-                              FilteringTextInputFormatter
-                                  .digitsOnly, // Only allow numbers
-                            ],
-                            isRequired: true,
-                          ),
                           TextLabel("Gender"),
-                          genderWidget1(),
-                          TextLabel("Marital Status"),
                           ReusableDropdown(
-                            selectedValue: selectedMaritalStatus,
-                            items: ListContants.maritalStatuses,
-                            hintText: 'Select Marital Status',
+                            selectedValue: selectedGender[i],
+                            items: ListContants.gender,
+                            hintText: 'Select Gender ',
                             onChanged: (newStatus) {
                               setState(() {
-                                selectedMaritalStatus = newStatus!;
+                                selectedGender[i] = newStatus!;
                               });
                             },
-                            prefixIcon: Icons.family_restroom,
+                            prefixIcon: Icons.person,
                             errorMessage:
-                                'Please select a marital status', // Pass the custom error message
+                                'Please select Gender', // Pass the custom error message
                             isRequired: false, // Make the field required
                           ),
-                          TextLabel("Sector"),
+                          TextLabel("Title"),
                           ReusableDropdown(
-                            selectedValue: selectedSector,
-                            items: ListContants.sectors,
-                            hintText: 'Select Sector',
+                            selectedValue: selectedTitle[
+                                i], // Use list index for each person
+                            items: ListContants.title,
+                            hintText: 'Select Title',
                             onChanged: (newStatus) {
                               setState(() {
-                                selectedSector = newStatus!;
+                                selectedTitle[i] = newStatus!;
                               });
                             },
                             prefixIcon: Icons.category,
-                            errorMessage:
-                                'Please select a Sector status', // Pass the custom error message
-                            isRequired: true, // Make the field required
-                          ),
-                          TextLabel("Date of Birth"),
-
-                          DatePickerField(
-                            controller: dateOfBirthController,
-                            hintText: 'Date of Birth',
-                            prefixIcon: Icons.date_range,
-                            initialDate: DateTime.now()
-                                .add(const Duration(days: -10000)),
-                            firstDate: DateTime(1940),
-                            lastDate: DateTime.now(),
+                            errorMessage: 'Please select a Title',
                             isRequired: true,
-                            errorMessage: 'Please select a date of birth',
                           ),
                         ]),
-                        _buildExpandablePersonalInformationSection(
-                            "Address Information",
-                            isExpandedAddressInfoList[i][0],
-                            // isExpandedPersonalList[i][0],
-                            () {
-                          setState(() {
-                            isExpandedAddressInfoList[i][0] =
-                                !isExpandedAddressInfoList[i][0];
-                            // isExpandedPersonalList[i][0] =
-                            //     !isExpandedPersonalList[i][0];
-                          });
-                        }, [
-                          TextLabel("State"),
-                          ReusableDropdown(
-                            selectedValue: selectedState,
-                            items: ListContants.ethiopianStates,
-                            hintText: 'Select State',
-                            onChanged: (newState) {
-                              setState(() {
-                                selectedState = newState;
-                                print(selectedState);
-                              });
-                            },
-                            errorMessage: 'Please select a state',
-                            prefixIcon: Icons.map,
-                            isRequired: false,
-                          ),
-                          TextLabel("Zone Subcity"),
-                          ReusableTextFormField(
-                            hintText: "Zone Subcity",
-                            controller: cityController,
-                            // keyboardType: TextInputType.number,
-                            errorMessage: "Zone Subcity cannot be empty",
-                            leadingIcon: Icons.location_city,
-                            isRequired: false,
-                          ),
-                          TextLabel("Woreda"),
-                          ReusableTextFormField(
-                            hintText: "Woreda",
-                            controller: woredaController,
-                            // keyboardType: TextInputType.number,
-                            errorMessage: "Woreda cannot be empty",
-                            leadingIcon: Icons.location_city,
-                            isRequired: false,
-                          ),
-                        ]),
+
+                        // SizedBox(
+                        //   height: 10,
+                        // ),
+                        // _buildExpandablePersonalInformationSection(
+                        //     "Address Information",
+                        //     isExpandedAddressInfoList[i][0],
+                        //     // isExpandedPersonalList[i][0],
+                        //     () {
+                        //   setState(() {
+                        //     isExpandedAddressInfoList[i][0] =
+                        //         !isExpandedAddressInfoList[i][0];
+                        //     // isExpandedPersonalList[i][0] =
+                        //     //     !isExpandedPersonalList[i][0];
+                        //   });
+                        // }, [
+                        //   TextLabel("State"),
+                        //   ReusableDropdown(
+                        //     selectedValue: selectedState,
+                        //     items: ListContants.ethiopianStates,
+                        //     hintText: 'Select State',
+                        //     onChanged: (newState) {
+                        //       setState(() {
+                        //         selectedState = newState;
+                        //         print(selectedState);
+                        //       });
+                        //     },
+                        //     errorMessage: 'Please select a state',
+                        //     prefixIcon: Icons.map,
+                        //     isRequired: false,
+                        //   ),
+                        //   TextLabel("Zone Subcity"),
+                        //   ReusableTextFormField(
+                        //     hintText: "Zone Subcity",
+                        //     controller: cityController,
+                        //     // keyboardType: TextInputType.number,
+                        //     errorMessage: "Zone Subcity cannot be empty",
+                        //     leadingIcon: Icons.location_city,
+                        //     isRequired: false,
+                        //   ),
+                        //   TextLabel("Woreda"),
+                        //   ReusableTextFormField(
+                        //     hintText: "Woreda",
+                        //     controller: woredaController,
+                        //     // keyboardType: TextInputType.number,
+                        //     errorMessage: "Woreda cannot be empty",
+                        //     leadingIcon: Icons.location_city,
+                        //     isRequired: false,
+                        //   ),
+                        // ]),
+
                         _buildExpandablePersonalInformationSection(
                             "Document Information",
                             isExpandedDocumentInfoList[i][0],
@@ -690,36 +738,65 @@ class _Registration extends State<CorporateRegistration> {
                             //     !isExpandedPersonalList[i][0];
                           });
                         }, [
-                          TextLabel("Personal Photo"),
-                          personalPhoto(),
-                          idCardPhoto(),
+                          TextLabel("Document Type"),
+                          ReusableDropdown(
+                            selectedValue: selectedDocumentType[
+                                i], // Use list index for each person
+                            items: ListContants.documentName,
+                            hintText: 'Select Document Type',
+                            onChanged: (newStatus) {
+                              setState(() {
+                                selectedDocumentType[i] = newStatus!;
+                              });
+                            },
+                            prefixIcon: Icons.category,
+                            errorMessage: 'Please select a Sector status',
+                            isRequired: true,
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          // TextLabel("Personal Photo"),
+                          personalPhoto(i),
+                          idCardPhoto(i),
                           TextLabel("Signature"),
                           // signatureWidget1(context),
-                          signatureCard(),
-                          signaturePadSelection(),
+                          signatureCard(i),
+                          signaturePadSelection(i),
+                        ]),
+
+                        _buildExpandablePersonalInformationSection(
+                            "ID Information", isExpandedIDInfoList[i][0],
+                            // isExpandedPersonalList[i][0],
+                            () {
+                          setState(() {
+                            isExpandedIDInfoList[i][0] =
+                                !isExpandedIDInfoList[i][0];
+                            // isExpandedPersonalList[i][0] =
+                            //     !isExpandedPersonalList[i][0];
+                          });
+                        }, [
                           TextLabel("Legal ID"),
                           ReusableTextFormField(
                             hintText: "Legal ID",
-                            controller: legalIDController,
+                            controller: legalIDControllers[i],
                             // keyboardType: TextInputType.number,
                             errorMessage: "Legal ID cannot be empty",
                             leadingIcon: Icons.badge,
                             isRequired: true,
                           ),
                           TextLabel("ISSUE AUTHORITY"),
-
                           ReusableTextFormField(
                             hintText: "ISSUE AUTHORITY",
-                            controller: issueAuthorityController,
+                            controller: issueAuthorityControllers[i],
                             // keyboardType: TextInputType.number,
                             errorMessage: "ISSUE AUTHORITY cannot be empty",
                             leadingIcon: Icons.verified,
                             isRequired: false,
                           ),
-
                           TextLabel("ISSUE DATE"),
                           DatePickerField(
-                            controller: issueDateController,
+                            controller: issueDateControllers[i],
                             hintText: 'Issue Date',
                             prefixIcon: Icons.calendar_today,
                             initialDate: DateTime.now(),
@@ -729,10 +806,9 @@ class _Registration extends State<CorporateRegistration> {
                             isRequired: false,
                             errorMessage: 'Please select an issue date',
                           ),
-
                           TextLabel("EXPIRY DATE"),
                           DatePickerField(
-                            controller: expireDateController,
+                            controller: expireDateControllers[i],
                             hintText: 'Expire Date',
                             prefixIcon: Icons.event_busy,
                             initialDate: DateTime.now(),
@@ -743,6 +819,7 @@ class _Registration extends State<CorporateRegistration> {
                             errorMessage: 'Please select an expire date',
                           ),
                         ]),
+
                         SizedBox(
                           height: 50,
                         ),
@@ -797,45 +874,133 @@ class _Registration extends State<CorporateRegistration> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextLabel("License"),
+              // TextLabel("TradeLicense"),
               // pickLicense1(),
               // Upload License Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: pickLicense,
-                  icon: Icon(Icons.upload_file, color: Colors.black),
+                  icon: Icon(Icons.upload_file, color: Colors.white),
                   label: Text("Upload License",
-                      style: TextStyle(color: Colors.black)),
+                      style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 ),
               ),
+              // if (licenseFile != null)
+              //   Text("Selected: ${licenseFile!.path}"), // Show selected file
+              // if (licenseFile != null) Text(licenseFile!.path.split('/').last),
+
               if (licenseFile != null)
-                Text("Selected: ${licenseFile!.path}"), // Show selected file
-
+                Card(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: ListTile(
+                    leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                    title: Text(
+                      licenseFile!.split('/').last, // Show only the file name
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          licenseFile = null; // Remove the selected file
+                        });
+                      },
+                    ),
+                  ),
+                ),
               SizedBox(height: 10),
-
+              // TextLabel("Articles Of Association"),
               // Upload Article Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: pickArticle,
-                  icon: Icon(Icons.upload_file, color: Colors.black),
-                  label: Text("Upload Article",
-                      style: TextStyle(color: Colors.black)),
+                  icon: Icon(Icons.upload_file, color: Colors.white),
+                  label: Text("Upload Articles Of Association",
+                      style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 ),
               ),
-              if (articleFile != null) Text("Selected: ${articleFile!.path}"),
-              TextLabel("Upload Documents "),
+              // if (articleFile != null) Text("Selected: ${articleFile!.path}"),
+              // if (articleFile != null) Text(articleFile!.path.split('/').last),
+              if (articleFile != null)
+                Card(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: ListTile(
+                    leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                    title: Text(
+                      articleFile!.split('/').last, // Show only the file name
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          articleFile = null; // Remove the selected file
+                        });
+                      },
+                    ),
+                  ),
+                ),
 
-              // ElevatedButton.icon(
-
-              //   onPressed: pickFiles,
-              //   icon: Icon(Icons.upload_file),
-              //   label: Text("Select PDF Files"),
-              // ),
               SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: letterOfRequest,
+                  icon: Icon(Icons.upload_file, color: Colors.white),
+                  label: Text("Letter Of Request",
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                ),
+              ),
+
+              if (letterOfRequestFile != null)
+                Card(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: ListTile(
+                    leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                    title: Text(
+                      letterOfRequestFile!
+                          .split('/')
+                          .last, // Show only the file name
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          letterOfRequestFile =
+                              null; // Remove the selected file
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+              SizedBox(height: 10),
+
+              SizedBox(height: 10),
+
+              SizedBox(
+                width: double.infinity, // Makes the button full width
+                child: ElevatedButton.icon(
+                  onPressed: pickFiles,
+                  icon: Icon(Icons.upload_file,
+                      color: Colors.white), // Set icon color
+                  label: Text(
+                    "Upload other documents",
+                    style: TextStyle(
+                        color: Colors.white), // Set text color to black
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.blue, // Set background color to blue
+                  ),
+                ),
+              ),
               if (selectedFiles.isNotEmpty)
                 Column(
                   children: selectedFiles.asMap().entries.map((entry) {
@@ -860,34 +1025,93 @@ class _Registration extends State<CorporateRegistration> {
               SizedBox(
                 height: 27,
               ),
-              SizedBox(
-                width: double.infinity, // Makes the button full width
-                child: ElevatedButton.icon(
-                  onPressed: pickFiles,
-                  icon: Icon(Icons.upload_file,
-                      color: Colors.white), // Set icon color
-                  label: Text(
-                    "Select PDF Files",
-                    style: TextStyle(
-                        color: Colors.white), // Set text color to black
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.blue, // Set background color to blue
-                  ),
-                ),
+            ],
+          ),
+        ),
+      ),
+      Step(
+        title: Text(isSmallScreen ? "" : "Financial Information"),
+        isActive: _activeStepIndex >= 5,
+        state: _activeStepIndex > 5 ? StepState.complete : StepState.indexed,
+        content: Form(
+          key: globalFormKey6,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                ' Select Account Type',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+                textAlign: TextAlign.end,
               ),
+              Padding(
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: filteredAccountTypes.isNotEmpty
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children:
+                            filteredAccountTypes.map<Widget>((accountType) {
+                          bool isSelected =
+                              selectedAccountTypeId == accountType['name'];
 
-              // SizedBox(
-              //   width: double.infinity, // Makes the button full width
-              //   child: ElevatedButton.icon(
-              //     onPressed: pickFiles,
-              //     icon: Icon(Icons.upload_file),
-              //     label: Text("Select PDF Files"),
-              //   ),
-              // ),
-              SizedBox(
-                height: 27,
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedAccountTypeId = accountType[
+                                    'name']; // Update selected account type
+                                print(
+                                    'Selected Account Type ID: $selectedAccountTypeId');
+                              });
+                            },
+                            child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              child: Card(
+                                margin: const EdgeInsets.all(10),
+                                color: isSelected
+                                    ? Colors.blue
+                                    : Colors.grey, // Change color if selected
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 1, horizontal: 2),
+                                  child: ListTile(
+                                    title: Text(
+                                      accountType['name'] as String,
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Colors
+                                                .black, // Text color changes when selected
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text("                     "),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      )
+                    : Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Text(
+                            "Sorry, no accounts were found for selection. Please ensure that the initial deposit and date of birth are correctly entered.",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),
@@ -896,7 +1120,7 @@ class _Registration extends State<CorporateRegistration> {
     ];
   }
 
-  void _showSignaturePadDialog(BuildContext context) {
+  void _showSignaturePadDialog(BuildContext context, int i) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1013,7 +1237,7 @@ class _Registration extends State<CorporateRegistration> {
                       ElevatedButton(
                         onPressed: () {
                           if (areAllSignaturesCompleted()) {
-                            _saveCombinedSignature();
+                            _saveCombinedSignature(i);
                             Navigator.pop(context);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -1037,14 +1261,14 @@ class _Registration extends State<CorporateRegistration> {
     );
   }
 
-  Padding signaturePadSelection() {
+  Padding signaturePadSelection(int i) {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           ElevatedButton(
-            onPressed: () => _showSignaturePadDialog(context),
+            onPressed: () => _showSignaturePadDialog(context, i),
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
               backgroundColor: Colors.black,
@@ -1054,7 +1278,7 @@ class _Registration extends State<CorporateRegistration> {
           const SizedBox(width: 20),
           ElevatedButton(
             onPressed: () {
-              showImagePicker(context, "signature");
+              // showImagePicker(context, "signature");
             },
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
@@ -1067,7 +1291,7 @@ class _Registration extends State<CorporateRegistration> {
     );
   }
 
-  Center signatureCard() {
+  Center signatureCard(int i) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
@@ -1085,12 +1309,12 @@ class _Registration extends State<CorporateRegistration> {
                 ),
               ],
             ),
-            child: _combinedSignature != null
+            child: combinedSignatures[i].isNotEmpty
                 ? Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20.0),
                       child: Image.memory(
-                        _combinedSignature!,
+                        combinedSignatures[i]!,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -1108,7 +1332,7 @@ class _Registration extends State<CorporateRegistration> {
     );
   }
 
-  Column personalPhoto() {
+  Column personalPhoto(int i) {
     return Column(
       children: [
         Center(
@@ -1129,7 +1353,7 @@ class _Registration extends State<CorporateRegistration> {
                     ),
                   ],
                 ),
-                child: profilePath.isEmpty
+                child: profilePaths[i].isEmpty
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -1144,27 +1368,29 @@ class _Registration extends State<CorporateRegistration> {
                           )
                         ],
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(20.0),
-                        child: Image.file(
-                          File(profilePath),
-                          height: MediaQuery.of(context).size.height * 0.7,
-                          width: MediaQuery.of(context).size.width * 0.7,
-                          fit: BoxFit.fill,
+                    : GestureDetector(
+                        onTap: () =>
+                            _showFullScreenImage(context, profilePaths[i]),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: Image.file(
+                            File(profilePaths[i]),
+                            height: 200,
+                            width: MediaQuery.of(context).size.width * 0.8,
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
               ),
               const SizedBox(height: 40.0),
               ButtonUploadTakePhoto(
-                onUploadPressed: () => _imgFromGallery("profile"),
-                onCapturePressed: () => _imgFromCamera("profile"),
+                onUploadPressed: () => _imgFromGallery(i, 'profilePath'),
+                onCapturePressed: () => _imgFromCamera(i, 'profilePath'),
               ),
             ],
           ),
         ),
-        const SizedBox(
-          height: 40,
-        )
+        const SizedBox(height: 40),
       ],
     );
   }
@@ -1199,7 +1425,7 @@ class _Registration extends State<CorporateRegistration> {
     );
   }
 
-  Column idCardPhoto() {
+  Column idCardPhoto(int i) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1207,7 +1433,7 @@ class _Registration extends State<CorporateRegistration> {
         Padding(
           padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
           child: Text(
-            "Front Photo of  $selectedDocumentType",
+            'Front Photo of ${selectedDocumentType[i] ?? "ID"}',
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -1232,7 +1458,7 @@ class _Registration extends State<CorporateRegistration> {
                     ),
                   ],
                 ),
-                child: residentPath.isEmpty
+                child: residentPaths[i].isEmpty
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -1247,20 +1473,24 @@ class _Registration extends State<CorporateRegistration> {
                           ),
                         ],
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(20.0),
-                        child: Image.file(
-                          File(residentPath),
-                          height: 180.0,
-                          width: MediaQuery.of(context).size.width * 0.7,
-                          fit: BoxFit.fill,
+                    : GestureDetector(
+                        onTap: () =>
+                            _showFullScreenImage(context, residentPaths[i]),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: Image.file(
+                            File(residentPaths[i]),
+                            height: 200,
+                            width: MediaQuery.of(context).size.width * 0.8,
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
               ),
               const SizedBox(height: 20.0),
               ButtonUploadTakePhoto(
-                onUploadPressed: () => _imgFromGallery("resident"),
-                onCapturePressed: () => _imgFromCamera("resident"),
+                onUploadPressed: () => _imgFromGallery(i, "resident"),
+                onCapturePressed: () => _imgFromCamera(i, "resident"),
               )
             ],
           ),
@@ -1271,7 +1501,7 @@ class _Registration extends State<CorporateRegistration> {
         Padding(
           padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
           child: Text(
-            "Back Photo of $selectedDocumentType",
+            'Back Photo of ${selectedDocumentType[i] ?? "ID"}',
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -1296,7 +1526,7 @@ class _Registration extends State<CorporateRegistration> {
                     ),
                   ],
                 ),
-                child: residentCardBackPath.isEmpty
+                child: residentCardBackPaths[i].isEmpty
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -1314,7 +1544,7 @@ class _Registration extends State<CorporateRegistration> {
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(20.0),
                         child: Image.file(
-                          File(residentCardBackPath),
+                          File(residentCardBackPaths[i]),
                           height: 180.0,
                           width: MediaQuery.of(context).size.width * 0.7,
                           fit: BoxFit.fill,
@@ -1323,8 +1553,8 @@ class _Registration extends State<CorporateRegistration> {
               ),
               const SizedBox(height: 20.0),
               ButtonUploadTakePhoto(
-                onUploadPressed: () => _imgFromGallery("residentCardBack"),
-                onCapturePressed: () => _imgFromCamera("residentCardBack"),
+                onUploadPressed: () => _imgFromGallery(i, "residentCardBack"),
+                onCapturePressed: () => _imgFromCamera(i, "residentCardBack"),
               )
             ],
           ),
@@ -1463,94 +1693,6 @@ class _Registration extends State<CorporateRegistration> {
     } catch (e) {
       print("Error calling API: $e");
     }
-  }
-
-  Padding genderWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: DropdownButtonFormField<String>(
-        value: selectedGender,
-        hint: const Text(
-          'Gender',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.black,
-          ),
-        ),
-        items: genders.map((String gender) {
-          return DropdownMenuItem<String>(
-            value: gender,
-            child: Text(gender),
-          );
-        }).toList(),
-        onChanged: (String? newGender) {
-          setState(() {
-            selectedGender = newGender!;
-          });
-        },
-        validator: (String? value) {
-          if (value == null) {
-            return 'Gender *';
-          }
-          return null;
-        },
-        decoration: const InputDecoration(
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          prefixIcon: Icon(Icons.person),
-        ),
-      ),
-    );
-  }
-
-  Padding genderWidget1() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Male'),
-                  value: 'MALE', // Radio button value
-                  groupValue: selectedGender, // Current selected gender
-                  onChanged: (String? value) {
-                    setState(() {
-                      selectedGender = value!;
-                    });
-                  },
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Female'),
-                  value: 'FEMALE', // Radio button value
-                  groupValue: selectedGender, // Current selected gender
-                  onChanged: (String? value) {
-                    setState(() {
-                      selectedGender = value!;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-          if (selectedGender == null)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text(
-                'Gender *',
-                style: TextStyle(color: Colors.red, fontSize: 12),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 
   int _activeStepIndex = 0;
@@ -1709,7 +1851,7 @@ class _Registration extends State<CorporateRegistration> {
     );
   }
 
-  void showImagePicker(BuildContext context, String imageTypes) {
+  void showImagePicker(BuildContext context, int i, String imageTypes) {
     showModalBottomSheet(
         context: context,
         builder: (builder) {
@@ -1739,7 +1881,7 @@ class _Registration extends State<CorporateRegistration> {
                         ],
                       ),
                       onTap: () {
-                        _imgFromGallery(imageTypes);
+                        _imgFromGallery(i, imageTypes);
                         Navigator.pop(context);
                       },
                     )),
@@ -1763,7 +1905,7 @@ class _Registration extends State<CorporateRegistration> {
                         ),
                       ),
                       onTap: () {
-                        _imgFromCamera(imageTypes);
+                        // _imgFromCamera(imageTypes);
                         Navigator.pop(context);
                       },
                     ))
@@ -1773,29 +1915,95 @@ class _Registration extends State<CorporateRegistration> {
         });
   }
 
-  _imgFromGallery(String imageTypes) async {
-    FocusScope.of(context).unfocus();
-    await picker
-        .pickImage(source: ImageSource.gallery, imageQuality: 50)
-        .then((value) {
-      if (value != null) {
-        _cropImage(File(value.path), imageTypes);
+  Future<void> _imgFromGallery(int i, String imageTypes) async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      File originalFile = File(pickedFile.path);
+
+      // Step 1: Check if the original file exists
+      bool originalExists = await originalFile.exists();
+      print("Original file exists: $originalExists");
+
+      if (!originalExists) {
+        print("Error: Selected file does not exist.");
+        return;
       }
-    });
+
+      // Step 2: Get the application's document directory
+      Directory appDir = await getApplicationDocumentsDirectory();
+      String newPath =
+          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      try {
+        // Step 3: Copy the file to the permanent directory
+        File newImage = await originalFile.copy(newPath);
+
+        // Step 4: Verify the new file exists
+        bool newFileExists = await newImage.exists();
+        print("New saved path: $newPath");
+        print("New file exists: $newFileExists");
+
+        if (newFileExists) {
+          setState(() {
+            if (imageTypes == 'profilePath') {
+              profilePaths[i] = newPath;
+            } else if (imageTypes == 'resident') {
+              residentPaths[i] = newPath;
+            } else if (imageTypes == 'residentCardBack') {
+              residentCardBackPaths[i] = newPath;
+            }
+          });
+        } else {
+          print("Error: File was not copied successfully.");
+        }
+      } catch (e) {
+        print("Error copying file: $e");
+      }
+    }
   }
 
-  _imgFromCamera(String imageTypes) async {
-    // Unfocus any text fields or inputs
-    FocusScope.of(context).unfocus();
-    await picker
-        .pickImage(source: ImageSource.camera, imageQuality: 50)
-        .then((value) {
-      if (value != null) {
-        _cropImage(File(value.path), imageTypes);
+  Future<void> _imgFromCamera(int i, String imageTypes) async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      File originalFile = File(pickedFile.path);
 
-        // _cropImage(File(value.path));
+      bool originalExists = await originalFile.exists();
+      print("Original file exists: $originalExists");
+
+      if (!originalExists) {
+        print("Error: Captured file does not exist.");
+        return;
       }
-    });
+
+      Directory appDir = await getApplicationDocumentsDirectory();
+      String newPath =
+          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      try {
+        File newImage = await originalFile.copy(newPath);
+        bool newFileExists = await newImage.exists();
+        print("New saved path: $newPath");
+        print("New file exists: $newFileExists");
+
+        if (newFileExists) {
+          setState(() {
+            if (imageTypes == 'profilePath') {
+              profilePaths[i] = newPath;
+            } else if (imageTypes == 'resident') {
+              residentPaths[i] = newPath;
+            } else if (imageTypes == 'residentCardBack') {
+              residentCardBackPaths[i] = newPath;
+            }
+          });
+        } else {
+          print("Error: File was not copied successfully.");
+        }
+      } catch (e) {
+        print("Error copying file: $e");
+      }
+    }
   }
 
   _cropImage(File imgFile, String imageTypes) async {
@@ -1846,18 +2054,92 @@ class _Registration extends State<CorporateRegistration> {
     }
   }
 
-  Future<Uint8List> _getImageBytes(String path) async {
-    final imageFile = File(path);
-    print("hello there");
-
-    print(imageFile);
-    print(await imageFile.exists());
-
-    if (await imageFile.exists()) {
-      // throw Exception("File does not exist.");
-      print("file not exist");
+  Future<Uint8List> _getPdfBytes(File? pdfFile) async {
+    if (pdfFile == null) {
+      print("File is null.");
+      return Uint8List(0); // Return an empty Uint8List if the file is null
     }
-    return await imageFile.readAsBytes();
+
+    try {
+      // Read and return the file bytes directly without saving
+      return await pdfFile.readAsBytes();
+    } catch (e) {
+      print("Error reading PDF file: $e");
+      return Uint8List(0); // Return an empty Uint8List if an error occurs
+    }
+  }
+
+  // Future<Uint8List> _getPdfBytes(File? pdfFile) async {
+  //   if (pdfFile == null) {
+  //     print("File is null.");
+  //     return Uint8List(0); // Return an empty Uint8List if the file is null
+  //   }
+
+  //   // Save the file to a permanent location
+  //   final permanentFile = await saveFileToPermanentLocation(pdfFile);
+
+  //   // Check if the file exists
+  //   bool exists = await permanentFile.exists();
+  //   print("File exists: $exists");
+
+  //   // If the file exists, read and return its bytes
+  //   if (exists) {
+  //     print("File exists, reading PDF bytes...");
+  //     return await permanentFile.readAsBytes();
+  //   } else {
+  //     print("Error: File does not exist.");
+  //     return Uint8List(
+  //         0); // Return an empty Uint8List if the file doesn't exist
+  //   }
+  // }
+
+  // Future<Uint8List> _getImageBytes(String path) async {
+  //   final imageFile = File(path);
+  //   print("hello there");
+
+  //   print(imageFile);
+  //   print(await imageFile.exists());
+
+  //   if (await imageFile.exists()) {
+  //     // throw Exception("File does not exist.");
+  //     print("file not exist");
+  //   }
+  //   return await imageFile.readAsBytes();
+  // }
+  Future<Uint8List?> _getImageBytes(String imagePath) async {
+    try {
+      final File imageFile = File(imagePath);
+
+      // Check if file exists
+      bool fileExists = await imageFile.exists();
+      print('File exists at $imagePath: $fileExists');
+
+      if (fileExists) {
+        // Try reading the file as bytes
+        final bytes = await imageFile.readAsBytes();
+        print('File successfully read');
+        return bytes;
+      } else {
+        print('File does not exist at path: $imagePath');
+        return null;
+      }
+    } catch (e) {
+      print("Error reading image: $e");
+
+      // If file doesn't exist, check the file path and directory
+      final directory =
+          Directory(imagePath.substring(0, imagePath.lastIndexOf('/')));
+      bool dirExists = await directory.exists();
+      print("Directory exists at ${directory.path}: $dirExists");
+
+      if (!dirExists) {
+        print("Directory does not exist. Attempting to create it...");
+        await directory.create(
+            recursive: true); // Create the directory if it doesn't exist
+      }
+
+      return null;
+    }
   }
 
   void clearSignature(int index) {
@@ -1998,8 +2280,10 @@ class _Registration extends State<CorporateRegistration> {
       } else if (_activeStepIndex == 3) {
         // await handleStepFour();
       } else if (_activeStepIndex == 4) {
+        _filterAccountTypes(selectedProductType!);
         // await handleStepFive();
       } else if (_activeStepIndex == 5) {
+        _filterAccountTypes(selectedProductType!);
         // await basicInformation();
       } else if (_activeStepIndex == 6) {
         // await addressInfo();
@@ -2008,8 +2292,23 @@ class _Registration extends State<CorporateRegistration> {
       }
 
       if (isLastStep) {
-        await submitFormData1();
-        // await submitFormData();
+        registerStatus = true;
+        if (selectedAccountTypeId == null) {
+          registerStatus = false;
+          isLoading = false;
+
+          DialogHelper.showErrorDialog(context, "Please select account type");
+
+          return;
+        } else {
+          setState(() {
+            isLoading = true; // Start loading before registration
+          });
+          await registerAllUsers();
+          setState(() {
+            isLoading = false; // Stop loading after registration
+          });
+        }
       } else {
         if (!registerStatus) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -2220,10 +2519,11 @@ class _Registration extends State<CorporateRegistration> {
                 child: Column(
                   children: [
                     SignatureButtons(
-                      onDrawSignature: () => _showDrawSignatureDialog(context),
-                      onUploadOrTake: () =>
-                          showImagePicker(context, "signature"),
-                    ),
+                        onDrawSignature: () =>
+                            _showDrawSignatureDialog(context),
+                        onUploadOrTake: () =>
+                            // showImagePicker(context, "signature"),
+                            {}),
                   ],
                 ),
               ),
@@ -2771,33 +3071,11 @@ class _Registration extends State<CorporateRegistration> {
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
     setState(() {
-      // Get user's age from date of birth
-      DateTime? dateOfBirth;
-      try {
-        dateOfBirth = DateTime.parse(dateOfBirthController.text);
-      } catch (e) {
-        print('Invalid date format: ${dateOfBirthController.text}');
-        return;
-      }
-
-      int age = DateTime.now().year - dateOfBirth.year;
-      if (DateTime.now().month < dateOfBirth.month ||
-          (DateTime.now().month == dateOfBirth.month &&
-              DateTime.now().day < dateOfBirth.day)) {
-        age--;
-      }
-
-      // Normalize gender
-      String normalizedGender = selectedGender.trim().toUpperCase();
-
       // Parse initial deposit
       double initialDeposit =
           double.tryParse(initialDepositController.text) ?? 0;
 
       filteredAccountTypes = accountTypes.where((accountType) {
-        print("AccountType: ${accountType}");
-        print("Selected Gender: $normalizedGender");
-
         // Check banking type
         if (accountType['bankingType'] != bankingType) {
           print(
@@ -2805,12 +3083,14 @@ class _Registration extends State<CorporateRegistration> {
           return false;
         }
 
-        // Validate age range
+        if (accountType['sex'] == 'FEMALE') {
+          print("Account type has 'female' gender, excluded.");
+          return false;
+        }
+        // Exclude account types with minAge == 0
         int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
-        int maxAge =
-            int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
-        if (age < minAge || age > maxAge) {
-          print("Age out of range: $age not in [$minAge, $maxAge]");
+        if (minAge < 18) {
+          print("Account type has minAge == 0, excluded.");
           return false;
         }
 
@@ -2823,14 +3103,6 @@ class _Registration extends State<CorporateRegistration> {
           return false;
         }
 
-        // Validate sex with 'BOTH' inclusion
-        String accountTypeSex =
-            accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
-        if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
-          print("Gender mismatch: $normalizedGender != $accountTypeSex");
-          return false;
-        }
-
         print("Account type matches!");
         return true;
       }).toList();
@@ -2840,7 +3112,7 @@ class _Registration extends State<CorporateRegistration> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'No account types available for your age ($age), gender ($selectedGender), and deposit ($initialDeposit)',
+              'No account types available for your deposit ($initialDeposit).',
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.red,
@@ -2889,7 +3161,7 @@ class _Registration extends State<CorporateRegistration> {
     }
   }
 
-  void _saveCombinedSignature() async {
+  void _saveCombinedSignature(int i) async {
     final Uint8List? combinedImage = await _combineSignatures();
 
     // Check if all signature pads are signed
@@ -2904,7 +3176,7 @@ class _Registration extends State<CorporateRegistration> {
     }
     if (combinedImage != null) {
       setState(() {
-        _combinedSignature = combinedImage; // Store the combined signature
+        combinedSignatures[i] = combinedImage;
       });
       // Example: Save to a file
       final file = File('${Directory.systemTemp.path}/combined_signature.png');
@@ -3045,23 +3317,225 @@ class _Registration extends State<CorporateRegistration> {
     });
   }
 
-  // Function to pick a license file
-  void pickLicense() async {
-    File? selectedFile = await FilePickerService.pickSinglePDF("License");
-    if (selectedFile != null) {
+  Future<void> pickLicense() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+      allowMultiple: false, // Ensure only one file is selected
+    );
+
+    if (result != null && result.files.single.path != null) {
       setState(() {
-        licenseFile = selectedFile;
+        licenseFile = result.files.single.path; // Set the file path as a string
       });
     }
   }
 
-  // Function to pick an article file
-  void pickArticle() async {
-    File? selectedFile = await FilePickerService.pickSinglePDF("Article");
-    if (selectedFile != null) {
+  Future<void> letterOfRequest() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+      allowMultiple: false, // Ensure only one file is selected
+    );
+
+    if (result != null && result.files.single.path != null) {
       setState(() {
-        articleFile = selectedFile;
+        letterOfRequestFile =
+            result.files.single.path; // Set the file path as a string
       });
     }
+  }
+
+  Future<void> pickArticle() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+      allowMultiple: false, // Ensure only one file is selected
+    );
+
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        articleFile = result.files.single.path; // Set the file path as a string
+      });
+    }
+  }
+
+  registerAllUsers() async {
+    List<Map<String, dynamic>> customers = [];
+
+    for (int i = 0; i < int.parse(NumberOfMembers!); i++) {
+      Uint8List? residentBytes;
+      Uint8List? residentCardBackBytes;
+      Uint8List? personalPhotoBytes;
+
+      Uint8List? tradeLicenseBytes;
+      Uint8List? articleBytes;
+      Uint8List? letterOfRequestBytes;
+      print("ddhdhhdh");
+      print(articleFile);
+      print(letterOfRequestFile);
+
+      // Check and handle image paths (make sure they're not null)
+      if (residentPaths[i].isNotEmpty) {
+        residentBytes = await _getImageBytes(residentPaths[i]);
+      }
+      if (residentCardBackPaths[i].isNotEmpty) {
+        residentCardBackBytes = await _getImageBytes(residentCardBackPaths[i]);
+      }
+      if (profilePaths[i].isNotEmpty) {
+        personalPhotoBytes = await _getImageBytes(profilePaths[i]);
+      }
+
+      if (letterOfRequestFile != null) {
+        letterOfRequestBytes = await _getImageBytes(letterOfRequestFile!);
+      }
+      if (licenseFile != null) {
+        licenseFileBytes = await _getImageBytes(licenseFile!);
+      }
+      if (articleFile != null) {
+        articleFileBytes = await _getImageBytes(articleFile!);
+      }
+
+      // Create the customer object with null handling
+      Map<String, dynamic> customer = {
+        "fullName": fullNameControllers[i].text.isNotEmpty
+            ? fullNameControllers[i].text
+            : "", // Default value for empty fields
+        "surname": "", // Add surname if available
+
+        "emailVerified": true,
+        "phone":
+            phoneControllers[i].text.isNotEmpty ? phoneControllers[i].text : "",
+        "email": emailControllers[i].text.isNotEmpty
+            ? emailControllers[i].text
+            : "", // Default value for empty fields
+
+        "country": "Ethiopia",
+        "state": selectedStates[i] ?? "",
+        "city": "",
+        "streetAddress": "",
+        "zipCode": "",
+
+        "title": selectedTitle[i],
+
+        "zoneSubCity": "",
+        "houseNo": "",
+        "documentName": selectedDocumentType[i],
+        "issueAuthority": "",
+        "issueDate": issueDateControllers[i].text.isNotEmpty
+            ? issueDateControllers[i].text
+            : "", // Default value for empty fields
+        "expiryDate": expireDateControllers[i].text.isNotEmpty
+            ? expireDateControllers[i].text
+            : "", // Default value for empty fields
+        "employeeStatus": "OTHER",
+        "legalId": legalIDControllers[i].text.isNotEmpty
+            ? legalIDControllers[i].text
+            : "",
+
+        "sex": selectedGender[i] ?? "",
+
+        "photo": personalPhotoBytes ?? [],
+        "signature": combinedSignatures[i] ?? [],
+        "residenceCard": residentBytes ??
+            [], // Handle null residence card (use empty list instead)
+        "residenceCardBack": residentCardBackBytes ??
+            [], // Handle null residence card back (use empty list instead)
+        "passport": "",
+      };
+
+      customers.add(customer);
+    }
+    var id;
+    if (selectedAccountTypeId != null) {
+      var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
+// // Check if accountTypeDetails is not null and then get the id
+      id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
+    }
+    // Construct the final payload
+    Map<String, dynamic> requestData = {
+      "customers": customers,
+      "companyName": companyNameController.text,
+      "email": emailController.text.toString(),
+      "phoneNumber": phoneNumberController.text.toString(),
+      "tinNumber": tinNumberController.text.toString(),
+      "dateOfEstablishment": dateOfEstabilishmentController.text.toString(),
+
+      "residence": residenceAddressController.text.toString(),
+      "state": stateController.text.toString(),
+      "zone": zoneSubsityController.text.toString(),
+      "woreda": woredaController.text.toString(),
+      "letterOfRequest": letterOfRequestBytes,
+      "tradeLicense": licenseFileBytes,
+      "articlesOfAssociation": articleFileBytes,
+      "currency": "ETB",
+
+      "branch": selectedBranch ?? "Unknown", // Default branch if null
+
+      "accountType": id.toString(),
+      "initialDeposit": initialDepositController.text.toString(),
+      "percentageCompleted": 0,
+    };
+
+    print("Final JSON payload:");
+    print(requestData);
+
+    // Send request
+    RegistrationService registrationService = RegistrationService();
+    var response = await registrationService.registerCustomers(requestData);
+
+    if (response["statusCode"] == 200) {
+      print("✅ Success: ${response["message"]}");
+      DialogHelper.showSuccessDialog(context, response["message"]);
+    } else {
+      DialogHelper.showErrorDialog(context, response["message"]);
+
+      print("❌ Error1 (${response["statusCode"]}): ${response["message"]}");
+      print("Error Details: ${response["error"]}");
+    }
+  }
+
+  void _showFullScreenImage(BuildContext context, String imagePath) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black.withOpacity(0.9),
+        insetPadding: EdgeInsets.zero, // Fullscreen effect
+        child: Stack(
+          children: [
+            Center(
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<File> saveFileToPermanentLocation(File pdfFile) async {
+    // Get the app's document directory
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final permanentFile =
+        File('${appDocDir.path}/API_INTEGRATION_TESTING_REQURMENT.pdf');
+
+    // If the file doesn't exist already, copy the file to the permanent location
+    if (!await permanentFile.exists()) {
+      await pdfFile.copy(permanentFile.path);
+    }
+
+    return permanentFile;
   }
 }

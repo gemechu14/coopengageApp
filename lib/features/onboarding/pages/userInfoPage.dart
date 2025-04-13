@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/features/onboarding/screens/updateCustomerInfoScreen.dart';
+import 'package:coopengageplus/features/onboarding/Indivudualaccount/updateCustomerInfoScreen.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +53,8 @@ class _UserInfoPageState extends State<UserInfoPage> {
         backgroundColor: Colors.white,
         title: Text(
           " ${widget.title}",
-          style: const TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              fontSize: 27, fontWeight: FontWeight.bold, color: Colors.blue),
         ),
         centerTitle: true,
       ),

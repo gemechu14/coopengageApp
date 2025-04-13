@@ -66,16 +66,16 @@ class _MainPageState extends State<MainPage> {
         // );
         // return RegistrationScreen();
         return AccountOpeningHomePage();
+      // case 2:
+      //   return Marchentregistration();
       case 2:
-        return Marchentregistration();
-      case 3:
         if (role != 'AGENT') {
           return const AgentPage();
         } else {
           return const ProfileScreen();
         }
 
-      case 4:
+      case 3:
         return const ProfileScreen();
       default:
         return Dashboard(onSettingsTap: () {
@@ -103,7 +103,7 @@ class _MainPageState extends State<MainPage> {
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.all(6.0),
+                padding: const EdgeInsets.all(10.0),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     double screenWidth = constraints.maxWidth;
@@ -113,7 +113,7 @@ class _MainPageState extends State<MainPage> {
                       hoverColor: Colors.grey[100]!,
                       gap: 3,
                       activeColor: Color(0xFF2196F3),
-                      iconSize: screenWidth < 400 ? 23 : 26, // Adjust icon size
+                      iconSize: screenWidth < 400 ? 26 : 29, // Adjust icon size
                       padding: EdgeInsets.symmetric(
                         horizontal: screenWidth < 400 ? 9 : 18,
                         vertical: screenWidth < 400 ? 8 : 12,
@@ -134,11 +134,11 @@ class _MainPageState extends State<MainPage> {
                             Icons.home, translation(context).home, 0),
                         _buildGNavItem(
                             Icons.assignment, translation(context).customer, 1),
-                        _buildGNavItem(
-                            Icons.store, translation(context).merchant, 2),
+                        // _buildGNavItem(
+                        //     Icons.store, translation(context).merchant, 2),
                         if (role != 'AGENT')
-                          _buildGNavItem(Icons.group, 'Agent', 3),
-                        _buildGNavItem(Icons.person_2, 'Profile', 4),
+                          _buildGNavItem(Icons.group, 'Agent', 2),
+                        _buildGNavItem(Icons.person_2, 'Profile', 3),
                       ],
                     );
                   },
@@ -163,7 +163,7 @@ class _MainPageState extends State<MainPage> {
                       _getCurrentWidget(1),
                       _getCurrentWidget(2),
                       _getCurrentWidget(3),
-                      _getCurrentWidget(4),
+                      // _getCurrentWidget(4),
                     ],
                   );
                 },

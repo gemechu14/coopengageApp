@@ -1,11 +1,10 @@
-// ignore_for_file: unused_local_variable, constant_identifier_names, unused_element, avoid_print, unused_import, unnecessary_import, prefer_typing_uninitialized_variables, file_names, non_constant_identifier_names, use_build_context_synchronously, no_leading_underscores_for_local_identifiers
+// ignore_for_file: unused_local_variable, constant_identifier_names, unused_element, avoid_print, unused_import, unnecessary_import, prefer_typing_uninitialized_variables, file_names, non_constant_identifier_names, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, deprecated_member_use, sized_box_for_whitespace
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
-// import 'package:csc_picker/csc_picker.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/dropDown/DatePickerField.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
@@ -15,6 +14,7 @@ import 'package:coopengageplus/common_widgets/textField/emailWidget.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/old/HomePage.dart';
+import 'package:coopengageplus/features/onboarding/pages/updateConfirmationPage.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
@@ -24,13 +24,10 @@ import 'package:flutter/services.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-
-// import 'package:searchfield/searchfield.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signature/signature.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
@@ -54,21 +51,14 @@ String? selectedCustomerType;
 String? selectedDocumentType;
 String? selectedSector;
 bool registerStatus = true;
-
-///
-///
-///
 String? signaturePath;
 int selectedAccountTypeValue = 1;
 String? signatureUrl;
-
 List<String> branchNames = [];
-// selectedAccountTypeValue=1;
 String residentCardBackPath = "";
 String? selectedPaymentMethod;
 bool isBankTransferSelected = false;
 bool isBankTransferIconClicked = false;
-
 String? signatureImagePath;
 Uint8List? savedSignature;
 String? amount;
@@ -104,6 +94,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   final List<String> genders = ['MALE', 'FEMALE'];
   List<Map<String, dynamic>> accountTypes = [];
   final Map<String, dynamic> registrationData = {};
+  final Map<String, dynamic> registrationFormData = {};
   Future<void> _initializeGlobalData() async {
     await GlobalData().fetchToken();
     GlobalData().initializeBranches();
@@ -113,6 +104,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
 
   @override
   void initState() {
+    loadSignature();
     _initializeGlobalData();
     _signatureController1 = SignatureController(
       penColor: Colors.black,
@@ -140,20 +132,37 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     String phoneNumber = isOnline
         ? (widget.userInfo['phone'] ?? '')
         : (widget.userInfo['phone'] ?? '');
+    print(phoneNumber.runtimeType);
+    phoneNumber = phoneNumber.trim();
+    print(phoneNumber.startsWith('0'));
+
     if (phoneNumber.startsWith('251')) {
       phoneNumber = phoneNumber.substring(3).trim();
     } else if (phoneNumber.startsWith('+251')) {
       phoneNumber = phoneNumber.substring(4).trim();
+    } else if (phoneNumber.startsWith('0')) {
+      phoneNumber = phoneNumber.substring(1).trim();
+    } else {
+      phoneNumber = phoneNumber;
     }
-    print("1234512345");
-    print(widget.userInfo);
-    print(allBranches);
-    print(allBranches);
-
+    String? userBranch = widget.userInfo['branch']?.toString();
+    if (userBranch != null &&
+        allBranches.any((branch) => branch['companyName'] == userBranch)) {
+      selectedBranch = userBranch;
+    } else {
+      selectedBranch = null;
+    }
     phoneNumberController.text = phoneNumber;
     selectedTitle = widget.userInfo['title'] ?? ListContants.title.first;
-    selectedMaritalStatus =
-        widget.userInfo['maritalStatus'] ?? ListContants.maritalStatuses.first;
+
+    if (ListContants.maritalStatuses
+        .contains(widget.userInfo['maritalStatus'])) {
+      selectedMaritalStatus = widget.userInfo['maritalStatus'];
+    }
+
+    if (ListContants.ethiopianStates.contains(widget.userInfo['state'])) {
+      selectedState = widget.userInfo['state'];
+    }
     print(widget.userInfo['signature']);
     idOne = widget.userInfo['id'];
     firstNameController.text = widget.userInfo['firstName'] ?? '';
@@ -163,27 +172,25 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       selectedBranch = widget.userInfo['branch'];
     }
 
-    // selectedBranch = widget.userInfo['branch'];
     selectedDocumentType =
         widget.userInfo['documentName'] ?? ListContants.documentName.first;
     fullNameController.text = widget.userInfo['fullName'] ?? '';
     surNameController.text = widget.userInfo['surname'] ?? '';
     motherNameController.text = widget.userInfo['motherName'] ?? '';
     emailController.text = widget.userInfo['email'] ?? '';
-
     selectedCustomerType = widget.userInfo['customerType'];
     addressController.text = widget.userInfo['address'] ?? '';
     streetController.text = widget.userInfo['streetAddress'] ?? '';
     stateController.text = widget.userInfo['state'] ?? '';
     residenceAddressController.text = widget.userInfo['residenceAddress'] ?? '';
     nationalityController.text = widget.userInfo['nationality'] ?? '';
-    cityController.text = widget.userInfo['city'] ?? '';
+    cityController.text = widget.userInfo['zoneSubCity'] ?? '';
     zipCodeController.text = widget.userInfo['zipCode'] ?? '';
     accountCurrencyController.text = widget.userInfo['currency'] ?? '';
     occupationController.text = widget.userInfo['occupation'] ?? '';
 
     dateOfBirthController.text = widget.userInfo['dateOfBirth'] ?? '';
-    // selectedGender = widget.userInfo["sex"];
+    selectedGender = widget.userInfo["sex"];
     surNameController.text = widget.userInfo['surName'] ?? '';
 
     expireDateController.text = widget.userInfo['expirayDate'] ?? '';
@@ -193,58 +200,54 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     legalIDController.text = widget.userInfo['legalId'] ?? '';
     cityController.text = widget.userInfo['zoneSubcity'] ?? '';
 
-    // // selectedAccountTypeValue =
-    // //     int.tryParse(widget.userInfo['accountType'].toString()) ?? 1;
-    // // selectedAccountTypeValue = widget.userInfo['accountType'] != null
-    // //     ? int.tryParse(widget.userInfo['accountType'].toString()) ?? 1
-    // //     : 1;
-
     initialDepositController.text =
         widget.userInfo['initialDeposit']?.toString() ?? '';
     monthlyIncomeController.text =
         widget.userInfo['monthlyIncome']?.toString() ?? '';
 
-    if (widget.userInfo['photo'] is String) {
-      profilePath = widget.userInfo['photo'];
-    } else if (widget.userInfo['photo'] is Uint8List) {
-      profilePath = base64Encode(widget.userInfo['photo']);
+    if (widget.userInfo['photo'] != null && widget.userInfo['photo'] != '') {
+      if (widget.userInfo['photo'] is String) {
+        profilePath = widget.userInfo['photo'];
+      } else if (widget.userInfo['photo'] is Uint8List) {
+        profilePath = base64Encode(widget.userInfo['photo']);
+      }
     }
 
-    if (widget.userInfo['residenceCardBack'] is String) {
-      residentCardBackPath = widget.userInfo['residenceCardBack'];
-    } else if (widget.userInfo['residenceCardBack'] is Uint8List) {
-      residentCardBackPath = base64Encode(widget.userInfo['residenceCardBack']);
-    }
-    if (widget.userInfo['residenceCard'] is String) {
-      residentPath = widget.userInfo['residenceCard'];
-    } else if (widget.userInfo['residenceCard'] is Uint8List) {
-      residentPath = base64Encode(widget.userInfo['residenceCard']);
+    if (widget.userInfo['residenceCardBack'] != null &&
+        widget.userInfo['residenceCardBack'] != '') {
+      if (widget.userInfo['residenceCardBack'] is String) {
+        residentCardBackPath = widget.userInfo['residenceCardBack'];
+      } else if (widget.userInfo['residenceCardBack'] is Uint8List) {
+        residentCardBackPath =
+            base64Encode(widget.userInfo['residenceCardBack']);
+      }
     }
 
-    if (widget.userInfo['signature'] is String) {
-      _combinedSignature = widget.userInfo['signature'];
-    } else if (widget.userInfo['signature'] is Uint8List) {
-      _combinedSignature = widget.userInfo['signature'];
+    if (widget.userInfo['residenceCard'] != null &&
+        widget.userInfo['residenceCard'] != '') {
+      if (widget.userInfo['residenceCard'] is String) {
+        residentPath = widget.userInfo['residenceCard'];
+      } else if (widget.userInfo['residenceCard'] is Uint8List) {
+        residentPath = base64Encode(widget.userInfo['residenceCard']);
+      }
     }
   }
 
   void _setDateOfBirth() {
     String? fullDateTime = widget.userInfo['dateOfBirth'];
     if (fullDateTime != null) {
-      String dateOnly = fullDateTime.split(' ').first; // Gets "2024-10-19"
+      String dateOnly = fullDateTime.split(' ').first;
 
-      // Optionally, you can also parse it to ensure correct formatting
       try {
         DateTime dateTime = DateTime.parse(fullDateTime);
-        dateOnly = DateFormat('yyyy-MM-dd')
-            .format(dateTime); // Formats it to "yyyy-MM-dd"
+        dateOnly = DateFormat('yyyy-MM-dd').format(dateTime);
       } catch (e) {
-        print('Error parsing date: $e'); // Handle parsing error if any
+        print('Error parsing date: $e');
       }
 
-      dateController.text = dateOnly; // Set the controller text
+      dateController.text = dateOnly;
     } else {
-      dateController.text = ''; // Handle null case
+      dateController.text = '';
     }
   }
 
@@ -257,7 +260,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   bool circular = false;
   bool isValid = true;
   String? selectedTitle;
-  // String? selectedGender;
   String? selectedMaritalStatus;
   String? selectedDocumentType;
   String? selectedSector;
@@ -269,34 +271,9 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   String selectedCountry = 'Ethiopia';
   String? selectedState;
   String? selectedCity;
-
+  String signaturePath = "";
   String? mainBranches;
   List<Map<String, dynamic>> branches1 = [];
-
-  final List<String> currencies = [
-    'USD',
-    'ETB',
-    'EUR',
-    'GBP',
-    'JPY',
-    'AUD',
-    'CAD',
-    'CHF',
-    'CNY',
-    'SEK',
-    'NZD',
-    'INR',
-    'RUB',
-    'ZAR',
-    'BRL',
-    'MXN',
-    'SGD',
-    'HKD',
-    'NOK',
-    'KRW',
-    'TRY',
-  ];
-
   TextEditingController firstNameController = TextEditingController();
   TextEditingController fullNameController = TextEditingController();
   TextEditingController surNameController = TextEditingController();
@@ -321,7 +298,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   TextEditingController photoController = TextEditingController();
   TextEditingController signatureController = TextEditingController();
   TextEditingController dateController = TextEditingController();
-
   TextEditingController legalIDController = TextEditingController();
   TextEditingController issueDateController = TextEditingController();
   TextEditingController expireDateController = TextEditingController();
@@ -335,7 +311,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   String imagepath2 = "";
   String imagepath3 = "";
   String selectedCurrency = 'ETB';
-
   final picker = ImagePicker();
   final picker2 = ImagePicker();
   final picker3 = ImagePicker();
@@ -344,11 +319,9 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   File? profileImageFile;
   var selectedDate;
   var selectedTime;
-
+  String? selectedProductType;
   String initialCountry = 'ET';
   PhoneNumber number = PhoneNumber(isoCode: 'ET');
-
-  // final List<String> genders = ['MALE', 'FEMALE'];
   final List<String> titles = ['MR', 'MS', 'DR'];
   final List<String> maritalStatus = ['Single', 'Married'];
 
@@ -467,230 +440,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     );
   }
 
-  Padding dateOfBirthWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: TextFormField(
-        controller: dateController,
-        onTap: () async {
-          _setDateHandler(context);
-        },
-        decoration: const InputDecoration(
-          hintText: "Date of Birth",
-          hintStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.black,
-          ),
-          prefixIcon: Icon(Icons.date_range),
-          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-          // labelText: "Date of Birth *",
-          labelStyle: TextStyle(fontSize: 15),
-          isDense: true,
-          // contentPadding: EdgeInsets.fromLTRB(
-          //     20, 2, 2, 4), // Adjust the bottom value (40) for spacing
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Padding emailWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: TextFormField(
-        keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(
-          hintText: "Email",
-          labelStyle: TextStyle(fontSize: 5),
-          hintStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.black,
-          ), // Adjust label size
-          isDense: true,
-          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.blue),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.red),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.red),
-          ),
-          prefixIcon: Icon(Icons.email),
-        ),
-        controller: emailController,
-        validator: (value) {
-          if (value != null) {
-            if (!isValid) {
-              return "Email is not valid";
-            }
-          }
-          return null;
-        },
-      ),
-    );
-  }
-
-  Padding monthlyIncomeWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: monthlyIncomeController,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly, // Only allow numbers
-              // LengthLimitingTextInputFormatter(9), // Limit to 9 digits
-            ],
-            decoration: const InputDecoration(
-              hintText: "Monthly Income",
-              hintStyle: const TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-              ),
-              labelStyle: TextStyle(fontSize: 5), // Adjust label size
-              isDense: true, // Makes the text field smaller vertically
-              contentPadding: EdgeInsets.symmetric(
-                  vertical: 8.0, horizontal: 10.0), // Adjust padding as needed
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              prefixIcon: Icon(Icons.trending_up),
-            ),
-            // Dynamic validator based on input value
-          ),
-        ],
-      ),
-    );
-  }
-
-  Padding countryWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: DropdownButtonFormField<String>(
-        value: selectedCountry, // Bind selectedCountry to the value
-        // hint: const Text('Country *'),
-        style: const TextStyle(
-          fontSize: 15,
-          color: Colors.black,
-        ),
-        items: ['Ethiopia'].map((String country) {
-          return DropdownMenuItem<String>(
-            value: country,
-            child: Text(country),
-          );
-        }).toList(),
-        onChanged: null,
-
-        decoration: const InputDecoration(
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          prefixIcon: Icon(Icons.public),
-        ),
-      ),
-    );
-  }
-
-  Padding phoneNumberWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: phoneNumberController,
-            keyboardType: TextInputType.phone,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly, // Only allow numbers
-              LengthLimitingTextInputFormatter(9), // Limit to 9 digits
-            ],
-            decoration: const InputDecoration(
-              hintText: "Phone Number",
-              labelStyle: TextStyle(fontSize: 5),
-              hintStyle: const TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-              ), // Adjust label size
-              isDense: true, // Makes the text field smaller vertically
-              contentPadding: EdgeInsets.symmetric(
-                  vertical: 8.0, horizontal: 10.0), // Adjust padding as needed
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              prefixIcon: Padding(
-                padding: EdgeInsets.all(10.0), // Adjust the padding as needed
-                child: Text(
-                  '+251',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ),
-            ),
-            validator: (value) {
-              // Ensure the user enters exactly 9 digits
-              if (value == null || value.isEmpty) {
-                return 'Phone number is required';
-              } else if (value.length != 9) {
-                return 'Phone number must be 9 digits';
-              }
-              return null;
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   int _activeStepIndex = 0;
 
   @override
@@ -761,18 +510,15 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                             padding: const EdgeInsets.only(
                                 top: 20, left: 25, right: 25),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment
-                                  .spaceBetween, // Custom positioning
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 if (_activeStepIndex > 0)
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: TextButton(
-                                      // onPressed: details.onStepCancel,
                                       onPressed: onStepCancel,
                                       style: TextButton.styleFrom(
-                                        backgroundColor: Colors
-                                            .blue, // Set the background color to blue
+                                        backgroundColor: Colors.blue,
                                       ),
                                       child: const Text(
                                         '     Back     ',
@@ -786,8 +532,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                                   child: TextButton(
                                     onPressed: onStepContinue,
                                     style: TextButton.styleFrom(
-                                      backgroundColor: Colors
-                                          .blue, // Set the background color to blue
+                                      backgroundColor: Colors.blue,
                                     ),
                                     child: Text(
                                       _activeStepIndex == 7
@@ -916,8 +661,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     if (croppedFile != null) {
       // imageCache.clear();
       setState(() {
-        // imageFile = File(croppedFile.path);
-
         if (imageTypes == 'passport') {
           passportPath = croppedFile.path;
         } else if (imageTypes == 'profile') {
@@ -927,9 +670,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         } else if (imageTypes == 'residentCardBack') {
           residentCardBackPath = croppedFile.path;
         } else if (imageTypes == 'signature') {
-          // signatureImagePath = croppedFile.path;
-          // savedSignature = null;
-
           _signatureController1.clear();
           _signatureController2.clear();
           _signatureController3.clear();
@@ -946,13 +686,21 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     }
   }
 
-  Future<Uint8List> _getImageBytes(String path) async {
+  Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
     final imageFile = File(path);
+
     if (await imageFile.exists()) {
-      // throw Exception("File does not exist.");
-      print("file not exist");
+      Uint8List bytes = await imageFile.readAsBytes();
+
+      final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
+      await tempFile.writeAsBytes(bytes);
+
+      print("✅ Saved temporary image at: ${tempFile.path}");
+      return bytes; // Return the image bytes
+    } else {
+      print("❌ File does not exist at: $path");
+      return null;
     }
-    return await imageFile.readAsBytes();
   }
 
   void _clearSignature() {
@@ -961,7 +709,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
 
   void _saveSignature() {}
   bool isStepComplete(int stepIndex) {
-    // print(stepIndex);
     switch (stepIndex) {
       case 0:
         return phoneNumberController.text.isNotEmpty &&
@@ -978,20 +725,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     }
   }
 
-  void _nextStep() {
-    // if (isStepComplete(_activeStepIndex) &&
-    //     globalFormKey.currentState?.validate() == true) {
-    //   setState(() {
-    //     _activeStepIndex += 1;
-    //   });
-    // } else {
-    //   print("Please fill in all required fields before proceeding.");
-    //   // Handle the case where the step is incomplete
-    //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //       content:
-    //           Text('Please fill in all required fields before proceeding.')));
-    // }
-  }
+  void _nextStep() {}
 
   void _previousStep() {
     if (_activeStepIndex > 0) {
@@ -1024,13 +758,41 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       if (_activeStepIndex == 0) {
         await handlefirstStep();
       }
-      if (_activeStepIndex == 1) {}
+      if (_activeStepIndex == 1) {
+        registerStatus = true;
+      }
       if (_activeStepIndex == 2) {}
       if (_activeStepIndex == 3) {}
-      if (_activeStepIndex == 4) {}
-      if (_activeStepIndex == 5) {}
-      if (_activeStepIndex == 6) {}
+      if (_activeStepIndex == 4) {
+        registerStatus = true;
+      }
+      if (_activeStepIndex == 5) {
+        registerStatus = true;
+      }
+      if (_activeStepIndex == 6) {
+        registerStatus = true;
+      }
       if (isLastStep) {
+        var id;
+        if (selectedAccountTypeId != null) {
+          var accountTypeDetails =
+              getAccountTypeDetails(selectedAccountTypeId!);
+
+          id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
+          await submitFormData1();
+        }
+
+        if (id == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please select account type'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            registerStatus = false;
+          }
+        }
         await submitFormData1();
       } else {
         if (registerStatus == true) {
@@ -1050,8 +812,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     switch (_activeStepIndex) {
       case 0:
         isValid = true;
-        print("check emial status");
-        print(emailController.text);
+        registerStatus = true;
         if (emailController.text.isNotEmpty) {
           isValid = EmailValidator.validate(emailController.text);
         }
@@ -1112,308 +873,241 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     );
   }
 
-  Padding reusableTextFormField({
-    required String hintText,
-    required TextEditingController controller,
-    String? errorMessage,
-    IconData? leadingIcon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: const TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-              ),
-              labelStyle: const TextStyle(fontSize: 5),
-              isDense: true,
-              // contentPadding:
-              //     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              enabledBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              errorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              prefixIcon: leadingIcon != null ? Icon(leadingIcon) : null,
-            ),
-            validator: (value) {
-              return errorMessage; // Return the error message if exists
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Padding reusableTextFormField2({
-    required String hintText,
-    required TextEditingController controller,
-    String? errorMessage,
-    IconData? leadingIcon,
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: controller,
-            inputFormatters: inputFormatters,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: const TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-              ),
-              labelStyle: const TextStyle(fontSize: 5),
-              isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              enabledBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              errorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              prefixIcon: leadingIcon != null ? Icon(leadingIcon) : null,
-            ),
-            // Dynamic validator based on input value
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return errorMessage ?? 'This field is required';
-              }
-              if (inputFormatters == null || inputFormatters.isEmpty) {
-                return null;
-              }
-              return null;
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Padding reusableTextFormField1({
-    required String hintText,
-    required TextEditingController controller,
-    String? errorMessage,
-    IconData? leadingIcon,
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: controller,
-            inputFormatters: inputFormatters,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: const TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-              ),
-              labelStyle: const TextStyle(fontSize: 5), // Adjust label size
-              isDense: true, // Makes the text field smaller vertically
-              contentPadding: const EdgeInsets.symmetric(
-                  vertical: 8.0, horizontal: 10.0), // Adjust padding as needed
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              enabledBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              errorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              prefixIcon: leadingIcon != null ? Icon(leadingIcon) : null,
-            ),
-            // Dynamic validator based on input value
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return errorMessage ?? 'This field is required';
-              }
-              if (inputFormatters == null || inputFormatters.isEmpty) {
-                return null; // No validation if there are no input formatters
-              }
-              return null; // Return null if no errors
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> submitFormData1() async {
+    registerStatus = true;
     Uint8List? signatureBytes = await _signatureController.toPngBytes();
     Uint8List? residentBytes;
     Uint8List? residentCardBackBytes;
     Uint8List? profileBytes;
     String phoneNumber = phoneNumberController.text;
 
-    registrationData['fullName'] = fullNameController.text;
-    registrationData['surname'] = surNameController.text;
-    registrationData['motherName'] = motherNameController.text;
-    registrationData['phone'] = '251$phoneNumber';
-    registrationData['email'] = emailController.text;
-    registrationData['sex'] = selectedGender;
-    registrationData['dateOfBirth'] = dateOfBirthController.text;
-    registrationData['city'] = cityController.text;
-    registrationData['country'] = selectedCountry;
-    registrationData['state'] = selectedState;
-    // registrationData['zipCode'] = dateOfBirthController.text;
-    registrationData['streetAddress'] = streetController.text;
-    registrationData['accountType'] = "$selectedAccountTypeValue";
-    registrationData['occupation'] = occupationController.text;
-    registrationData['initialDeposit'] = initialDepositController.text;
-    registrationData['monthlyIncome'] = monthlyIncomeController.text;
-    registrationData['branch'] = selectedBranch;
-    registrationData['currency'] = selectedCurrency;
-    registrationData['signature'] = _combinedSignature;
+    registrationFormData['fullName'] = fullNameController.text;
+    registrationFormData['surname'] = surNameController.text;
+    registrationFormData['motherName'] = motherNameController.text;
+    registrationFormData['phone'] = '251$phoneNumber';
+    registrationFormData['email'] = emailController.text;
+    registrationFormData['sex'] = selectedGender;
+    registrationFormData['dateOfBirth'] = dateOfBirthController.text;
+    registrationFormData['city'] = cityController.text;
+    registrationFormData['country'] = selectedCountry;
+    registrationFormData['state'] = selectedState;
+    registrationFormData['streetAddress'] = streetController.text;
+    registrationFormData['accountType'] = "$selectedAccountTypeValue";
+    registrationFormData['occupation'] = occupationController.text;
+    registrationFormData['initialDeposit'] = initialDepositController.text;
+    registrationFormData['monthlyIncome'] = monthlyIncomeController.text;
+    registrationFormData['branch'] = selectedBranch;
+    registrationFormData['currency'] = selectedCurrency;
+    registrationFormData['signature'] = _combinedSignature;
+    if (isOnline) {
+      registrationData['customerInfo.fullName'] = fullNameController.text;
+      registrationData['customerInfo.surname'] = surNameController.text;
+      registrationData['customerInfo.motherName'] = motherNameController.text;
+      registrationData['customerInfo.hone'] = '251$phoneNumber';
+      registrationData['customerInfo.email'] = emailController.text;
+      registrationData['customerInfo.sex'] = selectedGender;
+      registrationData['customerInfo.dateOfBirth'] = dateOfBirthController.text;
+      registrationData['customerInfo.zoneSubCity'] = cityController.text;
+      registrationData['customerInfo.country'] = selectedCountry;
+      registrationData['customerInfo.state'] = selectedState;
+      // registrationData['zipCode'] = dateOfBirthController.text;
+      registrationData['customerInfo.sreetAddress'] = streetController.text;
+      registrationData['accountType'] = "$selectedAccountTypeValue";
+      registrationData['customerInfo.occupation'] = occupationController.text;
+      registrationData['initialDeposit'] = initialDepositController.text;
+      registrationData['customerInfo.monthlyIncome'] =
+          monthlyIncomeController.text;
+
+      registrationData['customerInfo.issueAuthority'] =
+          issueAuthorityController.text;
+      registrationData['customerInfo.issueDate'] = issueDateController.text;
+      registrationData['customerInfo.expiryDate'] = expireDateController.text;
+      registrationData['customerInfo.documentName'] = selectedDocumentType;
+      registrationData['customerInfo.legalId'] = legalIDController.text;
+      registrationData['branch'] = selectedBranch;
+      registrationData['currency'] = selectedCurrency;
+      registrationData['customerInfo.signature'] = _combinedSignature;
+      if (profilePath.isEmpty) {
+        registrationData['customerInfo.photo'] = null;
+        registrationFormData['photo'] = null;
+        // return;
+      } else if (profilePath.startsWith('data:image/')) {
+        try {
+          final base64Prefix = '${profilePath.split(',')[0]},';
+          profilePath = profilePath.replaceFirst(base64Prefix, '');
+          profileBytes = base64Decode(profilePath);
+          registrationFormData['photo'] = profileBytes;
+          registrationData['customerInfo.photo'] = profileBytes;
+        } catch (e) {
+          print("Error decoding base64 image: $e");
+          return;
+        }
+      } else if (profilePath.startsWith('http') ||
+          profilePath.startsWith('https')) {
+        print("Assigning image URL: $profilePath");
+        registrationFormData['photo'] = profilePath;
+        registrationData['customerInfo.photo'] = profilePath;
+      } else {
+        try {
+          print("Loading image from file: $profilePath");
+          profileBytes = await _getImageBytes(profilePath, "profileimage.png");
+          registrationFormData['photo'] = profileBytes;
+          registrationData['customerInfo.photo'] = profileBytes;
+        } catch (e) {
+          print("Error loading image from file ($profilePath): $e");
+          return;
+        }
+      }
+      if (residentPath.isEmpty) {
+        registrationData['residenceCard'] = null;
+      } else if (residentPath.startsWith('/9j/') ||
+          residentPath.startsWith('data:image/jpeg;base64,')) {
+        try {
+          if (residentPath.startsWith('data:image/jpeg;base64,')) {
+            residentPath =
+                residentPath.replaceFirst('data:image/jpeg;base64,', '');
+          }
+          residentBytes = base64Decode(residentPath);
+          registrationFormData['residenceCard'] = residentBytes;
+          registrationData['residenceCard'] = residentBytes;
+        } catch (e) {
+          print("Error decoding base64 image: $e");
+          return;
+        }
+      } else if (residentPath.startsWith('http') ||
+          residentPath.startsWith('https')) {
+        registrationData['customerInfo.residenceCard'] = residentPath;
+        registrationFormData['residenceCard'] = residentPath;
+      } else {
+        try {
+          residentBytes =
+              await _getImageBytes(residentPath, "residentCard.png");
+          registrationFormData['residenceCard'] = residentBytes;
+          registrationData['customerInfo.residenceCard'] = residentBytes;
+        } catch (e) {
+          print("Error loading image from file: $e");
+          return;
+        }
+      }
+      registrationData['formCompleted'] = "true";
+      registrationData['status'] = 'UNSETTLED';
+      registrationData["percentageCompleted"] = 100;
+    } else {
+      registrationData['fullName'] = fullNameController.text;
+      registrationData['surname'] = surNameController.text;
+      registrationData['motherName'] = motherNameController.text;
+      registrationData['phone'] = '251$phoneNumber';
+      registrationData['email'] = emailController.text;
+      registrationData['sex'] = selectedGender;
+      registrationData['dateOfBirth'] = dateOfBirthController.text;
+      registrationData['city'] = cityController.text;
+      registrationData['country'] = selectedCountry;
+      registrationData['state'] = selectedState;
+      registrationData['streetAddress'] = streetController.text;
+      registrationData['accountType'] = "$selectedAccountTypeValue";
+      registrationData['occupation'] = occupationController.text;
+      registrationData['initialDeposit'] = initialDepositController.text;
+      registrationData['monthlyIncome'] = monthlyIncomeController.text;
+      registrationData['branch'] = selectedBranch;
+      registrationData['currency'] = selectedCurrency;
+      registrationData['signature'] = _combinedSignature;
 //PROFILE PHOTO
-    if (profilePath.isEmpty) {
-      registrationData['photo'] = null;
-    } else if (profilePath.startsWith('/9j/') ||
-        profilePath.startsWith('data:image/jpeg;base64,')) {
-      try {
-        if (profilePath.startsWith('data:image/jpeg;base64,')) {
-          profilePath = profilePath.replaceFirst('data:image/jpeg;base64,', '');
+      if (profilePath.isEmpty) {
+        registrationData['photo'] = null;
+      } else if (profilePath.startsWith('/9j/') ||
+          profilePath.startsWith('data:image/jpeg;base64,')) {
+        try {
+          if (profilePath.startsWith('data:image/jpeg;base64,')) {
+            profilePath =
+                profilePath.replaceFirst('data:image/jpeg;base64,', '');
+          }
+          profileBytes = base64Decode(profilePath);
+          registrationData['photo'] = profileBytes;
+        } catch (e) {
+          print("Error decoding base64 image: $e");
+          return;
         }
-        profileBytes = base64Decode(profilePath);
-        registrationData['photo'] = profileBytes;
-      } catch (e) {
-        print("Error decoding base64 image: $e");
-        return;
+      } else if (profilePath.startsWith('http') ||
+          profilePath.startsWith('https')) {
+        registrationData['photo'] = profilePath;
+      } else {
+        try {
+          profileBytes = await _getImageBytes(profilePath, "profilePhoto.png");
+          registrationData['photo'] = profileBytes;
+        } catch (e) {
+          print("Error loading image from file: $e");
+          return;
+        }
       }
-    } else if (profilePath.startsWith('http') ||
-        profilePath.startsWith('https')) {
-      registrationData['photo'] = profilePath;
-    } else {
-      try {
-        profileBytes = await _getImageBytes(profilePath);
-        registrationData['photo'] = profileBytes;
-      } catch (e) {
-        print("Error loading image from file: $e");
-        return;
-      }
-    }
 
-    /////RESIDENT CARD
-    if (residentPath.isEmpty) {
-      registrationData['residenceCard'] = null;
-    } else if (residentPath.startsWith('/9j/') ||
-        residentPath.startsWith('data:image/jpeg;base64,')) {
-      try {
-        if (residentPath.startsWith('data:image/jpeg;base64,')) {
-          residentPath =
-              residentPath.replaceFirst('data:image/jpeg;base64,', '');
+      /////RESIDENT CARD
+      if (residentPath.isEmpty) {
+        registrationData['residenceCard'] = null;
+      } else if (residentPath.startsWith('/9j/') ||
+          residentPath.startsWith('data:image/jpeg;base64,')) {
+        try {
+          if (residentPath.startsWith('data:image/jpeg;base64,')) {
+            residentPath =
+                residentPath.replaceFirst('data:image/jpeg;base64,', '');
+          }
+          residentBytes = base64Decode(residentPath);
+          registrationData['residenceCard'] = residentBytes;
+        } catch (e) {
+          print("Error decoding base64 image: $e");
+          return;
         }
-        residentBytes = base64Decode(residentPath);
-        registrationData['residenceCard'] = residentBytes;
-      } catch (e) {
-        print("Error decoding base64 image: $e");
-        return;
-      }
-    } else if (residentPath.startsWith('http') ||
-        residentPath.startsWith('https')) {
-      registrationData['residenceCard'] = residentPath;
-    } else {
-      try {
-        residentBytes = await _getImageBytes(residentPath);
-        registrationData['residenceCard'] = residentBytes;
-      } catch (e) {
-        print("Error loading image from file: $e");
-        return;
-      }
-    }
-
-    if (residentCardBackPath.isEmpty) {
-      registrationData['residenceCardBack'] = null;
-    } else if (residentCardBackPath.startsWith('/9j/') ||
-        residentCardBackPath.startsWith('data:image/jpeg;base64,')) {
-      try {
-        if (residentCardBackPath.startsWith('data:image/jpeg;base64,')) {
-          residentCardBackPath =
-              residentCardBackPath.replaceFirst('data:image/jpeg;base64,', '');
+      } else if (residentPath.startsWith('http') ||
+          residentPath.startsWith('https')) {
+        registrationData['residenceCard'] = residentPath;
+      } else {
+        try {
+          residentBytes =
+              await _getImageBytes(residentPath, "residentcard.png");
+          registrationData['residenceCard'] = residentBytes;
+        } catch (e) {
+          print("Error loading image from file: $e");
+          return;
         }
-        residentCardBackBytes = base64Decode(residentCardBackPath);
-        registrationData['residenceCardBack'] = residentCardBackBytes;
-      } catch (e) {
-        print("Error decoding base64 image: $e");
-        return;
       }
-    } else if (residentCardBackPath.startsWith('http') ||
-        residentCardBackPath.startsWith('https')) {
-      registrationData['residenceCardBack'] = residentCardBackPath;
-    } else {
-      try {
-        residentCardBackBytes = await _getImageBytes(residentCardBackPath);
-        registrationData['residenceCardBack'] = residentCardBackBytes;
-      } catch (e) {
-        print("Error loading image from file: $e");
-        return;
+      if (residentCardBackPath.isEmpty) {
+        registrationData['residenceCardBack'] = null;
+      } else if (residentCardBackPath.startsWith('/9j/') ||
+          residentCardBackPath.startsWith('data:image/jpeg;base64,')) {
+        try {
+          if (residentCardBackPath.startsWith('data:image/jpeg;base64,')) {
+            residentCardBackPath = residentCardBackPath.replaceFirst(
+                'data:image/jpeg;base64,', '');
+          }
+          residentCardBackBytes = base64Decode(residentCardBackPath);
+          registrationData['residenceCardBack'] = residentCardBackBytes;
+        } catch (e) {
+          print("Error decoding base64 image: $e");
+          return;
+        }
+      } else if (residentCardBackPath.startsWith('http') ||
+          residentCardBackPath.startsWith('https')) {
+        registrationData['residenceCardBack'] = residentCardBackPath;
+      } else {
+        try {
+          residentCardBackBytes = await _getImageBytes(
+              residentCardBackPath, "residentcardback.png");
+          registrationData['residenceCardBack'] = residentCardBackBytes;
+        } catch (e) {
+          print("Error loading image from file: $e");
+          return;
+        }
       }
+      registrationData['formCompleted'] = "true";
+      registrationData['status'] = 'UNSETTLED';
+      registrationData["percentageCompleted"] = 100;
     }
-    registrationData['formCompleted'] = "true";
-    registrationData['status'] = 'UNSETTLED';
-    registrationData["percentageCompleted"] = 100;
 
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ConfirmationPage(
+        builder: (context) => UpdateConfirmationPage(
             registrationData: registrationData,
+            registrationFormData: registrationFormData,
             userId: '$idOne',
             className: "update"),
       ),
@@ -1421,15 +1115,12 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
 
     if (result != null) {
       setState(() async {
-        await Future.delayed(
-            const Duration(milliseconds: 100)); // Optional delay
+        await Future.delayed(const Duration(milliseconds: 100));
         FocusScope.of(context).unfocus();
         userId = result;
       });
     }
   }
-
-  // Load JSON data from the asset
 
   Future<void> fetchToken() async {
     String? token = await storage.read(key: "token");
@@ -1485,25 +1176,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextLabel("Customer Type"),
-              ReusableDropdown(
-                selectedValue: selectedCustomerType,
-
-                items: ListContants.customerType,
-                hintText: 'Select Customer Type',
-                onChanged: (newStatus) {
-                  setState(() {
-                    selectedCustomerType = newStatus!;
-                  });
-                },
-                prefixIcon: selectedCustomerType == 'INDIVIDUAL' ||
-                        selectedCustomerType == 'DIASPORA'
-                    ? Icons.person
-                    : Icons.business,
-                errorMessage:
-                    'Please select a customer Type ', // Pass the custom error message
-                isRequired: false, // Make the field required
-              ),
               TextLabel("PhoneNumber"),
               PhoneNumberWidget(phoneNumberController: phoneNumberController),
               TextLabel("Email"),
@@ -1538,8 +1210,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                   });
                 },
                 prefixIcon: Icons.document_scanner,
-                errorMessage:
-                    'Please select a Document  type', // Pass the custom error message
+                errorMessage: 'Please select a Document  type',
                 isRequired: true, // Make the field required
               ),
               const SizedBox(
@@ -1570,7 +1241,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 isRequired: false,
               ),
               TextLabel("Signature"),
-              // signatureWidget1(context),
               signatureCard(),
               signaturePadSelection(),
             ],
@@ -1603,32 +1273,12 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextLabel("Sector"),
-              ReusableDropdown(
-                selectedValue: selectedSector,
-                items: ListContants.sectors,
-                hintText: 'Select Sector',
-                onChanged: (newStatus) {
-                  setState(() {
-                    selectedSector = newStatus!;
-                  });
-                },
-                prefixIcon: Icons.category,
-                errorMessage:
-                    'Please select a Sector status', // Pass the custom error message
-                isRequired: true, // Make the field required
-              ),
               TextLabel("Occupation "),
               ReusableTextFormField(
                 hintText: "Enter Occupation",
                 controller: occupationController,
-                // keyboardType: TextInputType.number,
                 errorMessage: "Occupation cannot be empty",
                 leadingIcon: Icons.work,
-                // return '';
-                // inputFormatters: [
-                //   FilteringTextInputFormatter.digitsOnly, // Only allow numbers
-                // ],
                 isRequired: true,
               ),
               TextLabel("Monthly Income"),
@@ -1657,11 +1307,11 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 ],
                 isRequired: true,
               ),
-              TextLabel("Payment Method"),
-              PaymentMethodWidget(
-                initialDepositController: initialDepositController,
-                phoneNumberController: phoneNumberController,
-              ),
+              // TextLabel("Payment Method"),
+              // PaymentMethodWidget(
+              //   initialDepositController: initialDepositController,
+              //   phoneNumberController: phoneNumberController,
+              // ),
               // TextLabel("Occupation"),
               // reusableTextFormField(
               //   hintText: "Occupation",
@@ -1736,16 +1386,11 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 isRequired: false,
               ),
 
-              if (selectedCustomerType == 'INDIVIDUAL')
-                TextLabel("Date of Birth"),
-              if (selectedCustomerType == 'ORGANIZATION')
-                TextLabel("Date of Estabilishment"),
+              TextLabel("Date of Birth"),
 
               DatePickerField(
                 controller: dateOfBirthController,
-                hintText: (selectedCustomerType == 'INDIVIDUAL')
-                    ? 'Date of Birth'
-                    : "Date of Establishment",
+                hintText: "Date of Birth",
                 prefixIcon: Icons.date_range,
                 initialDate: DateTime.now().add(const Duration(days: -10000)),
                 firstDate: DateTime(1940),
@@ -1754,55 +1399,25 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 errorMessage: 'Please select a date of birth',
               ),
 
-              // dateOfBirthWidget(),
-              if (selectedCustomerType == 'INDIVIDUAL')
-                TextLabel("Marital Status"),
-              if (selectedCustomerType == 'INDIVIDUAL')
-                ReusableDropdown(
-                  selectedValue: selectedMaritalStatus,
-                  items: ListContants.maritalStatuses,
-                  hintText: 'Select Marital Status',
-                  onChanged: (newStatus) {
-                    setState(() {
-                      selectedMaritalStatus = newStatus!;
-                    });
-                  },
-                  prefixIcon: Icons.family_restroom,
-                  errorMessage:
-                      'Please select a marital status', // Pass the custom error message
-                  isRequired: false, // Make the field required
-                ),
-              if (selectedCustomerType == 'INDIVIDUAL') TextLabel("Gender"),
+              TextLabel("Marital Status"),
+
+              ReusableDropdown(
+                selectedValue: selectedMaritalStatus,
+                items: ListContants.maritalStatuses,
+                hintText: 'Select Marital Status',
+                onChanged: (newStatus) {
+                  setState(() {
+                    selectedMaritalStatus = newStatus!;
+                  });
+                },
+                prefixIcon: Icons.family_restroom,
+                errorMessage:
+                    'Please select a marital status', // Pass the custom error message
+                isRequired: false, // Make the field required
+              ),
+              TextLabel("Gender"),
               //Gender
-              if (selectedCustomerType == 'INDIVIDUAL') genderWidget1(),
-
-              // TextLabel("Full Name"),
-              // reusableTextFormField1(
-              //   hintText: "Full Name",
-              //   controller: fullNameController,
-              //   errorMessage: "Full Name cannot be empty",
-              //   leadingIcon: Icons.person,
-              // ),
-              // TextLabel("SurName"),
-              // reusableTextFormField1(
-              //   hintText: "SurName",
-              //   controller: surNameController,
-              //   errorMessage: "SurName cannot be empty",
-              //   leadingIcon: Icons.person,
-              // ),
-
-              // TextLabel("Mother Name"),
-              // reusableTextFormField(
-              //   hintText: "Mother Name",
-              //   controller: motherNameController,
-              //   // errorMessage: "Mother Name cannot be empty",
-              //   leadingIcon: Icons.person,
-              // ),
-              // TextLabel("Date of Birth"),
-              // dateOfBirthWidget(),
-              // TextLabel("Gender"),
-              // //Gender
-              // genderWidget1(),
+              genderWidget1(),
             ],
           ),
         ),
@@ -1832,7 +1447,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                   prefixIcon: Icons.map,
                   isRequired: false,
                 ),
-
                 TextLabel("Zone Subcity"),
                 ReusableTextFormField(
                   hintText: "Zone Subcity",
@@ -1842,7 +1456,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                   leadingIcon: Icons.location_city,
                   isRequired: false,
                 ),
-
                 TextLabel("Woreda"),
                 ReusableTextFormField(
                   hintText: "Woreda",
@@ -1852,27 +1465,22 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                   leadingIcon: Icons.location_city,
                   isRequired: false,
                 ),
-
                 TextLabel("Legal ID"),
                 ReusableTextFormField(
                   hintText: "Legal ID",
                   controller: legalIDController,
-                  // keyboardType: TextInputType.number,
                   errorMessage: "Legal ID cannot be empty",
                   leadingIcon: Icons.badge,
                   isRequired: false,
                 ),
                 TextLabel("ISSUE AUTHORITY"),
-
                 ReusableTextFormField(
                   hintText: "ISSUE AUTHORITY",
                   controller: issueAuthorityController,
-                  // keyboardType: TextInputType.number,
                   errorMessage: "ISSUE AUTHORITY cannot be empty",
                   leadingIcon: Icons.verified,
                   isRequired: false,
                 ),
-
                 TextLabel("ISSUE DATE"),
                 DatePickerField(
                   controller: issueDateController,
@@ -1885,7 +1493,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                   isRequired: false,
                   errorMessage: 'Please select an issue date',
                 ),
-
                 TextLabel("EXPIRY DATE"),
                 DatePickerField(
                   controller: expireDateController,
@@ -1897,35 +1504,8 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                   isRequired: false,
                   errorMessage: 'Please select an expire date',
                 ),
-                // TextLabel("Country"),
-                // countryWidget(),
-                // TextLabel("State"),
-                // stateWidget(),
-                // TextLabel("City"),
-                // reusableTextFormField1(
-                //   hintText: "City",
-                //   controller: cityController,
-                //   errorMessage: "City cannot be empty",
-                //   leadingIcon: Icons.location_city,
-                // ),
-                // TextLabel("StreetAddress"),
-                // reusableTextFormField1(
-                //   hintText: "StreetAddress",
-                //   controller: streetController,
-                //   errorMessage: "StreetAddress cannot be empty",
-                //   leadingIcon: Icons.location_city,
-                // ),
-                // TextLabel("ZipCode"),
-                // reusableTextFormField(
-                //   hintText: "ZipCode",
-                //   controller: zipCodeController,
-                //   keyboardType: TextInputType.number,
-                //   leadingIcon: Icons.code,
-                // ),
               ],
-            )
-            //signatureWidget(),
-            ),
+            )),
       ),
 
       /// INITIAL AMOUNT
@@ -1939,58 +1519,33 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Account Type',
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.start,
-                ),
                 const SizedBox(
                   height: 20,
                 ),
+                TextLabel("Product Type"),
+                ReusableDropdown(
+                  selectedValue: selectedProductType,
+                  items: ListContants.productType,
+                  hintText: 'Select Product Type',
+                  onChanged: (newStatus) {
+                    setState(() {
+                      selectedProductType = newStatus;
+                      selectedAccountTypeId = null;
+                    });
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: ['Conventional', 'Alhuda'].map((bankingType) {
-                    bool isSelected = selectedBankingType == bankingType;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedBankingType = bankingType;
-                          _filterAccountTypes(
-                              bankingType); // Filter account types based on selected banking type
-                          // selectedAccountTypeId =
-                          //     null; // Reset account type selection
-                        });
-                      },
-                      child: Card(
-                        color: isSelected ? Colors.blue : Colors.white,
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 20),
-                          child: Text(
-                            bankingType,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                    if (selectedProductType != null) {
+                      print("Gemechuuu");
+
+                      setState(() {
+                        _filterAccountTypes(selectedProductType!);
+                      });
+                    }
+                  },
+                  prefixIcon: Icons.business,
+                  errorMessage: 'Please select a product type',
+                  isRequired: true,
                 ),
-
-// Account Type List with Cards
-                // TextLabel("Account Type"),
+                TextLabel("Account Type"),
                 Padding(
                   padding: const EdgeInsets.only(left: 15, right: 15),
                   child: Column(
@@ -2103,263 +1658,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       ),
     );
   }
-
-  // Column idCardPhoto() {
-  //   return Column(
-  //     mainAxisAlignment: MainAxisAlignment.start,
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Padding(
-  //         padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
-  //         child: Text(
-  //           "Front Photo of  ${selectedIdType.replaceAll('_', ' ')}  ",
-  //           style: const TextStyle(
-  //             fontSize: 13,
-  //             fontWeight: FontWeight.bold,
-  //           ),
-  //         ),
-  //       ),
-  //       Center(
-  //         child: Column(
-  //           children: [
-  //             const SizedBox(height: 20.0),
-  //             Container(
-  //               height: 150.0,
-  //               width: MediaQuery.of(context).size.width * 0.8,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.white,
-  //                 borderRadius: BorderRadius.circular(20.0),
-  //                 boxShadow: [
-  //                   BoxShadow(
-  //                     color: Colors.black.withOpacity(0.1),
-  //                     blurRadius: 10,
-  //                     offset: const Offset(0, 5),
-  //                   ),
-  //                 ],
-  //               ),
-  //               child: residentPath.isEmpty
-  //                   ? Column(
-  //                       mainAxisAlignment: MainAxisAlignment.center,
-  //                       children: [
-  //                         const Icon(
-  //                           Icons.add_a_photo,
-  //                           color: Colors.black,
-  //                           size: 50.0,
-  //                         ),
-  //                         const SizedBox(height: 5.0),
-  //                         Text(
-  //                           'Upload or Take Front Photo of ${selectedIdType.replaceAll('_', ' ')} ',
-  //                           textAlign: TextAlign.center,
-  //                           style: const TextStyle(
-  //                             fontSize: 12.0,
-  //                             color: Colors.black,
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     )
-  //                   : (residentPath.startsWith('http')
-  //                       ? Image.network(
-  //                           residentPath,
-  //                           height: 180.0,
-  //                           width: MediaQuery.of(context).size.width * 0.7,
-  //                           fit: BoxFit.fill,
-  //                         )
-  //                       : (residentPath.startsWith('/9j/')
-  //                           ? Image.memory(
-  //                               base64Decode(residentPath),
-  //                               height: 180.0,
-  //                               width: MediaQuery.of(context).size.width * 0.7,
-  //                               fit: BoxFit.fill,
-  //                             )
-  //                           : ClipRRect(
-  //                               borderRadius: BorderRadius.circular(20.0),
-  //                               child: Image.file(
-  //                                 File(
-  //                                     residentPath), // Use the file path if it's not base64
-  //                                 height: 190.0,
-  //                                 width:
-  //                                     MediaQuery.of(context).size.width * 0.7,
-  //                                 fit: BoxFit.fill,
-  //                               ),
-  //                             ))),
-  //             ),
-  //             const SizedBox(height: 20.0),
-  //             ElevatedButton.icon(
-  //               onPressed: () async {
-  //                 _imgFromGallery("resident");
-  //               },
-  //               icon: const Icon(Icons.photo_library),
-  //               label: const Text('Upload from Gallery'),
-  //               style: ElevatedButton.styleFrom(
-  //                 foregroundColor: Colors.white,
-  //                 backgroundColor: Colors.black,
-  //                 shape: RoundedRectangleBorder(
-  //                   borderRadius: BorderRadius.circular(20.0),
-  //                 ),
-  //                 textStyle: const TextStyle(
-  //                   fontSize: 13.0,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-  //             ElevatedButton.icon(
-  //               onPressed: () async {
-  //                 _imgFromCamera("resident");
-  //               },
-  //               icon: const Icon(Icons.camera_alt),
-  //               label: const Text('Take a Photo'),
-  //               style: ElevatedButton.styleFrom(
-  //                 foregroundColor: Colors.white,
-  //                 backgroundColor: Colors.black,
-  //                 padding: const EdgeInsets.symmetric(
-  //                   vertical: 8.0,
-  //                   horizontal: 17.0,
-  //                 ),
-  //                 shape: RoundedRectangleBorder(
-  //                   borderRadius: BorderRadius.circular(20.0),
-  //                 ),
-  //                 textStyle: const TextStyle(
-  //                   fontSize: 14.0,
-  //                   color: Colors.black,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //       const SizedBox(
-  //         height: 10,
-  //       ),
-  //       Padding(
-  //         padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
-  //         child: Text(
-  //           "Back Photo of ${selectedIdType.replaceAll('_', ' ')}",
-  //           style: const TextStyle(
-  //             fontSize: 13,
-  //             fontWeight: FontWeight.bold,
-  //           ),
-  //         ),
-  //       ),
-  //       Center(
-  //         child: Column(
-  //           children: [
-  //             const SizedBox(height: 20.0),
-  //             Container(
-  //               height: 150.0,
-  //               width: MediaQuery.of(context).size.width * 0.8,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.white,
-  //                 borderRadius: BorderRadius.circular(20.0),
-  //                 boxShadow: [
-  //                   BoxShadow(
-  //                     color: Colors.black.withOpacity(0.1),
-  //                     blurRadius: 10,
-  //                     offset: const Offset(0, 5),
-  //                   ),
-  //                 ],
-  //               ),
-  //               child: residentCardBackPath.isEmpty
-  //                   ? Column(
-  //                       mainAxisAlignment: MainAxisAlignment.center,
-  //                       children: [
-  //                         const Icon(
-  //                           Icons.add_a_photo,
-  //                           color: Colors.black,
-  //                           size: 50.0,
-  //                         ),
-  //                         const SizedBox(height: 5.0),
-  //                         Text(
-  //                           'Upload or Take Back Photo of  ${selectedIdType.replaceAll('_', ' ')} ',
-  //                           textAlign: TextAlign.center,
-  //                           style: const TextStyle(
-  //                             fontSize: 12.0,
-  //                             color: Colors.black,
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     )
-  //                   : (residentCardBackPath.startsWith('http')
-  //                       ? Image.network(
-  //                           residentCardBackPath,
-  //                           height: 180.0,
-  //                           width: MediaQuery.of(context).size.width * 0.7,
-  //                           fit: BoxFit.fill,
-  //                         )
-  //                       : (residentCardBackPath.startsWith('/9j/')
-  //                           ? Image.memory(
-  //                               base64Decode(residentCardBackPath),
-  //                               height: 180.0,
-  //                               width: MediaQuery.of(context).size.width * 0.7,
-  //                               fit: BoxFit.fill,
-  //                             )
-  //                           : ClipRRect(
-  //                               borderRadius: BorderRadius.circular(20.0),
-  //                               child: Image.file(
-  //                                 File(
-  //                                     residentCardBackPath), // Use the file path if it's not base64
-  //                                 height: 190.0,
-  //                                 width:
-  //                                     MediaQuery.of(context).size.width * 0.7,
-  //                                 fit: BoxFit.fill,
-  //                               ),
-  //                             ))),
-  //             ),
-  //             const SizedBox(height: 20.0),
-  //             ElevatedButton.icon(
-  //               onPressed: () async {
-  //                 _imgFromGallery("residentCardBack");
-  //               },
-  //               icon: const Icon(Icons.photo_library),
-  //               label: const Text('Upload from Gallery'),
-  //               style: ElevatedButton.styleFrom(
-  //                 foregroundColor: Colors.white,
-  //                 backgroundColor: Colors.black,
-  //                 padding: const EdgeInsets.symmetric(
-  //                   vertical: 5.0,
-  //                   horizontal: 21.0,
-  //                 ),
-  //                 shape: RoundedRectangleBorder(
-  //                   borderRadius: BorderRadius.circular(20.0),
-  //                 ),
-  //                 textStyle: const TextStyle(
-  //                   fontSize: 13.0,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-  //             ElevatedButton.icon(
-  //               onPressed: () async {
-  //                 _imgFromCamera("passport");
-  //               },
-  //               icon: const Icon(Icons.camera_alt),
-  //               label: const Text('Take a Photo'),
-  //               style: ElevatedButton.styleFrom(
-  //                 foregroundColor: Colors.white,
-  //                 backgroundColor: Colors.black,
-  //                 padding: const EdgeInsets.symmetric(
-  //                   vertical: 8.0,
-  //                   horizontal: 17.0,
-  //                 ),
-  //                 shape: RoundedRectangleBorder(
-  //                   borderRadius: BorderRadius.circular(20.0),
-  //                 ),
-  //                 textStyle: const TextStyle(
-  //                   fontSize: 14.0,
-  //                   color: Colors.black,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //       const SizedBox(
-  //         height: 40,
-  //       )
-  //     ],
-  //   );
-  // }
 
   Column idCardPhoto() {
     return Column(
@@ -2529,342 +1827,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       ],
     );
   }
-
-  Padding paymentMethod() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        children: [
-          // Payment Method Dropdown
-          DropdownButtonFormField<String>(
-            value: selectedPaymentMethod,
-            hint: const Text(
-              'Select Payment Method',
-              style: TextStyle(fontSize: 13, color: Colors.black),
-            ),
-            items: ['Cash', 'Transfer'].map((String method) {
-              return DropdownMenuItem<String>(
-                value: method,
-                child: Text(method),
-              );
-            }).toList(),
-            onChanged: (String? newMethod) {
-              setState(() {
-                selectedPaymentMethod = newMethod;
-                isBankTransferSelected = newMethod == 'Transfer';
-                isBankTransferIconClicked = false; // Reset icon click state
-              });
-            },
-            validator: (String? value) {
-              if (value == null) {
-                return 'Please select a payment method';
-              }
-              return null;
-            },
-            decoration: const InputDecoration(
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              prefixIcon: Icon(Icons.payment),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          if (isBankTransferSelected)
-            Column(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isBankTransferIconClicked =
-                          !isBankTransferIconClicked; // Toggle fields visibility
-                    });
-                  },
-                  child: Image.asset(
-                    'assets/ebirr.png',
-                    height: 50,
-                    width: 50,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                if (isBankTransferIconClicked) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-                    child: TextFormField(
-                      controller: phoneNumberController,
-                      inputFormatters: [
-                        FilteringTextInputFormatter
-                            .digitsOnly, // Only allow numbers
-                        LengthLimitingTextInputFormatter(9),
-                      ],
-                      decoration: const InputDecoration(
-                        isDense: true,
-
-                        hintText: "Phone Number",
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: 5.0,
-                            horizontal: 10.0), // Adjust padding as needed
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.black),
-                        ),
-
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.blue),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.red),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.red),
-                        ),
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.all(10.0),
-                          child: Text(
-                            '+251',
-                            style: TextStyle(color: Colors.black, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the phone number';
-                        } else if (value.length != 9) {
-                          return 'Phone number must be 9 digits';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          phoneNumber = value;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-                    child: TextFormField(
-                      readOnly: true,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      controller: initialDepositController,
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: 8.0, horizontal: 10.0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                        ),
-                        isDense: true,
-                        hintText: "Amount",
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.black),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.blue),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.red),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: Colors.red),
-                        ),
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(top: 10, left: 3),
-                          child: Text('ETB', style: TextStyle(fontSize: 14)),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the amount';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          amount = value;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        print("Phone Number: $phoneNumber, Amount: $amount");
-                      },
-                      child: Text('Send'),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.blue, // White text
-                        padding: const EdgeInsets.symmetric(vertical: 14.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  // Column personalPhoto() {
-  //   return Column(
-  //     children: [
-  //       Center(
-  //         child: Column(
-  //           children: [
-  //             const SizedBox(height: 10.0),
-  //             Container(
-  //               height: 150.0,
-  //               width: MediaQuery.of(context).size.width * 0.8,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.white,
-  //                 borderRadius: BorderRadius.circular(20.0),
-  //                 boxShadow: [
-  //                   BoxShadow(
-  //                     color: Colors.black.withOpacity(0.1),
-  //                     blurRadius: 10,
-  //                     offset: const Offset(0, 5),
-  //                   ),
-  //                 ],
-  //               ),
-  //               child: profilePath.isEmpty
-  //                   ? const Column(
-  //                       mainAxisAlignment: MainAxisAlignment.center,
-  //                       children: [
-  //                         Icon(
-  //                           Icons.add_a_photo,
-  //                           color: Colors.black,
-  //                           size: 50.0,
-  //                         ),
-  //                         SizedBox(height: 5.0),
-  //                         Text(
-  //                           'Upload or Take a Photo ',
-  //                           style: TextStyle(
-  //                             fontSize: 17.0,
-  //                             color: Colors.black,
-  //                           ),
-  //                         ),
-  //                       ],
-  //                     )
-  //                   : (profilePath.startsWith('http') ||
-  //                           profilePath.startsWith('https')
-  //                       ? Image.network(
-  //                           profilePath,
-  //                           height: 180.0,
-  //                           width: MediaQuery.of(context).size.width * 0.7,
-  //                           fit: BoxFit.fill,
-  //                         )
-  //                       : (profilePath.startsWith('/9j/')
-  //                           ? Image.memory(
-  //                               base64Decode(profilePath),
-  //                               height: 180.0,
-  //                               width: MediaQuery.of(context).size.width * 0.7,
-  //                               fit: BoxFit.fill,
-  //                             )
-  //                           : ClipRRect(
-  //                               borderRadius: BorderRadius.circular(20.0),
-  //                               child: Image.file(
-  //                                 File(
-  //                                     profilePath), // Use the file path if it's not base64
-  //                                 height: 190.0,
-  //                                 width:
-  //                                     MediaQuery.of(context).size.width * 0.7,
-  //                                 fit: BoxFit.fill,
-  //                               ),
-  //                             ))),
-  //               // : ClipRRect(
-  //               //     borderRadius: BorderRadius.circular(20.0),
-  //               //     child: Image.file(
-  //               //       File(profilePath),
-  //               //       height: 180.0,
-  //               //       width: MediaQuery.of(context).size.width * 0.7,
-  //               //       fit: BoxFit.cover, // Use cover for better fit
-  //               //     ),
-  //               //   ),
-  //             ),
-
-  //             const SizedBox(height: 20.0),
-
-  //             // Button to upload from gallery
-  //             ElevatedButton.icon(
-  //               onPressed: () async {
-  //                 _imgFromGallery("profile");
-  //               },
-  //               icon: const Icon(Icons.photo_library),
-  //               label: const Text('Upload from Gallery'),
-  //               style: ElevatedButton.styleFrom(
-  //                 foregroundColor: Colors.white,
-  //                 backgroundColor: Colors.black,
-  //                 padding: const EdgeInsets.symmetric(
-  //                   vertical: 5.0,
-  //                   horizontal: 21.0,
-  //                 ),
-  //                 shape: RoundedRectangleBorder(
-  //                   borderRadius: BorderRadius.circular(20.0),
-  //                 ),
-  //                 textStyle: const TextStyle(
-  //                   fontSize: 13.0,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-
-  //             ElevatedButton.icon(
-  //               onPressed: () async {
-  //                 _imgFromCamera("profile");
-  //                 // _pickImage(
-  //                 //     ImageSource.camera); // Take a photo with camera
-  //               },
-  //               icon: const Icon(Icons.camera_alt),
-  //               label: const Text('Take a Photo'),
-  //               style: ElevatedButton.styleFrom(
-  //                 foregroundColor: Colors.white,
-  //                 backgroundColor: Colors.black,
-  //                 padding: const EdgeInsets.symmetric(
-  //                   vertical: 8.0,
-  //                   horizontal: 17.0,
-  //                 ),
-  //                 shape: RoundedRectangleBorder(
-  //                   borderRadius: BorderRadius.circular(20.0),
-  //                 ),
-  //                 textStyle: const TextStyle(
-  //                   fontSize: 14.0,
-  //                   color: Colors.black,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //       const SizedBox(
-  //         height: 40,
-  //       )
-  //     ],
-  //   );
-  // }
 
   Column personalPhoto() {
     return Column(
@@ -3046,55 +2008,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     );
   }
 
-// Call API and update controllers
-  Future<void> callApiAndUpdateControllers(Uint8List residentBytes) async {
-    try {
-      // API endpoint
-      final url = Uri.parse('http://192.168.137.172:5000/process_id');
-
-      // Prepare multipart request
-      final request = http.MultipartRequest('POST', url);
-
-      // Add the residentBytes as an image file
-      request.files.add(http.MultipartFile.fromBytes(
-        'image', // Field name in the API
-        residentBytes,
-        filename: 'residence_card.png', // Optional: Provide a filename
-        contentType: MediaType('image', 'png'), // Set the appropriate MIME type
-      ));
-
-      // Send the multipart request
-      final response = await request.send();
-
-      if (response.statusCode == 200) {
-        // Parse the response JSON
-        final responseData = await response.stream.bytesToString();
-        final data = jsonDecode(responseData);
-
-        // Update TextEditingControllers
-        setState(() {
-          fullNameController.text =
-              '${data['first_name']} ${data['middle_name']}';
-          surNameController.text = data['surname'];
-          String formattedDate = "";
-          if (data['date_of_birth'] != null) {
-            DateTime parsedDate = DateTime.parse(data['date_of_birth']);
-            formattedDate = DateFormat('yyyy-MM-dd')
-                .format(parsedDate); // Change to '-' separator
-          }
-          selectedGender = data['gender'].toUpperCase();
-          dateController.text = formattedDate;
-        });
-
-        print("Controllers updated successfully");
-      } else {
-        print("Failed to call API: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error calling API: $e");
-    }
-  }
-
   void _showDrawSignatureDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -3153,7 +2066,10 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DropdownButtonFormField<String>(
-            value: selectedBranch,
+            value: (allBranches
+                    .any((branch) => branch['companyName'] == selectedBranch))
+                ? selectedBranch
+                : null, // Set to null if it doesn’t exist
             hint: const Text('Choose a branch'),
             onChanged: (String? newValue) {
               setState(() {
@@ -3168,8 +2084,8 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
             },
             items: allBranches.map<DropdownMenuItem<String>>((branch) {
               return DropdownMenuItem<String>(
-                value: branch['companyName'] ?? '',
-                child: Text(branch['companyName'] ?? ''),
+                value: branch['companyName']?.toString() ?? '',
+                child: Text(branch['companyName']?.toString() ?? ''),
               );
             }).toList(),
             decoration: const InputDecoration(
@@ -3217,14 +2133,10 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       setState(() {
         allBranches = [];
 
-        // Add main branch first if it exists
         if (decodedToken.containsKey("mainBranch")) {
           allBranches.add(decodedToken["mainBranch"]);
-          // Set main branch as default selected branch
-          // selectedBranch = decodedToken["mainBranch"]["companyName"];
         }
 
-        // Add regular branches
         allBranches.addAll(regularBranches);
       });
     }
@@ -3495,19 +2407,11 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     // Draw signature 1
     canvas.drawImage(image1, Offset(currentX, 0), Paint());
     currentX += image1.width.toDouble() + 10; // Add spacing
-
-    // Draw signature 2
     canvas.drawImage(image2, Offset(currentX, 0), Paint());
     currentX += image2.width.toDouble() + 10;
-
-    // Draw signature 3
     canvas.drawImage(image3, Offset(currentX, 0), Paint());
-
-    // End the recording
     final picture = recorder.endRecording();
     final combinedImage = await picture.toImage(totalWidth, maxHeight);
-
-    // Convert the combined image to bytes
     final byteData =
         await combinedImage.toByteData(format: ui.ImageByteFormat.png);
     return byteData?.buffer.asUint8List();
@@ -3516,7 +2420,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   void _saveCombinedSignature() async {
     final Uint8List? combinedImage = await _combineSignatures();
 
-    // Check if all signature pads are signed
     if (!areAllSignaturesCompleted()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -3524,11 +2427,11 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      return; // Stop execution if not all pads are signed
+      return;
     }
     if (combinedImage != null) {
       setState(() {
-        _combinedSignature = combinedImage; // Store the combined signature
+        _combinedSignature = combinedImage;
       });
       // Example: Save to a file
       final file = File('${Directory.systemTemp.path}/combined_signature.png');
@@ -3542,7 +2445,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
     setState(() {
-      // Get user's age from date of birth
       DateTime? dateOfBirth;
       try {
         dateOfBirth = DateTime.parse(dateOfBirthController.text);
@@ -3558,25 +2460,18 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         age--;
       }
 
-      // Normalize gender
       String normalizedGender = selectedGender!.trim().toUpperCase();
-
-      // Parse initial deposit
       double initialDeposit =
           double.tryParse(initialDepositController.text) ?? 0;
 
       filteredAccountTypes = accountTypes.where((accountType) {
         print("AccountType: ${accountType}");
         print("Selected Gender: $normalizedGender");
-
-        // Check banking type
         if (accountType['bankingType'] != bankingType) {
           print(
               "BankingType mismatch: ${accountType['bankingType']} != $bankingType");
           return false;
         }
-
-        // Validate age range
         int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
         int maxAge =
             int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
@@ -3584,8 +2479,6 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
           print("Age out of range: $age not in [$minAge, $maxAge]");
           return false;
         }
-
-        // Validate minimum amount
         double minAmount =
             double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
         if (initialDeposit < minAmount) {
@@ -3594,19 +2487,14 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
           return false;
         }
 
-        // Validate sex with 'BOTH' inclusion
         String accountTypeSex =
             accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
         if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
           print("Gender mismatch: $normalizedGender != $accountTypeSex");
           return false;
         }
-
-        print("Account type matches!");
         return true;
       }).toList();
-
-      // Show feedback if no account types match
       if (filteredAccountTypes.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -3636,7 +2524,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
   }
 
   handlefirstStep() {
-    if (GlobalData().role != 'ACCOUNT-CREATOR' ) {
+    if (GlobalData().role != 'ACCOUNT-CREATOR') {
       print(GlobalData().role);
       registerStatus = false;
       FormHelper.showSimpleAlertDialog(
@@ -3649,5 +2537,50 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         },
       );
     }
+  }
+
+  Future<void> loadSignature() async {
+    if (widget.userInfo['signature'] is String) {
+      String url = widget.userInfo['signature'];
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          setState(() {
+            _combinedSignature = response.bodyBytes; // ✅ Convert to Uint8List
+          });
+        }
+      } catch (e) {
+        print('Error loading signature: $e');
+      }
+    } else if (widget.userInfo['signature'] is Uint8List) {
+      setState(() {
+        _combinedSignature = widget.userInfo['signature'];
+      });
+    }
+  }
+
+  Map<String, dynamic>? getAccountTypeDetails(String selectedAccountType) {
+    if (selectedAccountType != null && filteredAccountTypes.isNotEmpty) {
+      try {
+        var selectedAccountTypeDetails = filteredAccountTypes.firstWhere(
+          (accountType) => accountType['name'] == selectedAccountType,
+        );
+
+        return {
+          "id": selectedAccountTypeDetails['id'],
+          "name": selectedAccountTypeDetails['name'],
+          "type": selectedAccountTypeDetails['type'],
+          "minAge": selectedAccountTypeDetails["minAge"] ?? "",
+          "maxAge": selectedAccountTypeDetails["maxAge"] ?? "",
+          "minAmount": selectedAccountTypeDetails["minAmount"] ?? "",
+          "sex": selectedAccountTypeDetails["sex"] ?? "",
+          "bankingType": selectedAccountTypeDetails["bankingType"]
+        };
+      } catch (e) {
+        print('Error finding account type: $e');
+        return null;
+      }
+    }
+    return null;
   }
 }
