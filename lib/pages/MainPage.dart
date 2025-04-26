@@ -60,14 +60,8 @@ class _MainPageState extends State<MainPage> {
           });
         });
       case 1:
-
-        // Navigator.of(context).pushReplacement(
-        //   MaterialPageRoute(builder: (context) => AccountOpeningHomePage()),
-        // );
-        // return RegistrationScreen();
         return AccountOpeningHomePage();
-      // case 2:
-      //   return Marchentregistration();
+
       case 2:
         if (role != 'AGENT') {
           return const AgentPage();

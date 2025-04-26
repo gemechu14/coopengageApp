@@ -1,4 +1,4 @@
-// ignore_for_file: sort_child_properties_last, unused_local_variable, use_super_parameters, library_private_types_in_public_api, unnecessary_cast, avoid_print
+// ignore_for_file: sort_child_properties_last, unused_local_variable, use_super_parameters, library_private_types_in_public_api, unnecessary_cast, avoid_print, sized_box_for_whitespace
 
 import 'dart:convert';
 import 'package:carousel_slider/carousel_options.dart';
@@ -217,9 +217,7 @@ class _DashboardState extends State<Dashboard> {
                         iconData = Icons.pending;
 
                         break;
-                      case "Approved":
-                        iconData = Icons.check_circle;
-                        break;
+
                       case "Pending":
                         iconData = Icons.hourglass_bottom;
                         break;
@@ -311,54 +309,10 @@ class _DashboardState extends State<Dashboard> {
               ),
 
               const SizedBox(height: 10),
-              // if (!isOnline)
-              //   CarouselSlider(
-              //     items: SliderImages.items.map((item) {
-              //       return Container(
-              //         width: double.infinity,
-              //         height: carouselHeight,
-              //         decoration: BoxDecoration(
-              //           borderRadius: BorderRadius.circular(8.0),
-              //           image: DecorationImage(
-              //             image: (item as Image).image,
-              //             fit: BoxFit.cover,
-              //           ),
-              //         ),
-              //       );
-              //     }).toList(),
-              //     options: CarouselOptions(
-              //       autoPlay: true,
-              //       height: carouselHeight,
-              //       autoPlayCurve: Curves.fastOutSlowIn,
-              //       autoPlayAnimationDuration:
-              //           const Duration(milliseconds: 1100),
-              //       autoPlayInterval: const Duration(seconds: 4),
-              //       enlargeCenterPage: true,
-              //       onPageChanged: (index, reason) {
-              //         setState(() {
-              //           currentItem = index;
-              //         });
-              //       },
-              //     ),
-              //   ),
-
-              // if (!isOnline) const SizedBox(height: 20),
-              // if (!isOnline)
-              //   AnimatedSmoothIndicator(
-              //     activeIndex: currentItem,
-              //     count: SliderImages.items.length,
-              //     effect: const WormEffect(
-              //       dotHeight: 13,
-              //       dotWidth: 13,
-              //       spacing: 5,
-              //       activeDotColor: Colors.blue,
-              //       paintStyle: PaintingStyle.fill,
-              //     ),
-              //   ),
 
               if (!isOnline)
                 Container(
-                  height: 205, // Fixed height for the container
+                  height: 205,
                   child: Column(
                     children: [
                       Expanded(
@@ -483,7 +437,7 @@ class _DashboardState extends State<Dashboard> {
           var decodedToken = JwtDecoder.decode(token);
           String userId = decodedToken['userId'].toString();
 
-          String url = '/api/v1/accounts/status-count?userId=$userId';
+          String url = '/api/v1/accounts/status-count?customerType=INDIVIDUAL';
           print("userid");
           print(userId);
           var response = await networkHandler.fetchData(url);

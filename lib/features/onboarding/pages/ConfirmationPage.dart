@@ -113,11 +113,11 @@ class ConfirmationPage extends StatelessWidget {
           ),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(right: 15, left: 15),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 10),
+              const SizedBox(height: 2),
               Card(
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 elevation: 3,
@@ -129,7 +129,7 @@ class ConfirmationPage extends StatelessWidget {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 7),
                         const Text(
                           'Personal Information',
                           style: TextStyle(

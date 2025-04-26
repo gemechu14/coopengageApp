@@ -11,8 +11,8 @@ class ListContants {
   ];
 
   static const List<String> productType = [
-    'Conventional',
-    'Alhuda',
+    'CONVENTIONAL',
+    'ALHUDA',
   ];
   static const List<String> gender = [
     'MALE',
@@ -78,18 +78,34 @@ class ListContants {
     'Real Estate',
   ];
 
+  // static const List<String> ethiopianStates = [
+  //   'Addis Ababa',
+  //   'Oromia',
+  //   'Amhara',
+  //   'Tigray',
+  //   'Sidama',
+  //   "Afar",
+  //   "Somale",
+  //   "Benishangul Gumuz",
+  //   "Gambela",
+  //   "Harar",
+  //   "Dire Dawa"
+  // ];
+
   static const List<String> ethiopianStates = [
     'Addis Ababa',
+    'Dire Dawa',
+    'Tigray',
+    'Afar',
     'Oromia',
     'Amhara',
-    'Tigray',
+    'Benishangul-Gumuz',
+    'Gambela',
+    'Harari',
     'Sidama',
-    "Afar",
-    "Somale",
-    "Benishangul Gumuz",
-    "Gambela",
-    "Harar",
-    "Dire Dawa"
+    'Somali',
+    'South West Ethiopia Peoples',
+    'Southern Nations, Nationalities, and Peoples\' Region (SNNPR)',
   ];
 
   static const List<String> AdditionalCustomerRequest = [

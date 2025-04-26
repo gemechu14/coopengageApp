@@ -106,7 +106,9 @@ class _Registration extends State<RegistrationScreen> {
     _initializeGlobalData();
     _initializeGlobal();
     initializeBranches();
-
+    fetchToken();
+    // fetchtoken();
+    // UserID = GlobalData()?.userId;
     _signatureController1 = SignatureController(
       penColor: Colors.black,
       penStrokeWidth: 5,
@@ -2275,6 +2277,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
     if (token != null && token.isNotEmpty) {
       // Decode the token using the JwtDecoder
       var decodedToken = JwtDecoder.decode(token);
+      UserID = decodedToken['userId'];
       branch = decodedToken.containsKey("branch")
           ? List<Map<String, dynamic>>.from(decodedToken["branch"])
           : [];
@@ -2904,22 +2907,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
         print("An error occurred: $e");
       }
     } else if (isOnline == false) {
-      // final DatabaseHelper dbHelper = DatabaseHelper();
-      // registrationData['id'] = userID;
-      // print(registrationData);
-      // int rowsAffected = await dbHelper
-      //     .updateCustomer(userID!, registrationData)
-      //     .timeout(const Duration(seconds: 5));
-
-      // if (rowsAffected > 0) {
-      //   print("User updated successfully in the local database.");
-      // }
-      // else {
-      //   registerStatus = false;
-      //   // isLoading = false;
-      //   print("Failed to update user in the local database.");
-      // }
-
       try {
         final DatabaseHelper dbHelper = DatabaseHelper();
         registrationData['id'] = userID;
@@ -2931,10 +2918,8 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
         if (rowsAffected > 0) {
           registerStatus = true;
-          print("User updated successfully in the local database.");
         } else {
           registerStatus = false;
-          print("Failed to update user in the local database.");
         }
       } on TimeoutException catch (_) {
         registerStatus = false;
@@ -2956,10 +2941,86 @@ By accepting these terms, you agree to comply with all banking regulations and p
     });
   }
 
+  // void _filterAccountTypes(String bankingType) {
+  //   print("Filtering account types...");
+  //   setState(() {
+  //     // Get user's age from date of birth
+  //     DateTime? dateOfBirth;
+  //     try {
+  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
+  //     } catch (e) {
+  //       print('Invalid date format: ${dateOfBirthController.text}');
+  //       return;
+  //     }
+
+  //     int age = DateTime.now().year - dateOfBirth.year;
+  //     if (DateTime.now().month < dateOfBirth.month ||
+  //         (DateTime.now().month == dateOfBirth.month &&
+  //             DateTime.now().day < dateOfBirth.day)) {
+  //       age--;
+  //     }
+
+  //     // Normalize gender
+  //     String normalizedGender = selectedGender.trim().toUpperCase();
+
+  //     // Parse initial deposit
+  //     double initialDeposit =
+  //         double.tryParse(initialDepositController.text) ?? 0;
+
+  //     // Filter account types
+  //     filteredAccountTypes = accountTypes.where((accountType) {
+  //       print("AccountType: ${accountType}");
+  //       print("Selected Gender: $normalizedGender");
+
+  //       // Check banking type
+  //       if (accountType['bankingType'] != bankingType) {
+  //         return false;
+  //       }
+
+  //       // Validate age range
+  //       int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
+  //       int maxAge =
+  //           int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
+  //       if (age < minAge || age > maxAge) {
+  //         return false;
+  //       }
+
+  //       // Validate minimum amount
+  //       double minAmount =
+  //           double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
+  //       if (initialDeposit < minAmount) {
+  //         return false;
+  //       }
+
+  //       // Validate sex with 'BOTH' inclusion
+  //       String accountTypeSex =
+  //           accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
+  //       if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
+  //         return false;
+  //       }
+
+  //       return true;
+  //     }).toList();
+
+  //     // Show feedback if no account types match
+  //     if (filteredAccountTypes.isEmpty) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text(
+  //             'No account types available for your age ($age), gender ($selectedGender), and deposit ($initialDeposit)',
+  //             style: const TextStyle(color: Colors.white),
+  //           ),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //     }
+  //   });
+  // }
+
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
     setState(() {
-      // Get user's age from date of birth
+      // Parse user's date of birth
       DateTime? dateOfBirth;
       try {
         dateOfBirth = DateTime.parse(dateOfBirthController.text);
@@ -2968,6 +3029,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
         return;
       }
 
+      // Calculate age
       int age = DateTime.now().year - dateOfBirth.year;
       if (DateTime.now().month < dateOfBirth.month ||
           (DateTime.now().month == dateOfBirth.month &&
@@ -2975,49 +3037,54 @@ By accepting these terms, you agree to comply with all banking regulations and p
         age--;
       }
 
-      // Normalize gender
+      // Normalize gender to upper case
       String normalizedGender = selectedGender.trim().toUpperCase();
 
-      // Parse initial deposit
+      // Parse initial deposit amount
       double initialDeposit =
-          double.tryParse(initialDepositController.text) ?? 0;
+          double.tryParse(initialDepositController.text.trim()) ?? 0;
 
-      // Filter account types
+      // Filter logic
       filteredAccountTypes = accountTypes.where((accountType) {
-        print("AccountType: ${accountType}");
-        print("Selected Gender: $normalizedGender");
+        print("Checking AccountType: ${accountType['name']}");
 
-        // Check banking type
-        if (accountType['bankingType'] != bankingType) {
+        // 1. Banking type must match
+        String accountBankingType =
+            (accountType['bankingType'] ?? '').toString().toUpperCase();
+        if (accountBankingType != bankingType.toUpperCase()) {
           return false;
         }
 
-        // Validate age range
-        int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
+        // 2. Parse minAge and maxAge (both as int from text)
+        int minAge =
+            int.tryParse(accountType['minAge']?.toString()?.trim() ?? '0') ?? 0;
         int maxAge =
-            int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
+            int.tryParse(accountType['maxAge']?.toString()?.trim() ?? '300') ??
+                300;
         if (age < minAge || age > maxAge) {
           return false;
         }
 
-        // Validate minimum amount
-        double minAmount =
-            double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
+        // 3. Parse minAmount (as double from text)
+        double minAmount = double.tryParse(
+                accountType['minAmount']?.toString()?.trim() ?? '0') ??
+            0;
         if (initialDeposit < minAmount) {
           return false;
         }
 
-        // Validate sex with 'BOTH' inclusion
+        // 4. Gender check
         String accountTypeSex =
-            accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
+            (accountType['sex'] ?? 'BOTH').toString().toUpperCase();
         if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
           return false;
         }
 
+        // Passed all checks
         return true;
       }).toList();
 
-      // Show feedback if no account types match
+      // Show message if no account types are found
       if (filteredAccountTypes.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

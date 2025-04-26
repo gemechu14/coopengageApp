@@ -60,6 +60,7 @@ bool isFirstPersonExpanded = false;
 bool isSecondPersonExpanded = false;
 bool isExpandedPersonalInformation = false;
 List<bool> isExpandedList = [false, false];
+String? expandedAccountTypeId;
 
 // File? licenseFile;
 // File? articleFile;
@@ -67,6 +68,8 @@ List<bool> isExpandedList = [false, false];
 String? licenseFile;
 String? articleFile;
 String? letterOfRequestFile;
+String? tinNumberPhoto;
+String? tradeName;
 
 List<File> selectedFiles = [];
 // List<bool> isExpandedList = [];
@@ -409,9 +412,13 @@ class _Registration extends State<CorporateRegistration> {
             ReusableTextFormField(
               hintText: "TIN ",
               controller: tinNumberController,
-              keyboardType: TextInputType.text,
+              keyboardType: TextInputType.number,
               errorMessage: "TIN cannot be empty",
               leadingIcon: Icons.badge,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
               // inputFormatters: [
               //   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
               // ],
@@ -621,6 +628,10 @@ class _Registration extends State<CorporateRegistration> {
                           setState(() {
                             isExpandedPersonalList[i][0] =
                                 !isExpandedPersonalList[i][0];
+
+                            // isExpandedAddressInfoList[i][0] = false;
+                            isExpandedDocumentInfoList[i][0] = false;
+                            isExpandedIDInfoList[i][0] = false;
                           });
                         }, [
                           TextLabel("Full Name"),
@@ -633,7 +644,13 @@ class _Registration extends State<CorporateRegistration> {
                             leadingIcon: Icons.person,
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
-                                  RegExp(r'^[a-zA-Z\s]+$')),
+                                  RegExp("[a-zA-Z ]")),
+                              TextInputFormatter.withFunction(
+                                (oldValue, newValue) {
+                                  return newValue.copyWith(
+                                      text: newValue.text.toUpperCase());
+                                },
+                              ),
                             ],
                             isRequired: true,
                           ),
@@ -676,9 +693,9 @@ class _Registration extends State<CorporateRegistration> {
                           ),
                         ]),
 
-                        // SizedBox(
-                        //   height: 10,
-                        // ),
+                        SizedBox(
+                          height: 10,
+                        ),
                         // _buildExpandablePersonalInformationSection(
                         //     "Address Information",
                         //     isExpandedAddressInfoList[i][0],
@@ -736,8 +753,12 @@ class _Registration extends State<CorporateRegistration> {
                                 !isExpandedDocumentInfoList[i][0];
                             // isExpandedPersonalList[i][0] =
                             //     !isExpandedPersonalList[i][0];
+                            isExpandedPersonalList[i][0] = false;
+                            isExpandedIDInfoList[i][0] = false;
                           });
                         }, [
+                          // TextLabel("Personal Photo"),
+                          personalPhoto(i),
                           TextLabel("Document Type"),
                           ReusableDropdown(
                             selectedValue: selectedDocumentType[
@@ -756,8 +777,6 @@ class _Registration extends State<CorporateRegistration> {
                           SizedBox(
                             height: 20,
                           ),
-                          // TextLabel("Personal Photo"),
-                          personalPhoto(i),
                           idCardPhoto(i),
                           TextLabel("Signature"),
                           // signatureWidget1(context),
@@ -774,6 +793,9 @@ class _Registration extends State<CorporateRegistration> {
                                 !isExpandedIDInfoList[i][0];
                             // isExpandedPersonalList[i][0] =
                             //     !isExpandedPersonalList[i][0];
+
+                            isExpandedDocumentInfoList[i][0] = false;
+                            isExpandedPersonalList[i][0] = false;
                           });
                         }, [
                           TextLabel("Legal ID"),
@@ -855,11 +877,11 @@ class _Registration extends State<CorporateRegistration> {
                 ],
                 isRequired: true,
               ),
-              TextLabel("Payment Method"),
-              PaymentMethodWidget(
-                initialDepositController: initialDepositController,
-                phoneNumberController: phoneNumberController,
-              ),
+              // TextLabel("Payment Method"),
+              // PaymentMethodWidget(
+              //   initialDepositController: initialDepositController,
+              //   phoneNumberController: phoneNumberController,
+              // ),
             ],
           ),
         ),
@@ -877,31 +899,74 @@ class _Registration extends State<CorporateRegistration> {
               // TextLabel("TradeLicense"),
               // pickLicense1(),
               // Upload License Button
+              // SizedBox(
+              //   width: double.infinity,
+              //   child: ElevatedButton.icon(
+              //     onPressed: pickLicense,
+              //     icon: Icon(Icons.description_outlined, color: Colors.white),
+              //     label: Text(
+              //       "Upload License ",
+              //       style: TextStyle(
+              //         color: Colors.white,
+              //         fontWeight: FontWeight.w600,
+              //         fontSize: 16,
+              //       ),
+              //     ),
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: Colors.blue,
+              //       padding: EdgeInsets.symmetric(vertical: 10),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //       elevation: 4,
+              //       shadowColor: Colors.black45,
+              //     ),
+              //   ),
+              // ),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: pickLicense,
+                  onPressed: () => showFilePickerOptions(
+                    context: context,
+                    onFilePicked: (path) {
+                      setState(() {
+                        licenseFile = path;
+                      });
+                      print("License selected: $licenseFile");
+                    },
+                  ),
                   icon: Icon(Icons.upload_file, color: Colors.white),
-                  label: Text("Upload License",
-                      style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  label: Text(
+                    "Upload License",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.black45,
+                  ),
                 ),
               ),
-              // if (licenseFile != null)
-              //   Text("Selected: ${licenseFile!.path}"), // Show selected file
-              // if (licenseFile != null) Text(licenseFile!.path.split('/').last),
 
               if (licenseFile != null)
                 Card(
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: ListTile(
-                    leading: Icon(Icons.picture_as_pdf, color: Colors.red),
                     title: Text(
                       licenseFile!.split('/').last, // Show only the file name
                       overflow: TextOverflow.ellipsis,
                     ),
                     trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
+                      icon: Icon(Icons.delete, color: Colors.redAccent),
                       onPressed: () {
                         setState(() {
                           licenseFile = null; // Remove the selected file
@@ -911,25 +976,45 @@ class _Registration extends State<CorporateRegistration> {
                   ),
                 ),
               SizedBox(height: 10),
-              // TextLabel("Articles Of Association"),
-              // Upload Article Button
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: pickArticle,
-                  icon: Icon(Icons.upload_file, color: Colors.white),
-                  label: Text("Upload Articles Of Association",
-                      style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  // onPressed: pickArticle,
+                  onPressed: () => showFilePickerOptions(
+                    context: context,
+                    onFilePicked: (path) {
+                      setState(() {
+                        articleFile = path;
+                      });
+                      print("License selected: $articleFile");
+                    },
+                  ),
+                  icon: Icon(Icons.description_rounded, color: Colors.white),
+                  label: Text(
+                    "Upload Articles of Association",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.black38,
+                  ),
                 ),
               ),
-              // if (articleFile != null) Text("Selected: ${articleFile!.path}"),
-              // if (articleFile != null) Text(articleFile!.path.split('/').last),
+
               if (articleFile != null)
                 Card(
                   margin: EdgeInsets.symmetric(vertical: 5),
                   child: ListTile(
-                    leading: Icon(Icons.picture_as_pdf, color: Colors.red),
                     title: Text(
                       articleFile!.split('/').last, // Show only the file name
                       overflow: TextOverflow.ellipsis,
@@ -946,17 +1031,40 @@ class _Registration extends State<CorporateRegistration> {
                 ),
 
               SizedBox(height: 10),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: letterOfRequest,
-                  icon: Icon(Icons.upload_file, color: Colors.white),
-                  label: Text("Letter Of Request",
-                      style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  // onPressed: pickArticle,
+                  onPressed: () => showFilePickerOptions(
+                    context: context,
+                    onFilePicked: (path) {
+                      setState(() {
+                        letterOfRequestFile = path;
+                      });
+                      print("Letter Of Request: $letterOfRequestFile");
+                    },
+                  ),
+                  icon: Icon(Icons.description_rounded, color: Colors.white),
+                  label: Text(
+                    "Letter Of Request",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.black38,
+                  ),
                 ),
               ),
-
               if (letterOfRequestFile != null)
                 Card(
                   margin: EdgeInsets.symmetric(vertical: 5),
@@ -981,26 +1089,154 @@ class _Registration extends State<CorporateRegistration> {
                 ),
 
               SizedBox(height: 10),
-
-              SizedBox(height: 10),
-
               SizedBox(
-                width: double.infinity, // Makes the button full width
+                width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: pickFiles,
-                  icon: Icon(Icons.upload_file,
-                      color: Colors.white), // Set icon color
+                  // onPressed: pickArticle,
+                  onPressed: () => showFilePickerOptions(
+                    context: context,
+                    onFilePicked: (path) {
+                      setState(() {
+                        tinNumberPhoto = path;
+                      });
+                      print("Letter Of Request: $tinNumberPhoto");
+                    },
+                  ),
+                  icon: Icon(Icons.description_rounded, color: Colors.white),
                   label: Text(
-                    "Upload other documents",
+                    "TIN  Photo",
                     style: TextStyle(
-                        color: Colors.white), // Set text color to black
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.blue, // Set background color to blue
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.black38,
                   ),
                 ),
               ),
+              SizedBox(height: 10),
+              if (tinNumberPhoto != null)
+                Card(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: ListTile(
+                    leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                    title: Text(
+                      tinNumberPhoto!
+                          .split('/')
+                          .last, // Show only the file name
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          tinNumberPhoto = null; // Remove the selected file
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  // onPressed: pickArticle,
+                  onPressed: () => showFilePickerOptions(
+                    context: context,
+                    onFilePicked: (path) {
+                      setState(() {
+                        tradeName = path;
+                      });
+                      print("Letter Of Request: $tradeName");
+                    },
+                  ),
+                  icon: Icon(Icons.description_rounded, color: Colors.white),
+                  label: Text(
+                    "Trade Name Registration",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.black38,
+                  ),
+                ),
+              ),
+
+              if (tradeName != null)
+                Card(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: ListTile(
+                    leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                    title: Text(
+                      tradeName!.split('/').last, // Show only the file name
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          tradeName = null; // Remove the selected file
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              SizedBox(
+                height: 15,
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => pickFiles(context),
+                  icon: Icon(Icons.upload_file, color: Colors.white),
+                  label: Text(
+                    "Upload other documents",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 4,
+                    shadowColor: Colors.black45,
+                  ),
+                ),
+              ),
+
+              // SizedBox(
+              //   width: double.infinity, // Makes the button full width
+              //   child: ElevatedButton.icon(
+              //     onPressed: pickFiles,
+              //     icon: Icon(Icons.upload_file,/
+              //         color: Colors.white), // Set icon color
+              //     label: Text(
+              //       "Upload other documents",
+              //       style: TextStyle(
+              //           color: Colors.white), // Set text color to black
+              //     ),
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor:
+              //           Colors.blue, // Set background color to blue
+              //     ),
+              //   ),
+              // ),
               if (selectedFiles.isNotEmpty)
                 Column(
                   children: selectedFiles.asMap().entries.map((entry) {
@@ -1047,6 +1283,73 @@ class _Registration extends State<CorporateRegistration> {
                     fontWeight: FontWeight.bold),
                 textAlign: TextAlign.end,
               ),
+              // Padding(
+              //   padding: const EdgeInsets.only(left: 15, right: 15),
+              //   child: filteredAccountTypes.isNotEmpty
+              //       ? Column(
+              //           mainAxisAlignment: MainAxisAlignment.start,
+              //           crossAxisAlignment: CrossAxisAlignment.start,
+              //           children:
+              //               filteredAccountTypes.map<Widget>((accountType) {
+              //             bool isSelected =
+              //                 selectedAccountTypeId == accountType['name'];
+
+              //             return GestureDetector(
+              //               onTap: () {
+              //                 setState(() {
+              //                   selectedAccountTypeId = accountType[
+              //                       'name']; // Update selected account type
+              //                   print(
+              //                       'Selected Account Type ID: $selectedAccountTypeId');
+              //                 });
+              //               },
+              //               child: Container(
+              //                 width: MediaQuery.of(context).size.width,
+              //                 child: Card(
+              //                   margin: const EdgeInsets.all(10),
+              //                   color: isSelected
+              //                       ? Colors.blue
+              //                       : Colors.grey, // Change color if selected
+              //                   shape: RoundedRectangleBorder(
+              //                     borderRadius: BorderRadius.circular(10),
+              //                   ),
+              //                   child: Padding(
+              //                     padding: const EdgeInsets.symmetric(
+              //                         vertical: 1, horizontal: 2),
+              //                     child: ListTile(
+              //                       title: Text(
+              //                         accountType['name'] as String,
+              //                         style: TextStyle(
+              //                           color: isSelected
+              //                               ? Colors.white
+              //                               : Colors
+              //                                   .black, // Text color changes when selected
+              //                           fontWeight: FontWeight.bold,
+              //                         ),
+              //                       ),
+              //                       subtitle: Text("                     "),
+              //                     ),
+              //                   ),
+              //                 ),
+              //               ),
+              //             );
+              //           }).toList(),
+              //         )
+              //       : Center(
+              //           child: Padding(
+              //             padding: const EdgeInsets.all(20.0),
+              //             child: Text(
+              //               "Sorry, no accounts were found for selection. Please ensure that the initial deposit and date of birth are correctly entered.",
+              //               style: TextStyle(
+              //                 fontSize: 16,
+              //                 fontWeight: FontWeight.bold,
+              //                 color: Colors.red,
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              // ),
+
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: filteredAccountTypes.isNotEmpty
@@ -1057,6 +1360,8 @@ class _Registration extends State<CorporateRegistration> {
                             filteredAccountTypes.map<Widget>((accountType) {
                           bool isSelected =
                               selectedAccountTypeId == accountType['name'];
+                          bool isExpanded =
+                              expandedAccountTypeId == accountType['name'];
 
                           return GestureDetector(
                             onTap: () {
@@ -1071,27 +1376,74 @@ class _Registration extends State<CorporateRegistration> {
                               width: MediaQuery.of(context).size.width,
                               child: Card(
                                 margin: const EdgeInsets.all(10),
-                                color: isSelected
-                                    ? Colors.blue
-                                    : Colors.grey, // Change color if selected
+                                color: isSelected ? Colors.blue : Colors.grey,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      vertical: 1, horizontal: 2),
-                                  child: ListTile(
-                                    title: Text(
-                                      accountType['name'] as String,
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Colors
-                                                .black, // Text color changes when selected
-                                        fontWeight: FontWeight.bold,
+                                      vertical: 8, horizontal: 12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Title
+                                      Text(
+                                        accountType['name'] ?? '',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                    ),
-                                    subtitle: Text("                     "),
+                                      const SizedBox(height: 8),
+                                      // Description
+                                      Text(
+                                        accountType['description'] ?? '',
+                                        maxLines: isExpanded ? null : 1,
+                                        overflow: isExpanded
+                                            ? TextOverflow.visible
+                                            : TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : Colors.black54,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Show More / Show Less Button
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              if (expandedAccountTypeId ==
+                                                  accountType['name']) {
+                                                expandedAccountTypeId = null;
+                                              } else {
+                                                expandedAccountTypeId =
+                                                    accountType['name'];
+                                              }
+                                            });
+                                          },
+                                          child: Text(
+                                            isExpanded
+                                                ? "Show Less"
+                                                : "Show More",
+                                            style: TextStyle(
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : Colors.black87,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -1112,7 +1464,7 @@ class _Registration extends State<CorporateRegistration> {
                           ),
                         ),
                       ),
-              ),
+              )
             ],
           ),
         ),
@@ -1278,7 +1630,7 @@ class _Registration extends State<CorporateRegistration> {
           const SizedBox(width: 20),
           ElevatedButton(
             onPressed: () {
-              // showImagePicker(context, "signature");
+              showImagePicker(context, i, "signature");
             },
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
@@ -1905,7 +2257,7 @@ class _Registration extends State<CorporateRegistration> {
                         ),
                       ),
                       onTap: () {
-                        // _imgFromCamera(imageTypes);
+                        _imgFromCamera(i, imageTypes);
                         Navigator.pop(context);
                       },
                     ))
@@ -1952,6 +2304,17 @@ class _Registration extends State<CorporateRegistration> {
               residentPaths[i] = newPath;
             } else if (imageTypes == 'residentCardBack') {
               residentCardBackPaths[i] = newPath;
+            } else if (imageTypes == 'signature') {
+              // signatureImagePath = croppedFile.path;
+              // savedSignature = null;
+              // _signatureController.clear();
+
+              // Clear drawn signature
+              _signatureController1.clear();
+              _signatureController2.clear();
+              _signatureController3.clear();
+              savedSignature = null;
+              combinedSignatures[i] = File(newPath).readAsBytesSync();
             }
           });
         } else {
@@ -1995,6 +2358,17 @@ class _Registration extends State<CorporateRegistration> {
               residentPaths[i] = newPath;
             } else if (imageTypes == 'residentCardBack') {
               residentCardBackPaths[i] = newPath;
+            } else if (imageTypes == 'signature') {
+              // signatureImagePath = croppedFile.path;
+              // savedSignature = null;
+              // _signatureController.clear();
+
+              // Clear drawn signature
+              _signatureController1.clear();
+              _signatureController2.clear();
+              _signatureController3.clear();
+              savedSignature = null;
+              combinedSignatures[i] = File(newPath).readAsBytesSync();
             }
           });
         } else {
@@ -3297,18 +3671,139 @@ class _Registration extends State<CorporateRegistration> {
     );
   }
 
-  Future<void> pickFiles() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-      allowMultiple: true, // Enable multiple file selection
+  Future<void> showFilePickerOptions({
+    required BuildContext context,
+    required Function(String path) onFilePicked,
+  }) async {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.picture_as_pdf),
+              title: Text('Upload PDF'),
+              onTap: () async {
+                Navigator.pop(context);
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'],
+                );
+                if (result != null && result.files.single.path != null) {
+                  onFilePicked(result.files.single.path!);
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_camera),
+              title: Text('Capture with Camera'),
+              onTap: () async {
+                Navigator.pop(context);
+                final XFile? image =
+                    await ImagePicker().pickImage(source: ImageSource.camera);
+                if (image != null) {
+                  onFilePicked(image.path);
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Pick from Gallery'),
+              onTap: () async {
+                Navigator.pop(context);
+                final XFile? image =
+                    await ImagePicker().pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  onFilePicked(image.path);
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
+  }
 
-    if (result != null) {
-      setState(() {
-        selectedFiles.addAll(result.paths.map((path) => File(path!)).toList());
-      });
-    }
+  // Future<void> pickFiles() async {
+  //   FilePickerResult? result = await FilePicker.platform.pickFiles(
+  //     type: FileType.custom,
+  //     allowedExtensions: ['pdf'],
+  //     allowMultiple: true, // Enable multiple file selection
+  //   );
+
+  //   if (result != null) {
+  //     setState(() {
+  //       selectedFiles.addAll(result.paths.map((path) => File(path!)).toList());
+  //     });
+  //   }
+  // }
+
+  Future<void> pickFiles(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.picture_as_pdf),
+              title: Text('Upload PDF(s)'),
+              onTap: () async {
+                Navigator.pop(context);
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'],
+                  allowMultiple: true,
+                );
+                if (result != null) {
+                  setState(() {
+                    selectedFiles.addAll(
+                      result.paths
+                          .whereType<String>()
+                          .map((path) => File(path))
+                          .toList(),
+                    );
+                  });
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Pick Image(s) from Gallery'),
+              onTap: () async {
+                Navigator.pop(context);
+                List<XFile>? images = await ImagePicker().pickMultiImage();
+                if (images != null) {
+                  setState(() {
+                    selectedFiles
+                        .addAll(images.map((img) => File(img.path)).toList());
+                  });
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_camera),
+              title: Text('Capture with Camera'),
+              onTap: () async {
+                Navigator.pop(context);
+                final XFile? image =
+                    await ImagePicker().pickImage(source: ImageSource.camera);
+                if (image != null) {
+                  setState(() {
+                    selectedFiles.add(File(image.path));
+                  });
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void removeFile(int index) {
@@ -3317,18 +3812,66 @@ class _Registration extends State<CorporateRegistration> {
     });
   }
 
-  Future<void> pickLicense() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-      allowMultiple: false, // Ensure only one file is selected
+  Future<void> pickLicense(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.picture_as_pdf),
+              title: Text('Upload PDF'),
+              onTap: () async {
+                Navigator.pop(context);
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'],
+                );
+                if (result != null && result.files.single.path != null) {
+                  setState(() {
+                    licenseFile = result.files.single.path!;
+                  });
+                  print("PDF picked: $licenseFile");
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_camera),
+              title: Text('Capture with Camera'),
+              onTap: () async {
+                Navigator.pop(context);
+                final XFile? image =
+                    await ImagePicker().pickImage(source: ImageSource.camera);
+                if (image != null) {
+                  setState(() {
+                    licenseFile = image.path;
+                  });
+                  print("Camera image: $licenseFile");
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Pick from Gallery'),
+              onTap: () async {
+                Navigator.pop(context);
+                final XFile? image =
+                    await ImagePicker().pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  setState(() {
+                    licenseFile = image.path;
+                  });
+                  print("Gallery image: $licenseFile");
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
-
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        licenseFile = result.files.single.path; // Set the file path as a string
-      });
-    }
   }
 
   Future<void> letterOfRequest() async {

@@ -78,9 +78,10 @@ class ReusableDropdown extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: DropdownButtonFormField<String>(
-        value: selectedValue,
+        value: selectedValue, isExpanded: true,
         hint: Text(
           hintText,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             fontSize: 13,
             color: Colors.black,

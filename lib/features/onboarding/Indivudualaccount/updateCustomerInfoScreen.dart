@@ -46,7 +46,7 @@ final List<String> iDType = [
   'NATIONAL_ID',
 ];
 
-String? selectedAccountTypeData;
+var selectedAccountTypeData;
 Uint8List? residenceFront;
 String? selectedMaritalStatus;
 String? selectedCustomerType;
@@ -862,7 +862,8 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     if (selectedAccountTypeId != null) {
       var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
 
-      id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
+      selectedAccountTypeData =
+          accountTypeDetails != null ? accountTypeDetails['id'] : null;
       selectedAccountTypeName = accountTypeDetails?['name'];
     }
 
@@ -877,13 +878,14 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
     registrationFormData['country'] = selectedCountry;
     registrationFormData['state'] = selectedState;
     registrationFormData['streetAddress'] = streetController.text;
-    registrationFormData['accountType'] = id.toString();
+    registrationFormData['accountType'] = selectedAccountTypeData;
     registrationFormData['occupation'] = occupationController.text;
     registrationFormData['initialDeposit'] = initialDepositController.text;
     registrationFormData['monthlyIncome'] = monthlyIncomeController.text;
     registrationFormData['branch'] = selectedBranch;
     registrationFormData['currency'] = selectedCurrency;
     registrationFormData['signature'] = _combinedSignature;
+
     if (isOnline) {
       registrationData['customerInfo.fullName'] = fullNameController.text;
       registrationData['customerInfo.surname'] = surNameController.text;
@@ -989,7 +991,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       registrationData['country'] = selectedCountry;
       registrationData['state'] = selectedState;
       registrationData['streetAddress'] = streetController.text;
-      registrationData['accountType'] = "$selectedAccountTypeIdValue";
+      registrationData['accountType'] = "$selectedAccountTypeData";
       registrationData['occupation'] = occupationController.text;
       registrationData['initialDeposit'] = initialDepositController.text;
       registrationData['monthlyIncome'] = monthlyIncomeController.text;
@@ -1007,6 +1009,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 profilePath.replaceFirst('data:image/jpeg;base64,', '');
           }
           profileBytes = base64Decode(profilePath);
+          registrationFormData['photo'] = profileBytes;
           registrationData['photo'] = profileBytes;
         } catch (e) {
           print("Error decoding base64 image: $e");
@@ -1014,10 +1017,12 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
         }
       } else if (profilePath.startsWith('http') ||
           profilePath.startsWith('https')) {
+        registrationFormData['photo'] = profilePath;
         registrationData['photo'] = profilePath;
       } else {
         try {
           profileBytes = await _getImageBytes(profilePath, "profilePhoto.png");
+          registrationFormData['photo'] = profileBytes;
           registrationData['photo'] = profileBytes;
         } catch (e) {
           print("Error loading image from file: $e");
@@ -1036,6 +1041,8 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                 residentPath.replaceFirst('data:image/jpeg;base64,', '');
           }
           residentBytes = base64Decode(residentPath);
+
+          registrationFormData['residenceCard'] = residentBytes;
           registrationData['residenceCard'] = residentBytes;
         } catch (e) {
           print("Error decoding base64 image: $e");
@@ -1044,11 +1051,13 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       } else if (residentPath.startsWith('http') ||
           residentPath.startsWith('https')) {
         registrationData['residenceCard'] = residentPath;
+        registrationFormData['residenceCard'] = residentPath;
       } else {
         try {
           residentBytes =
               await _getImageBytes(residentPath, "residentcard.png");
           registrationData['residenceCard'] = residentBytes;
+          registrationFormData['residenceCard'] = residentBytes;
         } catch (e) {
           print("Error loading image from file: $e");
           return;
@@ -1065,6 +1074,7 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
           }
           residentCardBackBytes = base64Decode(residentCardBackPath);
           registrationData['residenceCardBack'] = residentCardBackBytes;
+          registrationFormData['residenceCardBack'] = residentCardBackBytes;
         } catch (e) {
           print("Error decoding base64 image: $e");
           return;
@@ -1072,11 +1082,14 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
       } else if (residentCardBackPath.startsWith('http') ||
           residentCardBackPath.startsWith('https')) {
         registrationData['residenceCardBack'] = residentCardBackPath;
+        registrationFormData['residenceCardBack'] = residentCardBackPath;
       } else {
         try {
           residentCardBackBytes = await _getImageBytes(
               residentCardBackPath, "residentcardback.png");
           registrationData['residenceCardBack'] = residentCardBackBytes;
+
+          registrationFormData['residenceCardBack'] = residentCardBackBytes;
         } catch (e) {
           print("Error loading image from file: $e");
           return;
@@ -1679,7 +1692,8 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
                     ),
                     child: ListTile(
                       title: Text(
-                        getAccountTypeNameById(widget.userInfo['accountType']),
+                        getAccountTypeNameById(
+                            selectedAccountTypeData.toString()),
                         style: const TextStyle(
                           fontSize: 21,
                           fontWeight: FontWeight.w600,

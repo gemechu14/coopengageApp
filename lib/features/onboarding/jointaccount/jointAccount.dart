@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable, constant_identifier_names, unused_element, avoid_print, unused_import, unnecessary_import, prefer_typing_uninitialized_variables, file_names, non_constant_identifier_names, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, prefer_const_literals_to_create_immutables
+// ignore_for_file: unused_local_variable, constant_identifier_names, unused_element, avoid_print, unused_import, unnecessary_import, prefer_typing_uninitialized_variables, file_names, non_constant_identifier_names, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, prefer_const_literals_to_create_immutables, deprecated_member_use
 
 import 'dart:async';
 import 'dart:convert';
@@ -55,8 +55,9 @@ List<List<bool>> isExpandedPersonalList = [];
 List<List<bool>> isExpandedAddressInfoList = [];
 List<List<bool>> isExpandedDocumentInfoList = [];
 List<List<bool>> isExpandedIDInfoList = [];
-
-String? selectedAccountTypeId;
+String? selectedAccountTypeId; // you already have this
+String? expandedAccountTypeId; // <<< ADD THIS NEW LINE
+// String? selectedAccountTypeId;
 bool isFirstPersonExpanded = false;
 bool isSecondPersonExpanded = false;
 bool isExpandedPersonalInformation = false;
@@ -509,9 +510,19 @@ class _Registration extends State<JointAccountStepperPage> {
               controller: fullNameControllers[0],
               keyboardType: TextInputType.text,
               errorMessage: "FullName cannot be empty",
+
               leadingIcon: Icons.person,
+              // inputFormatters: [
+              //   FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
+              // ],
+
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+$')),
+                FilteringTextInputFormatter.allow(RegExp("[a-zA-Z ]")),
+                TextInputFormatter.withFunction(
+                  (oldValue, newValue) {
+                    return newValue.copyWith(text: newValue.text.toUpperCase());
+                  },
+                ),
               ],
               isRequired: true,
             ),
@@ -581,6 +592,12 @@ class _Registration extends State<JointAccountStepperPage> {
                           setState(() {
                             isExpandedPersonalList[i][0] =
                                 !isExpandedPersonalList[i][0];
+
+                            if (isExpandedPersonalList[i][0]) {
+                              isExpandedAddressInfoList[i][0] = false;
+                              isExpandedDocumentInfoList[i][0] = false;
+                              isExpandedIDInfoList[i][0] = false;
+                            }
                           });
                         }, [
                           TextLabel("Full Name"),
@@ -593,7 +610,13 @@ class _Registration extends State<JointAccountStepperPage> {
                             leadingIcon: Icons.person,
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
-                                  RegExp(r'^[a-zA-Z\s]+$')),
+                                  RegExp("[a-zA-Z ]")),
+                              TextInputFormatter.withFunction(
+                                (oldValue, newValue) {
+                                  return newValue.copyWith(
+                                      text: newValue.text.toUpperCase());
+                                },
+                              ),
                             ],
                             isRequired: true,
                           ),
@@ -612,6 +635,21 @@ class _Registration extends State<JointAccountStepperPage> {
                             errorMessage: "Mother Name cannot be empty",
                             leadingIcon: Icons.person,
                             isRequired: false,
+                          ),
+                          TextLabel("Title"),
+                          ReusableDropdown(
+                            selectedValue: selectedTitle[
+                                i], // Use list index for each person
+                            items: ListContants.title,
+                            hintText: 'Select Title',
+                            onChanged: (newStatus) {
+                              setState(() {
+                                selectedTitle[i] = newStatus!;
+                              });
+                            },
+                            prefixIcon: Icons.category,
+                            errorMessage: 'Please select a Title',
+                            isRequired: true,
                           ),
                           TextLabel("Occupation "),
                           ReusableTextFormField(
@@ -670,21 +708,6 @@ class _Registration extends State<JointAccountStepperPage> {
                                 'Please select a marital status', // Pass the custom error message
                             isRequired: false, // Make the field required
                           ),
-                          TextLabel("Title"),
-                          ReusableDropdown(
-                            selectedValue: selectedTitle[
-                                i], // Use list index for each person
-                            items: ListContants.title,
-                            hintText: 'Select Title',
-                            onChanged: (newStatus) {
-                              setState(() {
-                                selectedTitle[i] = newStatus!;
-                              });
-                            },
-                            prefixIcon: Icons.category,
-                            errorMessage: 'Please select a Title',
-                            isRequired: true,
-                          ),
                           TextLabel("Sector"),
                           ReusableDropdown(
                             selectedValue: selectedSectors[
@@ -723,6 +746,10 @@ class _Registration extends State<JointAccountStepperPage> {
                                 !isExpandedAddressInfoList[i][0];
                             // isExpandedPersonalList[i][0] =
                             //     !isExpandedPersonalList[i][0];
+
+                            isExpandedDocumentInfoList[i][0] = false;
+                            isExpandedIDInfoList[i][0] = false;
+                            isExpandedPersonalList[i][0] = false;
                           });
                         }, [
                           TextLabel("State"),
@@ -769,8 +796,15 @@ class _Registration extends State<JointAccountStepperPage> {
                                 !isExpandedDocumentInfoList[i][0];
                             // isExpandedPersonalList[i][0] =
                             //     !isExpandedPersonalList[i][0];
+
+                            isExpandedAddressInfoList[i][0] = false;
+                            isExpandedPersonalList[i][0] = false;
+                            isExpandedIDInfoList[i][0] = false;
                           });
                         }, [
+                          TextLabel("Personal Photo"),
+
+                          personalPhoto(i),
                           TextLabel("Document Type"),
                           ReusableDropdown(
                             selectedValue: selectedDocumentType[
@@ -789,10 +823,6 @@ class _Registration extends State<JointAccountStepperPage> {
                           SizedBox(
                             height: 20,
                           ),
-                          TextLabel("Personal Photo"),
-
-                          personalPhoto(i),
-
                           idCardPhoto(i),
                           TextLabel("Signature"),
                           // signatureWidget1(context),
@@ -808,6 +838,9 @@ class _Registration extends State<JointAccountStepperPage> {
                                 !isExpandedIDInfoList[i][0];
                             // isExpandedPersonalList[i][0] =
                             //     !isExpandedPersonalList[i][0];
+                            isExpandedAddressInfoList[i][0] = false;
+                            isExpandedDocumentInfoList[i][0] = false;
+                            isExpandedPersonalList[i][0] = false;
                           });
                         }, [
                           TextLabel("Legal ID"),
@@ -888,11 +921,11 @@ class _Registration extends State<JointAccountStepperPage> {
                 ],
                 isRequired: true,
               ),
-              TextLabel("Payment Method"),
-              PaymentMethodWidget(
-                initialDepositController: initialDepositController,
-                phoneNumberController: phoneNumberController,
-              ),
+              // TextLabel("Payment Method"),
+              // PaymentMethodWidget(
+              //   initialDepositController: initialDepositController,
+              //   phoneNumberController: phoneNumberController,
+              // ),
             ],
           ),
         ),
@@ -917,6 +950,72 @@ class _Registration extends State<JointAccountStepperPage> {
                     fontWeight: FontWeight.bold),
                 textAlign: TextAlign.end,
               ),
+              // Padding(
+              //   padding: const EdgeInsets.only(left: 15, right: 15),
+              //   child: filteredAccountTypes.isNotEmpty
+              //       ? Column(
+              //           mainAxisAlignment: MainAxisAlignment.start,
+              //           crossAxisAlignment: CrossAxisAlignment.start,
+              //           children:
+              //               filteredAccountTypes.map<Widget>((accountType) {
+              //             bool isSelected =
+              //                 selectedAccountTypeId == accountType['name'];
+
+              //             return GestureDetector(
+              //               onTap: () {
+              //                 setState(() {
+              //                   selectedAccountTypeId = accountType[
+              //                       'name']; // Update selected account type
+              //                   print(
+              //                       'Selected Account Type ID: $selectedAccountTypeId');
+              //                 });
+              //               },
+              //               child: Container(
+              //                 width: MediaQuery.of(context).size.width,
+              //                 child: Card(
+              //                   margin: const EdgeInsets.all(10),
+              //                   color: isSelected
+              //                       ? Colors.blue
+              //                       : Colors.grey, // Change color if selected
+              //                   shape: RoundedRectangleBorder(
+              //                     borderRadius: BorderRadius.circular(10),
+              //                   ),
+              //                   child: Padding(
+              //                     padding: const EdgeInsets.symmetric(
+              //                         vertical: 1, horizontal: 2),
+              //                     child: ListTile(
+              //                       title: Text(
+              //                         accountType['name'] as String,
+              //                         style: TextStyle(
+              //                           color: isSelected
+              //                               ? Colors.white
+              //                               : Colors
+              //                                   .black, // Text color changes when selected
+              //                           fontWeight: FontWeight.bold,
+              //                         ),
+              //                       ),
+              //                       subtitle: Text("                     "),
+              //                     ),
+              //                   ),
+              //                 ),
+              //               ),
+              //             );
+              //           }).toList(),
+              //         )
+              //       : Center(
+              //           child: Padding(
+              //             padding: const EdgeInsets.all(20.0),
+              //             child: Text(
+              //               "Sorry, no accounts were found for selection. Please ensure that the initial deposit and date of birth are correctly entered.",
+              //               style: TextStyle(
+              //                 fontSize: 16,
+              //                 fontWeight: FontWeight.bold,
+              //                 color: Colors.red,
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              // ),
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: filteredAccountTypes.isNotEmpty
@@ -927,41 +1026,87 @@ class _Registration extends State<JointAccountStepperPage> {
                             filteredAccountTypes.map<Widget>((accountType) {
                           bool isSelected =
                               selectedAccountTypeId == accountType['name'];
+                          bool isExpanded =
+                              selectedAccountTypeId == accountType['name'] &&
+                                  expandedAccountTypeId == accountType['name'];
 
                           return GestureDetector(
                             onTap: () {
                               setState(() {
-                                selectedAccountTypeId = accountType[
-                                    'name']; // Update selected account type
+                                if (selectedAccountTypeId ==
+                                    accountType['name']) {
+                                  expandedAccountTypeId =
+                                      expandedAccountTypeId ==
+                                              accountType['name']
+                                          ? null
+                                          : accountType['name'];
+                                } else {
+                                  selectedAccountTypeId = accountType['name'];
+                                  expandedAccountTypeId = accountType['name'];
+                                }
                                 print(
-                                    'Selected Account Type ID: $selectedAccountTypeId');
+                                    'Selected Account Type: $selectedAccountTypeId');
                               });
                             },
                             child: Container(
                               width: MediaQuery.of(context).size.width,
                               child: Card(
                                 margin: const EdgeInsets.all(10),
-                                color: isSelected
-                                    ? Colors.blue
-                                    : Colors.grey, // Change color if selected
+                                color: isSelected ? Colors.blue : Colors.grey,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      vertical: 1, horizontal: 2),
-                                  child: ListTile(
-                                    title: Text(
-                                      accountType['name'] as String,
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Colors
-                                                .black, // Text color changes when selected
-                                        fontWeight: FontWeight.bold,
+                                      vertical: 8, horizontal: 12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Title
+                                      Text(
+                                        accountType['name'] ?? '',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
-                                    ),
-                                    subtitle: Text("                     "),
+                                      const SizedBox(height: 8),
+                                      // Description
+                                      Text(
+                                        accountType['description'] ?? '',
+                                        maxLines: isExpanded ? null : 1,
+                                        overflow: isExpanded
+                                            ? TextOverflow.visible
+                                            : TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : Colors.black54,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // More / Less Button
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          isExpanded
+                                              ? "Show Less"
+                                              : "Show More",
+                                          style: TextStyle(
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.black87,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -982,7 +1127,7 @@ class _Registration extends State<JointAccountStepperPage> {
                           ),
                         ),
                       ),
-              ),
+              )
             ],
           ),
         ),
@@ -1148,7 +1293,7 @@ class _Registration extends State<JointAccountStepperPage> {
           const SizedBox(width: 20),
           ElevatedButton(
             onPressed: () {
-              // showImagePicker(context, "signature");
+              showImagePicker(context, i, "signature");
             },
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
@@ -1185,7 +1330,7 @@ class _Registration extends State<JointAccountStepperPage> {
                       borderRadius: BorderRadius.circular(20.0),
                       child: Image.memory(
                         combinedSignatures[i]!,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.fill,
                       ),
                     ),
                   )
@@ -1647,6 +1792,8 @@ class _Registration extends State<JointAccountStepperPage> {
   }
 
   void showImagePicker(BuildContext context, int i, String imageTypes) {
+    print("iamgellanlaoofofoofo");
+    print(imageTypes);
     showModalBottomSheet(
         context: context,
         builder: (builder) {
@@ -1700,7 +1847,8 @@ class _Registration extends State<JointAccountStepperPage> {
                         ),
                       ),
                       onTap: () {
-                        // _imgFromCamera(imageTypes);
+                        // _imgFromCamera(i, imageTypes);
+                        _imgFromCamera(i, 'signature');
                         Navigator.pop(context);
                       },
                     ))
@@ -1747,6 +1895,17 @@ class _Registration extends State<JointAccountStepperPage> {
               residentPaths[i] = newPath;
             } else if (imageTypes == 'residentCardBack') {
               residentCardBackPaths[i] = newPath;
+            } else if (imageTypes == 'signature') {
+              // signatureImagePath = croppedFile.path;
+              // savedSignature = null;
+              // _signatureController.clear();
+
+              // Clear drawn signature
+              _signatureController1.clear();
+              _signatureController2.clear();
+              _signatureController3.clear();
+              savedSignature = null;
+              combinedSignatures[i] = File(newPath).readAsBytesSync();
             }
           });
         } else {
@@ -1790,6 +1949,19 @@ class _Registration extends State<JointAccountStepperPage> {
               residentPaths[i] = newPath;
             } else if (imageTypes == 'residentCardBack') {
               residentCardBackPaths[i] = newPath;
+            } else if (imageTypes == 'signature') {
+              print("dkdnandjhahdadjsdfh");
+              // signatureImagePath = croppedFile.path;
+              // savedSignature = null;
+              // _signatureController.clear();
+
+              // Clear drawn signature
+              _signatureController1.clear();
+              _signatureController2.clear();
+              _signatureController3.clear();
+              savedSignature = null;
+
+              combinedSignatures[i] = File(newPath).readAsBytesSync();
             }
           });
         } else {
@@ -2803,35 +2975,96 @@ class _Registration extends State<JointAccountStepperPage> {
     });
   }
 
+  // void _filterAccountTypes(String bankingType) {
+  //   print("Filtering account types...");
+  //   setState(() {
+  //     // Parse initial deposit
+  //     double initialDeposit =
+  //         double.tryParse(initialDepositController.text) ?? 0;
+
+  //     filteredAccountTypes = accountTypes.where((accountType) {
+  //       // Check banking type
+  //       if (accountType['bankingType'] != bankingType) {
+  //         print(
+  //             "BankingType mismatch: ${accountType['bankingType']} != $bankingType");
+  //         return false;
+  //       }
+
+  //       if (accountType['sex'] == 'FEMALE') {
+  //         print("Account type has 'female' gender, excluded.");
+  //         return false;
+  //       }
+  //       // Exclude account types with minAge == 0
+  //       int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
+  //       if (minAge < 18) {
+  //         print("Account type has minAge == 0, excluded.");
+  //         return false;
+  //       }
+
+  //       // Validate minimum amount
+  //       double minAmount =
+  //           double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
+  //       if (initialDeposit < minAmount) {
+  //         print(
+  //             "Initial deposit $initialDeposit less than required $minAmount");
+  //         return false;
+  //       }
+
+  //       print("Account type matches!");
+  //       return true;
+  //     }).toList();
+
+  //     // Show feedback if no account types match
+  //     if (filteredAccountTypes.isEmpty) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text(
+  //             'No account types available for your deposit ($initialDeposit).',
+  //             style: const TextStyle(color: Colors.white),
+  //           ),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //     }
+  //   });
+  // }
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
     setState(() {
-      // Parse initial deposit
+      // Parse initial deposit safely from text
       double initialDeposit =
-          double.tryParse(initialDepositController.text) ?? 0;
+          double.tryParse(initialDepositController.text.trim()) ?? 0;
 
       filteredAccountTypes = accountTypes.where((accountType) {
-        // Check banking type
-        if (accountType['bankingType'] != bankingType) {
+        // Check banking type (normalize both sides to uppercase)
+        String accountBankingType =
+            (accountType['bankingType'] ?? '').toString().toUpperCase();
+        if (accountBankingType != bankingType.toUpperCase()) {
           print(
               "BankingType mismatch: ${accountType['bankingType']} != $bankingType");
           return false;
         }
 
-        if (accountType['sex'] == 'FEMALE') {
+        // Exclude account types with 'FEMALE' sex
+        String accountTypeSex =
+            (accountType['sex'] ?? '').toString().toUpperCase();
+        if (accountTypeSex == 'FEMALE') {
           print("Account type has 'female' gender, excluded.");
           return false;
         }
-        // Exclude account types with minAge == 0
-        int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
+
+        // Exclude account types with minAge less than 18
+        int minAge =
+            int.tryParse(accountType['minAge']?.toString()?.trim() ?? '0') ?? 0;
         if (minAge < 18) {
-          print("Account type has minAge == 0, excluded.");
+          print("Account type has minAge < 18, excluded.");
           return false;
         }
 
         // Validate minimum amount
-        double minAmount =
-            double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
+        double minAmount = double.tryParse(
+                accountType['minAmount']?.toString()?.trim() ?? '0') ??
+            0;
         if (initialDeposit < minAmount) {
           print(
               "Initial deposit $initialDeposit less than required $minAmount");

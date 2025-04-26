@@ -1,10 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, avoid_print, sized_box_for_whitespace, unused_element
 
 import 'dart:async';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/Screen/suuqpassLoginScreen.dart';
+import 'package:coopengageplus/common_widgets/textField/PasswordTextField.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/features/onboarding/agent/agentRegistration.dart';
@@ -137,9 +137,7 @@ class _LoginscreenState extends State<Loginscreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
               child: Container(
-                width: width < 600
-                    ? double.infinity
-                    : width * 0.5, // Adjust width for tablet
+                width: width < 600 ? double.infinity : width * 0.5,
                 child: TextFormField(
                   obscureText: hidePassword,
                   decoration: InputDecoration(
@@ -189,7 +187,6 @@ class _LoginscreenState extends State<Loginscreen> {
                 child: FormHelper.submitButton("Login",
                     txtColor: Colors.white,
                     btnColor: Colors.blue,
-                    // btnColor: const Color.fromARGB(255, 102, 163, 238),
                     borderColor: const Color.fromARGB(255, 102, 163, 238),
                     () async {
                   if (validateAndSave()) {
@@ -208,14 +205,16 @@ class _LoginscreenState extends State<Loginscreen> {
 
                     if (await isOnline()) {
                       try {
+                        print("aldkdjdjdjj");
+
                         var response = await networkHandler
                             .post('${AppConstants.baseURL}/login', data)
                             .timeout(const Duration(seconds: 19));
 
+                        print(response.statusCode);
                         if (response.statusCode == 200 ||
                             response.statusCode == 201) {
                           Map<String, dynamic> output =
-                          
                               json.decode(response.body);
                           await storage.write(
                               key: "token", value: output["access_token"]);
@@ -223,6 +222,7 @@ class _LoginscreenState extends State<Loginscreen> {
                               utf8.decode(base64Url.decode(base64Url.normalize(
                                   output["access_token"].split(".")[1]))));
                           String? token = output["access_token"];
+
                           String? clientId =
                               decodedToken["clientId"].toString();
                           String role = decodedToken["role"][0];
@@ -232,9 +232,10 @@ class _LoginscreenState extends State<Loginscreen> {
                                   decodedToken["branch"]);
 
                           DatabaseHelper dbHelper = DatabaseHelper();
+
                           bool userExists = await dbHelper.userExists(username);
                           await dbHelper.insertToken(token!);
-// await dbHelper ensureLanguageSet();
+
                           if (!userExists) {
                             // Register the user locally
                             await dbHelper.insertUser1(
@@ -243,7 +244,6 @@ class _LoginscreenState extends State<Loginscreen> {
                                 userId: userId,
                                 clientId: clientId,
                                 role: role,
-                                // token: token,
                                 branches: branches);
 
                             print("User registered locally for future use.");
@@ -251,45 +251,49 @@ class _LoginscreenState extends State<Loginscreen> {
                             print("User already exists in local storage.");
                           }
 
-                          /////////CHECK ACCOUNT TYPE
+                          var accountTypesResponse =
+                              await networkHandler.get('/api/v1/account-types');
 
-                          bool isTableEmpty =
-                              await dbHelper.isAccountTypeTableEmpty();
-                          if (isTableEmpty) {
-                            print(
-                                "AccountTypes table is empty. Fetching account types from server...");
-                            var accountTypesResponse = await networkHandler
-                                .get('/api/v1/account-types?type=Saving');
-                            print("datataa");
+                          if (accountTypesResponse is List<dynamic>) {
+                            int localCount =
+                                await dbHelper.getAccountTypeCount();
+                            int incomingCount = accountTypesResponse.length;
 
-                            print(accountTypesResponse);
-                            if (accountTypesResponse is List<dynamic>) {
-                              print("Fetched account types successfully.");
+                            if (localCount < incomingCount) {
+                              print(
+                                  "New account types found. Refreshing local database...");
+
+                              await dbHelper.clearAccountTypesTable();
 
                               List<Map<String, dynamic>> accountTypesToSave =
                                   accountTypesResponse.map((e) {
                                 return {
-                                  "id": e["id"],
-                                  "name":
-                                      e["name"], // Sanitize the 'name' field
-                                  "type": e["type"],
-                                  "minAge": e["minAge"] ?? "",
-                                  "maxAge": e["maxAge"] ?? "",
-                                  "minAmount": e["minAmount"] ?? "",
+                                  "id": e["id"].toString(),
+                                  "name": e["name"] ?? "",
+                                  "description": e["description"] ?? "",
+                                  "category": e["category"] ?? "",
+                                  "bankingType": e["bankingType"] ?? "",
+                                  "origin": e["origin"] ?? "",
+                                  "minAge": e["minAge"]?.toString() ?? "",
+                                  "maxAge": e["maxAge"]?.toString() ?? "",
+                                  "minAmount": e["minAmount"]?.toString() ?? "",
                                   "sex": e["sex"] ?? "",
-                                  "bankingType": e["bankingType"],
+                                  "status": e["status"] ?? "",
                                 };
                               }).toList();
 
                               await dbHelper
                                   .insertAccountTypes(accountTypesToSave);
-                              print("Account types saved successfully.");
+
+                              print(
+                                  "Account types refreshed and saved successfully.");
                             } else {
                               print(
-                                  "Failed to fetch account types: ${accountTypesResponse.body}");
+                                  "No need to update account types. Local data is up-to-date.");
                             }
                           } else {
-                            print("AccountTypes table already has data.");
+                            print(
+                                "Failed to fetch account types: ${accountTypesResponse.body}");
                           }
 
                           ///
@@ -350,6 +354,8 @@ class _LoginscreenState extends State<Loginscreen> {
                           },
                         );
                       } catch (e) {
+                        print("dkakdfds");
+                        print(e);
                         setState(() {
                           isApiCallProcess = false;
                           validate = false;
@@ -465,7 +471,6 @@ class _LoginscreenState extends State<Loginscreen> {
             ),
             const SizedBox(height: 5),
 
-            // Sign Up option
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -495,81 +500,6 @@ class _LoginscreenState extends State<Loginscreen> {
             ),
 
             const SizedBox(height: 5),
-            // Divider and Sign in with Google
-            // "or sign in with" Divider
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-            //   child: Container(
-            //     width: width < 600 ? double.infinity : width * 0.5,
-            //     child: const Row(
-            //       children: [
-            //         Expanded(
-            //           child: Divider(thickness: 1, color: Colors.grey),
-            //         ),
-            //         Padding(
-            //           padding: EdgeInsets.symmetric(horizontal: 10),
-            //           child: Text("OR", style: TextStyle(color: Colors.grey)),
-            //         ),
-            //         Expanded(
-            //           child: Divider(thickness: 1, color: Colors.black),
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-            //   child: GestureDetector(
-            //     onTap: () {
-            //       Navigator.pushAndRemoveUntil(
-            //           context,
-            //           MaterialPageRoute(
-            //             builder: (context) => const SuuqPassLoginscreen(),
-            //           ),
-            //           (route) => false);
-            //     },
-            //     child: Container(
-            //       width: width < 600
-            //           ? double.infinity
-            //           : width * 0.5, // Match login button width
-            //       height: 50, // Match login button height
-            //       decoration: BoxDecoration(
-            //         color: Colors.white,
-            //         borderRadius: BorderRadius.circular(25),
-            //         border: Border.all(color: Colors.grey),
-            //       ),
-            //       child: Row(
-            //         children: [
-            //           Padding(
-            //             padding: const EdgeInsets.only(
-            //                 left: 20.0), // Adjust space from left
-            //             child: Container(
-            //               height: 30, // Set a fixed height for the image
-            //               width: 30, // Set a fixed width for the image
-            //               child: Image.asset(
-            //                 'assets/coop_engage.png',
-            //                 fit: BoxFit
-            //                     .contain, // Make the image fit the container
-            //               ),
-            //             ),
-            //           ),
-            //           const Expanded(
-            //             child: Center(
-            //               child: Text(
-            //                 "Sign In with Suuq-Pass",
-            //                 style: TextStyle(
-            //                   fontSize: 16,
-            //                   color: Colors.black,
-            //                   fontWeight: FontWeight.bold,
-            //                 ),
-            //               ),
-            //             ),
-            //           ),
-            //         ],
-            //       ),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -581,14 +511,12 @@ class _LoginscreenState extends State<Loginscreen> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // const SizedBox(height: 30),
           Align(
             alignment: Alignment.center,
             child: Image.asset(
               'assets/coop_engage.png',
               width: 300,
               height: 290,
-              // color: Colors.white,
               fit: BoxFit.fill,
             ),
           ),
@@ -632,9 +560,9 @@ class _LoginscreenState extends State<Loginscreen> {
 
   String sanitizeInput(String input) {
     return input
-        .replaceAll("'", "&#39;") // Escape single quote
-        .replaceAll('"', "&quot;") // Escape double quote
-        .replaceAll('<', "&lt;") // Escape less than symbol
-        .replaceAll('>', "&gt;"); // Escape greater than symbol
+        .replaceAll("'", "&#39;")
+        .replaceAll('"', "&quot;")
+        .replaceAll('<', "&lt;")
+        .replaceAll('>', "&gt;");
   }
 }

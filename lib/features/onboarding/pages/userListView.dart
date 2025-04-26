@@ -1,5 +1,7 @@
 // // // ignore_for_file: library_private_types_in_public_api
 
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/features/onboarding/Indivudualaccount/ViewCustomerInfoPage.dart';
@@ -335,7 +337,7 @@ class _UserInfoPageState extends State<UserListPage> {
     print("title");
     print(title);
 
-    String url = '/api/v1/accounts/individual';
+    String url = '/api/v1/accounts?customerType=INDIVIDUAL&';
     int? SIZE;
 
     String status;
@@ -365,7 +367,7 @@ class _UserInfoPageState extends State<UserListPage> {
     }
 
     if (status.isNotEmpty) {
-      url += '?status=$status';
+      url += 'status=$status';
     }
 
     print('Fetching users from URL: $url');
@@ -373,10 +375,10 @@ class _UserInfoPageState extends State<UserListPage> {
       try {
         SIZE = SIZE ?? 1000;
 
-        print("SIZE");
+        print("SIZEdjjdj");
         print(SIZE);
         int size = 1000;
-        String urlWithParams = '$url&size= 10000';
+        String urlWithParams = '$url';
         print(urlWithParams);
 
         var response = await networkHandler.getUserData(urlWithParams);

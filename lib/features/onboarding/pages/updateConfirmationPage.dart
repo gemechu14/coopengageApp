@@ -12,7 +12,7 @@ class UpdateConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> registrationFormData;
   final String? userId;
   final String? className;
-  UpdateConfirmationPage({
+  const UpdateConfirmationPage({
     required this.registrationData,
     required this.registrationFormData,
     this.userId,
@@ -420,9 +420,6 @@ class _UpdateConfirmationPageState extends State<UpdateConfirmationPage> {
   Future<void> _initializeGlobal() async {
     List<Map<String, dynamic>> fetchedAccountTypes =
         await networkHandler.fetchAccountTypesFromDatabase();
-
-    print("Gemechu bulti ");
-    print(fetchedAccountTypes);
 
     setState(() {
       accountTypes = fetchedAccountTypes;
