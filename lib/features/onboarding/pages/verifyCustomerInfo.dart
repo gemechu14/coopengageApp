@@ -60,11 +60,12 @@ class _VerifycustomerinfoState extends State<Verifycustomerinfo> {
               color: Colors.blue,
             ),
             onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => MainPage()),
-                (route) => false,
-              );
+              // Navigator.pushAndRemoveUntil(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => MainPage()),
+              //   (route) => false,
+              // );
+              Navigator.pop(context);
             },
           ),
         ),

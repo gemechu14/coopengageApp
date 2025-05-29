@@ -157,7 +157,7 @@ class _AgentPageState extends State<AgentPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
-                  hintText: "Enter Full Name",
+                  hintText: "",
                   controller: fullNameController,
                   errorMessage: "Full Name cannot be empty",
 
@@ -174,9 +174,9 @@ class _AgentPageState extends State<AgentPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
-                  hintText: "Enter phonenumber or email",
+                  // hintText: "Enter phonenumber or email",
                   controller: phoneNumberController,
-                  errorMessage: "PhoneNumber empty",
+                  errorMessage: "PhoneNumber empty", hintText: '',
 
                   // leadingIcon: Icons.person,
                 ),
@@ -191,10 +191,10 @@ class _AgentPageState extends State<AgentPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
-                  hintText: "Enter Business Name",
+                  // hintText: "Enter Business Name",
                   controller: businessNameController,
                   errorMessage: "Business Name empty",
-                  isRequired: false,
+                  isRequired: false, hintText: '',
 
                   // leadingIcon: Icons.person,
                 ),
@@ -209,8 +209,7 @@ class _AgentPageState extends State<AgentPage> {
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: CustomTextFormField(
-                  hintText: "Enter TIN",
-                  controller: tinController,
+                  hintText: '', controller: tinController,
                   keyboardType: TextInputType.number,
                   // inputFormatters: [
                   //   FilteringTextInputFormatter
@@ -253,7 +252,8 @@ class _AgentPageState extends State<AgentPage> {
                     obscureText: hidePassword,
                     decoration: InputDecoration(
                       isDense: true,
-                      hintText: "Password",
+                      // hintText: "Password",
+                      hintText: '',
                       hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
                       suffixIcon: IconButton(
                         icon: Icon(hidePassword
@@ -303,7 +303,8 @@ class _AgentPageState extends State<AgentPage> {
                     obscureText: hideConfirmPassword,
                     decoration: InputDecoration(
                       isDense: true,
-                      hintText: "Confirm Password",
+                      // hintText: "Confirm Password",
+                      hintText: '',
                       hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
                       suffixIcon: IconButton(
                         icon: Icon(hideConfirmPassword
@@ -703,12 +704,13 @@ class _AgentPageState extends State<AgentPage> {
   Padding TextLabel(String text) {
     return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 1),
-        child: Text(text, style: titleStyle));
+        child: Text(text,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)));
   }
 
   Future<void> fetchBranches() async {
     const url =
-        'http://10.2.125.41:9060/api/branches'; // Replace with your actual URL
+        'http://10.2.125.41:9061/api/branches'; // Replace with your actual URL
     try {
       // print(url);
       final response = await http.get(Uri.parse(url));

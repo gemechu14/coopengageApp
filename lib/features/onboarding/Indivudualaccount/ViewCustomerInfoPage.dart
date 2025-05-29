@@ -71,19 +71,19 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
       "expirayDate",
       // 'percentageCompleted',
       'accountType',
-      // 'accountTypeName'
+      'accountNumber'
     ];
 
     return WillPopScope(
       onWillPop: () async {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainPage(),
-          ),
-          (route) => false,
-        );
-
+        // Navigator.pushAndRemoveUntil(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => MainPage(),
+        //   ),
+        //   (route) => false,
+        // );
+        Navigator.pop(context);
         return false;
       },
       child: Scaffold(
@@ -96,13 +96,14 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
           ),
           leading: IconButton(
             onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MainPage(),
-                ),
-                (route) => false,
-              );
+              Navigator.pop(context);
+              // Navigator.pushAndRemoveUntil(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (context) => MainPage(),
+              //   ),
+              //   (route) => false,
+              // );
             },
             icon: const Icon(
               Icons.arrow_back_ios_new_outlined,

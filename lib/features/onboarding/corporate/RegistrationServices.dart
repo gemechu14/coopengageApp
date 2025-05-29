@@ -22,10 +22,6 @@ class RegistrationService {
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
 
-      print("Starting request...");
-      print("kdkdksfadksddkkd");
-      print(requestData["tinNumber"]);
-
       // **Add company details**
       request.fields["companyName"] = requestData["companyName"] ?? "";
       request.fields["email"] = requestData["email"] ?? "";

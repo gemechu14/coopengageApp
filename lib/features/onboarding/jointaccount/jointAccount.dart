@@ -106,7 +106,6 @@ class JointAccountStepperPage extends StatefulWidget {
 }
 
 class _Registration extends State<JointAccountStepperPage> {
-  // final storage = FlutterSecureStorage();
   String? userId;
   int? userID;
   bool termsAccepted = false;
@@ -1973,54 +1972,6 @@ class _Registration extends State<JointAccountStepperPage> {
     }
   }
 
-  // _cropImage(File imgFile, String imageTypes) async {
-  //   FocusScope.of(context).unfocus();
-  //   final croppedFile =
-  //       await ImageCropper().cropImage(sourcePath: imgFile.path, uiSettings: [
-  //     AndroidUiSettings(
-  //         toolbarTitle: "Image Cropper",
-  //         toolbarColor: Colors.deepOrange,
-  //         toolbarWidgetColor: Colors.white,
-  //         initAspectRatio: CropAspectRatioPreset.original,
-  //         lockAspectRatio: false),
-  //     IOSUiSettings(
-  //       title: "Image Cropper",
-  //     )
-  //   ]);
-  //   if (croppedFile != null) {
-  //     // imageCache.clear();
-  //     setState(() {
-  //       // imageFile = File(croppedFile.path);
-
-  //       if (imageTypes == 'passport') {
-  //         passportPath = croppedFile.path;
-  //       } else if (imageTypes == 'profile') {
-  //         // profilePath = croppedFile.path;
-  //       } else if (imageTypes == 'resident') {
-  //         residentPath = croppedFile.path;
-  //       } else if (imageTypes == 'residentCardBack') {
-  //         residentCardBackPath = croppedFile.path;
-  //       } else if (imageTypes == 'signature') {
-  //         // signatureImagePath = croppedFile.path;
-  //         // savedSignature = null;
-  //         // _signatureController.clear();
-
-  //         // Clear drawn signature
-  //         _signatureController1.clear();
-  //         _signatureController2.clear();
-  //         _signatureController3.clear();
-  //         savedSignature = null;
-
-  //         // Set the uploaded image as the combined signature
-  //         signatureImagePath = croppedFile.path;
-  //         _combinedSignature = File(croppedFile.path).readAsBytesSync();
-  //       } else if (imageTypes == 'form') {
-  //         formPath = croppedFile.path;
-  //       }
-  //     });
-  //   }
-  // }
-
   Future<Uint8List?> _getImageBytes(String imagePath) async {
     try {
       final File imageFile = File(imagePath);
@@ -2297,10 +2248,10 @@ class _Registration extends State<JointAccountStepperPage> {
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(fontSize: 14), // Smaller font size
+          style: TextStyle(fontSize: 14),
         ),
         backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating, // Keeps it compact
+        behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.symmetric(
             horizontal: 20, vertical: 10), // Smaller margins
         shape: RoundedRectangleBorder(
@@ -3028,6 +2979,7 @@ class _Registration extends State<JointAccountStepperPage> {
   //     }
   //   });
   // }
+
   void _filterAccountTypes(String bankingType) {
     print("Filtering account types...");
     setState(() {
@@ -3326,59 +3278,6 @@ class _Registration extends State<JointAccountStepperPage> {
         "emailVerified": true,
         "phone":
             phoneControllers[i].text.isNotEmpty ? phoneControllers[i].text : "",
-        // "email": emailControllers[i].text.isNotEmpty
-        //     ? emailControllers[i].text
-        //     : "", // Default value for empty fields
-        // "dateOfBirth": dateOfBirthControllers[i].text.isNotEmpty
-        //     ? dateOfBirthControllers[i].text
-        //     : "", // Default value for empty fields
-        // "country": "Ethiopia",
-        // "state": selectedState[i] ?? "Unknown",
-        // "city": "",
-        // "streetAddress": "",
-        // "zipCode": "",
-        // "occupation": occupationControllers[i].text.isNotEmpty
-        //     ? occupationControllers[i].text
-        //     : "Unknown", // Default value for empty fields
-        // "title": selectedTitle[i], // Default title if null
-        // "maritalStatus": maritalStatus[i],
-        // // Default marital status if null
-        // "postCode": '',
-        // "zoneSubCity": "",
-        // "houseNo": "",
-        // "documentName": selectedDocumentType[i],
-        // "issueAuthority": "",
-        // "issueDate": issueDateControllers[i].text.isNotEmpty
-        //     ? issueDateControllers[i].text
-        //     : "", // Default value for empty fields
-        // "expiryDate": expireDateControllers[i].text.isNotEmpty
-        //     ? expireDateControllers[i].text
-        //     : "", // Default value for empty fields
-        // "employeeStatus": "OTHER",
-        // "legalId": legalIDControllers[i].text.isNotEmpty
-        //     ? legalIDControllers[i].text
-        //     : "Unknown", // Default value for empty fields
-        // "salary": 0, // Adjust if needed
-        // // "sector": selectedSectors[i] != null && selectedSectors[i].isNotEmpty
-        // //     ? selectedSectors[i]
-        // //     : "Unknown", // Default sector if null
-        // "industry": "",
-        // "employerName": "",
-        // "monthlyIncome": monthlyIncomeControllers[i].text.isNotEmpty
-        //     ? monthlyIncomeControllers[i].text
-        //     : "", // Default value for empty fields
-        // "sex": selectedGender[i] ?? "",
-        // //     : "Unknown", // Default gender if null
-        // "photo": personalPhotoBytes ??
-        //     [], // Handle null photo (use empty list instead)
-        // "signature": combinedSignatures[i] ??
-        //     [], // Handle null signature (use empty list instead)
-        // "residenceCard": residentBytes ??
-        //     [], // Handle null residence card (use empty list instead)
-        // "residenceCardBack": residentCardBackBytes ??
-        //     [], // Handle null residence card back (use empty list instead)
-        // "passport": "", // Add if available
-        // "confirmationForm": "",
         "percentageCompleted": 0
       };
 
@@ -3410,27 +3309,9 @@ class _Registration extends State<JointAccountStepperPage> {
     if (response["statusCode"] == 200) {
       print("✅ Success: ${response["message"]}");
       DialogHelper.showSuccessDialog(context, response["message"]);
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => MainPage()),
-      //   (route) => false,
-      // );
-
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text(response["message"]),
-      //     backgroundColor: Colors.red,
-      //   ),
-      // );
     } else {
       DialogHelper.showErrorDialog(context, response["message"]);
-      // showErrorDialog(context, response["message"]);
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text(response["message"]),
-      //     backgroundColor: Colors.red,
-      //   ),
-      // );
+
       print("❌ Error1 (${response["statusCode"]}): ${response["message"]}");
       print("Error Details: ${response["error"]}");
     }

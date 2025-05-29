@@ -186,11 +186,19 @@ class AccountOpeningHomePage extends StatelessWidget {
                 const Color.fromARGB(255, 20, 57, 74)
               ],
               onTap: () {
+                // Navigator.pushAndRemoveUntil(
+                //   context,
+                //   MaterialPageRoute(
+                //       builder: (context) => JointAccountStepperPage()),
+                //   (route) => false,
+                // );
+
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
                       builder: (context) => JointAccountStepperPage()),
-                  (route) => false,
+                  (route) =>
+                      false, // This removes all routes, except the one you're pushing
                 );
               },
             ),

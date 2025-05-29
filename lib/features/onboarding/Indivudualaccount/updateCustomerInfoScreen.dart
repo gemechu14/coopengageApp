@@ -450,14 +450,19 @@ class _CustomerINFO extends State<UpdateCustomerINFOScreen> {
             backgroundColor: Colors.white,
             leading: IconButton(
                 onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MainPage(),
-                      ),
-                      (route) => false);
+                  // Navigator.pushAndRemoveUntil(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (context) => const MainPage(),
+                  //     ),
+                  //     (route) => false);
+
+                  Navigator.pop(context);
                 },
-                icon: const Icon(Icons.arrow_back))),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Colors.blue,
+                ))),
         body: Center(
           child: Container(
             width: width < 600 ? double.infinity : width * 0.5,

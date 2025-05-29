@@ -15,15 +15,10 @@ class RegistrationService {
   Future<Map<String, dynamic>> registerCustomers(
       Map<String, dynamic> requestData) async {
     try {
-      print("kjhgfghjkl");
-      print(_baseUrl);
 
       var uri = Uri.parse(_baseUrl);
       var request = http.MultipartRequest("POST", uri);
       String? token = await storage.read(key: "token");
-      // Token to include in the headers
-
-      // Add token to request headers
       request.headers['Authorization'] = 'Bearer $token';
       print("Starting request...");
 
