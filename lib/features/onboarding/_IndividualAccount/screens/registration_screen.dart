@@ -9,6 +9,7 @@ import '../widgets/steps/step_account_type.dart';
 import '../widgets/steps/step_terms_conditions.dart';
 import '../widgets/registration_summary_dialog.dart';
 import '../widgets/steps/step_financial_info.dart';
+import 'package:coopengageplus/pages/MainPage.dart';
 import '../widgets/steps/step_payment.dart';
 import '../widgets/steps/step_personal_info.dart';
 import '../widgets/steps/step_personal_photo.dart';
@@ -263,7 +264,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                               )
                             : isTermsStep && !allPreviousStepsCompleted
                                 ? Text(
-                                    'Complete all previous steps first',
+                                    'Complete all previous steps ',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.orange.shade600,
@@ -628,12 +629,16 @@ class StepDetailScreen extends ConsumerWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Registration completed successfully!'),
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.blueAccent,
                   duration: Duration(seconds: 3),
                 ),
               );
               Navigator.pop(context); // Close step detail screen
-              // Navigator.pop(context); // Go back to main screen
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const MainPage()),
+                (route) => false,
+              );
             } else {
               // Show error message
               ScaffoldMessenger.of(context).showSnackBar(

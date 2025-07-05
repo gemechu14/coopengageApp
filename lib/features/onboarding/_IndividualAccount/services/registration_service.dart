@@ -54,15 +54,13 @@ class RegistrationService {
 
   Future<ServiceResult> submitSignature({
     required Uint8List signature,
-   
     required bool isOnline,
     required String motherName,
     String? userId,
   }) async {
     try {
       if (isOnline) {
-        return await _submitSignatureOnline(
-            signature, motherName, userId);
+        return await _submitSignatureOnline(signature, motherName, userId);
       } else {
         return await _submitSignatureOffline(signature, userId);
       }
@@ -155,6 +153,22 @@ class RegistrationService {
       }
     } catch (e) {
       return ServiceResult.error('Failed to submit address info: $e');
+    }
+  }
+
+  Future<ServiceResult> submitAccountType({
+    required String accountType,
+    required bool isOnline,
+    String? userId,
+  }) async {
+    try {
+      if (isOnline) {
+        return await _submitAccountTypeOnline(accountType, userId);
+      } else {
+        return await _submitAccountTypeOffline(accountType, userId);
+      }
+    } catch (e) {
+      return ServiceResult.error('Failed to submit account type: $e');
     }
   }
 
@@ -666,6 +680,74 @@ class RegistrationService {
         return ServiceResult.success();
       } else {
         return ServiceResult.error('Failed to update address info');
+      }
+    } on TimeoutException {
+      return ServiceResult.error('Update operation timed out.');
+    } catch (e) {
+      return ServiceResult.error('An error occurred: $e');
+    }
+  }
+
+  Future<ServiceResult> _submitAccountTypeOnline(
+      String accountType, String? userId) async {
+    try {
+      print("dfksnfkdndnfdndnnddnfndf");
+      print(accountType);
+      if (userId == null) {
+        return ServiceResult.error(
+            'User ID not found. Please complete previous steps first.');
+      }
+
+      final requestData = {
+        'accountType': accountType,
+        'percentageCompleted': 87.5,
+        'status': 'INITIAL',
+      };
+
+      final response = await _networkHandler
+          .put1('/api/v1/accounts/individual/$userId', requestData)
+          .timeout(const Duration(seconds: 15));
+      print("ytytytyytyt");
+      print(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("ytytytyytyt");
+        return ServiceResult.success();
+      } else {
+        final errorResponse = jsonDecode(response.body);
+        final errorMessage =
+            errorResponse['message'] ?? 'Failed to update account type';
+        return ServiceResult.error(errorMessage);
+      }
+    } on TimeoutException {
+      return ServiceResult.error('Request timed out. Please try again.');
+    } catch (e) {
+      return ServiceResult.error('An error occurred: $e');
+    }
+  }
+
+  Future<ServiceResult> _submitAccountTypeOffline(
+      String accountType, String? userId) async {
+    try {
+      if (userId == null) {
+        return ServiceResult.error(
+            'User ID not found. Please complete previous steps first.');
+      }
+
+      final updateData = {
+        'accountType': accountType,
+        'percentageCompleted': 87.5,
+        'status': 'INITIAL',
+        'id': userId,
+      };
+
+      final rowsAffected = await _database
+          .updateCustomer(int.parse(userId), updateData)
+          .timeout(const Duration(seconds: 10));
+
+      if (rowsAffected > 0) {
+        return ServiceResult.success();
+      } else {
+        return ServiceResult.error('Failed to update account type');
       }
     } on TimeoutException {
       return ServiceResult.error('Update operation timed out.');

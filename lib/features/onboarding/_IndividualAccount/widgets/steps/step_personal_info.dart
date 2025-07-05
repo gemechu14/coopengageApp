@@ -42,14 +42,15 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
   void _initializeData() {
     final registrationData = ref.read(registrationDataProvider);
 
-    // if (registrationData.fullName != null)
-    //   _fullNameController.text = registrationData.fullName!;
-    // if (registrationData.surname != null)
-    //   _surnameController.text = registrationData.surname!;
-    // if (registrationData.motherName != null)
-    //   _motherNameController.text = registrationData.motherName!;
-    // if (registrationData.dateOfBirth != null)
-    //   _dateOfBirthController.text = registrationData.dateOfBirth!;
+    // Load existing data into text controllers
+    if (registrationData.fullName != null && registrationData.fullName!.isNotEmpty)
+      _fullNameController.text = registrationData.fullName!;
+    if (registrationData.surname != null && registrationData.surname!.isNotEmpty)
+      _surnameController.text = registrationData.surname!;
+    if (registrationData.motherName != null && registrationData.motherName!.isNotEmpty)
+      _motherNameController.text = registrationData.motherName!;
+    if (registrationData.dateOfBirth != null && registrationData.dateOfBirth!.isNotEmpty)
+      _dateOfBirthController.text = registrationData.dateOfBirth!;
 
     // Set defaults for title and gender
     _selectedTitle = registrationData.title ?? 'MR'; // Default to MR
@@ -76,7 +77,6 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
     _motherNameController.dispose();
     _dateOfBirthController.dispose();
 
- 
     _issueAuthorityController.dispose();
     _issueDateController.dispose();
     _expireDateController.dispose();

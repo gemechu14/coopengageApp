@@ -433,6 +433,11 @@ class RegistrationController {
     String? userId,
   }) async {
     try {
+      print("=== handleAccountTypeStep called ===");
+      print("accountType ID: $accountType");
+      print("isOnline: $isOnline");
+      print("userId: $userId");
+      
       _formValidationNotifier.clearAllErrors();
 
       // Validate account type selection
@@ -442,14 +447,25 @@ class RegistrationController {
         return false;
       }
 
-      // Update registration data
-      _registrationDataNotifier.updateAccountType(accountType);
+      // Submit account type using registration service
+      print("Calling _registrationService.submitAccountType...");
+      final result = await _registrationService.submitAccountType(
+        accountType: accountType,
+        isOnline: isOnline,
+        userId: userId,
+      );
 
-      // For now, just mark step as complete since account type submission
-      // is typically handled during final registration submission
-      _stepCompletionNotifier.markStepComplete(7);
-      _registrationDataNotifier.updateProgress(100.0);
-      return true;
+      if (result.isSuccess) {
+        // Update registration data
+        _registrationDataNotifier.updateAccountType(accountType);
+        _stepCompletionNotifier.markStepComplete(7);
+        _registrationDataNotifier.updateProgress(87.5);
+        return true;
+      } else {
+        _formValidationNotifier.setError(
+            'accountType', result.errorMessage ?? 'Failed to submit account type');
+        return false;
+      }
     } catch (e) {
       _formValidationNotifier.setError(
           'submission', 'An unexpected error occurred: $e');

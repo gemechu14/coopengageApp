@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import '../../providers/registration_providers.dart';
-import 'package:coopengageplus/NetworkHandler.dart';
+import '../../services/registration_service.dart';
 
 class StepAccountType extends ConsumerStatefulWidget {
   const StepAccountType({super.key});
@@ -41,9 +41,24 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
     final registrationData = ref.read(registrationDataProvider);
     if (registrationData.accountType != null &&
         registrationData.accountType!.isNotEmpty) {
-      setState(() {
-        selectedAccountTypeId = registrationData.accountType;
-      });
+      // Check if the stored value is a name (not a numeric ID)
+      final storedValue = registrationData.accountType!;
+      if (int.tryParse(storedValue) == null) {
+        // It's a name, find the corresponding ID
+        final accountTypeDetails = getAccountTypeDetails(storedValue);
+        if (accountTypeDetails != null) {
+          setState(() {
+            selectedAccountTypeId = accountTypeDetails['id'].toString();
+          });
+          // Update the registration data with the ID
+          ref.read(registrationDataProvider.notifier).updateAccountType(accountTypeDetails['id'].toString());
+        }
+      } else {
+        // It's already an ID
+        setState(() {
+          selectedAccountTypeId = storedValue;
+        });
+      }
     }
   }
 
@@ -57,7 +72,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
       final networkHandler = NetworkHandler();
       final accountTypes = await networkHandler.fetchAccountTypesFromDatabase();
       print("Account types loaded: ${accountTypes.length}");
-      
+
       if (accountTypes.isNotEmpty) {
         setState(() {
           allAccountTypes = accountTypes;
@@ -111,7 +126,8 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
               double.tryParse(accountType['minAmount']?.toString() ?? '0') ??
                   0.0;
           final accountSex = accountType['sex']?.toString() ?? '';
-          final accountBankingType = accountType['bankingType']?.toString() ?? '';
+          final accountBankingType =
+              accountType['bankingType']?.toString() ?? '';
 
           // Check age requirements
           final meetsAgeRequirement =
@@ -125,7 +141,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
               accountSex.isEmpty || accountSex == sex || accountSex == 'BOTH';
 
           // Check product type requirements (Conventional vs Alhuda)
-          final meetsProductTypeRequirement = 
+          final meetsProductTypeRequirement =
               accountBankingType.toUpperCase() == productType.toUpperCase();
 
           return meetsAgeRequirement &&
@@ -208,10 +224,10 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
         child: InkWell(
           onTap: () {
             setState(() {
-              selectedAccountTypeId = name;
+              selectedAccountTypeId = accountType['id'].toString();
             });
-            // Update registration data
-            ref.read(registrationDataProvider.notifier).updateAccountType(name);
+            // Update registration data with ID
+            ref.read(registrationDataProvider.notifier).updateAccountType(accountType['id'].toString());
             // Clear validation errors
             ref.read(formValidationProvider.notifier).clearError('accountType');
           },
@@ -380,14 +396,14 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                                  Text(
-                  'Choose the account type that best suits your needs based on your age, initial deposit, and product type.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    height: 1.4,
+                  Text(
+                    'Choose the account type that best suits your needs based on your age, initial deposit, and product type.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      height: 1.4,
+                    ),
                   ),
-                ),
                 ],
               ),
             ),
@@ -477,7 +493,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
                 const SizedBox(height: 16),
                 ...filteredAccountTypes
                     .map((accountType) => _buildAccountTypeCard(accountType,
-                        selectedAccountTypeId == accountType['name']))
+                        selectedAccountTypeId == accountType['id'].toString()))
                     .toList(),
               ] else ...[
                 Container(
@@ -505,15 +521,15 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                                          Text(
-                      'Sorry, no accounts were found for selection. Please ensure that the initial deposit, date of birth, and product type are correctly entered.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                        height: 1.4,
+                      Text(
+                        'Sorry, no accounts were found for selection. Please ensure that the initial deposit, date of birth, and product type are correctly entered.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          height: 1.4,
+                        ),
                       ),
-                    ),
                     ],
                   ),
                 ),
@@ -559,4 +575,76 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
       ),
     );
   }
+
+  // Method to validate and save data (called from parent)
+
+  // Method to handle registration (similar to your previous code)
+  // Future<bool> handleRegistration() async {
+  //   try {
+  //     print("dfjdnfdjfjdjddfnjdjjfd");
+  //     final registrationData = ref.read(registrationDataProvider);
+  //     final isOnline = ref.read(connectivityProvider);
+  //     final userId = ref.read(userIdProvider);
+
+  //     print(selectedAccountTypeId);
+  //     print("daaaaa");
+
+  //     var id;
+  //     var selectedAccountTypeName;
+
+  //     if (selectedAccountTypeId != null) {
+  //       var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
+
+  //       id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
+  //       selectedAccountTypeName = accountTypeDetails?['name'];
+  //     }
+
+  //     if (id == null) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //           content: Text('Please select account type'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //       return false; // Stop execution if invalid
+  //     }
+  //     print("kfdkfnjjfdndjfjdfjdfjdjfjdjfj");
+  //     print(id);
+  //     // Use the registration service to submit account type
+  //     final registrationService = ref.read(registrationServiceProvider);
+  //     final result = await registrationService.submitAccountType(
+  //       accountType: id.toString(),
+  //       isOnline: isOnline,
+  //       userId: userId,
+  //     );
+
+  //     if (result.isSuccess) {
+  //       // Update local registration data (save the ID, not the name)
+  //       ref
+  //           .read(registrationDataProvider.notifier)
+  //           .updateAccountType(id.toString());
+  //       ref.read(registrationDataProvider.notifier).updateProgress(87.5);
+
+  //       return true;
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content:
+  //               Text(result.errorMessage ?? 'Failed to update account type'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     print('Error in handleRegistration: $e');
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('An error occurred: $e'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return false;
+  //   }
+  // }
 }
