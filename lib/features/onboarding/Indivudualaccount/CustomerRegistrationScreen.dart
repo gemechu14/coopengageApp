@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable, constant_identifier_names, unused_element, avoid_print, unused_import, unnecessary_import, prefer_typing_uninitialized_variables, file_names, non_constant_identifier_names, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, prefer_const_literals_to_create_immutables
+// ignore_for_file: unused_local_variable, constant_identifier_names, unused_element, avoid_print, unused_import, unnecessary_import, prefer_typing_uninitialized_variables, file_names, non_constant_identifier_names, use_build_context_synchronously, no_leading_underscores_for_local_identifiers, prefer_const_literals_to_create_immutables, prefer_final_fields, deprecated_member_use
 
 import 'dart:async';
 import 'dart:convert';
@@ -6,7 +6,9 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
-import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
+import 'package:coopengageplus/common_widgets/dropDown/branch_selector.dart';
+import 'package:coopengageplus/common_widgets/image/image_utils.dart';
+import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:email_validator/email_validator.dart';
@@ -19,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,15 +59,16 @@ class RegistrationScreen extends StatefulWidget {
 
 class _Registration extends State<RegistrationScreen> {
   // final storage = FlutterSecureStorage();
-  String? userId;
+
+  int? idOne;
   int? userID;
+  String? userId;
   bool termsAccepted = false;
   List<String> branches = [];
   List<String> filteredBranches = [];
   String? selectedBranch;
   List<Map<String, dynamic>> branch = [];
   List<Map<String, dynamic>> mainBranches = [];
-  int? idOne;
   final Map<String, dynamic> registrationData = {};
   final Map<String, dynamic> registrationDataFile = {};
   bool registerStatus = true;
@@ -84,7 +88,6 @@ class _Registration extends State<RegistrationScreen> {
       _signatureController3;
   final ImagePicker _picker = ImagePicker();
   List<XFile>? _signatureImages = [];
-  bool _isSigning = false; // To toggle between sign and upload
   Uint8List? _combinedSignature;
 
   Future<void> _initializeGlobalData() async {
@@ -105,10 +108,8 @@ class _Registration extends State<RegistrationScreen> {
     super.initState();
     _initializeGlobalData();
     _initializeGlobal();
-    initializeBranches();
+    // initializeBranches();
     fetchToken();
-    // fetchtoken();
-    // UserID = GlobalData()?.userId;
     _signatureController1 = SignatureController(
       penColor: Colors.black,
       penStrokeWidth: 5,
@@ -277,6 +278,12 @@ class _Registration extends State<RegistrationScreen> {
               isRequired: true,
             ),
 
+            // BranchSelector(
+            //   initialValue: selectedBranch,
+            //   onChanged: (value) {
+            //     selectedBranch = value;
+            //   },
+            // ),
             TextLabel("PhoneNumber"),
             PhoneNumberWidget(phoneNumberController: phoneNumberController),
             TextLabel("Email"),
@@ -285,6 +292,8 @@ class _Registration extends State<RegistrationScreen> {
           ],
         ),
       ),
+     
+     
       Step(
         title: Text(
           isSmallScreen ? "" : "ID TYPE",
@@ -298,8 +307,14 @@ class _Registration extends State<RegistrationScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextLabel("Branch"),
+              BranchSelector(
+                initialValue: selectedBranch,
+                onChanged: (value) {
+                  selectedBranch = value;
+                },
+              ),
               // branchSelectorWidget(),
-              branchSelectorWidget1(),
+              // branchSelectorWidget1(),
               TextLabel("Document Type"),
               ReusableDropdown(
                 selectedValue: selectedDocumentType,
@@ -322,6 +337,8 @@ class _Registration extends State<RegistrationScreen> {
           ),
         ),
       ),
+     
+     
       Step(
         title: Text(isSmallScreen ? "" : "Signature"),
         isActive: _activeStepIndex >= 2,
@@ -342,13 +359,14 @@ class _Registration extends State<RegistrationScreen> {
                 isRequired: false,
               ),
               TextLabel("Signature"),
-              // signatureWidget1(context),
               signatureCard(),
               signaturePadSelection(),
             ],
           ),
         ),
       ),
+      
+      
       Step(
         title: Text(isSmallScreen ? "" : "Financial Information"),
         isActive: _activeStepIndex >= 3,
@@ -365,8 +383,9 @@ class _Registration extends State<RegistrationScreen> {
           ),
         ),
       ),
+
       Step(
-        title: Text(isSmallScreen ? "" : "Personal photo"),
+        title: Text(isSmallScreen ? "" : "Finantial Info"),
         isActive: _activeStepIndex >= 4,
         state: _activeStepIndex > 4 ? StepState.complete : StepState.indexed,
         content: Form(
@@ -416,7 +435,6 @@ class _Registration extends State<RegistrationScreen> {
                 ],
                 isRequired: false,
               ),
-
               TextLabel("InitialDeposit"),
               ReusableTextFormField(
                 hintText: "InitialDeposit",
@@ -430,15 +448,12 @@ class _Registration extends State<RegistrationScreen> {
                 ],
                 isRequired: true,
               ),
-              // TextLabel("Payment Method"),
-              // PaymentMethodWidget(
-              //   initialDepositController: initialDepositController,
-              //   phoneNumberController: phoneNumberController,
-              // ),
             ],
           ),
         ),
       ),
+      
+      
       Step(
         title: Text(isSmallScreen ? "" : "Payment"),
         isActive: _activeStepIndex >= 5,
@@ -546,8 +561,11 @@ class _Registration extends State<RegistrationScreen> {
           ),
         ),
       ),
+   
+   
+   
       Step(
-        title: Text(isSmallScreen ? "" : "Personal Information "),
+        title: Text(isSmallScreen ? "" : "Address Information "),
         isActive: _activeStepIndex >= 6,
         state: _activeStepIndex > 6 ? StepState.complete : StepState.indexed,
         content: Form(
@@ -556,8 +574,6 @@ class _Registration extends State<RegistrationScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // TextLabel("Country"),
-                // countryWidget(),
                 TextLabel("State"),
                 ReusableDropdown(
                   selectedValue: selectedState,
@@ -573,47 +589,38 @@ class _Registration extends State<RegistrationScreen> {
                   prefixIcon: Icons.map,
                   isRequired: false,
                 ),
-
                 TextLabel("Zone Subcity"),
                 ReusableTextFormField(
                   hintText: "Zone Subcity",
                   controller: cityController,
-                  // keyboardType: TextInputType.number,
                   errorMessage: "Zone Subcity cannot be empty",
                   leadingIcon: Icons.location_city,
                   isRequired: false,
                 ),
-
                 TextLabel("Woreda"),
                 ReusableTextFormField(
                   hintText: "Woreda",
                   controller: woredaController,
-                  // keyboardType: TextInputType.number,
                   errorMessage: "Woreda cannot be empty",
                   leadingIcon: Icons.location_city,
                   isRequired: false,
                 ),
-
                 TextLabel("Legal ID"),
                 ReusableTextFormField(
                   hintText: "Legal ID",
                   controller: legalIDController,
-                  // keyboardType: TextInputType.number,
                   errorMessage: "Legal ID cannot be empty",
                   leadingIcon: Icons.badge,
                   isRequired: true,
                 ),
                 TextLabel("ISSUE AUTHORITY"),
-
                 ReusableTextFormField(
                   hintText: "ISSUE AUTHORITY",
                   controller: issueAuthorityController,
-                  // keyboardType: TextInputType.number,
                   errorMessage: "ISSUE AUTHORITY cannot be empty",
                   leadingIcon: Icons.verified,
                   isRequired: false,
                 ),
-
                 TextLabel("ISSUE DATE"),
                 DatePickerField(
                   controller: issueDateController,
@@ -626,7 +633,6 @@ class _Registration extends State<RegistrationScreen> {
                   isRequired: false,
                   errorMessage: 'Please select an issue date',
                 ),
-
                 TextLabel("EXPIRY DATE"),
                 DatePickerField(
                   controller: expireDateController,
@@ -824,6 +830,8 @@ By accepting these terms, you agree to comply with all banking regulations and p
           ),
         ),
       )
+    
+    
     ];
   }
 
@@ -1078,6 +1086,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
                     : GestureDetector(
                         onTap: () =>
                             {_showFullScreenImage(context, profilePath)},
+                        // {showFullScreenImage(context, profilePath),},
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20.0),
                           child: Image.file(
@@ -1101,36 +1110,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
           height: 40,
         )
       ],
-    );
-  }
-
-  Padding countryWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: DropdownButtonFormField<String>(
-        value: selectedCountry,
-        // hint: const Text('Country *'),
-        style: const TextStyle(
-          fontSize: 15,
-          color: Colors.black,
-        ),
-        items: ['Ethiopia'].map((String country) {
-          return DropdownMenuItem<String>(
-            value: country,
-            child: Text(country),
-          );
-        }).toList(),
-        onChanged: null,
-
-        decoration: const InputDecoration(
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          prefixIcon: Icon(Icons.public),
-        ),
-      ),
     );
   }
 
@@ -1280,176 +1259,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
     );
   }
 
-  Widget branchSelectorWidget1() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DropdownButtonFormField<String>(
-            value: selectedBranch,
-            hint: const Text('Choose a branch'),
-            onChanged: (String? newValue) {
-              setState(() {
-                selectedBranch = newValue;
-              });
-            },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Branch is required';
-              }
-              return null;
-            },
-            items: allBranches.map<DropdownMenuItem<String>>((branch) {
-              return DropdownMenuItem<String>(
-                value: branch['companyName'] ?? '',
-                child: Text(branch['companyName'] ?? ''),
-              );
-            }).toList(),
-            decoration: const InputDecoration(
-              isDense: true,
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              prefixIcon: Icon(Icons.location_city),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void initializeBranches() async {
-    String? token = await storage.read(key: "token");
-    if (token != null && token.isNotEmpty) {
-      var decodedToken = JwtDecoder.decode(token);
-
-      // Get regular branches
-      List<Map<String, dynamic>> regularBranches =
-          decodedToken.containsKey("branch")
-              ? List<Map<String, dynamic>>.from(decodedToken["branch"])
-              : [];
-
-      setState(() {
-        allBranches = [];
-
-        // Add main branch first if it exists
-        if (decodedToken.containsKey("mainBranch")) {
-          allBranches.add(decodedToken["mainBranch"]);
-          // Set main branch as default selected branch
-          selectedBranch = decodedToken["mainBranch"]["companyName"];
-        }
-
-        // Add regular branches
-        allBranches.addAll(regularBranches);
-      });
-    }
-  }
-
-  Future<void> callApiAndUpdateControllers(Uint8List residentBytes) async {
-    try {
-      // API endpoint
-      final url = Uri.parse('http://10.11.227.165:5000/process_id');
-      final request = http.MultipartRequest('POST', url);
-
-      request.files.add(http.MultipartFile.fromBytes(
-        'image', // Field name in the API
-        residentBytes,
-        filename: 'residence_card.png', // Optional: Provide a filename
-        contentType: MediaType('image', 'png'), // Set the appropriate MIME type
-      ));
-
-      // Send the multipart request
-      final response = await request.send();
-
-      if (response.statusCode == 200) {
-        // Parse the response JSON
-        final responseData = await response.stream.bytesToString();
-        final data = jsonDecode(responseData);
-
-        // Update TextEditingControllers
-        setState(() {
-          fullNameController.text =
-              '${data['first_name']} ${data['middle_name']}';
-          surNameController.text = data['surname'];
-          String formattedDate = "";
-          if (data['date_of_birth'] != null) {
-            DateTime parsedDate = DateTime.parse(data['date_of_birth']);
-            formattedDate = DateFormat('yyyy-MM-dd')
-                .format(parsedDate); // Change to '-' separator
-          }
-          selectedGender = data['gender'].toUpperCase();
-          dateController.text = formattedDate;
-        });
-
-        print("Controllers updated successfully");
-      } else {
-        print("Failed to call API: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error calling API: $e");
-    }
-  }
-
-  Padding genderWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: DropdownButtonFormField<String>(
-        value: selectedGender,
-        hint: const Text(
-          'Gender',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.black,
-          ),
-        ),
-        items: genders.map((String gender) {
-          return DropdownMenuItem<String>(
-            value: gender,
-            child: Text(gender),
-          );
-        }).toList(),
-        onChanged: (String? newGender) {
-          setState(() {
-            selectedGender = newGender!;
-          });
-        },
-        validator: (String? value) {
-          if (value == null) {
-            return 'Gender *';
-          }
-          return null;
-        },
-        decoration: const InputDecoration(
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          prefixIcon: Icon(Icons.person),
-        ),
-      ),
-    );
-  }
-
   Padding genderWidget1() {
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
@@ -1545,97 +1354,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
               backgroundColor: Colors.white,
             ),
           ),
-          //   body: Container(
-          //     child: Center(
-          //       child: Container(
-          //         width: width < 600 ? double.infinity : width * 0.5,
-          //         color: Colors.white,
-          //         child: Column(
-          //           children: [
-          //             const SizedBox(
-          //               height: 20,
-          //             ),
-          //             Expanded(
-          //               child: Form(
-          //                 key: globalFormKey,
-          //                 child: Theme(
-          //                   data: ThemeData(
-          //                     colorScheme: const ColorScheme.light(
-          //                       primary: Colors.blue,
-          //                       secondary: Colors.blue,
-          //                     ),
-          //                   ),
-          //                   child: Stepper(
-          //                     stepIconHeight: 25.0,
-          //                     stepIconWidth: 25.0,
-          //                     margin: EdgeInsets.zero,
-          //                     connectorThickness: 10,
-          //                     type: StepperType.horizontal,
-          //                     steps: stepList(),
-          //                     currentStep: _activeStepIndex,
-          //                     controlsBuilder:
-          //                         (BuildContext context, ControlsDetails details) {
-          //                       return Padding(
-          //                         padding: const EdgeInsets.only(
-          //                             top: 20, left: 20, right: 20),
-          //                         child: Row(
-          //                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                           children: <Widget>[
-          //                             if (_activeStepIndex > 0)
-          //                               Align(
-          //                                 alignment: Alignment.centerLeft,
-          //                                 child: TextButton(
-          //                                   onPressed: onStepCancel,
-          //                                   style: TextButton.styleFrom(
-          //                                     backgroundColor: Colors.blue,
-          //                                   ),
-          //                                   child: const Text(
-          //                                     '     Back     ',
-          //                                     style: TextStyle(color: Colors.white),
-          //                                   ),
-          //                                 ),
-          //                               ),
-          //                             const Spacer(),
-          //                             Align(
-          //                               alignment: Alignment.centerRight,
-          //                               child: TextButton(
-          //                                 onPressed: onStepContinue,
-          //                                 style: TextButton.styleFrom(
-          //                                   backgroundColor: Colors.blue,
-          //                                 ),
-          //                                 child: isLoading
-          //                                     ? const SizedBox(
-          //                                         width: 20,
-          //                                         height: 20,
-          //                                         child: CircularProgressIndicator(
-          //                                           strokeWidth: 2,
-          //                                           color: Colors.white,
-          //                                         ),
-          //                                       )
-          //                                     : Text(
-          //                                         _activeStepIndex == 8
-          //                                             ? 'Submit'
-          //                                             : 'Continue',
-          //                                         style: const TextStyle(
-          //                                             color: Colors.white),
-          //                                       ),
-          //                               ),
-          //                             ),
-          //                           ],
-          //                         ),
-          //                       );
-          //                     },
-          //                   ),
-          //                 ),
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-          // );
-
           body: Container(
             child: Center(
               child: Container(
@@ -1666,54 +1384,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
                                     steps: stepList(),
                                     currentStep: _activeStepIndex,
                                     margin: EdgeInsets.zero,
-                                    // controlsBuilder: (BuildContext context,
-                                    //     ControlsDetails details) {
-                                    //   return Padding(
-                                    //     padding: const EdgeInsets.only(top: 20),
-                                    //     child: Wrap(
-                                    //       // Changed from Row to Wrap
-                                    //       spacing: 8,
-                                    //       children: <Widget>[
-                                    //         if (_activeStepIndex > 0)
-                                    //           TextButton(
-                                    //             onPressed: onStepCancel,
-                                    //             style: TextButton.styleFrom(
-                                    //               backgroundColor: Colors.blue,
-                                    //               minimumSize: const Size(80, 36),
-                                    //             ),
-                                    //             child: const Text(
-                                    //               'Back',
-                                    //               style: TextStyle(
-                                    //                   color: Colors.white),
-                                    //             ),
-                                    //           ),
-                                    //         TextButton(
-                                    //           onPressed: onStepContinue,
-                                    //           style: TextButton.styleFrom(
-                                    //             backgroundColor: Colors.blue,
-                                    //             minimumSize: const Size(80, 36),
-                                    //           ),
-                                    //           child: isLoading
-                                    //               ? const SizedBox(
-                                    //                   width: 20,
-                                    //                   height: 20,
-                                    //                   child:
-                                    //                       CircularProgressIndicator(
-                                    //                     strokeWidth: 2,
-                                    //                     color: Colors.white,
-                                    //                   ),
-                                    //                 )
-                                    //               : Text(
-                                    //                   _activeStepIndex == 8
-                                    //                       ? 'Submit'
-                                    //                       : 'Continue',
-                                    //                   style: const TextStyle(
-                                    //                       color: Colors.white),
-                                    //                 ),
-                                    //         ),
-                                    //       ],
-                                    //     ),
-
                                     controlsBuilder: (BuildContext context,
                                         ControlsDetails details) {
                                       return Padding(
@@ -1862,80 +1532,169 @@ By accepting these terms, you agree to comply with all banking regulations and p
     });
   }
 
-  _imgFromCamera(String imageTypes) async {
-    // Unfocus any text fields or inputs
-    FocusScope.of(context).unfocus();
-    await picker
-        .pickImage(source: ImageSource.camera, imageQuality: 50)
-        .then((value) {
-      if (value != null) {
-        _cropImage(File(value.path), imageTypes);
+  // _imgFromCamera(String imageTypes) async {
+  //   // Unfocus any text fields or inputs
+  //   FocusScope.of(context).unfocus();
+  //   await picker
+  //       .pickImage(source: ImageSource.camera, imageQuality: 50)
+  //       .then((value) {
+  //     if (value != null) {
+  //       _cropImage(File(value.path), imageTypes);
 
-        // _cropImage(File(value.path));
+  //       // _cropImage(File(value.path));
+  //     }
+  //   });
+  // }
+
+  // _imgFromCamera(String imageTypes) async {
+  //   try {
+  //     FocusScope.of(context).unfocus();
+  //     final permissionStatus = await Permission.camera.request();
+  //     if (permissionStatus.isGranted) {
+  //       final pickedFile = await picker.pickImage(
+  //           source: ImageSource.camera, imageQuality: 50);
+  //       if (pickedFile != null) {
+  //         await _cropImage(File(pickedFile.path), imageTypes);
+  //       }
+  //     } else {
+  //       debugPrint("Camera permission denied");
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error in _imgFromCamera: $e");
+  //   }
+  // }
+
+  Future<void> _imgFromCamera(String imageTypes) async {
+    try {
+      FocusScope.of(context).unfocus();
+      final permissionStatus = await Permission.camera.request();
+
+      if (!permissionStatus.isGranted) {
+        debugPrint("Camera permission denied");
+        return;
       }
-    });
+
+      // Show loader
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final pickedFile =
+          await picker.pickImage(source: ImageSource.camera, imageQuality: 50);
+
+      if (pickedFile != null) {
+        await _cropImage(File(pickedFile.path), imageTypes);
+      }
+
+      // Dismiss loader
+      Navigator.of(context, rootNavigator: true).pop();
+    } catch (e) {
+      debugPrint("Error in _imgFromCamera: $e");
+      Navigator.of(context, rootNavigator: true).pop(); // just in case
+    }
   }
 
-  _cropImage(File imgFile, String imageTypes) async {
+  Future<void> _cropImage(File imgFile, String imageTypes) async {
     FocusScope.of(context).unfocus();
-    final croppedFile =
-        await ImageCropper().cropImage(sourcePath: imgFile.path, uiSettings: [
-      AndroidUiSettings(
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: imgFile.path,
+      uiSettings: [
+        AndroidUiSettings(
           toolbarTitle: "Image Cropper",
           toolbarColor: Colors.deepOrange,
           toolbarWidgetColor: Colors.white,
           initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false),
-      IOSUiSettings(
-        title: "Image Cropper",
-      )
-    ]);
+          lockAspectRatio: false,
+        ),
+        IOSUiSettings(title: "Image Cropper"),
+      ],
+    );
+
     if (croppedFile != null) {
-      // imageCache.clear();
-      setState(() {
-        // imageFile = File(croppedFile.path);
+      final file = File(croppedFile.path);
 
-        if (imageTypes == 'passport') {
-          passportPath = croppedFile.path;
-        } else if (imageTypes == 'profile') {
-          profilePath = croppedFile.path;
-        } else if (imageTypes == 'resident') {
-          residentPath = croppedFile.path;
-        } else if (imageTypes == 'residentCardBack') {
-          residentCardBackPath = croppedFile.path;
-        } else if (imageTypes == 'signature') {
-          // signatureImagePath = croppedFile.path;
-          // savedSignature = null;
-          // _signatureController.clear();
-
-          // Clear drawn signature
+      if (imageTypes == 'signature') {
+        final bytes = await file.readAsBytes();
+        setState(() {
           _signatureController1.clear();
           _signatureController2.clear();
           _signatureController3.clear();
           savedSignature = null;
-
-          // Set the uploaded image as the combined signature
           signatureImagePath = croppedFile.path;
-          _combinedSignature = File(croppedFile.path).readAsBytesSync();
-        } else if (imageTypes == 'form') {
-          formPath = croppedFile.path;
-        }
-      });
+          _combinedSignature = bytes;
+        });
+      } else {
+        setState(() {
+          if (imageTypes == 'passport') passportPath = croppedFile.path;
+          if (imageTypes == 'profile') profilePath = croppedFile.path;
+          if (imageTypes == 'resident') residentPath = croppedFile.path;
+          if (imageTypes == 'residentCardBack')
+            residentCardBackPath = croppedFile.path;
+          if (imageTypes == 'form') formPath = croppedFile.path;
+        });
+      }
     }
+
+    // Dismiss loading
+    Navigator.of(context, rootNavigator: true).pop();
   }
 
-  // Future<Uint8List> _getImageBytes(String path) async {
-  //   final imageFile = File(path);
-  //   print("hello there");
+  // _cropImage(File imgFile, String imageTypes) async {
+  //   FocusScope.of(context).unfocus();
+  //   final croppedFile =
+  //       await ImageCropper().cropImage(sourcePath: imgFile.path, uiSettings: [
+  //     AndroidUiSettings(
+  //         toolbarTitle: "Image Cropper",
+  //         toolbarColor: Colors.deepOrange,
+  //         toolbarWidgetColor: Colors.white,
+  //         initAspectRatio: CropAspectRatioPreset.original,
+  //         lockAspectRatio: false),
+  //     IOSUiSettings(
+  //       title: "Image Cropper",
+  //     )
+  //   ]);
+  //   if (croppedFile != null) {
+  //     // imageCache.clear();
+  //     setState(() {
+  //       // imageFile = File(croppedFile.path);
 
-  //   print(imageFile);
-  //   print(await imageFile.exists());
+  //       if (imageTypes == 'passport') {
+  //         passportPath = croppedFile.path;
+  //       } else if (imageTypes == 'profile') {
+  //         profilePath = croppedFile.path;
+  //       } else if (imageTypes == 'resident') {
+  //         residentPath = croppedFile.path;
+  //       } else if (imageTypes == 'residentCardBack') {
+  //         residentCardBackPath = croppedFile.path;
+  //       } else if (imageTypes == 'signature') {
+  //         // signatureImagePath = croppedFile.path;
+  //         // savedSignature = null;
+  //         // _signatureController.clear();
 
-  //   if (await imageFile.exists()) {
-  //     // throw Exception("File does not exist.");
-  //     print("file not exist");
+  //         // Clear drawn signature
+  //         _signatureController1.clear();
+  //         _signatureController2.clear();
+  //         _signatureController3.clear();
+  //         savedSignature = null;
+
+  //         // Set the uploaded image as the combined signature
+  //         signatureImagePath = croppedFile.path;
+  //         _combinedSignature = File(croppedFile.path).readAsBytesSync();
+  //       } else if (imageTypes == 'form') {
+  //         formPath = croppedFile.path;
+  //       }
+  //     });
   //   }
-  //   return await imageFile.readAsBytes();
   // }
 
   Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
@@ -2073,15 +1832,11 @@ By accepting these terms, you agree to comply with all banking regulations and p
       isLoading = true;
     });
     final formIsValid = validateData();
-    print("formIsValid");
-    print(formIsValid);
+
 
     if (formIsValid) {
       final isLastStep = _activeStepIndex == stepList().length - 1;
-      print("isLastStep1");
-      print(isLastStep);
-      print(_activeStepIndex);
-
+    
       if (_activeStepIndex == 0) {
         await handleFirstStep();
       } else if (_activeStepIndex == 1) {
@@ -2170,20 +1925,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
     }
   }
 
-  _setDateHandler(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(seconds: 1)),
-      firstDate: DateTime(1940),
-      lastDate: DateTime(2024, 12, 31),
-    );
-    if (picked != null) {
-      {
-        dateController.text = picked.toString().split(" ")[0];
-      }
-    }
-  }
-
   Padding TextLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
@@ -2197,85 +1938,10 @@ By accepting these terms, you agree to comply with all banking regulations and p
     );
   }
 
-  Column signatureWidget1(BuildContext context) {
-    return Column(
-      children: [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-            child: Container(
-              height: 180,
-              width: MediaQuery.of(context).size.width * 0.8,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                  ),
-                ],
-              ),
-              child: savedSignature != null
-                  ? Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20.0),
-                        child: Image.memory(
-                          savedSignature!,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    )
-                  : (signatureImagePath != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(20.0),
-                          child: Image.file(
-                            File(signatureImagePath!),
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(20.0),
-                          child: Image.asset(
-                            'assets/signature.png',
-                            height: 10.0,
-                            width: MediaQuery.of(context).size.width * 0.1,
-                            fit: BoxFit.contain,
-                          ),
-                        )),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10),
-                child: Column(
-                  children: [
-                    SignatureButtons(
-                      onDrawSignature: () => _showDrawSignatureDialog(context),
-                      onUploadOrTake: () =>
-                          showImagePicker(context, "signature"),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Future<void> fetchToken() async {
     String? token =
         await storage.read(key: "token"); // Get token from secure storage
     if (token != null && token.isNotEmpty) {
-      // Decode the token using the JwtDecoder
       var decodedToken = JwtDecoder.decode(token);
       UserID = decodedToken['userId'];
       branch = decodedToken.containsKey("branch")
@@ -2300,58 +1966,58 @@ By accepting these terms, you agree to comply with all banking regulations and p
     }
   }
 
-  void _showDrawSignatureDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Draw Signature'),
-          content: SizedBox(
-            height: 300,
-            width: 300,
-            child: Signature(
-              controller: _signatureController,
-              backgroundColor: Colors.white,
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Clear'),
-              onPressed: () {
-                _signatureController.clear();
-              },
-            ),
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Save'),
-              onPressed: () async {
-                if (_signatureController.isNotEmpty) {
-                  // Capture the signature as an image
-                  final signatureImage = await _signatureController.toImage();
-                  final byteData = await signatureImage!
-                      .toByteData(format: ImageByteFormat.png);
+  // void _showDrawSignatureDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Draw Signature'),
+  //         content: SizedBox(
+  //           height: 300,
+  //           width: 300,
+  //           child: Signature(
+  //             controller: _signatureController,
+  //             backgroundColor: Colors.white,
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             child: const Text('Clear'),
+  //             onPressed: () {
+  //               _signatureController.clear();
+  //             },
+  //           ),
+  //           TextButton(
+  //             child: const Text('Cancel'),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //           TextButton(
+  //             child: const Text('Save'),
+  //             onPressed: () async {
+  //               if (_signatureController.isNotEmpty) {
+  //                 // Capture the signature as an image
+  //                 final signatureImage = await _signatureController.toImage();
+  //                 final byteData = await signatureImage!
+  //                     .toByteData(format: ImageByteFormat.png);
 
-                  setState(() {
-                    savedSignature = byteData!.buffer.asUint8List();
-                    signatureImagePath = null;
+  //                 setState(() {
+  //                   savedSignature = byteData!.buffer.asUint8List();
+  //                   signatureImagePath = null;
 
-                    // isSignatureDrawn = true;
-                  });
+  //                   // isSignatureDrawn = true;
+  //                 });
 
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //                 Navigator.of(context).pop();
+  //               }
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> submitStepData() async {
     // var connectivityResult = await Conne().checkConnectivity();
@@ -2369,10 +2035,9 @@ By accepting these terms, you agree to comply with all banking regulations and p
           response = await networkHandler
               .post1('/api/v1/accounts/individual', registrationData)
               .timeout(const Duration(seconds: 20));
-
+      
           var responseData = json.decode(response.body);
-          print("response.statusCode");
-          print(response.statusCode);
+     
 
           if (response.statusCode == 200 || response.statusCode == 201) {
             setState(() {
@@ -2392,16 +2057,14 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
             FormHelper.showSimpleAlertDialog(
               context,
-              "Coop Engage +",
+              "Coop Engage sss+",
               errorText,
               "OK",
               () {
                 Navigator.of(context).pop();
               },
             );
-            // const SnackBar(
-            //   content: Text(errorText),
-            // );
+        
           }
         } on TimeoutException catch (_) {
           registerStatus = false;
@@ -2570,7 +2233,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
       registrationData['customerInfo.email'] = emailController.text;
       registrationData['customerInfo.percentageCompleted'] = 12.5;
       registrationData['customerInfo.status'] = "INITIAL";
-      registrationData['accountType'] = "1";
+      // registrationData['accountType'] = "1";
       registrationData['customerInfo.formCompleted'] = 0;
     } else {
       registrationData['phone'] = '0${phoneNumberController.text}';
@@ -2878,16 +2541,12 @@ By accepting these terms, you agree to comply with all banking regulations and p
   Future<void> updateUser() async {
     if (isOnline) {
       try {
-        print("geejjejejejejejejej");
+     
         print(registrationData);
         var response = await networkHandler
             .put1('/api/v1/accounts/individual/$userId', registrationData)
             .timeout(const Duration(seconds: 15));
 
-        print("response.statusCodeddddddddddddd");
-        print(response.statusCode);
-
-        print("response");
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           setState(() {
@@ -2911,7 +2570,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
         final DatabaseHelper dbHelper = DatabaseHelper();
         registrationData['id'] = userID;
 
-        // Apply timeout to the updateCustomer call
         int rowsAffected = await dbHelper
             .updateCustomer(userID!, registrationData)
             .timeout(const Duration(seconds: 10));
@@ -2937,88 +2595,12 @@ By accepting these terms, you agree to comply with all banking regulations and p
 
     setState(() {
       accountTypes =
-          fetchedAccountTypes; // Update the state with the fetched account types
+          fetchedAccountTypes; 
     });
   }
 
-  // void _filterAccountTypes(String bankingType) {
-  //   print("Filtering account types...");
-  //   setState(() {
-  //     // Get user's age from date of birth
-  //     DateTime? dateOfBirth;
-  //     try {
-  //       dateOfBirth = DateTime.parse(dateOfBirthController.text);
-  //     } catch (e) {
-  //       print('Invalid date format: ${dateOfBirthController.text}');
-  //       return;
-  //     }
-
-  //     int age = DateTime.now().year - dateOfBirth.year;
-  //     if (DateTime.now().month < dateOfBirth.month ||
-  //         (DateTime.now().month == dateOfBirth.month &&
-  //             DateTime.now().day < dateOfBirth.day)) {
-  //       age--;
-  //     }
-
-  //     // Normalize gender
-  //     String normalizedGender = selectedGender.trim().toUpperCase();
-
-  //     // Parse initial deposit
-  //     double initialDeposit =
-  //         double.tryParse(initialDepositController.text) ?? 0;
-
-  //     // Filter account types
-  //     filteredAccountTypes = accountTypes.where((accountType) {
-  //       print("AccountType: ${accountType}");
-  //       print("Selected Gender: $normalizedGender");
-
-  //       // Check banking type
-  //       if (accountType['bankingType'] != bankingType) {
-  //         return false;
-  //       }
-
-  //       // Validate age range
-  //       int minAge = int.tryParse(accountType['minAge']?.trim() ?? '0') ?? 0;
-  //       int maxAge =
-  //           int.tryParse(accountType['maxAge']?.trim() ?? '999') ?? 999;
-  //       if (age < minAge || age > maxAge) {
-  //         return false;
-  //       }
-
-  //       // Validate minimum amount
-  //       double minAmount =
-  //           double.tryParse(accountType['minAmount']?.toString() ?? '0') ?? 0;
-  //       if (initialDeposit < minAmount) {
-  //         return false;
-  //       }
-
-  //       // Validate sex with 'BOTH' inclusion
-  //       String accountTypeSex =
-  //           accountType['sex']?.trim().toUpperCase() ?? 'BOTH';
-  //       if (accountTypeSex != 'BOTH' && accountTypeSex != normalizedGender) {
-  //         return false;
-  //       }
-
-  //       return true;
-  //     }).toList();
-
-  //     // Show feedback if no account types match
-  //     if (filteredAccountTypes.isEmpty) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(
-  //             'No account types available for your age ($age), gender ($selectedGender), and deposit ($initialDeposit)',
-  //             style: const TextStyle(color: Colors.white),
-  //           ),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
-
   void _filterAccountTypes(String bankingType) {
-    print("Filtering account types...");
+
     setState(() {
       // Parse user's date of birth
       DateTime? dateOfBirth;
@@ -3037,14 +2619,11 @@ By accepting these terms, you agree to comply with all banking regulations and p
         age--;
       }
 
-      // Normalize gender to upper case
       String normalizedGender = selectedGender.trim().toUpperCase();
 
-      // Parse initial deposit amount
       double initialDeposit =
           double.tryParse(initialDepositController.text.trim()) ?? 0;
 
-      // Filter logic
       filteredAccountTypes = accountTypes.where((accountType) {
         print("Checking AccountType: ${accountType['name']}");
 
@@ -3128,15 +2707,15 @@ By accepting these terms, you agree to comply with all banking regulations and p
     return null; // Return null if the account type list is empty or the selected account is null
   }
 
-  Future<void> _pickSignatureImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _signatureImages!.add(pickedFile);
-      });
-    }
-  }
+  // Future<void> _pickSignatureImage() async {
+  //   final XFile? pickedFile =
+  //       await _picker.pickImage(source: ImageSource.gallery);
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _signatureImages!.add(pickedFile);
+  //     });
+  //   }
+  // }
 
   void _saveCombinedSignature() async {
     final Uint8List? combinedImage = await _combineSignatures();

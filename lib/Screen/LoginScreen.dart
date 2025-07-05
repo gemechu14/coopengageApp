@@ -1,19 +1,19 @@
-// ignore_for_file: use_build_context_synchronously, avoid_print, sized_box_for_whitespace, unused_element
+// ignore_for_file: sized_box_for_whitespace, use_build_context_synchronously
 
 import 'dart:async';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/common_widgets/textField/PasswordTextField.dart';
+import 'package:coopengageplus/common_widgets/AlertDialog/dialog_helper.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/features/onboarding/agent/agentRegistration.dart';
+import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:snippet_coder_utils/FormHelper.dart';
-import 'package:snippet_coder_utils/ProgressHUD.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
@@ -38,13 +38,9 @@ class _LoginscreenState extends State<Loginscreen> {
       body: Container(
           width: double.infinity,
           decoration: const BoxDecoration(),
-          child: ProgressHUD(
-            key: UniqueKey(),
-            inAsyncCall: isApiCallProcess,
-            child: Form(
-              key: globalFormKey,
-              child: _loginUI(context),
-            ),
+          child: Form(
+            key: globalFormKey,
+            child: _loginUI(context),
           )),
     );
   }
@@ -60,7 +56,6 @@ class _LoginscreenState extends State<Loginscreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // _buildHeader(),
           _buildFormContainer(width, height, networkHandler, storage, context),
         ],
       ),
@@ -74,7 +69,6 @@ class _LoginscreenState extends State<Loginscreen> {
       FlutterSecureStorage storage,
       BuildContext context) {
     return SizedBox(
-      // height: height - (MediaQuery.of(context).padding.top + 200),
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -84,7 +78,7 @@ class _LoginscreenState extends State<Loginscreen> {
           ),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Align at the top
+          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 120),
@@ -95,17 +89,13 @@ class _LoginscreenState extends State<Loginscreen> {
               fit: BoxFit.fill,
             ),
             const SizedBox(height: 30),
-            // Username Field
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
               child: Container(
-                width: width < 600
-                    ? double.infinity
-                    : width * 0.5, // Adjust width for tablet
+                width: width < 600 ? double.infinity : width * 0.5,
                 child: TextFormField(
                   decoration: const InputDecoration(
                     hintText: "Username",
-                    // labelText: "Username",
                     labelStyle: TextStyle(fontSize: 20),
                     contentPadding: EdgeInsets.fromLTRB(20, 2, 2, 4),
                     border: OutlineInputBorder(
@@ -120,7 +110,6 @@ class _LoginscreenState extends State<Loginscreen> {
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                       borderSide: BorderSide(color: Colors.red),
                     ),
-                    // prefixIcon: Icon(Icons.person), // Leading icon
                   ),
                   controller: _username,
                   validator: (value) {
@@ -134,341 +123,9 @@ class _LoginscreenState extends State<Loginscreen> {
             ),
 
             // Password Field
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: Container(
-                width: width < 600 ? double.infinity : width * 0.5,
-                child: TextFormField(
-                  obscureText: hidePassword,
-                  decoration: InputDecoration(
-                    hintText: "Password",
+            password(width),
+            login(width),
 
-                    suffixIcon: IconButton(
-                      icon: Icon(hidePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () {
-                        setState(() {
-                          hidePassword = !hidePassword;
-                        });
-                      },
-                    ),
-                    labelStyle: const TextStyle(fontSize: 20),
-                    contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    errorBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                      borderSide: BorderSide(color: Colors.red),
-                    ),
-                    // prefixIcon: const Icon(Icons.lock), // Leading icon
-                  ),
-                  controller: _password,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password cannot be empty';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: Container(
-                width: width < 600 ? double.infinity : width * 0.5,
-                child: FormHelper.submitButton("Login",
-                    txtColor: Colors.white,
-                    btnColor: Colors.blue,
-                    borderColor: const Color.fromARGB(255, 102, 163, 238),
-                    () async {
-                  if (validateAndSave()) {
-                    setState(() {
-                      isApiCallProcess = true;
-                    });
-
-                    String username = _username.text.trim();
-                    String password = _password.text.trim();
-
-                    // Login Logic start here
-                    Map<String, String> data = {
-                      "username": username,
-                      "password": password,
-                    };
-
-                    if (await isOnline()) {
-                      try {
-                        print("aldkdjdjdjj");
-
-                        var response = await networkHandler
-                            .post('${AppConstants.baseURL}/login', data)
-                            .timeout(const Duration(seconds: 19));
-
-                        print(response.statusCode);
-                        if (response.statusCode == 200 ||
-                            response.statusCode == 201) {
-                          Map<String, dynamic> output =
-                              json.decode(response.body);
-                          await storage.write(
-                              key: "token", value: output["access_token"]);
-                          Map<String, dynamic> decodedToken = json.decode(
-                              utf8.decode(base64Url.decode(base64Url.normalize(
-                                  output["access_token"].split(".")[1]))));
-                          String? token = output["access_token"];
-
-                          String? clientId =
-                              decodedToken["clientId"].toString();
-                          String role = decodedToken["role"][0];
-                          int userId = decodedToken["userId"];
-                          List<Map<String, dynamic>> branches =
-                              List<Map<String, dynamic>>.from(
-                                  decodedToken["branch"]);
-
-                          DatabaseHelper dbHelper = DatabaseHelper();
-
-                          bool userExists = await dbHelper.userExists(username);
-                          await dbHelper.insertToken(token!);
-
-                          if (!userExists) {
-                            // Register the user locally
-                            await dbHelper.insertUser1(
-                                username: username,
-                                password: password,
-                                userId: userId,
-                                clientId: clientId,
-                                role: role,
-                                branches: branches);
-
-                            print("User registered locally for future use.");
-                          } else {
-                            print("User already exists in local storage.");
-                          }
-
-                          var accountTypesResponse =
-                              await networkHandler.get('/api/v1/account-types');
-
-                          if (accountTypesResponse is List<dynamic>) {
-                            int localCount =
-                                await dbHelper.getAccountTypeCount();
-                            int incomingCount = accountTypesResponse.length;
-
-                            if (localCount < incomingCount) {
-                              print(
-                                  "New account types found. Refreshing local database...");
-
-                              await dbHelper.clearAccountTypesTable();
-
-                              List<Map<String, dynamic>> accountTypesToSave =
-                                  accountTypesResponse.map((e) {
-                                return {
-                                  "id": e["id"].toString(),
-                                  "name": e["name"] ?? "",
-                                  "description": e["description"] ?? "",
-                                  "category": e["category"] ?? "",
-                                  "bankingType": e["bankingType"] ?? "",
-                                  "origin": e["origin"] ?? "",
-                                  "minAge": e["minAge"]?.toString() ?? "",
-                                  "maxAge": e["maxAge"]?.toString() ?? "",
-                                  "minAmount": e["minAmount"]?.toString() ?? "",
-                                  "sex": e["sex"] ?? "",
-                                  "status": e["status"] ?? "",
-                                };
-                              }).toList();
-
-                              await dbHelper
-                                  .insertAccountTypes(accountTypesToSave);
-
-                              print(
-                                  "Account types refreshed and saved successfully.");
-                            } else {
-                              print(
-                                  "No need to update account types. Local data is up-to-date.");
-                            }
-                          } else {
-                            print(
-                                "Failed to fetch account types: ${accountTypesResponse.body}");
-                          }
-
-                          ///
-
-                          setState(() {
-                            validate = true;
-                            circular = false;
-                          });
-
-                          List<dynamic> roles = decodedToken['role'] ?? [];
-
-                          if (roles.contains("CRM")) {
-                            Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const CRMMainScreen(),
-                                ),
-                                (route) => false);
-                          } else {
-                            Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const MainPage(),
-                                ),
-                                (route) => false);
-                          }
-                        } else {
-                          setState(() {
-                            isApiCallProcess = false;
-                            validate = false;
-                            errorText = "Invalid Username or Password.";
-                            circular = false;
-                          });
-                          FormHelper.showSimpleAlertDialog(
-                            context,
-                            "Coop Engage+",
-                            errorText,
-                            "OK",
-                            () {
-                              Navigator.of(context).pop();
-                            },
-                          );
-                        }
-                      } on TimeoutException catch (_) {
-                        setState(() {
-                          isApiCallProcess = false;
-                          validate = false;
-                          errorText = "Request timed out. Please try again.";
-                          circular = false;
-                        });
-                        FormHelper.showSimpleAlertDialog(
-                          context,
-                          "Coop Engage+",
-                          errorText,
-                          "OK",
-                          () {
-                            Navigator.of(context).pop();
-                          },
-                        );
-                      } catch (e) {
-                        print("dkakdfds");
-                        print(e);
-                        setState(() {
-                          isApiCallProcess = false;
-                          validate = false;
-                          errorText = "An error occurred. Please try again.";
-                          circular = false;
-                        });
-                        FormHelper.showSimpleAlertDialog(
-                          context,
-                          "Coop Engage+",
-                          errorText,
-                          "OK",
-                          () {
-                            Navigator.of(context).pop();
-                          },
-                        );
-                      }
-                    } else {
-                      // Offline Login
-                      DatabaseHelper dbHelper = DatabaseHelper();
-                      bool userExists = await dbHelper.userExists(username);
-
-                      if (userExists) {
-                        // User is offline, retrieve credentials and log in locally
-                        try {
-                          List<Map<String, dynamic>> users = await dbHelper
-                              .getUsers()
-                              .timeout(const Duration(seconds: 4));
-
-                          bool loginSuccessful = false;
-
-                          // Check if the user exists in the local users list
-                          for (var user in users) {
-                            if (user['username'] == username &&
-                                user['password'] == password) {
-                              loginSuccessful = true;
-                              break;
-                            }
-                          }
-
-                          if (loginSuccessful) {
-                            // Navigate to the main page
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const MainPage()),
-                            );
-                          } else {
-                            setState(() {
-                              isApiCallProcess = false;
-                              errorText = "Invalid Username or Password.";
-                            });
-                            FormHelper.showSimpleAlertDialog(
-                              context,
-                              "Coop Engage+",
-                              errorText,
-                              "OK",
-                              () {
-                                Navigator.of(context).pop();
-                              },
-                            );
-                          }
-                        } on TimeoutException catch (_) {
-                          setState(() {
-                            isApiCallProcess = false;
-                            errorText =
-                                "Request timed out while accessing local storage.";
-                          });
-                          FormHelper.showSimpleAlertDialog(
-                            context,
-                            "Coop Engage+",
-                            errorText,
-                            "OK",
-                            () {
-                              Navigator.of(context).pop();
-                            },
-                          );
-                        } catch (e) {
-                          setState(() {
-                            isApiCallProcess = false;
-                            errorText =
-                                "An error occurred while accessing local storage: $e";
-                          });
-                          FormHelper.showSimpleAlertDialog(
-                            context,
-                            "Coop Engage+",
-                            errorText,
-                            "OK",
-                            () {
-                              Navigator.of(context).pop();
-                            },
-                          );
-                        }
-                      } else {
-                        setState(() {
-                          isApiCallProcess = false;
-                          errorText =
-                              "User is offline and does not exist in local storage.";
-                        });
-                        FormHelper.showSimpleAlertDialog(
-                          context,
-                          "Coop Engage+",
-                          errorText,
-                          "OK",
-                          () {
-                            Navigator.of(context).pop();
-                          },
-                        );
-                      }
-                    }
-                  }
-                }),
-              ),
-            ),
             const SizedBox(height: 5),
 
             Row(
@@ -506,34 +163,253 @@ class _LoginscreenState extends State<Loginscreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Padding login(double width) {
     return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Image.asset(
-              'assets/coop_engage.png',
-              width: 300,
-              height: 290,
-              fit: BoxFit.fill,
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.only(top: 5, left: 20, bottom: 30, right: 20),
-            child: Text(
-              "Coop Engage+",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: SizedBox(
+              width: width < 600 ? double.infinity : width * 0.5,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () async {
+                  if (isApiCallProcess) return;
+
+                  if (validateAndSave()) {
+                    setState(() => isApiCallProcess = true);
+                    await _handleLogin();
+                    setState(() => isApiCallProcess = false);
+                  }
+                },
+                child: isApiCallProcess
+                    ? const SpinKitThreeBounce(
+                        color: Colors.white,
+                        size: 24.0,
+                      )
+                    : const Text(
+                        "Login",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          );
+  }
+
+  Padding password(double width) {
+    return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: Container(
+              width: width < 600 ? double.infinity : width * 0.5,
+              child: TextFormField(
+                obscureText: hidePassword,
+                decoration: InputDecoration(
+                  hintText: "Password",
+                  suffixIcon: IconButton(
+                    icon: Icon(hidePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () {
+                      setState(() {
+                        hidePassword = !hidePassword;
+                      });
+                    },
+                  ),
+                  labelStyle: const TextStyle(fontSize: 20),
+                  contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  errorBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                    borderSide: BorderSide(color: Colors.red),
+                  ),
+                ),
+                controller: _password,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password cannot be empty';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          );
+  }
+
+  Future<void> _handleLogin() async {
+    String username = _username.text.trim();
+    String password = _password.text.trim();
+
+    final data = {"username": username, "password": password};
+    final dbHelper = DatabaseHelper();
+
+    try {
+      if (await isOnline()) {
+        NetworkHandler networkHandler = NetworkHandler();
+        // ONLINE LOGIN
+        final response = await networkHandler
+            .post('${AppConstants.baseURL}/login', data)
+            .timeout(const Duration(seconds: 19));
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final output = json.decode(response.body);
+          final token = output["access_token"];
+
+          await storage.write(key: "token", value: token);
+
+          final decodedToken = json.decode(utf8.decode(
+            base64Url.decode(base64Url.normalize(token.split(".")[1])),
+          ));
+
+          final clientId = decodedToken["clientId"]?.toString();
+          final role = decodedToken["role"]?[0] ?? '';
+          final userId = decodedToken["userId"];
+          final branches =
+              List<Map<String, dynamic>>.from(decodedToken["branch"]);
+
+          bool userExists = await dbHelper.userExists(username);
+          await dbHelper.insertToken(token);
+
+          if (!userExists) {
+            await dbHelper.insertUser1(
+              username: username,
+              password: password,
+              userId: userId,
+              clientId: clientId,
+              role: role,
+              branches: branches,
+            );
+            // print("User registered locally.");
+          }
+
+          // SYNC ACCOUNT TYPES
+          final accountTypesResponse =
+              await networkHandler.get('/api/v1/account-types');
+          if (accountTypesResponse is List<dynamic>) {
+            int localCount = await dbHelper.getAccountTypeCount();
+            int incomingCount = accountTypesResponse.length;
+
+            if (localCount < incomingCount) {
+              await dbHelper.clearAccountTypesTable();
+              final typesToSave = accountTypesResponse.map((e) {
+                return {
+                  "id": e["id"].toString(),
+                  "name": e["name"] ?? "",
+                  "description": e["description"] ?? "",
+                  "category": e["category"] ?? "",
+                  "bankingType": e["bankingType"] ?? "",
+                  "origin": e["origin"] ?? "",
+                  "minAge": e["minAge"]?.toString() ?? "",
+                  "maxAge": e["maxAge"]?.toString() ?? "",
+                  "minAmount": e["minAmount"]?.toString() ?? "",
+                  "sex": e["sex"] ?? "",
+                  "status": e["status"] ?? "",
+                };
+              }).toList();
+
+              await dbHelper.insertAccountTypes(typesToSave);
+            }
+          }
+
+          // NAVIGATION BASED ON ROLE
+          List<dynamic> roles = decodedToken['role'] ?? [];
+          if (roles.contains("CRM")) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const CRMMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const MainPage()),
+              (route) => false,
+            );
+          }
+        } else {
+          DialogHelper.show(
+            context,
+            title: "Coop Engage+",
+            message: "Invalid Username or Password.",
+            type: DialogType.error,
+          );
+        }
+      } else {
+        // OFFLINE LOGIN
+        bool userExists = await dbHelper.userExists(username);
+        if (!userExists) {
+          DialogHelper.show(
+            context,
+            title: "Coop Engage+",
+            message: "User is offline and not registered locally..",
+            type: DialogType.error,
+          );
+          return;
+        }
+
+        try {
+          final users =
+              await dbHelper.getUsers().timeout(const Duration(seconds: 4));
+          final match = users.any(
+              (u) => u['username'] == username && u['password'] == password);
+
+          if (match) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MainPage()),
+            );
+          } else {
+            DialogHelper.show(
+              context,
+              title: "Coop Engage+",
+              message: "Invalid Username or Password.",
+              type: DialogType.error,
+            );
+          }
+        } on TimeoutException {
+          DialogHelper.show(
+            context,
+            title: "Coop Engage+",
+            message: "Timeout accessing local data.",
+            type: DialogType.error,
+          );
+        } catch (e) {
+          DialogHelper.show(
+            context,
+            title: "Coop Engage+",
+            message: "Local login error",
+            type: DialogType.error,
+          );
+        }
+      }
+    } on TimeoutException {
+      DialogHelper.show(
+        context,
+        title: "Coop Engage+",
+        message: "Request timed out. Please try again.",
+        type: DialogType.error,
+      );
+    } catch (e) {
+      print(e);
+
+      DialogHelper.show(
+        context,
+        title: "Coop Engage+",
+        message: "Unexpected error occurred.",
+        type: DialogType.error,
+      );
+    }
   }
 
   bool validateAndSave() {
@@ -547,11 +423,10 @@ class _LoginscreenState extends State<Loginscreen> {
 
   Future<bool> isOnline() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
-    print("Connectivity Result: $connectivityResult");
+    // print("Connectivity Result: $connectivityResult");
 
     if (connectivityResult.contains(ConnectivityResult.mobile) ||
         connectivityResult.contains(ConnectivityResult.wifi)) {
-      print("Hello from: $connectivityResult");
       return true;
     }
 

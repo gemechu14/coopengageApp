@@ -8,7 +8,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/features/onboarding/corporate/RegistrationServices.dart';
-import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
+import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:email_validator/email_validator.dart';
@@ -1220,23 +1220,7 @@ class _Registration extends State<CorporateRegistration> {
                 ),
               ),
 
-              // SizedBox(
-              //   width: double.infinity, // Makes the button full width
-              //   child: ElevatedButton.icon(
-              //     onPressed: pickFiles,
-              //     icon: Icon(Icons.upload_file,/
-              //         color: Colors.white), // Set icon color
-              //     label: Text(
-              //       "Upload other documents",
-              //       style: TextStyle(
-              //           color: Colors.white), // Set text color to black
-              //     ),
-              //     style: ElevatedButton.styleFrom(
-              //       backgroundColor:
-              //           Colors.blue, // Set background color to blue
-              //     ),
-              //   ),
-              // ),
+    
               if (selectedFiles.isNotEmpty)
                 Column(
                   children: selectedFiles.asMap().entries.map((entry) {
@@ -1283,72 +1267,8 @@ class _Registration extends State<CorporateRegistration> {
                     fontWeight: FontWeight.bold),
                 textAlign: TextAlign.end,
               ),
-              // Padding(
-              //   padding: const EdgeInsets.only(left: 15, right: 15),
-              //   child: filteredAccountTypes.isNotEmpty
-              //       ? Column(
-              //           mainAxisAlignment: MainAxisAlignment.start,
-              //           crossAxisAlignment: CrossAxisAlignment.start,
-              //           children:
-              //               filteredAccountTypes.map<Widget>((accountType) {
-              //             bool isSelected =
-              //                 selectedAccountTypeId == accountType['name'];
 
-              //             return GestureDetector(
-              //               onTap: () {
-              //                 setState(() {
-              //                   selectedAccountTypeId = accountType[
-              //                       'name']; // Update selected account type
-              //                   print(
-              //                       'Selected Account Type ID: $selectedAccountTypeId');
-              //                 });
-              //               },
-              //               child: Container(
-              //                 width: MediaQuery.of(context).size.width,
-              //                 child: Card(
-              //                   margin: const EdgeInsets.all(10),
-              //                   color: isSelected
-              //                       ? Colors.blue
-              //                       : Colors.grey, // Change color if selected
-              //                   shape: RoundedRectangleBorder(
-              //                     borderRadius: BorderRadius.circular(10),
-              //                   ),
-              //                   child: Padding(
-              //                     padding: const EdgeInsets.symmetric(
-              //                         vertical: 1, horizontal: 2),
-              //                     child: ListTile(
-              //                       title: Text(
-              //                         accountType['name'] as String,
-              //                         style: TextStyle(
-              //                           color: isSelected
-              //                               ? Colors.white
-              //                               : Colors
-              //                                   .black, // Text color changes when selected
-              //                           fontWeight: FontWeight.bold,
-              //                         ),
-              //                       ),
-              //                       subtitle: Text("                     "),
-              //                     ),
-              //                   ),
-              //                 ),
-              //               ),
-              //             );
-              //           }).toList(),
-              //         )
-              //       : Center(
-              //           child: Padding(
-              //             padding: const EdgeInsets.all(20.0),
-              //             child: Text(
-              //               "Sorry, no accounts were found for selection. Please ensure that the initial deposit and date of birth are correctly entered.",
-              //               style: TextStyle(
-              //                 fontSize: 16,
-              //                 fontWeight: FontWeight.bold,
-              //                 color: Colors.red,
-              //               ),
-              //             ),
-              //           ),
-              //         ),
-              // ),
+
 
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
@@ -2443,43 +2363,8 @@ class _Registration extends State<CorporateRegistration> {
     }
   }
 
-  // Future<Uint8List> _getPdfBytes(File? pdfFile) async {
-  //   if (pdfFile == null) {
-  //     print("File is null.");
-  //     return Uint8List(0); // Return an empty Uint8List if the file is null
-  //   }
-
-  //   // Save the file to a permanent location
-  //   final permanentFile = await saveFileToPermanentLocation(pdfFile);
-
-  //   // Check if the file exists
-  //   bool exists = await permanentFile.exists();
-  //   print("File exists: $exists");
-
-  //   // If the file exists, read and return its bytes
-  //   if (exists) {
-  //     print("File exists, reading PDF bytes...");
-  //     return await permanentFile.readAsBytes();
-  //   } else {
-  //     print("Error: File does not exist.");
-  //     return Uint8List(
-  //         0); // Return an empty Uint8List if the file doesn't exist
-  //   }
-  // }
-
-  // Future<Uint8List> _getImageBytes(String path) async {
-  //   final imageFile = File(path);
-  //   print("hello there");
-
-  //   print(imageFile);
-  //   print(await imageFile.exists());
-
-  //   if (await imageFile.exists()) {
-  //     // throw Exception("File does not exist.");
-  //     print("file not exist");
-  //   }
-  //   return await imageFile.readAsBytes();
-  // }
+ 
+ 
   Future<Uint8List?> _getImageBytes(String imagePath) async {
     try {
       final File imageFile = File(imagePath);

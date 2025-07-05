@@ -50,6 +50,7 @@ class _VerifycustomerinfoState extends State<Verifycustomerinfo> {
     final bool hasAccountNumber = currentAccountNumber.isNotEmpty;
 
     return Scaffold(
+      // backgroundColor: Color(colors.white),
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.only(left: 15),

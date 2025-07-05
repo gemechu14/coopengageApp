@@ -9,7 +9,7 @@ import 'dart:ui';
 // import 'package:csc_picker/csc_picker.dart';
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/features/onboarding/jointaccount/RegistrationService.dart';
-import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
+import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:email_validator/email_validator.dart';

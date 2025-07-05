@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 
 class EmailWidget extends StatelessWidget {
   final TextEditingController emailController;
+  final Function(String)? onChanged;
 
-  const EmailWidget({Key? key, required this.emailController})
-      : super(key: key);
+  const EmailWidget({
+    Key? key, 
+    required this.emailController,
+    this.onChanged,
+  }) : super(key: key);
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
@@ -24,6 +28,7 @@ class EmailWidget extends StatelessWidget {
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: TextFormField(
         keyboardType: TextInputType.emailAddress,
+        onChanged: onChanged,
         decoration: const InputDecoration(
           hintText: "Enter Email",
           labelStyle: TextStyle(fontSize: 5),

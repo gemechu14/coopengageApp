@@ -12,6 +12,7 @@ class ReusableTextFormField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool isRequired; // New parameter to handle required validation
   final bool isEnabled;
+  final Function(String)? onChanged; // Add onChanged callback
   const ReusableTextFormField({
     Key? key,
     required this.hintText,
@@ -22,6 +23,7 @@ class ReusableTextFormField extends StatelessWidget {
     this.inputFormatters,
     this.isEnabled = true,
     this.isRequired = true, // Defaults to required
+    this.onChanged, // Add onChanged parameter
   }) : super(key: key);
 
   @override
@@ -33,6 +35,7 @@ class ReusableTextFormField extends StatelessWidget {
         controller: controller,
         inputFormatters: inputFormatters,
         keyboardType: keyboardType,
+        onChanged: onChanged, // Add onChanged callback
         decoration: InputDecoration(
           enabled: isEnabled,
           hintText: hintText,

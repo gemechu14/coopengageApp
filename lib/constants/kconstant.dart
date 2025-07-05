@@ -47,4 +47,5 @@ const Color darkBlue = Color(0xFF1565C0); // Blue 800
 Color lightBlue =
     Colors.blue[200] ?? Colors.blue[100]!; // fallback to another color
 
-
+const graybackgroundColor = Color(0xFFF5F6FA);
+const cyanblueColor = (Color.fromARGB(255, 33, 150, 243));

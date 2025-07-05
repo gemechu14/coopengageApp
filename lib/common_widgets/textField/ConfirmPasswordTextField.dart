@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/constants/text_styles.dart';
 
@@ -25,54 +27,57 @@ class ConfirmPasswordTextField extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-            vertical: 6), // Vertical padding for centering
-        child: TextFormField(
-          obscureText: hidePassword,
-          controller: textEditingController,
-          keyboardType: TextInputType.text,
-          autofocus: false,
-          style: titleStyle,
-          decoration: InputDecoration(
-            isDense: true,
-            hintText: hint,
-            hintStyle: subtitleStyle,
-            suffixIcon: IconButton(
-              icon:
-                  Icon(hidePassword ? Icons.visibility_off : Icons.visibility),
-              onPressed: togglePasswordVisibility, // Toggle Password
-            ),
-            border: const OutlineInputBorder(
+      child: Container(
+        width: width < 600 ? double.infinity : width * 0.5,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              vertical: 6), // Vertical padding for centering
+          child: TextFormField(
+            obscureText: hidePassword,
+            controller: textEditingController,
+            keyboardType: TextInputType.text,
+            autofocus: false,
+            style: titleStyle,
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: hint,
+              hintStyle: subtitleStyle,
+              suffixIcon: IconButton(
+                icon: Icon(
+                    hidePassword ? Icons.visibility_off : Icons.visibility),
+                onPressed: togglePasswordVisibility, // Toggle Password
+              ),
+              border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderSide:
+                      BorderSide(color: Color.fromRGBO(176, 198, 214, 1))),
+              enabledBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide:
-                    BorderSide(color: Color.fromRGBO(176, 198, 214, 1))),
-            enabledBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.grey),
+                borderSide: BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: Colors.blue),
+              ),
+              errorBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: Colors.red),
+              ),
+              focusedErrorBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: Colors.red),
+              ),
             ),
-            focusedBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.blue),
-            ),
-            errorBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.red),
-            ),
-            focusedErrorBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.red),
-            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Confirm Password cannot be empty';
+              }
+              if (value != passwordController.text) {
+                return 'Passwords do not match';
+              }
+              return null;
+            },
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Confirm Password cannot be empty';
-            }
-            if (value != passwordController.text) {
-              return 'Passwords do not match';
-            }
-            return null;
-          },
         ),
       ),
     );

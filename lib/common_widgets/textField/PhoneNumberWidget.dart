@@ -7,14 +7,15 @@ class PhoneNumberWidget extends StatelessWidget {
   final bool isRequired;
   final bool greyBoarder;
   final bool isEnabled;
+  final Function(String)? onChanged;
   const PhoneNumberWidget({
     Key? key,
     bool? greyBorder,
     required this.phoneNumberController,
     this.countryPrefix = '+251', // Default to Ethiopia
     this.isRequired = true, // Make it optional by default
-
     this.isEnabled = true,
+    this.onChanged,
   })  : greyBoarder = greyBorder ?? false, // Default to false if null
         super(key: key);
 
@@ -36,6 +37,7 @@ class PhoneNumberWidget extends StatelessWidget {
         controller: phoneNumberController,
         enabled: isEnabled,
         keyboardType: TextInputType.phone,
+        onChanged: onChanged,
         inputFormatters: [
           FilteringTextInputFormatter.digitsOnly,
           LengthLimitingTextInputFormatter(9),

@@ -63,6 +63,8 @@
 // //         "updatedBy": "2024-11-08T16:40:28.91634"
 // //     }
 
+// ignore_for_file: invalid_annotation_target
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'dart:convert';
 

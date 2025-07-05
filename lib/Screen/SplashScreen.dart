@@ -1,11 +1,16 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+
 import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
+// import 'package:coopengageplus/features/auth/login/login_screen.dart';
 import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
-import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+
+import '../features/auth/login/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -25,8 +30,16 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       const storage = FlutterSecureStorage();
       String? token = await storage.read(key: "token");
-
+      var connectivityResult = await Connectivity().checkConnectivity();
+      bool isOnline = connectivityResult != ConnectivityResult.none;
       if (token != null) {
+        if (isOnline && JwtDecoder.isExpired(token)) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const Loginscreen()),
+          );
+          return;
+        }
+
         Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
         List<dynamic> roles = decodedToken['role'] ?? [];
 
@@ -38,27 +51,19 @@ class _SplashScreenState extends State<SplashScreen> {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const MainPage()),
           );
-          // Navigator.of(context).pushReplacement(
-          //   MaterialPageRoute(builder: (context) => AccountOpeningHomePage()),
-          // );
         }
       } else {
-        // Navigator.of(context).pushReplacement(
-        //   MaterialPageRoute(builder: (context) => MainPage()),
-        // );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const Loginscreen()),
         );
       }
     } catch (e) {
-      print("Error during navigation: $e");
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const Loginscreen()),
       );
     }
   }
 
-//   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

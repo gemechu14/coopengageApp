@@ -7,11 +7,11 @@ class SignaturePad extends StatelessWidget {
   final VoidCallback onClear;
 
   const SignaturePad({
-    Key? key,
+    super.key,
     required this.title,
     required this.controller,
     required this.onClear,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +57,10 @@ class UploadOrSignButtons extends StatelessWidget {
   final VoidCallback onUpload;
 
   const UploadOrSignButtons({
-    Key? key,
+    super.key,
     required this.onSign,
     required this.onUpload,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

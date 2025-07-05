@@ -11,7 +11,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
 
 class NetworkHandler {
-  String baseurl = "http://10.2.125.41:9061";
+  // String baseurl = "http://10.2.125.41:9061";
+  String baseurl = "http://10.8.100.111:9061";
   var log = Logger();
   FlutterSecureStorage storage = const FlutterSecureStorage();
   Future get(String url) async {
@@ -237,9 +238,11 @@ class NetworkHandler {
     }
   }
 
-  
   Future<http.Response> post1(String url, Map<String, dynamic> data) async {
     String? token = await storage.read(key: "token");
+
+    print("kdsfjdjjdjfjd");
+    print(token);
     if (token == null) {
       throw Exception("Token not found");
     }
@@ -316,7 +319,8 @@ class NetworkHandler {
       ..headers['Authorization'] = 'Bearer $token';
 
     data.forEach((key, value) {
-      if (isOnline) {
+      // Handle both online and offline field names
+      if (key.startsWith('customerInfo.')) {
         if (key == 'customerInfo.signature' && value is Uint8List) {
           final httpFile = http.MultipartFile.fromBytes(
             key,
@@ -371,6 +375,7 @@ class NetworkHandler {
           request.fields[key] = value;
         }
       } else {
+        // Handle non-customerInfo fields (offline mode or other fields)
         if (key == 'signature' && value is Uint8List) {
           final httpFile = http.MultipartFile.fromBytes(
             key,

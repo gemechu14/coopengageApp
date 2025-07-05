@@ -1,9 +1,8 @@
 // ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, use_build_context_synchronously, deprecated_member_use, use_super_parameters
 import 'package:coopengageplus/features/onboarding/Dashboard/Dashboard.dart';
+import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
 import 'package:coopengageplus/features/onboarding/agent/AgentPage.dart';
-import 'package:coopengageplus/features/onboarding/jointaccount/homepage.dart';
-import 'package:coopengageplus/features/onboarding/marchent/presentation/MarchentRegistration.dart';
-import 'package:coopengageplus/features/onboarding/Indivudualaccount/CustomerRegistrationScreen.dart';
+import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
 import 'package:coopengageplus/features/onboarding/screens/profileScreen.dart';
 import 'package:coopengageplus/pages/LoginPage.dart';
 import 'package:coopengageplus/utils/language_store.dart';
@@ -60,8 +59,8 @@ class _MainPageState extends State<MainPage> {
           });
         });
       case 1:
-        return AccountOpeningHomePage();
-
+        // return AccountOpeningHomePage();
+        return RegistrationScreen();
       case 2:
         if (role != 'AGENT') {
           return const AgentPage();

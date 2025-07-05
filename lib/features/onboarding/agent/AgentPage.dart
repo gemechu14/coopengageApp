@@ -75,6 +75,7 @@ class _AgentPageState extends State<AgentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(

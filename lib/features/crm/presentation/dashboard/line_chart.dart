@@ -79,11 +79,15 @@ class _LineChartSample2State extends State<LineChartSample2> {
         text = const Text('', style: style);
         break;
     }
-
     return SideTitleWidget(
-      axisSide: meta.axisSide,
-      child: text,
+      meta: meta, // ✅ Pass the required meta argument
+      space: 4,
+      child: Text(text as String, style: style),
     );
+    // return SideTitleWidget(
+    //   axisSide: meta.axisSide,
+    //   child: text,
+    // );
   }
 
   Widget leftTitleWidgets(double value, TitleMeta meta) {

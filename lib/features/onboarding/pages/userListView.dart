@@ -562,9 +562,9 @@ class _UserInfoPageState extends State<UserListPage> {
         title: Text(
           " ${widget.title}",
           style: const TextStyle(
-              fontSize: 27, fontWeight: FontWeight.bold, color: Colors.blue),
+              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
         ),
-        centerTitle: true,
+        // centerTitle: true,
       ),
       body: Container(
         color: Colors.white,

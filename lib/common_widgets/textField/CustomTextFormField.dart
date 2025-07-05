@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable, use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/constants/text_styles.dart';
 

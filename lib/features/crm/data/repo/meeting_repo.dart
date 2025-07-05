@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, empty_constructor_bodies
+
 import 'dart:convert';
 import 'dart:developer';
 
@@ -53,7 +55,6 @@ class MeetingRepository implements MeetingRepo {
       return meetings;
     } catch (e, stackTrace) {
       log('Error in getMeetings: $e', stackTrace: stackTrace);
-      print(e);
       throw Exception('Failed to load high profile clients');
     }
   }
@@ -77,7 +78,6 @@ class MeetingRepository implements MeetingRepo {
         if (reason != null) "reason": reason,
       };
 
-      print("Request body: ${jsonEncode(body)}");
       final response = await http.post(
         url,
         body: jsonEncode(body),
@@ -95,12 +95,10 @@ class MeetingRepository implements MeetingRepo {
 
       final responseData = json.decode(response.body) as Map<String, dynamic>;
       final newMeeting = MeetingModel.fromJson(responseData);
-      print(responseData);
       return newMeeting;
     } catch (e, stackTrace) {
       log('Error creating a Meeting: $e', stackTrace: stackTrace);
-      print(e);
-      print(stackTrace);
+   
       throw Exception('Failed to create Meeting');
     }
   }

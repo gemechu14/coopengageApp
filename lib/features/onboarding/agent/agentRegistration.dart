@@ -10,14 +10,11 @@ import 'package:coopengageplus/common_widgets/textField/ConfirmPasswordTextField
 import 'package:coopengageplus/common_widgets/textField/CustomTextFormField.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
-
-// import 'package:searchfield/searchfield.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
 import 'package:snippet_coder_utils/ProgressHUD.dart';
-import 'package:http/http.dart' as http; // For making API calls
+import 'package:http/http.dart' as http;
 
 class AgentRegistration extends StatefulWidget {
   const AgentRegistration({super.key});
@@ -165,46 +162,58 @@ class _LoginscreenState extends State<AgentRegistration> {
             TextLabel("Full Name"),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: CustomTextFormField(
-                hintText: "Enter Full Name",
-                controller: fullNameController,
-                errorMessage: "Full Name cannot be empty",
+              child: Container(
+                width: width < 600 ? double.infinity : width * 0.5,
+                child: CustomTextFormField(
+                  hintText: "Enter Full Name",
+                  controller: fullNameController,
+                  errorMessage: "Full Name cannot be empty",
 
-                // leadingIcon: Icons.person,
+                  // leadingIcon: Icons.person,
+                ),
               ),
             ),
             TextLabel("PhoneNumber"),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: CustomTextFormField(
-                hintText: "Enter phonenumber or email",
-                controller: phoneNumberController,
-                errorMessage: "PhoneNumber empty",
+              child: Container(
+                width: width < 600 ? double.infinity : width * 0.5,
+                child: CustomTextFormField(
+                  hintText: "Enter phonenumber or email",
+                  controller: phoneNumberController,
+                  errorMessage: "PhoneNumber empty",
 
-                // leadingIcon: Icons.person,
+                  // leadingIcon: Icons.person,
+                ),
               ),
             ),
             TextLabel("Business Name"),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: CustomTextFormField(
-                hintText: "Enter Business Name",
-                controller: businessNameController,
-                errorMessage: "Business Name empty",
-                isRequired: false,
+              child: Container(
+                width: width < 600 ? double.infinity : width * 0.5,
+                child: CustomTextFormField(
+                  hintText: "Enter Business Name",
+                  controller: businessNameController,
+                  errorMessage: "Business Name empty",
+                  isRequired: false,
 
-                // leadingIcon: Icons.person,
+                  // leadingIcon: Icons.person,
+                ),
               ),
             ),
             TextLabel("TIN"),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-              child: CustomTextFormField(
-                hintText: "Enter TIN",
-                keyboardType: TextInputType.number,
-                controller: tinController,
-                errorMessage: "TIN cannot be empty",
-                isRequired: true,
+              child: Container(
+                width: width < 600 ? double.infinity : width * 0.5,
+                child: CustomTextFormField(
+                  hintText: "Enter TIN",
+                  keyboardType: TextInputType.number,
+                  controller: tinController,
+                  errorMessage: "TIN cannot be empty",
+                  isRequired: true,
+                ),
               ),
             ),
             TextLabel("Password"),

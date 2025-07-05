@@ -596,7 +596,7 @@ import 'package:flutter/material.dart';
 class AchievementBarChart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
 
-  const AchievementBarChart({Key? key, required this.data}) : super(key: key);
+  const AchievementBarChart({Key? key, required this.data, required double width}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
