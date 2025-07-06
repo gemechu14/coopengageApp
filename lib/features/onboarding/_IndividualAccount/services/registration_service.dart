@@ -156,6 +156,22 @@ class RegistrationService {
     }
   }
 
+  Future<ServiceResult> submitPersonalPhoto({
+    required Uint8List? photo,
+    required bool isOnline,
+    String? userId,
+  }) async {
+    try {
+      if (isOnline) {
+        return await _submitPersonalPhotoOnline(photo, userId);
+      } else {
+        return await _submitPersonalPhotoOffline(photo, userId);
+      }
+    } catch (e) {
+      return ServiceResult.error('Failed to submit personal photo: $e');
+    }
+  }
+
   Future<ServiceResult> submitAccountType({
     required String accountType,
     required bool isOnline,
@@ -227,6 +243,10 @@ class RegistrationService {
   Future<ServiceResult> _submitIdTypeOnline(String branch, String documentName,
       Uint8List? frontImage, Uint8List? backImage, String? userId) async {
     try {
+      print("ttttttttttttttttttttttttttt");
+
+      print(branch);
+      print(frontImage);
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete step 1 first.');
@@ -234,9 +254,10 @@ class RegistrationService {
 
       final requestData = {
         'branch': branch,
+        'residenceCard': frontImage,
         'customerInfo.documentName': documentName,
-        'customerInfo.residenceCard': frontImage,
-        'customerInfo.residenceCardBack': backImage,
+        // 'customerInfo.residenceCard': frontImage,
+        // 'customerInfo.residenceCardBack': backImage,
         'accountType': '1',
         'percentageCompleted': 25,
         'status': 'INITIAL',
@@ -250,6 +271,7 @@ class RegistrationService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success();
       } else {
+        print(("333333333333333333333333333333333333333333"));
         final errorResponse = jsonDecode(response.body);
         final errorMessage =
             errorResponse['message'] ?? 'Failed to update user data';
@@ -258,6 +280,8 @@ class RegistrationService {
     } on TimeoutException {
       return ServiceResult.error('Request timed out. Please try again.');
     } catch (e) {
+      print("1111111111111111111111111111111111111111111111111111111");
+      print(e);
       return ServiceResult.error('An error occurred: $e');
     }
   }
@@ -456,6 +480,109 @@ class RegistrationService {
         return ServiceResult.success();
       } else {
         return ServiceResult.error('Failed to update signature');
+      }
+    } on TimeoutException {
+      return ServiceResult.error('Update operation timed out.');
+    } catch (e) {
+      return ServiceResult.error('An error occurred: $e');
+    }
+  }
+
+  Future<ServiceResult> _submitPersonalPhotoOnline(
+      Uint8List? photo, String? userId) async {
+    try {
+      print("djfdjfdfdkfhdfdkfdkjjjjjjjjjjj");
+
+      print(photo);
+      if (userId == null) {
+        return ServiceResult.error(
+            'User ID not found. Please complete previous steps first.');
+      }
+
+      // Validate userId format
+      if (userId.isEmpty || !RegExp(r'^\d+$').hasMatch(userId)) {
+        return ServiceResult.error(
+            'Invalid user ID format. Please complete previous steps first.');
+      }
+
+      final requestData = {
+        // 'customerInfo.photo': photo, // Photo will be handled separately if needed
+        'percentageCompleted': 50,
+        'status': 'INITIAL',
+      };
+
+      // Add retry logic for network issues
+      int retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount < maxRetries) {
+        try {
+          final response = await _networkHandler
+              .put1('/api/v1/accounts/individual/$userId', requestData)
+              .timeout(const Duration(seconds: 20));
+
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            return ServiceResult.success();
+          } else {
+            final errorResponse = jsonDecode(response.body);
+            final errorMessage =
+                errorResponse['message'] ?? 'Failed to update personal photo';
+            return ServiceResult.error(errorMessage);
+          }
+        } on TimeoutException {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            return ServiceResult.error(
+                'Request timed out after $maxRetries attempts. Please check your connection and try again.');
+          }
+          // Wait before retrying
+          await Future.delayed(Duration(seconds: retryCount * 2));
+        } catch (e) {
+          if (e.toString().contains('Connection reset by peer') ||
+              e.toString().contains('SocketException')) {
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              return ServiceResult.error(
+                  'Network connection issue. Please check your internet connection and try again.');
+            }
+            // Wait before retrying
+            await Future.delayed(Duration(seconds: retryCount * 2));
+          } else {
+            return ServiceResult.error('An error occurred: $e');
+          }
+        }
+      }
+
+      return ServiceResult.error(
+          'Failed to update personal photo after $maxRetries attempts.');
+    } catch (e) {
+      return ServiceResult.error('An error occurred: $e');
+    }
+  }
+
+  Future<ServiceResult> _submitPersonalPhotoOffline(
+      Uint8List? photo, String? userId) async {
+    try {
+      if (userId == null) {
+        return ServiceResult.error(
+            'User ID not found. Please complete previous steps first.');
+      }
+
+      final updateData = {
+        'photo': photo,
+        'percentageCompleted': 50,
+        'status': 'INITIAL',
+        'id': userId,
+      };
+
+      final rowsAffected = await _database
+          .updateCustomer(int.parse(userId), updateData)
+          .timeout(const Duration(seconds: 10));
+
+      if (rowsAffected > 0) {
+        return ServiceResult.success();
+      } else {
+        return ServiceResult.error('Failed to update personal photo data');
       }
     } on TimeoutException {
       return ServiceResult.error('Update operation timed out.');

@@ -37,15 +37,15 @@ class SignaturePad extends StatelessWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey, width: 1), // Minimized border
+            borderRadius: BorderRadius.circular(4), // Smaller radius
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(4), // Smaller radius
             child: Signature(
               controller: controller,
               backgroundColor: Colors.white,
-              height: 200,
+              height: 150, // Reduced height
               width: double.infinity,
             ),
           ),

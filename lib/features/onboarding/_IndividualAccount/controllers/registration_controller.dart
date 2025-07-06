@@ -224,10 +224,22 @@ class RegistrationController {
       // Update registration data
       _registrationDataNotifier.updatePhoto(photo: photo);
 
-      // For now, just mark as complete since photo upload is handled in the UI
-      _stepCompletionNotifier.markStepComplete(3);
-      _registrationDataNotifier.updateProgress(50.0);
-      return true;
+      // Submit to service
+      final serviceResult = await _registrationService.submitPersonalPhoto(
+        photo: photo,
+        isOnline: isOnline,
+        userId: userId,
+      );
+
+      if (serviceResult.isSuccess) {
+        _stepCompletionNotifier.markStepComplete(3);
+        _registrationDataNotifier.updateProgress(50.0);
+        return true;
+      } else {
+        _formValidationNotifier.setError(
+            'submission', serviceResult.errorMessage!);
+        return false;
+      }
     } catch (e) {
       _formValidationNotifier.setError(
           'submission', 'An unexpected error occurred: $e');

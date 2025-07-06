@@ -554,7 +554,7 @@ class StepDetailScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      backgroundColor: Colors.green,
+                      backgroundColor: cyanblueColor,
                       duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
                       margin: const EdgeInsets.all(16),

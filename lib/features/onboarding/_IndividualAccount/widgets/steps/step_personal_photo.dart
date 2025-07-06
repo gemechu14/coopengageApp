@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
-import '../common/button_upload_take_photo.dart';
+import '../common/image_selection_dialog.dart';
 import '../../providers/registration_providers.dart';
 
 class StepPersonalPhoto extends ConsumerStatefulWidget {
@@ -17,6 +19,9 @@ class StepPersonalPhoto extends ConsumerStatefulWidget {
 class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
   String profilePath = '';
   final ImagePicker _picker = ImagePicker();
+  
+  // Image bytes for API
+  Uint8List? _photoBytes;
 
   @override
   void initState() {
@@ -175,21 +180,24 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
           child: Column(
             children: [
               const SizedBox(height: 10.0),
-              Container(
-                height: 200.0,
-                width: MediaQuery.of(context).size.width * 0.8,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: profilePath.isEmpty
+              GestureDetector(
+                onTap: () => _showImageSelectionDialog(),
+                child: Container(
+                  height: 180.0, // Reduced height
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.0), // Smaller radius
+                    border: Border.all(color: Colors.grey.shade300, width: 1), // Minimized border
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05), // Reduced shadow
+                        blurRadius: 5, // Reduced blur
+                        offset: const Offset(0, 2), // Reduced offset
+                      ),
+                    ],
+                  ),
+                  child: profilePath.isEmpty
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -204,43 +212,94 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
                           )
                         ],
                       )
-                    : GestureDetector(
-                        onTap: () => _showFullScreenImage(context, profilePath),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20.0),
-                          child: profilePath == 'has_photo'
-                              ? FutureBuilder<Uint8List?>(
-                                  future: _getImageBytesFromData(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData && snapshot.data != null) {
-                                      return Image.memory(
-                                        snapshot.data!,
-                                        height: MediaQuery.of(context).size.height * 0.7,
-                                        width: MediaQuery.of(context).size.width * 0.7,
-                                        fit: BoxFit.fill,
-                                      );
-                                    } else {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                  },
-                                )
-                              : Image.file(
-                                  File(profilePath),
-                                  height: MediaQuery.of(context).size.height * 0.7,
-                                  width: MediaQuery.of(context).size.width * 0.7,
-                                  fit: BoxFit.fill,
+                    : Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(20.0),
+                            child: profilePath == 'has_photo'
+                                ? FutureBuilder<Uint8List?>(
+                                    future: _getImageBytesFromData(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData && snapshot.data != null) {
+                                        return Image.memory(
+                                          snapshot.data!,
+                                          height: 200.0,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        );
+                                      } else {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                    },
+                                  )
+                                : Image.file(
+                                    File(profilePath),
+                                    height: 200.0,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                          // Full screen button
+                          Positioned(
+                            top: 8,
+                            left: 8,
+                            child: GestureDetector(
+                              onTap: () => _showFullScreenImage(context, profilePath),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                        ),
+                                child: const Icon(
+                                  Icons.fullscreen,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Change image button
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () => _showImageSelectionDialog(),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.edit,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
               ),
-              const SizedBox(height: 40.0),
-              ButtonUploadTakePhoto(
-                onUploadPressed: () => _imgFromGallery("profile"),
-                onCapturePressed: () => _imgFromCamera("profile"),
-              ),
-            ],
+              // const SizedBox(height: 40.0),
+             )   ]
           ),
         ),
         const SizedBox(height: 40),
@@ -248,53 +307,216 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
     );
   }
 
-  Future<void> _imgFromGallery(String type) async {
+  // Show image selection dialog - same as IdTypeStep
+  void _showImageSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => ImageSelectionDialog(
+        title: 'Personal Photo',
+        subtitle: 'Choose how you want to add your photo',
+        onOptionSelected: (source) async {
+          try {
+            await _pickImage(source);
+          } catch (e) {
+            // If camera fails, show option to use gallery instead
+            if (source == ImageSource.camera) {
+              _showCameraFallbackDialog();
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  void _showCameraFallbackDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Camera Unavailable'),
+        content: const Text('Camera is not available. Would you like to select from gallery instead?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickImage(ImageSource.gallery);
+            },
+            child: const Text('Use Gallery'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Image handling methods - same as IdTypeStep
+  Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-      );
-      
-      if (image != null) {
-        setState(() {
-          profilePath = image.path;
-        });
-        
-        // Update registration data
-        await _updatePhotoData();
+      // Check permissions first - simplified flow
+      bool hasPermission = await _checkPermission(source);
+      if (!hasPermission) {
+        // Just show a simple message and return
+        _showErrorSnackBar('Permission required to continue');
+        return;
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error selecting image: $e'),
-          backgroundColor: Colors.red,
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
         ),
       );
+
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1920,
+        maxHeight: 1080,
+      );
+
+      // Dismiss loading indicator
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      if (image != null) {
+        await _cropAndProcessImage(File(image.path));
+      }
+    } catch (e) {
+      // Dismiss loading indicator if still showing
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      
+      String errorMessage = 'Failed to pick image';
+      if (e.toString().contains('permission')) {
+        errorMessage = 'Permission denied. Please grant camera permission in settings.';
+      } else if (e.toString().contains('camera')) {
+        errorMessage = 'Camera not available. Please try again or use gallery.';
+      } else if (e.toString().contains('cancel')) {
+        // User cancelled, don't show error
+        return;
+      } else {
+        errorMessage = 'Failed to pick image: ${e.toString()}';
+      }
+      
+      _showErrorSnackBar(errorMessage);
     }
   }
 
-  Future<void> _imgFromCamera(String type) async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 80,
-      );
+  Future<bool> _checkPermission(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      // Check camera permission status
+      PermissionStatus status = await Permission.camera.status;
       
-      if (image != null) {
-        setState(() {
-          profilePath = image.path;
-        });
-        
-        // Update registration data
-        await _updatePhotoData();
+      // If not granted, request it
+      if (!status.isGranted) {
+        status = await Permission.camera.request();
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error capturing image: $e'),
-          backgroundColor: Colors.red,
+      
+      return status.isGranted;
+    } else {
+      // Check gallery permission status
+      PermissionStatus status = await Permission.photos.status;
+      
+      // If not granted, request it
+      if (!status.isGranted) {
+        status = await Permission.photos.request();
+      }
+      
+      return status.isGranted;
+    }
+  }
+
+  Future<void> _cropAndProcessImage(File imageFile) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
         ),
       );
+
+      // Crop image with better error handling
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        compressQuality: 80,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: "Crop Personal Photo",
+            toolbarColor: cyanblueColor,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            hideBottomControls: false,
+            showCropGrid: true,
+            cropGridColor: Colors.white,
+            cropFrameColor: cyanblueColor,
+            cropFrameStrokeWidth: 2,
+            cropGridColumnCount: 3,
+            cropGridRowCount: 3,
+          ),
+          IOSUiSettings(
+            title: "Crop Personal Photo",
+            doneButtonTitle: "Done",
+            cancelButtonTitle: "Cancel",
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+            aspectRatioPickerButtonHidden: false,
+            rotateButtonsHidden: false,
+            rotateClockwiseButtonHidden: false,
+          ),
+        ],
+      );
+
+      // Dismiss loading dialog
+      if (Navigator.canPop(context)) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      if (croppedFile != null) {
+        // Convert to bytes using the same method as IdTypeStep
+        final bytes = await _getImageBytes(croppedFile.path, "personal_photo.png");
+        
+        if (bytes != null) {
+          setState(() {
+            profilePath = croppedFile.path;
+            _photoBytes = bytes;
+          });
+          
+          // Update registration data
+          ref.read(registrationDataProvider.notifier).updatePhoto(photo: bytes);
+          
+          // Clear validation error
+          ref.read(formValidationProvider.notifier).clearError('photo');
+          
+          // _showSuccessSnackBar('Photo captured successfully!');
+        } else {
+          _showErrorSnackBar('Failed to process photo bytes');
+        }
+      }
+    } catch (e) {
+      // Dismiss loading dialog if still showing
+      if (Navigator.canPop(context)) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      String errorMessage = 'Failed to process photo';
+      if (e.toString().contains('crop')) {
+        errorMessage = 'Photo cropping was cancelled';
+      } else if (e.toString().contains('permission')) {
+        errorMessage = 'Permission denied for photo processing';
+      } else {
+        errorMessage = 'Failed to process photo: ${e.toString()}';
+      }
+      
+      _showErrorSnackBar(errorMessage);
     }
   }
 
@@ -328,22 +550,70 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
     }
   }
 
-  Future<Uint8List?> _getImageBytes(String imagePath, String filename) async {
-    try {
-      final File imageFile = File(imagePath);
-      if (await imageFile.exists()) {
-        return await imageFile.readAsBytes();
-      }
-      return null;
-    } catch (e) {
-      print('Error reading image bytes: $e');
+  // Convert image to bytes - same as IdTypeStep implementation
+  Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
+    final imageFile = File(path);
+
+    if (await imageFile.exists()) {
+      Uint8List bytes = await imageFile.readAsBytes();
+
+      // Save the bytes as a temporary file
+      final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
+      await tempFile.writeAsBytes(bytes);
+
+      print("✅ Saved temporary photo at: ${tempFile.path}");
+      print("📤 Photo Bytes Length: ${bytes.length}");
+      return bytes; // Return the image bytes
+    } else {
+      print("❌ File does not exist at: $path");
       return null;
     }
   }
 
+
+
   Future<Uint8List?> _getImageBytesFromData() async {
     final registrationData = ref.read(registrationDataProvider);
     return registrationData.photo;
+  }
+
+  // Handle personal photo step completion - using controller like other steps
+  Future<void> handlePersonalPhotoStep() async {
+    print("🔄 Starting Personal Photo Step Registration...");
+    
+    // Get connectivity status
+    final isOnline = ref.read(connectivityProvider);
+    
+    // Get photo bytes
+    Uint8List? profileBytes;
+    if (profilePath.isNotEmpty && profilePath != 'has_photo') {
+      profileBytes = await _getImageBytes(profilePath, "profile.png");
+    }
+
+    print("📤 Profile Bytes: ${profileBytes != null ? 'Available' : 'Not available'}");
+
+    // Get current user ID
+    final userId = ref.read(userIdProvider);
+
+    print("👤 User ID: $userId");
+    print("🌐 Is Online: $isOnline");
+
+    // Call controller method
+    final success = await ref.read(registrationControllerProvider)
+        .handlePersonalPhotoStep(
+      photo: profileBytes,
+      isOnline: isOnline,
+      userId: userId,
+    );
+
+    if (success) {
+      print("✅ Personal Photo Step completed successfully!");
+      print("📊 Progress: 50%");
+      print("📋 Form Status: INITIAL");
+    } else {
+      print("❌ Personal Photo Step failed!");
+      // Error is already handled by the controller and shown via SnackBar
+    }
   }
 
   void _showFullScreenImage(BuildContext context, String imagePath) {
@@ -390,6 +660,17 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
           ),
         );
       },
+    );
+  }
+
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 } 

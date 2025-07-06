@@ -33,6 +33,16 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
     if (registrationData.email != null) {
       _emailController.text = registrationData.email!;
     }
+    
+    // Set CONVENTIONAL as default product type if not already set
+    // Use Future.microtask to avoid modifying provider during build
+    if (registrationData.productType == null) {
+      Future.microtask(() {
+        ref.read(registrationDataProvider.notifier).updateBasicInfo(
+          productType: 'CONVENTIONAL',
+        );
+      });
+    }
   }
 
   @override

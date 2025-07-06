@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import '../../providers/registration_providers.dart';
-import '../common/button_upload_take_photo.dart';
 import '../common/image_preview.dart';
 import '../common/branch_selector.dart';
+import '../common/image_selection_dialog.dart';
 
 class IdTypeStep extends ConsumerStatefulWidget {
   const IdTypeStep({Key? key}) : super(key: key);
@@ -204,7 +205,6 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         _buildImageUploadSection(
           _frontImagePath,
           'front',
-          'assets/id_front.png',
           onImageSelected: (path, bytes) {
             setState(() {
               _frontImagePath = path;
@@ -213,12 +213,11 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
             _updateRegistrationData();
           },
         ),
-        const SizedBox(height: 20),
+        // const SizedBox(height: 20),
         _buildLabel("Back Photo of ${_selectedDocumentType ?? 'ID'}"),
         _buildImageUploadSection(
           _backImagePath,
           'back',
-          'assets/backpage.png',
           onImageSelected: (path, bytes) {
             setState(() {
               _backImagePath = path;
@@ -233,71 +232,202 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
   Widget _buildImageUploadSection(
     String imagePath,
-    String imageType,
-    String placeholderAsset, {
+    String imageType, {
     required Function(String path, Uint8List bytes) onImageSelected,
   }) {
     return Center(
       child: Column(
         children: [
           const SizedBox(height: 20.0),
-          Container(
-            height: 150.0,
-            width: MediaQuery.of(context).size.width * 0.8,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+          GestureDetector(
+            onTap: () => _showImageSelectionDialog(imageType, onImageSelected),
+            child: Container(
+              height: 150.0,
+              width: MediaQuery.of(context).size.width * 0.8,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20.0),
+                border: Border.all(
+                  color: imagePath.isEmpty ? Colors.grey.shade300 : Colors.transparent,
+                  width: imagePath.isEmpty ? 2 : 0,
                 ),
-              ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: imagePath.isEmpty
+                  ? _buildPlaceholderIcon(imageType)
+                  : _buildCapturedImage(imagePath, imageType),
             ),
-            child: imagePath.isEmpty
-                ? _buildPlaceholderImage(placeholderAsset)
-                : _buildCapturedImage(imagePath),
-          ),
-          const SizedBox(height: 20.0),
-          ButtonUploadTakePhoto(
-            onUploadPressed: () => _pickImage(ImageSource.gallery, imageType, onImageSelected),
-            onCapturePressed: () => _pickImage(ImageSource.camera, imageType, onImageSelected),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPlaceholderImage(String assetPath) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20.0),
-          child: Image.asset(
-            assetPath,
-            height: 150.0,
-            width: double.infinity,
-            fit: BoxFit.fill,
-          ),
+  Widget _buildPlaceholderIcon(String imageType) {
+    final documentType = _selectedDocumentType ?? 'ID';
+    final title = imageType == 'front' ? 'Front Photo of $documentType' : 'Back Photo of $documentType';
+    
+    return Container(
+      padding: const EdgeInsets.all(0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            cyanblueColor.withOpacity(0.05),
+            cyanblueColor.withOpacity(0.1),
+          ],
         ),
-      ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cyanblueColor.withOpacity(0.2),
+          width: 2,
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: cyanblueColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: cyanblueColor.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.add_a_photo,
+              size: 40,
+              color: cyanblueColor,
+            ),
+          ),
+          // const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: cyanblueColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Tap to add',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: cyanblueColor,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildCapturedImage(String imagePath) {
-    return GestureDetector(
-      onTap: () => _showFullScreenImage(context, imagePath),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20.0),
-        child: Image.file(
-          File(imagePath),
-          height: 150.0,
-          width: double.infinity,
-          fit: BoxFit.fill,
+  Widget _buildCapturedImage(String imagePath, String imageType) {
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: () => _showFullScreenImage(context, imagePath),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20.0),
+            child: Image.file(
+              File(imagePath),
+              height: 150.0,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
-      ),
+        // Change image button
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: () => _showImageSelectionDialog(
+              imageType,
+              (path, bytes) {
+                setState(() {
+                  if (imageType == 'front') {
+                    _frontImagePath = path;
+                    _frontImageBytes = bytes;
+                  } else {
+                    _backImagePath = path;
+                    _backImageBytes = bytes;
+                  }
+                });
+                _updateRegistrationData();
+              },
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.edit,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ),
+        // View full screen button
+        Positioned(
+          top: 8,
+          left: 8,
+          child: GestureDetector(
+            onTap: () => _showFullScreenImage(context, imagePath),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.fullscreen,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -378,6 +508,61 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     );
   }
 
+  // Show image selection dialog
+  void _showImageSelectionDialog(
+    String imageType,
+    Function(String path, Uint8List bytes) onImageSelected,
+  ) {
+    final title = imageType == 'front' 
+        ? 'Front Photo of ${_selectedDocumentType ?? 'ID'}'
+        : 'Back Photo of ${_selectedDocumentType ?? 'ID'}';
+    final subtitle = 'Choose how you want to add your photo';
+    
+    showDialog(
+      context: context,
+      builder: (context) => ImageSelectionDialog(
+        title: title,
+        subtitle: subtitle,
+        onOptionSelected: (source) async {
+          try {
+            await _pickImage(source, imageType, onImageSelected);
+          } catch (e) {
+            // If camera fails, show option to use gallery instead
+            if (source == ImageSource.camera) {
+              _showCameraFallbackDialog(imageType, onImageSelected);
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  void _showCameraFallbackDialog(
+    String imageType,
+    Function(String path, Uint8List bytes) onImageSelected,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Camera Unavailable'),
+        content: const Text('Camera is not available. Would you like to select from gallery instead?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickImage(ImageSource.gallery, imageType, onImageSelected);
+            },
+            child: const Text('Use Gallery'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Image handling methods
   Future<void> _pickImage(
     ImageSource source,
@@ -385,16 +570,81 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     Function(String path, Uint8List bytes) onImageSelected,
   ) async {
     try {
+      // Check permissions first - simplified flow
+      bool hasPermission = await _checkPermission(source);
+      if (!hasPermission) {
+        // Just show a simple message and return
+        _showErrorSnackBar('Permission required to continue');
+        return;
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
       final XFile? image = await _picker.pickImage(
         source: source,
         imageQuality: 80,
+        maxWidth: 1920,
+        maxHeight: 1080,
       );
+
+      // Dismiss loading indicator
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
 
       if (image != null) {
         await _cropAndProcessImage(File(image.path), imageType, onImageSelected);
       }
     } catch (e) {
-      _showErrorSnackBar('Failed to pick image: $e');
+      // Dismiss loading indicator if still showing
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      
+      String errorMessage = 'Failed to pick image';
+      if (e.toString().contains('permission')) {
+        errorMessage = 'Permission denied. Please grant camera permission in settings.';
+      } else if (e.toString().contains('camera')) {
+        errorMessage = 'Camera not available. Please try again or use gallery.';
+      } else if (e.toString().contains('cancel')) {
+        // User cancelled, don't show error
+        return;
+      } else {
+        errorMessage = 'Failed to pick image: ${e.toString()}';
+      }
+      
+      _showErrorSnackBar(errorMessage);
+    }
+  }
+
+  Future<bool> _checkPermission(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      // Check camera permission status
+      PermissionStatus status = await Permission.camera.status;
+      
+      // If not granted, request it
+      if (!status.isGranted) {
+        status = await Permission.camera.request();
+      }
+      
+      return status.isGranted;
+    } else {
+      // Check gallery permission status
+      PermissionStatus status = await Permission.photos.status;
+      
+      // If not granted, request it
+      if (!status.isGranted) {
+        status = await Permission.photos.request();
+      }
+      
+      return status.isGranted;
     }
   }
 
@@ -413,37 +663,90 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         ),
       );
 
-      // Crop image
+      // Crop image with better error handling
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: imageFile.path,
+        compressQuality: 80,
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: "Crop ID Card",
-            toolbarColor: Colors.blue,
+            toolbarColor: cyanblueColor,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
+            hideBottomControls: false,
+            showCropGrid: true,
+            cropGridColor: Colors.white,
+            cropFrameColor: cyanblueColor,
+            cropFrameStrokeWidth: 2,
+            cropGridColumnCount: 3,
+            cropGridRowCount: 3,
           ),
-          IOSUiSettings(title: "Crop ID Card"),
+          IOSUiSettings(
+            title: "Crop ID Card",
+            doneButtonTitle: "Done",
+            cancelButtonTitle: "Cancel",
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+            aspectRatioPickerButtonHidden: false,
+            rotateButtonsHidden: false,
+            rotateClockwiseButtonHidden: false,
+          ),
         ],
       );
 
       // Dismiss loading dialog
-      Navigator.of(context, rootNavigator: true).pop();
+      if (Navigator.canPop(context)) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
 
       if (croppedFile != null) {
-        final file = File(croppedFile.path);
-        final bytes = await file.readAsBytes();
+        // Convert to bytes using the same method as your previous implementation
+        final bytes = await _getImageBytes(croppedFile.path, "${imageType}_${_selectedDocumentType ?? 'id'}.png");
         
-        onImageSelected(croppedFile.path, bytes);
-        _showSuccessSnackBar('Image captured successfully!');
+        if (bytes != null) {
+          onImageSelected(croppedFile.path, bytes);
+          // _showSuccessSnackBar('Image captured successfully!');
+        } else {
+          _showErrorSnackBar('Failed to process image bytes');
+        }
       }
     } catch (e) {
       // Dismiss loading dialog if still showing
       if (Navigator.canPop(context)) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-      _showErrorSnackBar('Failed to process image: $e');
+      
+      String errorMessage = 'Failed to process image';
+      if (e.toString().contains('crop')) {
+        errorMessage = 'Image cropping was cancelled';
+      } else if (e.toString().contains('permission')) {
+        errorMessage = 'Permission denied for image processing';
+      } else {
+        errorMessage = 'Failed to process image: ${e.toString()}';
+      }
+      
+      _showErrorSnackBar(errorMessage);
+    }
+  }
+
+  // Convert image to bytes - same as your previous implementation
+  Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
+    final imageFile = File(path);
+
+    if (await imageFile.exists()) {
+      Uint8List bytes = await imageFile.readAsBytes();
+
+      // Save the bytes as a temporary file
+      final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
+      await tempFile.writeAsBytes(bytes);
+
+      print("✅ Saved temporary image at: ${tempFile.path}");
+      print("📤 Image Bytes Length: ${bytes.length}");
+      return bytes; // Return the image bytes
+    } else {
+      print("❌ File does not exist at: $path");
+      return null;
     }
   }
 
@@ -486,11 +789,57 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     );
   }
 
+  // Handle registration step completion - similar to your previous implementation
+  Future<void> handleIdTypeStep() async {
+    // Get connectivity status
+    final isOnline = ref.read(connectivityProvider);
+    
+    // Get image bytes
+    Uint8List? frontImageBytes;
+    Uint8List? backImageBytes;
+
+    if (_frontImagePath.isNotEmpty) {
+      frontImageBytes = await _getImageBytes(_frontImagePath, "front_${_selectedDocumentType ?? 'id'}.png");
+    }
+
+    if (_backImagePath.isNotEmpty) {
+      backImageBytes = await _getImageBytes(_backImagePath, "back_${_selectedDocumentType ?? 'id'}.png");
+    }
+
+    print("📤 Front Image Bytes: $frontImageBytes");
+    print("📤 Back Image Bytes: $backImageBytes");
+
+    // Update the registration data provider
+    ref.read(registrationDataProvider.notifier).updateIdTypeInfo(
+      branch: _selectedBranch,
+      documentName: _selectedDocumentType,
+      residenceCard: frontImageBytes,
+      residenceCardBack: backImageBytes,
+    );
+
+    // Update progress
+    ref.read(registrationDataProvider.notifier).updateProgress(25.0);
+
+    // Update status and form completion
+    final currentData = ref.read(registrationDataProvider);
+    ref.read(registrationDataProvider.notifier).state = currentData.copyWith(
+      status: "INITIAL",
+      formCompleted: false, // Always false for this step
+    );
+
+    print("✅ ID Type Step Data Updated:");
+    print("Branch: $_selectedBranch");
+    print("Document Type: $_selectedDocumentType");
+    print("Front Image: ${frontImageBytes != null ? 'Uploaded' : 'Not uploaded'}");
+    print("Back Image: ${backImageBytes != null ? 'Uploaded' : 'Not uploaded'}");
+    print("Is Online: $isOnline");
+  }
+
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.green,
+        backgroundColor: cyanblueColor,
         behavior: SnackBarBehavior.floating,
       ),
     );

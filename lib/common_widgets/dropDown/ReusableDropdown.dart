@@ -78,7 +78,12 @@ class ReusableDropdown extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: DropdownButtonFormField<String>(
-        value: selectedValue, isExpanded: true,
+        value: selectedValue, 
+        isExpanded: true,
+        dropdownColor: Colors.white,
+        menuMaxHeight: 300,
+        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+        iconSize: 24,
         hint: Text(
           hintText,
           overflow: TextOverflow.ellipsis,
@@ -87,14 +92,36 @@ class ReusableDropdown extends StatelessWidget {
             color: Colors.black,
           ),
         ),
-        style: TextStyle(fontSize: 15, color: Colors.black),
-        items: items.map((String state) {
-          // Define a maximum length for the text
-
+        style: const TextStyle(fontSize: 15, color: Colors.black),
+        items: items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final state = entry.value;
+          
           return DropdownMenuItem<String>(
             value: state,
-            child: Text(
-              state,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: index < items.length - 1 
+                  ? const Border(
+                      bottom: BorderSide(
+                        color: Colors.grey,
+                        width: 1.0,
+                      ),
+                    )
+                  : null,
+                borderRadius: BorderRadius.circular(4.0),
+              ),
+              child: Text(
+                state,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
             ),
           );
         }).toList(),
@@ -109,6 +136,8 @@ class ReusableDropdown extends StatelessWidget {
             : null, // No validation if isRequired is false
         decoration: InputDecoration(
           isDense: true,
+          filled: true,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(
@@ -134,6 +163,7 @@ class ReusableDropdown extends StatelessWidget {
             borderSide: BorderSide(color: Colors.red),
           ),
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
       ),
     );

@@ -306,6 +306,8 @@ class NetworkHandler {
   }
 
   Future<http.Response> put1(String url, Map<String, dynamic> data) async {
+    print("888888888888888888888888888888888888");
+    print(data);
     String? token = await storage.read(key: "token");
 
     if (token == null) {
