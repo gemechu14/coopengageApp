@@ -72,8 +72,14 @@ final stepSubmissionProvider =
 );
 
 // Text Controllers Provider
-final phoneControllerProvider =
-    Provider<TextEditingController>((ref) => TextEditingController());
+final phoneControllerProvider = StateProvider<TextEditingController>((ref) {
+  final controller = TextEditingController();
+  final phone = ref.read(registrationDataProvider).phone;
+  if (phone != null && phone.isNotEmpty) {
+    controller.text = phone;
+  }
+  return controller;
+});
 final emailControllerProvider =
     Provider<TextEditingController>((ref) => TextEditingController());
 
@@ -197,6 +203,10 @@ class RegistrationDataNotifier extends StateNotifier<RegistrationData> {
 
   void updateProgress(double percentage) {
     state = state.copyWith(percentageCompleted: percentage);
+  }
+
+  void updateStatus(String status) {
+    state = state.copyWith(status: status);
   }
 
   void reset() {

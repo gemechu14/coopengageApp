@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:coopengageplus/common_widgets/text/CustomText.dart';
 import 'package:coopengageplus/constants/app_sizes.dart';

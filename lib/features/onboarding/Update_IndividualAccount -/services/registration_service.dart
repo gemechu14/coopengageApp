@@ -36,7 +36,7 @@ class RegistrationService {
         return await _submitBasicInfoOffline(
           phoneNumber: phoneNumber,
           email: email,
-          productType: productType,
+          // productType: productType,
           userId: userId,
         );
       }
@@ -76,7 +76,7 @@ class RegistrationService {
       if (isOnline) {
         return await _submitSignatureOnline(signature, motherName, userId);
       } else {
-        return await _submitSignatureOffline(signature, userId);
+        return await _submitSignatureOffline(signature,motherName, userId);
       }
     } catch (e) {
       return ServiceResult.error('Failed to submit signature: $e');
@@ -234,31 +234,8 @@ class RegistrationService {
           return ServiceResult.error('Failed to update user');
         }
       } else {
-        // CREATE new user
-        final response = await _networkHandler.post1(
-          '/api/v1/accounts/individual',
-          {
-            // 'phone': '0$phoneNumber',
-            // 'email': email,
-            // 'customerType': "INDIVIDUAL",
-            // 'accountId':'1',
-            // 'status': 'INITIAL',
-            'customerInfo.phone': '0$phoneNumber',
-            'customerInfo.email': email,
-            'customerInfo.percentageCompleted': 12.5,
-            'customerInfo.status': 'INITIAL',
-            'customerInfo.formCompleted': 0,
-          },
-        );
-        print('Create status code: \\${response.statusCode}');
-        print('Create response body: \\${response.body}');
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          final data = jsonDecode(response.body);
-          final newUserId = data['id'].toString();
-          return ServiceResult.success(userId: newUserId);
-        } else {
-          return ServiceResult.error('Failed to create user');
-        }
+        // (Optional) If you never want to create, you can return an error here:
+        return ServiceResult.error('No userId provided for update');
       }
     } catch (e) {
       return ServiceResult.error('Error in registration: $e');
@@ -423,11 +400,10 @@ class RegistrationService {
   Future<ServiceResult> _submitBasicInfoOffline({
     required String phoneNumber,
     required String email,
-    required String productType,
     String? userId,
   }) async {
     try {
-      print("object");
+      print("object32323232322dfdfdddfd");
       if (!await _checkPermissions()) {
         return ServiceResult.error(
             'You don\'t have permission to create Account');
@@ -437,6 +413,8 @@ class RegistrationService {
       // Get the current user ID from token (the registering person)
       final existingUserId = await _getCurrentUserId();
 
+      print("phonenumberndfbdhfbdhf ");
+      print(phoneNumber);
       if (userId != null) {
         // UPDATE existing customer
         final updateData = {
@@ -531,7 +509,7 @@ class RegistrationService {
   }
 
   Future<ServiceResult> _submitSignatureOffline(
-      Uint8List signature, String? userId) async {
+      Uint8List signature, String motherName, String? userId) async {
     try {
       if (userId == null) {
         return ServiceResult.error(
@@ -540,18 +518,21 @@ class RegistrationService {
 
       // var currentUserId = await _getCurrentUserId();
       final updateData = {
+        "motherName":motherName,
         'signature': signature,
         'percentageCompleted': 37.5,
         'status': 'INITIAL',
         // 'id': userId,
       };
 
-      print("dshfhjdhfdhfhdjfjdj");
-      print(userId);
+      print("dshfhjdhfdhfhdjfjdjmotherName");
+      print(motherName);
 
       final rowsAffected = await _database
           .updateCustomer(int.parse(userId), updateData)
           .timeout(const Duration(seconds: 10));
+
+
 
       if (rowsAffected > 0) {
         return ServiceResult.success();

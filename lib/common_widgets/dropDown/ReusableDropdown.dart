@@ -49,6 +49,7 @@
 //   }
 // }
 
+
 import 'package:flutter/material.dart';
 
 class ReusableDropdown extends StatelessWidget {
@@ -100,8 +101,8 @@ class ReusableDropdown extends StatelessWidget {
           return DropdownMenuItem<String>(
             value: state,
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8.0),
-              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+              margin: const EdgeInsets.symmetric(horizontal: 1.0),
+              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: index < items.length - 1 

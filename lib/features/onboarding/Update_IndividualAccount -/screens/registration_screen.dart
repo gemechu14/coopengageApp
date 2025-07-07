@@ -1,27 +1,29 @@
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/steps/basic_info_step.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/steps/id_type_step.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/steps/signature_step.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/controllers/registration_controller.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/models/registration_data.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/providers/registration_providers.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/registration_summary_dialog.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/basic_info_step.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/id_type_step.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/signature_step.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_account_type.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_financial_info.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_payment.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_personal_info.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_personal_photo.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_terms_conditions.dart';
+import 'package:coopengageplus/pages/MainPage.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/registration_data.dart';
-import '../widgets/steps/step_account_type.dart';
-import '../widgets/steps/step_terms_conditions.dart';
-import '../widgets/registration_summary_dialog.dart';
-import '../widgets/steps/step_financial_info.dart';
-import 'package:coopengageplus/pages/MainPage.dart';
-import '../widgets/steps/step_payment.dart';
-import '../widgets/steps/step_personal_info.dart';
-import '../widgets/steps/step_personal_photo.dart';
-import '../widgets/steps/step_signature.dart';
-import '../providers/registration_providers.dart';
-import '../controllers/registration_controller.dart';
 
-class RegistrationScreen extends ConsumerStatefulWidget {
-  const RegistrationScreen({super.key});
+class UpdateUserRegistrationScreen extends ConsumerStatefulWidget {
+  final Map<String, dynamic> userInfo;
+  const UpdateUserRegistrationScreen({super.key, required this.userInfo});
 
   @override
-  ConsumerState<RegistrationScreen> createState() => _RegistrationScreenState();
+  ConsumerState<UpdateUserRegistrationScreen> createState() =>
+      _RegistrationScreenState();
 }
 
 class _StepInfo {
@@ -32,14 +34,54 @@ class _StepInfo {
   const _StepInfo(this.title, this.widget, this.stepNumber);
 }
 
-class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
+class _RegistrationScreenState
+    extends ConsumerState<UpdateUserRegistrationScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize the registration process
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Reset any previous state
       ref.read(registrationControllerProvider).resetAllSteps();
+      final userInfo = (widget as dynamic).userInfo as Map<String, dynamic>?;
+      if (userInfo != null) {
+        print("dfdfjdjfjdjfjd");
+
+        print(userInfo);
+
+        String? phone = formatPhoneNumber(userInfo['phone'] ?? userInfo['phoneNumber']);
+        ref.read(registrationDataProvider.notifier).state = RegistrationData(
+          phone: phone,
+          email: userInfo['email'],
+          customerId: userInfo['id']?.toString(),
+          fullName: userInfo['fullName'],
+          surname: userInfo['surname'],
+          motherName: userInfo['motherName'],
+          sex: userInfo['sex'],
+          dateOfBirth: userInfo['dateOfBirth'],
+          title: userInfo['title'],
+          maritalStatus: userInfo['maritalStatus'],
+          branch: userInfo['branch'],
+          documentName: userInfo['documentName'],
+          residenceCard: userInfo['residenceCard'],
+          residenceCardBack: userInfo['residenceCardBack'],
+          signature: userInfo['signature'],
+          photo: userInfo['photo'],
+          occupation: userInfo['occupation'],
+          monthlyIncome: userInfo['monthlyIncome']?.toString(),
+          initialDeposit: userInfo['initialDeposit']?.toString(),
+          sector: userInfo['sector'],
+          country: userInfo['country'],
+          issueAuthority: userInfo['issueAuthority'],
+          issueDate: userInfo['issueDate'],
+          expirayDate: userInfo['expirayDate'],
+          legalId: userInfo['legalId'],
+          state: userInfo['state'],
+          zoneSubCity: userInfo['zoneSubCity'],
+          streetAddress: userInfo['streetAddress'],
+          accountType: userInfo['accountType'],
+          currency: userInfo['currency'],
+          termsAccepted: userInfo['termsAccepted'],
+        );
+      }
     });
   }
 
@@ -66,8 +108,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       // Check if this is the Terms & Conditions step (index 8)
       if (index == 8) {
         // Check if all previous steps are completed
-        final allPreviousStepsCompleted = stepCompleted.take(8).every((completed) => completed);
-        
+        final allPreviousStepsCompleted =
+            stepCompleted.take(8).every((completed) => completed);
+
         if (!allPreviousStepsCompleted) {
           // Show message that all previous steps must be completed
           ScaffoldMessenger.of(context).showSnackBar(
@@ -85,7 +128,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           return;
         }
       }
-      
+
       ref.read(registrationStepProvider.notifier).goToStep(index);
       Navigator.push(
         context,
@@ -157,7 +200,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         ),
         titleSpacing: 0,
         title: const Text(
-          'Customer Registration',
+          'Update Registration',
           style: TextStyle(color: cyanblueColor),
         ),
         backgroundColor: whiteColor,
@@ -215,18 +258,18 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   final step = steps[index];
                   final isActive = index == currentStep;
                   final isCompleted = stepCompleted[index];
-                  
+
                   // Check if this is the Terms & Conditions step (index 8)
                   final isTermsStep = index == 8;
-                  
+
                   // Check if all previous steps are completed (for Terms step)
-                  final allPreviousStepsCompleted = isTermsStep 
+                  final allPreviousStepsCompleted = isTermsStep
                       ? stepCompleted.take(8).every((completed) => completed)
                       : true;
-                  
+
                   // Determine if step is clickable
                   final isClickable = !isTermsStep || allPreviousStepsCompleted;
-                  
+
                   return Padding(
                     padding: const EdgeInsets.only(
                         bottom: 1, left: 10, right: 10, top: 5),
@@ -246,7 +289,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           step.title,
                           style: TextStyle(
                             fontSize: 15,
-                            color: isClickable 
+                            color: isClickable
                                 ? (isCompleted ? blackColor : Colors.black87)
                                 : Colors.grey.shade500,
                             fontWeight:
@@ -273,7 +316,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                                   )
                                 : null,
                         trailing: Icon(
-                          Icons.arrow_forward_ios, 
+                          Icons.arrow_forward_ios,
                           size: 10,
                           color: isClickable ? null : Colors.grey.shade400,
                         ),
@@ -308,7 +351,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   Future<void> _completeRegistration(BuildContext context, WidgetRef ref,
       RegistrationController controller) async {
     final registrationData = ref.read(registrationDataProvider);
-    
+
     // Show summary dialog
     showDialog(
       context: context,
@@ -319,7 +362,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           onConfirm: () async {
             // Close the dialog
             Navigator.of(context).pop();
-            
+
             // Submit the registration
             final success = await controller.submitRegistration(ref);
 
@@ -340,7 +383,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
               // Show error message
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Failed to complete registration. Please try again.'),
+                  content: Text(
+                      'Failed to complete registration. Please try again.'),
                   backgroundColor: Colors.red,
                   duration: Duration(seconds: 3),
                 ),
@@ -354,6 +398,16 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         );
       },
     );
+  }
+
+  String? formatPhoneNumber(String? phone) {
+    if (phone == null) return null;
+    if (phone.startsWith('0')) {
+      return phone.substring(1);
+    } else if (phone.startsWith('+251')) {
+      return phone.substring(4);
+    }
+    return phone;
   }
 }
 
@@ -445,7 +499,7 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
         title: Row(
           children: [
             Text(
-              step.title,
+              'Update ${step.title}',
               style: TextStyle(
                 fontSize: 17,
                 color: isActive
@@ -485,10 +539,12 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
           children: [
             if (widget.stepIndex > 0)
               ElevatedButton.icon(
-                onPressed: _isLoading ? null : () {
-                  widget.onStepChanged(widget.stepIndex - 1);
-                  Navigator.pop(context);
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        widget.onStepChanged(widget.stepIndex - 1);
+                        Navigator.pop(context);
+                      },
                 label: Text(
                   _isLoading ? 'Please wait...' : 'Previous',
                   style: TextStyle(fontSize: 13),
@@ -505,91 +561,98 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
             else
               const SizedBox(width: 100),
             ElevatedButton.icon(
-              onPressed: _isLoading ? null : () async {
-                setState(() {
-                  _isLoading = true;
-                });
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      setState(() {
+                        _isLoading = true;
+                      });
 
-                try {
-                  // Handle step completion based on current step
-                  bool canProceed = true;
+                      try {
+                        // Handle step completion based on current step
+                        bool canProceed = true;
 
-                  // Use the controller's validateAndSaveStep method for steps 0-7 and 8
-                  if (widget.stepIndex <= 7 || widget.stepIndex == 8) {
-                    canProceed = await registrationController.validateAndSaveStep(
-                        widget.stepIndex, ref);
+                        // Use the controller's validateAndSaveStep method for steps 0-7 and 8
+                        if (widget.stepIndex <= 7 || widget.stepIndex == 8) {
+                          canProceed = await registrationController
+                              .validateAndSaveStep(widget.stepIndex, ref);
 
-                    // Show validation errors in SnackBar if validation fails
-                    if (!canProceed) {
-                      final validationErrors = ref.read(formValidationProvider);
-                      final errorMessage = _formatErrorMessages(validationErrors);
+                          // Show validation errors in SnackBar if validation fails
+                          if (!canProceed) {
+                            final validationErrors =
+                                ref.read(formValidationProvider);
+                            final errorMessage =
+                                _formatErrorMessages(validationErrors);
 
-                      if (errorMessage.isNotEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Please fix the following errors:',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                            if (errorMessage.isNotEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Please fix the following errors:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        errorMessage,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  backgroundColor: Colors.red,
+                                  duration: const Duration(seconds: 4),
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(16),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  errorMessage,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
+                              );
+                            }
+                          }
+                        }
+
+                        if (canProceed &&
+                            widget.stepIndex < widget.steps.length - 1) {
+                          // Show success message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${step.title} completed successfully!',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              ],
+                              ),
+                              backgroundColor: cyanblueColor,
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.all(16),
                             ),
-                            backgroundColor: Colors.red,
-                            duration: const Duration(seconds: 4),
-                            behavior: SnackBarBehavior.floating,
-                            margin: const EdgeInsets.all(16),
-                          ),
-                        );
+                          );
+                          widget.onStepChanged(widget.stepIndex + 1);
+                          Navigator.pop(context);
+                        } else if (canProceed &&
+                            widget.stepIndex == widget.steps.length - 1) {
+                          // Final step - complete registration
+                          await _completeRegistration(
+                              context, ref, registrationController);
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        }
                       }
-                    }
-                  }
-
-                  if (canProceed && widget.stepIndex < widget.steps.length - 1) {
-                    // Show success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${step.title} completed successfully!',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        backgroundColor: cyanblueColor,
-                        duration: const Duration(seconds: 2),
-                        behavior: SnackBarBehavior.floating,
-                        margin: const EdgeInsets.all(16),
-                      ),
-                    );
-                    widget.onStepChanged(widget.stepIndex + 1);
-                    Navigator.pop(context);
-                  } else if (canProceed && widget.stepIndex == widget.steps.length - 1) {
-                    // Final step - complete registration
-                    await _completeRegistration(
-                        context, ref, registrationController);
-                  }
-                } finally {
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                    });
-                  }
-                }
-              },
+                    },
               icon: _isLoading
                   ? const SizedBox(
                       width: 16,
@@ -642,7 +705,7 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
   Future<void> _completeRegistration(BuildContext context, WidgetRef ref,
       RegistrationController controller) async {
     final registrationData = ref.read(registrationDataProvider);
-    
+
     // Show summary dialog
     showDialog(
       context: context,
@@ -653,7 +716,7 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
           onConfirm: () async {
             // Close the dialog
             Navigator.of(context).pop();
-            
+
             // Submit the registration
             final success = await controller.submitRegistration(ref);
 
@@ -678,7 +741,8 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
               // Show error message
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Failed to complete registration. Please try again.'),
+                  content: Text(
+                      'Failed to complete registration. Please try again.'),
                   backgroundColor: Colors.red,
                   duration: Duration(seconds: 3),
                 ),

@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:convert';
 import 'dart:developer';
 
@@ -53,7 +55,6 @@ class TaskRepository implements TaskRepo {
       return tasks;
     } catch (e, stackTrace) {
       log('Error in gettasks: $e', stackTrace: stackTrace);
-      print(e);
       throw Exception('Failed to load high profile clients');
     }
   }
@@ -96,12 +97,10 @@ class TaskRepository implements TaskRepo {
 
       final responseData = json.decode(response.body) as Map<String, dynamic>;
       final newTask = TaskModel.fromJson(responseData);
-      print(responseData);
       return newTask;
     } catch (e, stackTrace) {
       log('Error creating a task: $e', stackTrace: stackTrace);
-      print(e);
-      print(stackTrace);
+     
       throw Exception('Failed to create task');
     }
   }

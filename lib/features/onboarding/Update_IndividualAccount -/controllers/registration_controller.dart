@@ -44,7 +44,8 @@ class RegistrationController {
       }
 
       // Always use the latest customerId from state if userId is not provided
-      final currentCustomerId = userId ?? _ref.read(registrationDataProvider).customerId;
+      final currentCustomerId =
+          userId ?? _ref.read(registrationDataProvider).customerId;
       print('[CONTROLLER] Using userId/customerId: $currentCustomerId');
 
       // Submit to service
@@ -66,7 +67,8 @@ class RegistrationController {
           phone: phoneNumber,
           email: email,
           productType: productType,
-          customerId: serviceResult.userId!, // Store the new or updated customer ID
+          customerId:
+              serviceResult.userId!, // Store the new or updated customer ID
         );
         print("=== Basic Info Step Debug ===");
         print("New customer ID stored: ${serviceResult.userId}");
@@ -99,7 +101,6 @@ class RegistrationController {
     required String? documentName,
     required Uint8List? frontImage,
     required Uint8List? backImage,
-    
     String? userId,
   }) async {
     try {
@@ -555,19 +556,26 @@ class RegistrationController {
   }
 
   // Validation methods
+  String formatPhoneNumber(String phone) {
+    if (phone.startsWith('0')) {
+      return phone.substring(1);
+    } else if (phone.startsWith('+251')) {
+      return phone.substring(4);
+    }
+    return phone;
+  }
+
   ValidationResult _validateBasicInfo(
       String phoneNumber, String email, String? productType) {
     final errors = <String, String>{};
 
-    // Validate product type
-    if (productType == null || productType.isEmpty) {
-      errors['productType'] = 'Product Type is required';
-    }
-
-    // Validate phone number
-    if (phoneNumber.trim().isEmpty) {
+    // Format and validate phone number
+    String formattedPhone = formatPhoneNumber(phoneNumber.trim());
+    print("qwqwqwqqwqwobject1111");
+    print(formattedPhone);
+    if (formattedPhone.isEmpty) {
       errors['phone'] = 'Phone Number is required';
-    } else if (phoneNumber.trim().length != 9) {
+    } else if (formattedPhone.length != 9) {
       errors['phone'] = 'Phone Number must be 9 digits';
     }
 
@@ -821,14 +829,11 @@ class RegistrationController {
   Future<bool> validateAndSaveStep(int step, WidgetRef ref) async {
     switch (step) {
       case 0: // Basic Info
-        final phoneController = ref.read(phoneControllerProvider);
-        final emailController = ref.read(emailControllerProvider);
         final data = ref.read(registrationDataProvider);
         return await handleBasicInfoStep(
-          phoneNumber: phoneController.text.trim(),
-          email: emailController.text.trim(),
+          phoneNumber: data.phone ?? '',
+          email: data.email ?? '',
           productType: data.productType,
-          // isOnline: ref.read(connectivityProvider),
         );
       case 1: // ID Type
         final data = ref.read(registrationDataProvider);
@@ -838,7 +843,6 @@ class RegistrationController {
           documentName: data.documentName,
           frontImage: data.residenceCard,
           backImage: data.residenceCardBack,
-          // isOnline: ref.read(connectivityProvider),
           userId: userId,
         );
       case 2: // Signature
@@ -918,12 +922,44 @@ class RegistrationController {
   // Method to submit the entire registration
   Future<bool> submitRegistration(WidgetRef ref) async {
     try {
-      // This would typically submit all the collected data
-      // For now, we'll just mark all steps as complete
+      // Mark all steps as complete
       for (int i = 0; i < 9; i++) {
         _stepCompletionNotifier.markStepComplete(i);
       }
       _registrationDataNotifier.updateProgress(100.0);
+      
+      // Update status to UNSETTLED for offline mode
+      final registrationData = _ref.read(registrationDataProvider);
+      final userId = ref.read(userIdProvider);
+      final isOnline = ref.read(connectivityProvider);
+      
+      if (!isOnline && userId != null) {
+        // Update status to UNSETTLED in offline database
+        final updateData = {
+          'status': 'UNSETTLED',
+          'percentageCompleted': 100.0,
+          'formCompleted': 1,
+        };
+        
+        try {
+          final databaseHelper = _ref.read(databaseProvider);
+          final rowsAffected = await databaseHelper.updateCustomer(
+            int.parse(userId),
+            updateData,
+          );
+          
+          if (rowsAffected > 0) {
+            print('[SUBMIT REGISTRATION] Status updated to UNSETTLED successfully');
+            // Update the registration data with new status
+            _registrationDataNotifier.updateStatus('UNSETTLED');
+          } else {
+            print('[SUBMIT REGISTRATION] Failed to update status to UNSETTLED');
+          }
+        } catch (e) {
+          print('[SUBMIT REGISTRATION] Error updating status: $e');
+        }
+      }
+      
       return true;
     } catch (e) {
       _formValidationNotifier.setError(

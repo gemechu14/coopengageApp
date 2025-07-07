@@ -32,11 +32,14 @@ class ReusableTextFormField extends StatelessWidget {
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: TextFormField(
         // textAlign: TextAlign.start,
+
+        
         controller: controller,
         inputFormatters: inputFormatters,
         keyboardType: keyboardType,
         onChanged: onChanged, // Add onChanged callback
         decoration: InputDecoration(
+          // fillColor: Colors.white,
           enabled: isEnabled,
           hintText: hintText,
           hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),

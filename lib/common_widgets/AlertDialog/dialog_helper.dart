@@ -27,8 +27,7 @@ class DialogHelper {
         titleColor = Colors.blue;
         break;
       case DialogType.info:
-      default:
-        iconData = Icons.info_outline;
+      iconData = Icons.info_outline;
         iconColor = Colors.blue;
         titleColor = Colors.blue;
         break;

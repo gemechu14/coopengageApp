@@ -48,7 +48,6 @@ class HighProfileClientRepository implements HighProfileClientRepo {
       return highProfileClients;
     } catch (e, stackTrace) {
       log('Error in getHighProfileClients: $e', stackTrace: stackTrace);
-      print(e);
       throw Exception('Failed to load high profile clients');
     }
   }

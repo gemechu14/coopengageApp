@@ -1,4 +1,4 @@
-// ignore_for_file: sort_child_properties_last, use_super_parameters
+// ignore_for_file: sort_child_properties_last, use_super_parameters, sized_box_for_whitespace
 
 import 'dart:convert';
 import 'package:coopengageplus/NetworkHandler.dart';
@@ -500,7 +500,7 @@ class _DashboardState extends State<Dashboard> {
             fetchedUsers.length; // Set the count of database customers
       });
     } catch (e) {
-      print("Error fetching users: $e");
+      // print("Error fetching users: $e");
     }
   }
 
