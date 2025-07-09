@@ -1,7 +1,8 @@
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/features/onboarding/Indivudualaccount/CustomerRegistrationScreen.dart';
+import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
+
+import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/features/onboarding/corporate/corporateAccount.dart';
 import 'package:coopengageplus/features/onboarding/jointaccount/jointAccount.dart';
 import 'package:coopengageplus/features/onboarding/HomePage/IndividualAccountTypeSelection.dart';
 // import 'package:coopengageplus/features/onboarding/Indivudualaccount/CustomerRegistrationScreen.dart';
@@ -65,47 +66,54 @@ class AccountOnboardingScreen extends StatelessWidget {
                         cyanblueColor
                       ],
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const IndividualAccountTypeSelection()),
+                        // Navigator.of(context).push(
+                        //   MaterialPageRoute(builder: (context) => const IndividualAccountTypeSelection()),dd
+                        // );
+
+                         Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const RegistrationScreen()),
                         );
                       },
                     ),
-                    _buildAccountCard(
-                      title: 'Joint',
-                      description: 'Shared account for multiple users',
-                      icon: Icons.group_outlined,
-                      gradientColors: [
-                        const Color(0xFF10B981),
-                        const Color(0xFF059669),
-                      ],
-                      onTap: () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => JointAccountStepperPage(),
-                          ),
-                          (route) => false,
-                        );
-                      },
-                    ),
-                    _buildAccountCard(
-                      title: 'Corporate',
-                      description: 'Business and organizational accounts',
-                      icon: Icons.business_outlined,
-                      gradientColors: [
-                        const Color(0xFFF59E0B),
-                        const Color(0xFFD97706),
-                      ],
-                      onTap: () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CorporateRegistration(),
-                          ),
-                          (route) => false,
-                        );
-                      },
-                    ),
+                    // _buildAccountCard(
+                    //   title: 'Joint',
+                    //   description: 'Shared account for multiple users',
+                    //   icon: Icons.group_outlined,
+                    //   gradientColors: [
+                    //     const Color(0xFF10B981),
+                    //     const Color(0xFF059669),
+                    //   ],
+                    //   onTap: () {
+                    //     Navigator.pushAndRemoveUntil(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => JointAccountStepperPage(),
+                    //       ),
+                    //       (route) => false,
+                    //     );
+                    //   },
+                    // ),
+                    // _buildAccountCard(
+                    //   title: 'Corporate',
+                    //   description: 'Business and organizational accounts',
+                    //   icon: Icons.business_outlined,
+                    //   gradientColors: [
+                    //     const Color(0xFFF59E0B),
+                    //     const Color(0xFFD97706),
+                    //   ],
+                    //   onTap: () {
+                    //     Navigator.pushAndRemoveUntil(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => CorporateCustomerRegistration(),
+                    //       ),
+                    //       (route) => false,
+                    //     );
+                    //   },
+                    // ),
+                 
+                 
+                 
                   ],
                 ),
               ),

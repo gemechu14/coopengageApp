@@ -7,8 +7,9 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
-import 'package:coopengageplus/features/onboarding/corporate/RegistrationServices.dart';
+import 'package:coopengageplus/features/onboarding/HomePage/AccountOpeningHomePage.dart';
 import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
+import 'package:coopengageplus/features/onboarding/corporateCustomer/RegistrationServices.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:email_validator/email_validator.dart';
@@ -83,13 +84,13 @@ List<TextEditingController> motherNameControllers = [];
 List<TextEditingController> DateofBirthControllers = [];
 List<TextEditingController> occupationControllers = [];
 
-class CorporateRegistration extends StatefulWidget {
-  const CorporateRegistration({super.key});
+class CorporateCustomerRegistration extends StatefulWidget {
+  const CorporateCustomerRegistration({super.key});
   @override
-  State<CorporateRegistration> createState() => _Registration();
+  State<CorporateCustomerRegistration> createState() => _Registration();
 }
 
-class _Registration extends State<CorporateRegistration> {
+class _Registration extends State<CorporateCustomerRegistration> {
   // final storage = FlutterSecureStorage();
   String? userId;
   int? userID;
@@ -580,8 +581,6 @@ class _Registration extends State<CorporateRegistration> {
                 errorMessage: 'Please select the number of authorized signers',
                 isRequired: true,
               ),
-              
-              
               SizedBox(
                 height: 10,
               )
@@ -856,9 +855,6 @@ class _Registration extends State<CorporateRegistration> {
           ],
         ),
       ),
-     
-     
-     
       Step(
         title: Text(isSmallScreen ? "" : "Financial Information"),
         isActive: _activeStepIndex >= 3,
@@ -1225,7 +1221,6 @@ class _Registration extends State<CorporateRegistration> {
                 ),
               ),
 
-    
               if (selectedFiles.isNotEmpty)
                 Column(
                   children: selectedFiles.asMap().entries.map((entry) {
@@ -1272,9 +1267,6 @@ class _Registration extends State<CorporateRegistration> {
                     fontWeight: FontWeight.bold),
                 textAlign: TextAlign.end,
               ),
-
-
-
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
                 child: filteredAccountTypes.isNotEmpty
@@ -1985,7 +1977,7 @@ class _Registration extends State<CorporateRegistration> {
       onWillPop: () async {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => MainPage()),
+          MaterialPageRoute(builder: (context) => AccountOnboardingScreen()),
           (route) => false,
         );
         return false;
@@ -2011,7 +2003,8 @@ class _Registration extends State<CorporateRegistration> {
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => MainPage()),
+                      MaterialPageRoute(
+                          builder: (context) => AccountOnboardingScreen()),
                       (route) => false,
                     );
                   }),
@@ -2368,8 +2361,6 @@ class _Registration extends State<CorporateRegistration> {
     }
   }
 
- 
- 
   Future<Uint8List?> _getImageBytes(String imagePath) async {
     try {
       final File imageFile = File(imagePath);
@@ -2568,6 +2559,7 @@ class _Registration extends State<CorporateRegistration> {
           setState(() {
             isLoading = true; // Start loading before registration
           });
+          print("kdddhfhdfhdh");
           await registerAllUsers();
           setState(() {
             isLoading = false; // Stop loading after registration
@@ -3795,7 +3787,7 @@ class _Registration extends State<CorporateRegistration> {
 
   registerAllUsers() async {
     List<Map<String, dynamic>> customers = [];
-
+  print("a");
     for (int i = 0; i < int.parse(NumberOfMembers!); i++) {
       Uint8List? residentBytes;
       Uint8List? residentCardBackBytes;
@@ -3804,7 +3796,7 @@ class _Registration extends State<CorporateRegistration> {
       Uint8List? tradeLicenseBytes;
       Uint8List? articleBytes;
       Uint8List? letterOfRequestBytes;
-      print("ddhdhhdh");
+      print("ddhdhhdhsssss");
       print(articleFile);
       print(letterOfRequestFile);
 

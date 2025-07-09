@@ -1,9 +1,17 @@
 class AppConstants {
   // static const baseUrl = "http://10.2.125.41:9061/api/v1";
   // static const baseURL = 'http://10.2.125.41:9061';
+///TEST SERVER
+  // static const baseUrl = "http://10.8.100.111:9061/api/v1";
+  // static const baseURL = 'http://10.8.100.111:9061';
 
-  static const baseUrl = "http://10.8.100.111:9061/api/v1";
-  static const baseURL = 'http://10.8.100.111:9061';
+  //PRODUCTION SERVER
+  static const baseUrl = "http://10.12.53.33:9061/api/v1";
+  static const baseURL = 'http://10.12.53.33:9061';
+  
+
+
+
   static const cacheDays = 60;
   static const soupBaseURL = 'https://souqpass.coopbankoromiasc.com/api';
 

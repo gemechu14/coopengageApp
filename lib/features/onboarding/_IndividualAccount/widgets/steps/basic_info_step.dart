@@ -115,7 +115,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                 const SizedBox(height: 24),
 
                 // Product Type
-                // _buildLabel("Product Type *"),
+                _buildLabel("Product Type *"),
                 ReusableDropdown(
                   selectedValue: registrationData.productType,
                   items: ListContants.productType,
@@ -139,7 +139,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                 const SizedBox(height: 20),
 
                 // Phone Number
-                // _buildLabel("Phone Number *"),
+                _buildLabel("Phone Number *"),
                 PhoneNumberWidget(
                   phoneNumberController: _phoneController,
                   onChanged: (value) {
@@ -166,7 +166,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                 const SizedBox(height: 20),
 
                 // Email
-                // _buildLabel("Email Address"),
+                _buildLabel("Email (optional)"),
                 EmailWidget(
                   emailController: _emailController,
                   onChanged: (value) {
@@ -192,55 +192,9 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
 
                 const SizedBox(height: 30),
 
-                // Progress indicator
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Step Progress',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            '1 of 8',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: 0.125,
-                        backgroundColor: Colors.grey.shade300,
-                        valueColor:
-                            const AlwaysStoppedAnimation<Color>(Colors.blue),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '12.5% Complete',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+           
+             
+             
               ],
             ),
           ),
@@ -251,11 +205,11 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
 
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 8.0 ,left: 5),
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),

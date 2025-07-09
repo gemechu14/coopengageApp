@@ -43,11 +43,10 @@ class _RegistrationScreenState
       ref.read(registrationControllerProvider).resetAllSteps();
       final userInfo = (widget as dynamic).userInfo as Map<String, dynamic>?;
       if (userInfo != null) {
-        print("dfdfjdjfjdjfjd");
+     
 
-        print(userInfo);
-
-        String? phone = formatPhoneNumber(userInfo['phone'] ?? userInfo['phoneNumber']);
+        String? phone =
+            formatPhoneNumber(userInfo['phone'] ?? userInfo['phoneNumber']);
         ref.read(registrationDataProvider.notifier).state = RegistrationData(
           phone: phone,
           email: userInfo['email'],
@@ -107,12 +106,10 @@ class _RegistrationScreenState
     void _goToStep(int index) {
       // Check if this is the Terms & Conditions step (index 8)
       if (index == 8) {
-        // Check if all previous steps are completed
         final allPreviousStepsCompleted =
             stepCompleted.take(8).every((completed) => completed);
 
         if (!allPreviousStepsCompleted) {
-          // Show message that all previous steps must be completed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
@@ -193,7 +190,13 @@ class _RegistrationScreenState
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
+            // Navigator.pop(context);
+
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MainPage()),
+              (route) => false,
+            );
           },
           icon: const Icon(Icons.arrow_back_ios_new),
           color: cyanblueColor,
@@ -201,7 +204,11 @@ class _RegistrationScreenState
         titleSpacing: 0,
         title: const Text(
           'Update Registration',
-          style: TextStyle(color: cyanblueColor),
+          style: TextStyle(
+            fontSize: 17,
+            color: Colors.blue,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: whiteColor,
       ),
@@ -502,12 +509,8 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
               'Update ${step.title}',
               style: TextStyle(
                 fontSize: 17,
-                color: isActive
-                    ? Colors.blue
-                    : isCompleted
-                        ? Colors.blue
-                        : Colors.black87,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
               ),
             ),
             if (isCompleted) ...[

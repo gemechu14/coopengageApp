@@ -95,9 +95,7 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
                 _buildIdCardPhotos(),
                 
                 const SizedBox(height: 30),
-                
-                // Progress indicator
-                _buildProgressIndicator(),
+        
               ],
             ),
           ),

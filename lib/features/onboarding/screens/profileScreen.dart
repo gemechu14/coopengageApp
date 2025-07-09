@@ -187,19 +187,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // Navigate to About Page
                   },
                 ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.language, color: Colors.blue),
-                  title: const Text("language"),
-                  onTap: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ChangeLanguagePage()),
-                      (route) => false,
-                    );
-                  },
-                ),
+                // const Divider(),
+                // ListTile(
+                //   leading: const Icon(Icons.language, color: Colors.blue),
+                //   title: const Text("language"),
+                //   onTap: () {
+                //     Navigator.pushAndRemoveUntil(
+                //       context,
+                //       MaterialPageRoute(
+                //           builder: (context) => const ChangeLanguagePage()),
+                //       (route) => false,
+                //     );
+                //   },
+                // ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.help, color: Colors.blue),

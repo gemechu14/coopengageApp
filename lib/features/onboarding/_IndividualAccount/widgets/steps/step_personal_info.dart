@@ -623,7 +623,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
 
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 8.0, left: 5),
       child: Text(
         text,
         style: const TextStyle(

@@ -279,8 +279,8 @@ class RegistrationService {
         'branch': branch,
         'residenceCard': frontImage,
         'customerInfo.documentName': documentName,
-        // 'customerInfo.residenceCard': frontImage,
-        // 'customerInfo.residenceCardBack': backImage,
+        'customerInfo.residenceCard': frontImage,
+        'customerInfo.residenceCardBack': backImage,
         'accountType': '1',
         'percentageCompleted': 25,
         'status': 'INITIAL',
@@ -322,7 +322,7 @@ class RegistrationService {
       }
 
       final requestData = {
-        // 'customerInfo.signature': signature,
+        'customerInfo.signature': signature,
         'customerInfo.motherName': motherName,
         'percentageCompleted': 37.5,
         'status': 'INITIAL',
@@ -583,7 +583,7 @@ class RegistrationService {
       }
 
       final requestData = {
-        // 'customerInfo.photo': photo, // Photo will be handled separately if needed
+        'customerInfo.photo': photo, // Photo will be handled separately if needed
         'percentageCompleted': 50,
         'status': 'INITIAL',
       };

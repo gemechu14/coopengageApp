@@ -183,304 +183,312 @@ class _StepPaymentState extends ConsumerState<StepPayment> {
   Widget build(BuildContext context) {
     final validationErrors = ref.watch(formValidationProvider);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: graybackgroundColor,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
 
-          // Address Information Section
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_on_outlined,
-                        color: Colors.blue.shade700,),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Address Information',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                     color: Colors.blue.shade700,
+            // Address Information Section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        color: Colors.blue.shade700,
                       ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Address Information',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please provide your address and legal identification details.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.blue.shade700,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Please provide your address and legal identification details.',
-                  style: TextStyle(
-                    fontSize: 14,
-                  color: Colors.blue.shade700,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // State
+            _buildLabel("State"),
+            ReusableDropdown(
+              hintText: "Select State",
+              selectedValue: selectedState,
+              items: ListContants.ethiopianStates,
+              onChanged: (value) {
+                setState(() {
+                  selectedState = value;
+                });
+                // Update registration data
+                ref.read(registrationDataProvider.notifier).updateAddressInfo(
+                      stateValue: value,
+                    );
+                ref.read(formValidationProvider.notifier).clearError('state');
+              },
+              errorMessage: validationErrors['state'] ?? '',
+              isRequired: false,
+            ),
+            // Error display under State
+            if (validationErrors['state'] != null &&
+                validationErrors['state']!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+                child: Text(
+                  validationErrors['state']!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
                   ),
                 ),
-              ],
+              ),
+
+            const SizedBox(height: 16),
+
+            // Zone Subcity
+            _buildLabel("Zone Subcity"),
+            ReusableTextFormField(
+              hintText: "Zone Subcity",
+              controller: zoneSubCityController,
+              keyboardType: TextInputType.text,
+              errorMessage: validationErrors['zoneSubCity'] ?? '',
+              leadingIcon: Icons.location_city,
+              isRequired: false,
+              onChanged: (value) {
+                // Update registration data
+                ref.read(registrationDataProvider.notifier).updateAddressInfo(
+                      zoneSubCity: value,
+                    );
+                // Clear validation errors when user makes changes
+                if (value.isNotEmpty) {
+                  ref
+                      .read(formValidationProvider.notifier)
+                      .clearError('zoneSubCity');
+                }
+              },
             ),
-          ),
+            // Error display under Zone Subcity
+            if (validationErrors['zoneSubCity'] != null &&
+                validationErrors['zoneSubCity']!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+                child: Text(
+                  validationErrors['zoneSubCity']!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-          // State
-          _buildLabel("State"),
-          ReusableDropdown(
-            hintText: "Select State",
-            selectedValue: selectedState,
-            items: ListContants.ethiopianStates,
-            onChanged: (value) {
-              setState(() {
-                selectedState = value;
-              });
-              // Update registration data
-              ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                    stateValue: value,
-                  );
-              ref.read(formValidationProvider.notifier).clearError('state');
-            },
-            errorMessage: validationErrors['state'] ?? '',
-            isRequired: false,
-          ),
-          // Error display under State
-          if (validationErrors['state'] != null &&
-              validationErrors['state']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-              child: Text(
-                validationErrors['state']!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
+            // Woreda
+            _buildLabel("Woreda"),
+            ReusableTextFormField(
+              hintText: "Woreda",
+              controller: woredaController,
+              keyboardType: TextInputType.text,
+              errorMessage: validationErrors['streetAddress'] ?? '',
+              leadingIcon: Icons.location_city,
+              isRequired: false,
+              onChanged: (value) {
+                // Update registration data
+                ref.read(registrationDataProvider.notifier).updateAddressInfo(
+                      streetAddress: value,
+                    );
+                // Clear validation errors when user makes changes
+                if (value.isNotEmpty) {
+                  ref
+                      .read(formValidationProvider.notifier)
+                      .clearError('streetAddress');
+                }
+              },
+            ),
+            // Error display under Woreda
+            if (validationErrors['streetAddress'] != null &&
+                validationErrors['streetAddress']!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+                child: Text(
+                  validationErrors['streetAddress']!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Legal ID
+            _buildLabel("Legal ID *"),
+            ReusableTextFormField(
+              hintText: "Legal ID",
+              controller: legalIdController,
+              keyboardType: TextInputType.text,
+              errorMessage: validationErrors['legalId'] ?? '',
+              leadingIcon: Icons.badge,
+              isRequired: true,
+              onChanged: (value) {
+                // Update registration data
+                ref.read(registrationDataProvider.notifier).updateAddressInfo(
+                      legalId: value,
+                    );
+                // Clear validation errors when user makes changes
+                if (value.isNotEmpty) {
+                  ref
+                      .read(formValidationProvider.notifier)
+                      .clearError('legalId');
+                }
+              },
+            ),
+            // Error display under Legal ID
+            if (validationErrors['legalId'] != null &&
+                validationErrors['legalId']!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+                child: Text(
+                  validationErrors['legalId']!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Issue Authority
+            _buildLabel("Issue Authority"),
+            ReusableTextFormField(
+              hintText: "Issue Authority",
+              controller: issueAuthorityController,
+              keyboardType: TextInputType.text,
+              errorMessage: validationErrors['issueAuthority'] ?? '',
+              leadingIcon: Icons.verified,
+              isRequired: false,
+              onChanged: (value) {
+                // Update registration data
+                ref.read(registrationDataProvider.notifier).updateAddressInfo(
+                      issueAuthority: value,
+                    );
+                // Clear validation errors when user makes changes
+                if (value.isNotEmpty) {
+                  ref
+                      .read(formValidationProvider.notifier)
+                      .clearError('issueAuthority');
+                }
+              },
+            ),
+            // Error display under Issue Authority
+            if (validationErrors['issueAuthority'] != null &&
+                validationErrors['issueAuthority']!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+                child: Text(
+                  validationErrors['issueAuthority']!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Issue Date
+            _buildLabel("Issue Date"),
+            GestureDetector(
+              onTap: () => _selectIssueDate(context),
+              child: AbsorbPointer(
+                child: ReusableTextFormField(
+                  hintText: "Issue Date",
+                  controller: issueDateController,
+                  keyboardType: TextInputType.none,
+                  errorMessage: validationErrors['issueDate'] ?? '',
+                  leadingIcon: Icons.calendar_today,
+                  isRequired: false,
                 ),
               ),
             ),
+            // Error display under Issue Date
+            if (validationErrors['issueDate'] != null &&
+                validationErrors['issueDate']!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+                child: Text(
+                  validationErrors['issueDate']!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // Zone Subcity
-          _buildLabel("Zone Subcity"),
-          ReusableTextFormField(
-            hintText: "Zone Subcity",
-            controller: zoneSubCityController,
-            keyboardType: TextInputType.text,
-            errorMessage: validationErrors['zoneSubCity'] ?? '',
-            leadingIcon: Icons.location_city,
-            isRequired: false,
-            onChanged: (value) {
-              // Update registration data
-              ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                    zoneSubCity: value,
-                  );
-              // Clear validation errors when user makes changes
-              if (value.isNotEmpty) {
-                ref
-                    .read(formValidationProvider.notifier)
-                    .clearError('zoneSubCity');
-              }
-            },
-          ),
-          // Error display under Zone Subcity
-          if (validationErrors['zoneSubCity'] != null &&
-              validationErrors['zoneSubCity']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-              child: Text(
-                validationErrors['zoneSubCity']!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
+            // Expire Date
+            _buildLabel("Expire Date"),
+            GestureDetector(
+              onTap: () => _selectExpireDate(context),
+              child: AbsorbPointer(
+                child: ReusableTextFormField(
+                  hintText: "Expire Date",
+                  controller: expireDateController,
+                  keyboardType: TextInputType.none,
+                  errorMessage: validationErrors['expireDate'] ?? '',
+                  leadingIcon: Icons.event_busy,
+                  isRequired: false,
                 ),
               ),
             ),
-
-          const SizedBox(height: 16),
-
-          // Woreda
-          _buildLabel("Woreda"),
-          ReusableTextFormField(
-            hintText: "Woreda",
-            controller: woredaController,
-            keyboardType: TextInputType.text,
-            errorMessage: validationErrors['streetAddress'] ?? '',
-            leadingIcon: Icons.location_city,
-            isRequired: false,
-            onChanged: (value) {
-              // Update registration data
-              ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                    streetAddress: value,
-                  );
-              // Clear validation errors when user makes changes
-              if (value.isNotEmpty) {
-                ref
-                    .read(formValidationProvider.notifier)
-                    .clearError('streetAddress');
-              }
-            },
-          ),
-          // Error display under Woreda
-          if (validationErrors['streetAddress'] != null &&
-              validationErrors['streetAddress']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-              child: Text(
-                validationErrors['streetAddress']!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
+            // Error display under Expire Date
+            if (validationErrors['expireDate'] != null &&
+                validationErrors['expireDate']!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+                child: Text(
+                  validationErrors['expireDate']!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
                 ),
               ),
-            ),
 
-          const SizedBox(height: 16),
-
-          // Legal ID
-          _buildLabel("Legal ID *"),
-          ReusableTextFormField(
-            hintText: "Legal ID",
-            controller: legalIdController,
-            keyboardType: TextInputType.text,
-            errorMessage: validationErrors['legalId'] ?? '',
-            leadingIcon: Icons.badge,
-            isRequired: true,
-            onChanged: (value) {
-              // Update registration data
-              ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                    legalId: value,
-                  );
-              // Clear validation errors when user makes changes
-              if (value.isNotEmpty) {
-                ref.read(formValidationProvider.notifier).clearError('legalId');
-              }
-            },
-          ),
-          // Error display under Legal ID
-          if (validationErrors['legalId'] != null &&
-              validationErrors['legalId']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-              child: Text(
-                validationErrors['legalId']!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 16),
-
-          // Issue Authority
-          _buildLabel("Issue Authority"),
-          ReusableTextFormField(
-            hintText: "Issue Authority",
-            controller: issueAuthorityController,
-            keyboardType: TextInputType.text,
-            errorMessage: validationErrors['issueAuthority'] ?? '',
-            leadingIcon: Icons.verified,
-            isRequired: false,
-            onChanged: (value) {
-              // Update registration data
-              ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                    issueAuthority: value,
-                  );
-              // Clear validation errors when user makes changes
-              if (value.isNotEmpty) {
-                ref
-                    .read(formValidationProvider.notifier)
-                    .clearError('issueAuthority');
-              }
-            },
-          ),
-          // Error display under Issue Authority
-          if (validationErrors['issueAuthority'] != null &&
-              validationErrors['issueAuthority']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-              child: Text(
-                validationErrors['issueAuthority']!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 16),
-
-          // Issue Date
-          _buildLabel("Issue Date"),
-          GestureDetector(
-            onTap: () => _selectIssueDate(context),
-            child: AbsorbPointer(
-              child: ReusableTextFormField(
-                hintText: "Issue Date",
-                controller: issueDateController,
-                keyboardType: TextInputType.none,
-                errorMessage: validationErrors['issueDate'] ?? '',
-                leadingIcon: Icons.calendar_today,
-                isRequired: false,
-              ),
-            ),
-          ),
-          // Error display under Issue Date
-          if (validationErrors['issueDate'] != null &&
-              validationErrors['issueDate']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-              child: Text(
-                validationErrors['issueDate']!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 16),
-
-          // Expire Date
-          _buildLabel("Expire Date"),
-          GestureDetector(
-            onTap: () => _selectExpireDate(context),
-            child: AbsorbPointer(
-              child: ReusableTextFormField(
-                hintText: "Expire Date",
-                controller: expireDateController,
-                keyboardType: TextInputType.none,
-                errorMessage: validationErrors['expireDate'] ?? '',
-                leadingIcon: Icons.event_busy,
-                isRequired: false,
-              ),
-            ),
-          ),
-          // Error display under Expire Date
-          if (validationErrors['expireDate'] != null &&
-              validationErrors['expireDate']!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-              child: Text(
-                validationErrors['expireDate']!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 16),
-        ],
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
-
 }
