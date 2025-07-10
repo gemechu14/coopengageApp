@@ -124,8 +124,8 @@ class RegistrationDataNotifier extends StateNotifier<RegistrationData> {
   void updateIdTypeInfo({
     String? branch,
     String? documentName,
-    Uint8List? residenceCard,
-    Uint8List? residenceCardBack,
+    dynamic? residenceCard,
+    dynamic? residenceCardBack,
   }) {
     state = state.copyWith(
       branch: branch,
@@ -135,11 +135,11 @@ class RegistrationDataNotifier extends StateNotifier<RegistrationData> {
     );
   }
 
-  void updateSignature({Uint8List? signature}) {
+  void updateSignature({dynamic? signature}) {
     state = state.copyWith(signature: signature);
   }
 
-  void updatePhoto({Uint8List? photo}) {
+  void updatePhoto({dynamic? photo}) {
     state = state.copyWith(photo: photo);
   }
 

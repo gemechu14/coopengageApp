@@ -49,7 +49,6 @@
 //   }
 // }
 
-
 // import 'package:flutter/material.dart';
 
 // class ReusableDropdown extends StatelessWidget {
@@ -83,7 +82,7 @@
 //         borderRadius: BorderRadius.circular(14),
 //         shadowColor: Colors.black12,
 //         child: DropdownButtonFormField<String>(
-//           value: selectedValue, 
+//           value: selectedValue,
 //           isExpanded: true,
 //           dropdownColor: const Color(0xFFF7F7F9), // subtle light grey
 //           menuMaxHeight: 300,
@@ -172,7 +171,6 @@
 //   }
 // }
 
-
 import 'package:flutter/material.dart';
 
 class ReusableDropdown extends StatelessWidget {
@@ -205,9 +203,20 @@ class ReusableDropdown extends StatelessWidget {
       isExpanded: true,
       hint: Text(hintText),
       items: items.map((item) {
+        //   return DropdownMenuItem<String>(
+        //     value: item,
+        //     child: Text(item),
+        //   );
+        // }).toList(),
         return DropdownMenuItem<String>(
           value: item,
-          child: Text(item),
+          child: Container(
+            width: MediaQuery.of(context).size.width -
+                32, // 👈 full width minus horizontal padding
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16), // 👈 padding inside container
+            child: Text(item),
+          ),
         );
       }).toList(),
       onChanged: onChanged,
@@ -221,8 +230,11 @@ class ReusableDropdown extends StatelessWidget {
           : null,
       decoration: InputDecoration(
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.blueGrey) : null,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, color: Colors.blueGrey)
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(14)),
           borderSide: BorderSide(

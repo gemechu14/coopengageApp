@@ -153,36 +153,9 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
                 ),
                 child: profilePath.isEmpty
                     ?
-                    // Column(
-                    //     mainAxisAlignment: MainAxisAlignment.center,
-                    //     children: [
-                    // ClipRRect(
-                    //   borderRadius: BorderRadius.circular(20.0),
-                    //   child: Image.asset(
-                    //     'assets/photo1.png',
-                    //     height: 170.0,
-                    //     width: MediaQuery.of(context).size.width * 0.6,
-                    //     fit: BoxFit.fill,
-                    //   ),
-                    // )
+                
                     _buildPlaceholderIcon()
-                    //   Container(
-                    //     height: 170.0,
-                    //     width: MediaQuery.of(context).size.width * 0.6,
-                    //     decoration: BoxDecoration(
-                    //       color: Colors.grey[300], // light background color
-                    //       borderRadius: BorderRadius.circular(20.0),
-                    //     ),
-                    //     child: const Center(
-                    //       child: Icon(
-                    //         Icons.add, // plus icon
-                    //         color: Colors.black54,
-                    //         size: 50.0,
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ],
-                    // )
+                  
                     : Stack(
                         children: [
                           ClipRRect(

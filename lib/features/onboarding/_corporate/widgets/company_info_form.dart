@@ -1,13 +1,10 @@
-import 'package:coopengageplus/common_widgets/dropDown/DatePickerField.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
 import 'package:coopengageplus/features/onboarding/_corporate/providers/registration_providers.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../_corporate/models/corporate_registration_form.dart';
 
 class CompanyInfoForm extends ConsumerStatefulWidget {
   final GlobalKey<FormState>? formKey;
@@ -136,7 +133,7 @@ class _CompanyInfoFormState extends ConsumerState<CompanyInfoForm> {
                 onChanged: (value) => notifier.updateField('phoneNumber', value),
               ),
               const SizedBox(height: 12),
-              TextLabel("Email  (optional)"),
+              TextLabel("Email "),
               const SizedBox(height: 4),
               ReusableTextFormField(
                 hintText: "Email",
@@ -144,7 +141,7 @@ class _CompanyInfoFormState extends ConsumerState<CompanyInfoForm> {
                 keyboardType: TextInputType.emailAddress,
                 errorMessage: "Email cannot be empty",
                 leadingIcon: Icons.email,
-                isRequired: true,
+                isRequired: false,
                 onChanged: (value) => notifier.updateField('email', value),
               ),
               const SizedBox(height: 12),

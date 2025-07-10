@@ -8,7 +8,7 @@ import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/signature_step.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_account_type.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_financial_info.dart';
-import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_payment.dart';
+import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_addressInformation.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_personal_info.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_personal_photo.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_terms_conditions.dart';
@@ -16,6 +16,8 @@ import 'package:coopengageplus/pages/MainPage.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class UpdateUserRegistrationScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> userInfo;
@@ -43,43 +45,67 @@ class _RegistrationScreenState
       ref.read(registrationControllerProvider).resetAllSteps();
       final userInfo = (widget as dynamic).userInfo as Map<String, dynamic>?;
       if (userInfo != null) {
-     
+        print("dfdfjdjfjdjfjddkddfjdjfjdjfjdjdjfhdf");
+
+        print(userInfo);
 
         String? phone =
             formatPhoneNumber(userInfo['phone'] ?? userInfo['phoneNumber']);
-        ref.read(registrationDataProvider.notifier).state = RegistrationData(
-          phone: phone,
-          email: userInfo['email'],
-          customerId: userInfo['id']?.toString(),
-          fullName: userInfo['fullName'],
-          surname: userInfo['surname'],
-          motherName: userInfo['motherName'],
-          sex: userInfo['sex'],
-          dateOfBirth: userInfo['dateOfBirth'],
-          title: userInfo['title'],
-          maritalStatus: userInfo['maritalStatus'],
-          branch: userInfo['branch'],
-          documentName: userInfo['documentName'],
-          residenceCard: userInfo['residenceCard'],
-          residenceCardBack: userInfo['residenceCardBack'],
-          signature: userInfo['signature'],
-          photo: userInfo['photo'],
-          occupation: userInfo['occupation'],
-          monthlyIncome: userInfo['monthlyIncome']?.toString(),
-          initialDeposit: userInfo['initialDeposit']?.toString(),
-          sector: userInfo['sector'],
-          country: userInfo['country'],
-          issueAuthority: userInfo['issueAuthority'],
-          issueDate: userInfo['issueDate'],
-          expirayDate: userInfo['expirayDate'],
-          legalId: userInfo['legalId'],
-          state: userInfo['state'],
-          zoneSubCity: userInfo['zoneSubCity'],
-          streetAddress: userInfo['streetAddress'],
-          accountType: userInfo['accountType'],
-          currency: userInfo['currency'],
-          termsAccepted: userInfo['termsAccepted'],
-        );
+        // Normalize branch value
+        String? branchValue = userInfo['branch'];
+        // Get available branches from token (same logic as BranchSelector)
+        final storage = const FlutterSecureStorage();
+        storage.read(key: "token").then((token) {
+          if (token != null && token.isNotEmpty) {
+            var decodedToken = JwtDecoder.decode(token);
+            List<Map<String, dynamic>> regularBranches =
+                decodedToken.containsKey("branch")
+                    ? List<Map<String, dynamic>>.from(decodedToken["branch"])
+                    : [];
+            List<Map<String, dynamic>> branches = [];
+            if (decodedToken.containsKey("mainBranch")) {
+              branches.add(decodedToken["mainBranch"]);
+            }
+            branches.addAll(regularBranches);
+            final branchNames = branches.map((b) => b['companyName'] ?? '').toList();
+            if (branchValue != null && !branchNames.contains(branchValue)) {
+              branchValue = null;
+            }
+          }
+          ref.read(registrationDataProvider.notifier).state = RegistrationData(
+            phone: phone,
+            email: userInfo['email'],
+            customerId: userInfo['id']?.toString(),
+            fullName: userInfo['fullName'],
+            surname: userInfo['surname'],
+            motherName: userInfo['motherName'],
+            sex: userInfo['sex'],
+            dateOfBirth: userInfo['dateOfBirth'],
+            title: userInfo['title'],
+            maritalStatus: userInfo['maritalStatus'],
+            branch: branchValue,
+            documentName: userInfo['documentName'],
+            residenceCard: userInfo['residenceCard'],
+            residenceCardBack: userInfo['residenceCardBack'],
+            signature: userInfo['signature'],
+            photo: userInfo['photo'],
+            occupation: userInfo['occupation'],
+            monthlyIncome: userInfo['monthlyIncome']?.toString(),
+            initialDeposit: userInfo['initialDeposit']?.toString(),
+            sector: userInfo['sector'],
+            country: userInfo['country'],
+            issueAuthority: userInfo['issueAuthority'],
+            issueDate: userInfo['issueDate'],
+            expirayDate: userInfo['expirayDate'],
+            legalId: userInfo['legalId'],
+            state: userInfo['state'],
+            zoneSubCity: userInfo['zoneSubCity'],
+            streetAddress: userInfo['streetAddress'],
+            accountType: userInfo['accountType'],
+            currency: userInfo['currency'],
+            termsAccepted: userInfo['termsAccepted'],
+          );
+        });
       }
     });
   }
@@ -98,7 +124,7 @@ class _RegistrationScreenState
       _StepInfo('Personal Photo', const StepPersonalPhoto(), '4/9'),
       _StepInfo('Financial Information', const StepFinancialInfo(), '5/9'),
       _StepInfo('Personal Info', const StepPersonalInfo(), '6/9'),
-      _StepInfo('Address Information', const StepPayment(), '7/9'),
+      _StepInfo('Address Information', const StepAddressInformation(), '7/9'),
       _StepInfo('Account Type', const StepAccountType(), '8/9'),
       _StepInfo('Terms & Conditions', const StepTermsConditions(), '9/9'),
     ];
@@ -106,10 +132,12 @@ class _RegistrationScreenState
     void _goToStep(int index) {
       // Check if this is the Terms & Conditions step (index 8)
       if (index == 8) {
+        // Check if all previous steps are completed
         final allPreviousStepsCompleted =
             stepCompleted.take(8).every((completed) => completed);
 
         if (!allPreviousStepsCompleted) {
+          // Show message that all previous steps must be completed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(

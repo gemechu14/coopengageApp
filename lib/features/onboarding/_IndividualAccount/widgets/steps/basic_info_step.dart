@@ -93,9 +93,9 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                           Text(
                             'Basic Information',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 17,
+                              color: Colors.blue,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700,
                             ),
                           ),
                         ],
@@ -191,10 +191,6 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                   ),
 
                 const SizedBox(height: 30),
-
-           
-             
-             
               ],
             ),
           ),
@@ -205,7 +201,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
 
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0 ,left: 5),
+      padding: const EdgeInsets.only(bottom: 8.0, left: 5),
       child: Text(
         text,
         style: const TextStyle(

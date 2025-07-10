@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../_corporate/providers/registration_providers.dart';
-import '../../_corporate/models/corporate_registration_form.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
@@ -9,7 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AccountTypeForm extends ConsumerStatefulWidget {
-  const AccountTypeForm({Key? key}) : super(key: key);
+  final GlobalKey<FormState>? formKey;
+  const AccountTypeForm({Key? key, this.formKey}) : super(key: key);
 
   @override
   ConsumerState<AccountTypeForm> createState() => _AccountTypeFormState();
@@ -165,76 +165,80 @@ class _AccountTypeFormState extends ConsumerState<AccountTypeForm> {
 
     return Padding(
       padding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextLabel('Branch'),
-          branchSelectorWidget1(),
-          const SizedBox(height: 4),
-          TextLabel('State'),
-          ReusableDropdown(
-            selectedValue: selectedState,
-            items: ListContants.ethiopianStates,
-            hintText: 'Select State',
-            onChanged: (newState) {
-              setState(() {
-                selectedState = newState;
-              });
-              notifier.updateField('state', newState);
-            },
-            errorMessage: 'Please select a state',
-            prefixIcon: Icons.map,
-            isRequired: false,
-          ),
-        const SizedBox(height: 4),
-          TextLabel('Zone Subcity'),
-          ReusableTextFormField(
-            hintText: 'Zone Subcity',
-            controller: cityController,
-            errorMessage: 'Zone Subcity cannot be empty',
-            leadingIcon: Icons.location_city,
-            isRequired: false,
-            onChanged: (value) => notifier.updateField('zone', value),
-          ),
-          const SizedBox(height: 4),
-          TextLabel('Woreda'),
-          ReusableTextFormField(
-            hintText: 'Woreda',
-            controller: woredaController,
-            errorMessage: 'Woreda cannot be empty',
-            leadingIcon: Icons.location_city,
-            isRequired: false,
-            onChanged: (value) => notifier.updateField('woreda', value),
-          ),
-         const SizedBox(height: 4),
-          TextLabel('Resident'),
-          ReusableTextFormField(
-            hintText: 'Resident',
-            controller: residenceController,
-            keyboardType: TextInputType.text,
-            errorMessage: 'Resident cannot be empty',
-            leadingIcon: Icons.location_city,
-            isRequired: true,
-            onChanged: (value) => notifier.updateField('residence', value),
-          ),
-         const SizedBox(height: 6),
-          TextLabel('Select Number of Authorized Signers'),
-          ReusableDropdown(
-            selectedValue: numberOfMembers,
-            items: ListContants.NumberOfMembersForOrganization,
-            hintText: 'Select Number of Authorized Signers',
-            onChanged: (newStatus) {
-              setState(() {
-                numberOfMembers = newStatus;
-              });
-              // You can update the provider or handle logic for number of signers here
-            },
-            prefixIcon: Icons.person_add,
-            errorMessage: 'Please select the number of authorized signers',
-            isRequired: true,
-          ),
-          const SizedBox(height: 12),
-        ],
+      child: Form(
+        key: widget.formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextLabel('Branch'),
+            branchSelectorWidget1(),
+            const SizedBox(height: 4),
+            TextLabel('State'),
+            ReusableDropdown(
+              selectedValue: selectedState,
+              items: ListContants.ethiopianStates,
+              hintText: 'Select State',
+              onChanged: (newState) {
+                setState(() {
+                  selectedState = newState;
+                });
+                notifier.updateField('state', newState);
+              },
+              errorMessage: 'Please select a state',
+              prefixIcon: Icons.map,
+              isRequired: false,
+            ),
+            const SizedBox(height: 4),
+            TextLabel('Zone Subcity'),
+            ReusableTextFormField(
+              hintText: 'Zone Subcity',
+              controller: cityController,
+              errorMessage: 'Zone Subcity cannot be empty',
+              leadingIcon: Icons.location_city,
+              isRequired: true,
+              onChanged: (value) => notifier.updateField('zone', value),
+            ),
+            const SizedBox(height: 4),
+            TextLabel('Woreda'),
+            ReusableTextFormField(
+              hintText: 'Woreda',
+              controller: woredaController,
+              errorMessage: 'Woreda cannot be empty',
+              leadingIcon: Icons.location_city,
+              isRequired: false,
+              onChanged: (value) => notifier.updateField('woreda', value),
+            ),
+            const SizedBox(height: 4),
+            TextLabel('Resident'),
+            ReusableTextFormField(
+              hintText: 'Resident',
+              controller: residenceController,
+              keyboardType: TextInputType.text,
+              errorMessage: 'Resident cannot be empty',
+              leadingIcon: Icons.location_city,
+              isRequired: true,
+              onChanged: (value) => notifier.updateField('residence', value),
+            ),
+            const SizedBox(height: 6),
+            TextLabel('Select Number of Authorized Signers'),
+            ReusableDropdown(
+              selectedValue: numberOfMembers,
+              items: ListContants.NumberOfMembersForOrganization,
+              hintText: 'Select Number of Authorized Signers',
+              onChanged: (newStatus) {
+                setState(() {
+                  numberOfMembers = newStatus;
+                });
+                // You can update the provider or handle logic for number of signers here
+              },
+              prefixIcon: Icons.person_add,
+              errorMessage: 'Please select the number of authorized signers',
+              isRequired: true,
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }

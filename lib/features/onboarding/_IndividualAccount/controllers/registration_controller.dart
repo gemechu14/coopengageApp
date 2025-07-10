@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:coopengageplus/features/onboarding/corporate/corporateAccount.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/registration_service.dart';
 import '../providers/registration_providers.dart';

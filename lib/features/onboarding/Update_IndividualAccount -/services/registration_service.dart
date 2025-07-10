@@ -48,11 +48,12 @@ class RegistrationService {
   Future<ServiceResult> submitIdType({
     required String branch,
     required String documentName,
-    required Uint8List? frontImage,
-    required Uint8List? backImage,
+    required dynamic? frontImage,
+    required dynamic? backImage,
     // required bool isOnline,
     String? userId,
   }) async {
+    print("fdhfdhfdhfdfhdjfdjjfhdfddjjdf");
     try {
       if (isOnline) {
         return await _submitIdTypeOnline(
@@ -67,7 +68,7 @@ class RegistrationService {
   }
 
   Future<ServiceResult> submitSignature({
-    required Uint8List signature,
+    required dynamic signature,
     // required bool isOnline,
     required String motherName,
     String? userId,
@@ -76,7 +77,7 @@ class RegistrationService {
       if (isOnline) {
         return await _submitSignatureOnline(signature, motherName, userId);
       } else {
-        return await _submitSignatureOffline(signature,motherName, userId);
+        return await _submitSignatureOffline(signature, motherName, userId);
       }
     } catch (e) {
       return ServiceResult.error('Failed to submit signature: $e');
@@ -170,7 +171,7 @@ class RegistrationService {
   }
 
   Future<ServiceResult> submitPersonalPhoto({
-    required Uint8List? photo,
+    required dynamic? photo,
     // required bool isOnline,
     String? userId,
   }) async {
@@ -242,27 +243,42 @@ class RegistrationService {
     }
   }
 
-  Future<ServiceResult> _submitIdTypeOnline(String branch, String documentName,
-      Uint8List? frontImage, Uint8List? backImage, String? userId) async {
+  Future<ServiceResult> _submitIdTypeOnline(
+    String branch,
+    String documentName,
+    dynamic? frontImage,
+    dynamic? backImage,
+    String? userId,
+  ) async {
     try {
-      print(branch);
-      print(frontImage);
+      print('Branch: $branch');
+      print('Front Image: $frontImage');
+      print('Back Image: $backImage');
+
       if (userId == null) {
         return ServiceResult.error(
-            'User ID not found. Please complete step 1 first.');
+          'User ID not found. Please complete step 1 first.',
+        );
       }
 
-      final requestData = {
+      // Build request map dynamically
+      final Map<String, dynamic> requestData = {
         'branch': branch,
-        'residenceCard': frontImage,
         'customerInfo.documentName': documentName,
-        // 'customerInfo.residenceCard': frontImage,
-        // 'customerInfo.residenceCardBack': backImage,
         'accountType': '1',
         'percentageCompleted': 25,
         'status': 'INITIAL',
         'formCompleted': false,
       };
+
+      // Only include images if they are Uint8List (not String paths)
+      if (frontImage != null && frontImage is Uint8List) {
+        requestData['customerInfo.residenceCard'] = frontImage;
+      }
+
+      if (backImage != null && backImage is Uint8List) {
+        requestData['customerInfo.residenceCardBack'] = backImage;
+      }
 
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
@@ -284,23 +300,74 @@ class RegistrationService {
     }
   }
 
+  // Future<ServiceResult> _submitIdTypeOnline(String branch, String documentName,
+  //     dynamic? frontImage, Uint8List? backImage, String? userId) async {
+  //   try {
+  //     print(branch);
+  //     print(frontImage);
+  //     if (userId == null) {
+  //       return ServiceResult.error(
+  //           'User ID not found. Please complete step 1 first.');
+  //     }
+
+  //     final requestData = {
+  //       'branch': branch,
+  //       'residenceCard': frontImage,
+  //       'customerInfo.documentName': documentName,
+  //       // 'customerInfo.residenceCard': frontImage,
+  //       // 'customerInfo.residenceCardBack': backImage,
+  //       'accountType': '1',
+  //       'percentageCompleted': 25,
+  //       'status': 'INITIAL',
+  //       'formCompleted': false,
+  //     };
+
+  //     final response = await _networkHandler
+  //         .put1('/api/v1/accounts/individual/$userId', requestData)
+  //         .timeout(const Duration(seconds: 15));
+
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       return ServiceResult.success();
+  //     } else {
+  //       final errorResponse = jsonDecode(response.body);
+  //       final errorMessage =
+  //           errorResponse['message'] ?? 'Failed to update user data';
+  //       return ServiceResult.error(errorMessage);
+  //     }
+  //   } on TimeoutException {
+  //     return ServiceResult.error('Request timed out. Please try again.');
+  //   } catch (e) {
+  //     print(e);
+  //     return ServiceResult.error('An error occurred: $e');
+  //   }
+  // }
+
   Future<ServiceResult> _submitSignatureOnline(
-      Uint8List signature, String? motherName, String? userId) async {
+      dynamic signature, String? motherName, String? userId) async {
     try {
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
       }
-
+      print("dfdfhdjjfhdjfhdhjfjdhdfhdfjd");
       // Validate userId format
       if (userId.isEmpty || !RegExp(r'^\d+$').hasMatch(userId)) {
         return ServiceResult.error(
             'Invalid user ID format. Please complete previous steps first.');
       }
 
+      // final requestData = {
+      //   'customerInfo.signature': signature,
+      //   'customerInfo.motherName': motherName,
+      //   'percentageCompleted': 37.5,
+      //   'status': 'INITIAL',
+      // };
+
       final requestData = {
-        // 'customerInfo.signature': signature,
-        'customerInfo.motherName': motherName,
+        if (signature != null && signature is Uint8List)
+          'customerInfo.signature': signature,
+        if (motherName != null && motherName.isNotEmpty)
+          'customerInfo.motherName': motherName,
         'percentageCompleted': 37.5,
         'status': 'INITIAL',
       };
@@ -518,7 +585,7 @@ class RegistrationService {
 
       // var currentUserId = await _getCurrentUserId();
       final updateData = {
-        "motherName":motherName,
+        "motherName": motherName,
         'signature': signature,
         'percentageCompleted': 37.5,
         'status': 'INITIAL',
@@ -531,8 +598,6 @@ class RegistrationService {
       final rowsAffected = await _database
           .updateCustomer(int.parse(userId), updateData)
           .timeout(const Duration(seconds: 10));
-
-
 
       if (rowsAffected > 0) {
         return ServiceResult.success();
@@ -547,9 +612,9 @@ class RegistrationService {
   }
 
   Future<ServiceResult> _submitPersonalPhotoOnline(
-      Uint8List? photo, String? userId) async {
+      dynamic? photo, String? userId) async {
     try {
-      print("djfdjfdfdkfhdfdkfdkjjjjjjjjjjj");
+      print("djfdjfdfdkfhdfdkfdkjjfhdhfdjjjjjjjjjj");
 
       print(photo);
       if (userId == null) {
@@ -564,7 +629,13 @@ class RegistrationService {
       }
 
       final requestData = {
-        // 'customerInfo.photo': photo, // Photo will be handled separately if needed
+
+
+        if (photo != null && photo is Uint8List)
+        'customerInfo.signature': photo,
+        // 'customerInfo.photo':
+        //     photo, // Photo will be handled separately if needed
+
         'percentageCompleted': 50,
         'status': 'INITIAL',
       };
@@ -798,7 +869,7 @@ class RegistrationService {
       }
 
       final requestData = {
-        'customerInfo.country': country,
+        'customerInfo.country': "ETHIOPIA",
         'customerInfo.issueAuthority': issueAuthority,
         'customerInfo.issueDate': issueDate,
         'customerInfo.expiryDate': expirayDate,

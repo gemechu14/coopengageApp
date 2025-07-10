@@ -1,5 +1,6 @@
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
+import 'package:coopengageplus/features/onboarding/_corporate/screens/registration_screen.dart';
+import 'package:coopengageplus/features/onboarding/corporate/corporateAccount.dart';
 
 import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,6 @@ class AccountOnboardingScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-      
         title: const Text(
           'Choose Account Type',
           style: TextStyle(
@@ -44,7 +44,7 @@ class AccountOnboardingScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
-              
+
               // Account type cards
               SizedBox(
                 height: 400, // Fixed height for GridView
@@ -54,7 +54,8 @@ class AccountOnboardingScreen extends StatelessWidget {
                   crossAxisSpacing: 16,
                   childAspectRatio: 1.4,
                   shrinkWrap: true, // Add this to prevent unbounded height
-                  physics: const NeverScrollableScrollPhysics(), // Disable GridView scrolling
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Disable GridView scrolling
                   children: [
                     _buildAccountCard(
                       title: 'Individual',
@@ -66,54 +67,52 @@ class AccountOnboardingScreen extends StatelessWidget {
                         cyanblueColor
                       ],
                       onTap: () {
-                        // Navigator.of(context).push(
-                        //   MaterialPageRoute(builder: (context) => const IndividualAccountTypeSelection()),dd
-                        // );
-
-                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const RegistrationScreen()),
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const IndividualAccountTypeSelection()),
                         );
                       },
                     ),
-                    // _buildAccountCard(
-                    //   title: 'Joint',
-                    //   description: 'Shared account for multiple users',
-                    //   icon: Icons.group_outlined,
-                    //   gradientColors: [
-                    //     const Color(0xFF10B981),
-                    //     const Color(0xFF059669),
-                    //   ],
-                    //   onTap: () {
-                    //     Navigator.pushAndRemoveUntil(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => JointAccountStepperPage(),
-                    //       ),
-                    //       (route) => false,
-                    //     );
-                    //   },
-                    // ),
-                    // _buildAccountCard(
-                    //   title: 'Corporate',
-                    //   description: 'Business and organizational accounts',
-                    //   icon: Icons.business_outlined,
-                    //   gradientColors: [
-                    //     const Color(0xFFF59E0B),
-                    //     const Color(0xFFD97706),
-                    //   ],
-                    //   onTap: () {
-                    //     Navigator.pushAndRemoveUntil(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => CorporateCustomerRegistration(),
-                    //       ),
-                    //       (route) => false,
-                    //     );
-                    //   },
-                    // ),
-                 
-                 
-                 
+                    _buildAccountCard(
+                      title: 'Joint',
+                      description: 'Shared account for multiple users',
+                      icon: Icons.group_outlined,
+                      gradientColors: [
+                        const Color(0xFF10B981),
+                        const Color(0xFF059669),
+                      ],
+                      onTap: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => JointAccountStepperPage(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                    ),
+                    _buildAccountCard(
+                      title: 'Corporate',
+                      description: 'Business and organizational accounts',
+                      icon: Icons.business_outlined,
+                      gradientColors: [
+                        const Color(0xFFF59E0B),
+                        const Color(0xFFD97706),
+                      ],
+                      onTap: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                // CorporateCustomerRegistration(),
+                                // CorporateRegistrationScreen()
+                                CorporateRegistration()
+                          ),
+                          (route) => false,
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -174,9 +173,9 @@ class AccountOnboardingScreen extends StatelessWidget {
                           letterSpacing: 0.3,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // Description
                       Expanded(
                         child: Text(
@@ -193,7 +192,7 @@ class AccountOnboardingScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   // Arrow indicator (positioned absolutely)
                   Positioned(
                     top: 0,

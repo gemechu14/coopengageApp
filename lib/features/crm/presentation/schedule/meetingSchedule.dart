@@ -10,7 +10,6 @@ import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
-import 'package:coopengageplus/features/crm/presentation/schedule/Schedule.dart';
 import 'package:coopengageplus/features/crm/providers/high_profile_clients.dart';
 import 'package:coopengageplus/features/hpc/providers/meeting/meeting_provider.dart';
 import 'package:coopengageplus/utils/language_store.dart';

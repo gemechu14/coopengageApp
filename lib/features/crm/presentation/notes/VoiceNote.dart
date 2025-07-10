@@ -10,13 +10,9 @@ import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
-import 'package:coopengageplus/features/crm/presentation/notes/noteScreen.dart';
-import 'package:coopengageplus/features/crm/presentation/notes/widgets/audio_widget.dart';
 import 'package:coopengageplus/features/crm/providers/notes/note_provider.dart';
-import 'package:coopengageplus/features/hpc/data/model/high_profile_client/high_profile_clients.dart';
 import 'package:coopengageplus/features/hpc/providers/high_profile/high_profile_clients.dart';
 import 'package:coopengageplus/utils/language_store.dart';
-import 'package:snippet_coder_utils/FormHelper.dart';
 
 class VoiceNote extends ConsumerStatefulWidget {
   const VoiceNote({super.key});
@@ -352,19 +348,19 @@ class _VoiceNoteState extends ConsumerState<VoiceNote> {
     }
   }
 
-  // Function to show time picker dialog
-  Future<void> _setTimeHandler(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        timeController.text =
-            picked.format(context); // Set the selected time in the text field
-      });
-    }
-  }
+  // // Function to show time picker dialog
+  // Future<void> _setTimeHandler(BuildContext context) async {
+  //   final TimeOfDay? picked = await showTimePicker(
+  //     context: context,
+  //     initialTime: TimeOfDay.now(),
+  //   );
+  //   if (picked != null) {
+  //     setState(() {
+  //       timeController.text =
+  //           picked.format(context); // Set the selected time in the text field
+  //     });
+  //   }
+  // }
 
   ///
   Padding TextLabel(String text) {

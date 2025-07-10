@@ -23,6 +23,7 @@ class _CorporateRegistrationScreenState
   bool _isLoading = false;
 
   final GlobalKey<FormState> _companyInfoFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _accountTypeFormKey = GlobalKey<FormState>();
 
   late final List<Widget> _steps;
 
@@ -39,7 +40,7 @@ class _CorporateRegistrationScreenState
     super.initState();
     _steps = [
       CompanyInfoForm(formKey: _companyInfoFormKey),
-      const AccountTypeForm(),
+      AccountTypeForm(formKey: _accountTypeFormKey),
       const RepresentativeForm(),
       const DocumentUploadForm(),
       const SubmitButton(),
@@ -162,8 +163,14 @@ class _CorporateRegistrationScreenState
                         });
                         try {
                           if (_currentStep == 0) {
-                            if (_companyInfoFormKey.currentState?.validate() !=
-                                true) {
+                            if (_companyInfoFormKey.currentState?.validate() != true) {
+                              setState(() { _isLoading = false; });
+                              return;
+                            }
+                          }
+                          if (_currentStep == 1) {
+                            if (_accountTypeFormKey.currentState?.validate() != true) {
+                              setState(() { _isLoading = false; });
                               return;
                             }
                           }

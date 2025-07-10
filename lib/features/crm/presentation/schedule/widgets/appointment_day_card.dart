@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:coopengageplus/common_widgets/text/CustomText.dart';
 import 'package:coopengageplus/constants/app_sizes.dart';

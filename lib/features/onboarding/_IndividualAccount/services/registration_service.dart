@@ -583,7 +583,8 @@ class RegistrationService {
       }
 
       final requestData = {
-        'customerInfo.photo': photo, // Photo will be handled separately if needed
+        'customerInfo.photo':
+            photo, // Photo will be handled separately if needed
         'percentageCompleted': 50,
         'status': 'INITIAL',
       };
@@ -817,7 +818,7 @@ class RegistrationService {
       }
 
       final requestData = {
-        'customerInfo.country': country,
+        'customerInfo.country': "ETHIOPIA",
         'customerInfo.issueAuthority': issueAuthority,
         'customerInfo.issueDate': issueDate,
         'customerInfo.expiryDate': expirayDate,
@@ -829,6 +830,7 @@ class RegistrationService {
         'status': 'INITIAL',
       };
 
+      print(requestData);
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));

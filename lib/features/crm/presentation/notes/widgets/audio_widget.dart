@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 // import 'package:flutter_sound/flutter_sound.dart'; // For audio recording
-import 'package:path_provider/path_provider.dart'; // To get temporary directory
 
 class RecordAudioWidget extends StatefulWidget {
   const RecordAudioWidget({Key? key}) : super(key: key);
@@ -14,7 +12,7 @@ class _RecordAudioWidgetState extends State<RecordAudioWidget> {
   // late FlutterSoundRecorder _recorder;
   bool isRecording = false;
   String formattedTime = "00:00:00";
-  File? _audioFile;
+  // File? _audioFile;
 
   @override
   void initState() {

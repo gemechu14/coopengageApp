@@ -52,8 +52,14 @@ class _BranchSelectorState extends State<BranchSelector> {
         allBranches = branches;
 
         // Priority: initialValue > alreadySelected > mainBranch
-        selectedBranch =
-            widget.initialValue ?? selectedBranch ?? defaultBranchName;
+        String? candidate = widget.initialValue ?? selectedBranch ?? defaultBranchName;
+        // Ensure candidate is present exactly once in allBranches
+        final branchNames = allBranches.map((b) => b['companyName'] ?? '').toList();
+        if (candidate != null && branchNames.where((b) => b == candidate).length == 1) {
+          selectedBranch = candidate;
+        } else {
+          selectedBranch = null;
+        }
 
         isLoading = false;
       });

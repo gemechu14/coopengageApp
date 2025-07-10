@@ -125,6 +125,7 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
   }
 
   Column personalPhoto() {
+    final registrationData = ref.watch(registrationDataProvider);
     return Column(
       children: [
         Center(
@@ -149,129 +150,117 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
                     ),
                   ],
                 ),
-                child: profilePath.isEmpty
-                    ?
-                    // Column(
-                    //     mainAxisAlignment: MainAxisAlignment.center,
-                    //     children: [
-                    // ClipRRect(
-                    //   borderRadius: BorderRadius.circular(20.0),
-                    //   child: Image.asset(
-                    //     'assets/photo1.png',
-                    //     height: 170.0,
-                    //     width: MediaQuery.of(context).size.width * 0.6,
-                    //     fit: BoxFit.fill,
-                    //   ),
-                    // )
-                    _buildPlaceholderIcon()
-                    //   Container(
-                    //     height: 170.0,
-                    //     width: MediaQuery.of(context).size.width * 0.6,
-                    //     decoration: BoxDecoration(
-                    //       color: Colors.grey[300], // light background color
-                    //       borderRadius: BorderRadius.circular(20.0),
-                    //     ),
-                    //     child: const Center(
-                    //       child: Icon(
-                    //         Icons.add, // plus icon
-                    //         color: Colors.black54,
-                    //         size: 50.0,
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ],
-                    // )
-                    : Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(20.0),
-                            child: profilePath == 'has_photo'
-                                ? FutureBuilder<Uint8List?>(
-                                    future: _getImageBytesFromData(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData &&
-                                          snapshot.data != null) {
-                                        return Image.memory(
-                                          snapshot.data!,
-                                          height: 200.0,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                        );
-                                      } else {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      }
-                                    },
-                                  )
-                                : Image.file(
-                                    File(profilePath),
-                                    height: 200.0,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                          ),
-                          // Full screen button
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            child: GestureDetector(
-                              onTap: () =>
-                                  _showFullScreenImage(context, profilePath),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.fullscreen,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Change image button
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: GestureDetector(
-                              onTap: () => _showImageSelectionDialog(),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                child: (() {
+                  final photo = registrationData.photo;
+                  if (profilePath.isEmpty && photo == null) {
+                    return _buildPlaceholderIcon();
+                  }
+                  Widget imageWidget;
+                  if (profilePath == 'has_photo' && photo != null) {
+                    if (photo is Uint8List) {
+                      imageWidget = Image.memory(
+                        photo,
+                        height: 200.0,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      );
+                    } else if (photo is String) {
+                      imageWidget = Image.network(
+                        photo,
+                        height: 200.0,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      );
+                    } else {
+                      imageWidget = _buildPlaceholderIcon();
+                    }
+                  } else if (profilePath.isNotEmpty && profilePath != 'has_photo') {
+                    if (profilePath.startsWith('http')) {
+                      imageWidget = Image.network(
+                        profilePath,
+                        height: 200.0,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      );
+                    } else {
+                      imageWidget = Image.file(
+                        File(profilePath),
+                        height: 200.0,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      );
+                    }
+                  } else {
+                    imageWidget = _buildPlaceholderIcon();
+                  }
+                  // Add overlay icons
+                  return Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20.0),
+                        child: imageWidget,
                       ),
+                      // Full screen button (top left)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: GestureDetector(
+                          onTap: () => _showFullScreenImage(context, profilePath),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.fullscreen,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Change image button (top right)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => _showImageSelectionDialog(),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                })(),
               ),
-              // const SizedBox(height: 40.0),
-            )
-          ]),
+            ),
+            // const SizedBox(height: 40.0),
+          ])
         ),
         const SizedBox(height: 40),
       ],
@@ -667,47 +656,69 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
   }
 
   void _showFullScreenImage(BuildContext context, String imagePath) {
+    final registrationData = ref.read(registrationDataProvider);
+    final photo = registrationData.photo;
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.95),
+      barrierDismissible: true,
       builder: (BuildContext context) {
-        return Dialog(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.7,
-            child: Column(
-              children: [
-                Expanded(
-                  child: imagePath == 'has_photo'
-                      ? FutureBuilder<Uint8List?>(
-                          future: _getImageBytesFromData(),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData && snapshot.data != null) {
-                              return Image.memory(
-                                snapshot.data!,
-                                fit: BoxFit.contain,
-                              );
-                            } else {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                          },
-                        )
-                      : Image.file(
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                color: Colors.transparent,
+                child: Center(
+                  child: (() {
+                    if (imagePath == 'has_photo' && photo != null) {
+                      if (photo is Uint8List) {
+                        return Image.memory(
+                          photo,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                        );
+                      } else if (photo is String) {
+                        return Image.network(
+                          photo,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                        );
+                      }
+                    }
+                    if (imagePath.isNotEmpty && imagePath != 'has_photo') {
+                      if (imagePath.startsWith('http')) {
+                        return Image.network(
+                          imagePath,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                        );
+                      } else {
+                        return Image.file(
                           File(imagePath),
                           fit: BoxFit.contain,
-                        ),
+                          width: double.infinity,
+                          height: double.infinity,
+                        );
+                      }
+                    }
+                    return _buildPlaceholderIcon();
+                  })(),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 36),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Close',
+              ),
+            ),
+          ],
         );
       },
     );

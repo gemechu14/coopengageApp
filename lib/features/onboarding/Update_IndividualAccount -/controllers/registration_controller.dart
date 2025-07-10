@@ -99,14 +99,15 @@ class RegistrationController {
   Future<bool> handleIdTypeStep({
     required String? branch,
     required String? documentName,
-    required Uint8List? frontImage,
-    required Uint8List? backImage,
+    required dynamic? frontImage,
+    required dynamic? backImage,
     String? userId,
   }) async {
+    print("dkfdjfjdhfhdjdjfjdjfhdjfhdjdkfdjfjdhfhdjdjfjdjfhdjfhdj");
     try {
       // Clear previous errors
       _formValidationNotifier.clearAllErrors();
-
+      print("dkfdjfjdhfhdjdjfjdjfhdjfhdjdkfdjfjdhfhdjdjfjdjfhdjfhdj");
       // Validate inputs
       final validationResult =
           _validateIdType(branch, documentName, frontImage, backImage);
@@ -166,7 +167,7 @@ class RegistrationController {
 
   // Step 3: Signature Controller
   Future<bool> handleSignatureStep({
-    required Uint8List? signature,
+    required dynamic? signature,
     required bool isOnline,
     String? userId,
   }) async {
@@ -239,13 +240,14 @@ class RegistrationController {
 
   // Step 4: Personal Photo Controller
   Future<bool> handlePersonalPhotoStep({
-    required Uint8List? photo,
+    required dynamic? photo,
     required bool isOnline,
     String? userId,
   }) async {
     try {
+      print("dfdhdjfhdfhdjjfjdjfjueue73737377");
       _formValidationNotifier.clearAllErrors();
-
+print("data123");
       // Update registration data
       _registrationDataNotifier.updatePhoto(photo: photo);
 
@@ -596,7 +598,7 @@ class RegistrationController {
   }
 
   ValidationResult _validateIdType(String? branch, String? documentName,
-      Uint8List? frontImage, Uint8List? backImage) {
+      dynamic? frontImage, dynamic? backImage) {
     final errors = <String, String>{};
 
     // Validate branch
@@ -927,12 +929,12 @@ class RegistrationController {
         _stepCompletionNotifier.markStepComplete(i);
       }
       _registrationDataNotifier.updateProgress(100.0);
-      
+
       // Update status to UNSETTLED for offline mode
       final registrationData = _ref.read(registrationDataProvider);
       final userId = ref.read(userIdProvider);
       final isOnline = ref.read(connectivityProvider);
-      
+
       if (!isOnline && userId != null) {
         // Update status to UNSETTLED in offline database
         final updateData = {
@@ -940,16 +942,17 @@ class RegistrationController {
           'percentageCompleted': 100.0,
           'formCompleted': 1,
         };
-        
+
         try {
           final databaseHelper = _ref.read(databaseProvider);
           final rowsAffected = await databaseHelper.updateCustomer(
             int.parse(userId),
             updateData,
           );
-          
+
           if (rowsAffected > 0) {
-            print('[SUBMIT REGISTRATION] Status updated to UNSETTLED successfully');
+            print(
+                '[SUBMIT REGISTRATION] Status updated to UNSETTLED successfully');
             // Update the registration data with new status
             _registrationDataNotifier.updateStatus('UNSETTLED');
           } else {
@@ -959,7 +962,7 @@ class RegistrationController {
           print('[SUBMIT REGISTRATION] Error updating status: $e');
         }
       }
-      
+
       return true;
     } catch (e) {
       _formValidationNotifier.setError(

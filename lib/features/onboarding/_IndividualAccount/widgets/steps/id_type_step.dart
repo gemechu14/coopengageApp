@@ -9,7 +9,6 @@ import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import '../../providers/registration_providers.dart';
-import '../common/image_preview.dart';
 import '../common/branch_selector.dart';
 import '../common/image_selection_dialog.dart';
 
@@ -90,8 +89,7 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
                 _buildDocumentTypeSelection(validationErrors),
                 
                 const SizedBox(height: 20),
-                
-                // ID Card Photos
+              
                 _buildIdCardPhotos(),
                 
                 const SizedBox(height: 30),
@@ -236,17 +234,17 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     return Center(
       child: Column(
         children: [
-          const SizedBox(height: 20.0),
+          const SizedBox(height: 10.0),
           GestureDetector(
             onTap: () => _showImageSelectionDialog(imageType, onImageSelected),
             child: Container(
-              height: 150.0,
-              width: MediaQuery.of(context).size.width * 0.8,
+              height: 160.0,
+              width: MediaQuery.of(context).size.width * 0.85,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20.0),
                 border: Border.all(
-                  color: imagePath.isEmpty ? Colors.grey.shade300 : Colors.transparent,
+                  color: imagePath.isEmpty ? const Color.fromARGB(255, 249, 244, 244) : Colors.transparent,
                   width: imagePath.isEmpty ? 2 : 0,
                 ),
                 boxShadow: [
@@ -481,11 +479,11 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 5.0, left: 5,top: 5),
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),

@@ -113,7 +113,6 @@ import 'package:flutter/material.dart';
 import 'package:coopengageplus/common_widgets/text/CustomText.dart';
 import 'package:coopengageplus/constants/app_sizes.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/features/crm/presentation/dashboard/widgets/categories_row.dart';
 
 extension StringExtension on String {
   String capitalize() {

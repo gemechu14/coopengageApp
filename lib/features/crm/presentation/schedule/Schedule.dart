@@ -5,7 +5,6 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
 import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/features/crm/presentation/schedule/meetingSchedule.dart';
 import 'package:coopengageplus/features/crm/presentation/schedule/schedule_details.dart';
 import 'package:coopengageplus/features/crm/presentation/widgets/schedule_card.dart';

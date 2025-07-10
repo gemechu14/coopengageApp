@@ -8,14 +8,14 @@ import '../../constants/reusable_dropdown.dart';
 import '../../providers/registration_providers.dart';
 import 'package:intl/intl.dart';
 
-class StepPayment extends ConsumerStatefulWidget {
-  const StepPayment({super.key});
+class StepAddressInformation extends ConsumerStatefulWidget {
+  const StepAddressInformation({super.key});
 
   @override
-  ConsumerState<StepPayment> createState() => _StepPaymentState();
+  ConsumerState<StepAddressInformation> createState() => _StepPaymentState();
 }
 
-class _StepPaymentState extends ConsumerState<StepPayment> {
+class _StepPaymentState extends ConsumerState<StepAddressInformation> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController surNameController = TextEditingController();
   final TextEditingController dateOfBirthController = TextEditingController();

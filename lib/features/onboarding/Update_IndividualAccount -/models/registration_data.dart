@@ -21,12 +21,12 @@ class RegistrationData {
   // Branch & Document
   String? branch;
   String? documentName;
-  Uint8List? residenceCard;
-  Uint8List? residenceCardBack;
+  dynamic residenceCard; // can be Uint8List or String
+  dynamic residenceCardBack; // can be Uint8List or String
 
   // Signature & Photo
-  Uint8List? signature;
-  Uint8List? photo;
+  dynamic signature; // can be Uint8List or String
+  dynamic photo; // can be Uint8List or String
 
   // Financial Info
   String? occupation;
@@ -182,10 +182,10 @@ class RegistrationData {
     String? maritalStatus,
     String? branch,
     String? documentName,
-    Uint8List? residenceCard,
-    Uint8List? residenceCardBack,
-    Uint8List? signature,
-    Uint8List? photo,
+    dynamic residenceCard,
+    dynamic residenceCardBack,
+    dynamic signature,
+    dynamic photo,
     String? occupation,
     String? monthlyIncome,
     String? initialDeposit,

@@ -168,7 +168,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     );
   }
 
-  Widget _buildSignatureCard(Uint8List? signature) {
+  Widget _buildSignatureCard(dynamic signature) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
@@ -187,25 +187,40 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
               ),
             ],
           ),
-          child: signature != null
-              ? Center(
+          child: (() {
+            if (signature != null) {
+              if (signature is Uint8List) {
+                return Center(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0), // Smaller radius
+                    borderRadius: BorderRadius.circular(8.0),
                     child: Image.memory(
                       signature,
                       fit: BoxFit.cover,
                     ),
                   ),
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0), // Smaller radius
-                  child: Image.asset(
-                    'assets/signature.png',
-                    height: 10.0,
-                    width: MediaQuery.of(context).size.width * 0.1,
-                    fit: BoxFit.contain,
+                );
+              } else if (signature is String) {
+                return Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.network(
+                      signature,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                ),
+                );
+              }
+            }
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.asset(
+                'assets/signature.png',
+                height: 10.0,
+                width: MediaQuery.of(context).size.width * 0.1,
+                fit: BoxFit.contain,
+              ),
+            );
+          })(),
         ),
       ),
     );

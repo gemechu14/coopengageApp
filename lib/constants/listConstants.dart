@@ -1,8 +1,8 @@
 class ListContants {
   // List of marital statuses
   static const List<String> maritalStatuses = [
-    'Single',
-    'Married',
+    'SINGLE',
+    'MARRIED',
   ];
 
   static const List<String> accountTypeofJoint = [
@@ -128,6 +128,7 @@ class ListContants {
     'MRS',
     'DR',
     'MISS',
+    'AMBASSADOR'
   ];
   static const List<String> businessTypes = [
     'Sole Proprietorship',
