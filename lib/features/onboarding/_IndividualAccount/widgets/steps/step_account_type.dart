@@ -51,7 +51,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
             selectedAccountTypeId = accountTypeDetails['id'].toString();
           });
           // Update the registration data with the ID
-          ref.read(registrationDataProvider.notifier).updateAccountType(accountTypeDetails['id'].toString());
+          ref
+              .read(registrationDataProvider.notifier)
+              .updateAccountType(accountTypeDetails['id'].toString());
         }
       } else {
         // It's already an ID
@@ -74,6 +76,8 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
       print("Account types loaded: ${accountTypes.length}");
 
       if (accountTypes.isNotEmpty) {
+        print("Incoming account types");
+        print(accountTypes);
         setState(() {
           allAccountTypes = accountTypes;
           filteredAccountTypes = allAccountTypes;
@@ -104,6 +108,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
     final sex = registrationData.sex;
     final productType = registrationData.productType;
 
+    print(dateOfBirth);
+    print(initialDeposit);
+    print(productType);
     if (dateOfBirth == null || initialDeposit == null || productType == null) {
       setState(() {
         filteredAccountTypes = [];
@@ -120,6 +127,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
         filteredAccountTypes = allAccountTypes.where((accountType) {
           final minAge =
               int.tryParse(accountType['minAge']?.toString() ?? '0') ?? 0;
+
           final maxAge =
               int.tryParse(accountType['maxAge']?.toString() ?? '999') ?? 999;
           final minAmount =
@@ -129,10 +137,10 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
           final accountBankingType =
               accountType['bankingType']?.toString() ?? '';
 
-          // Check age requirements
-          final meetsAgeRequirement =
-              age >= minAge && (maxAge > 100 || age <= maxAge);
-
+          // // Check age requirements
+          // final meetsAgeRequirement =
+          //     age >= minAge && (maxAge > 100 || age <= maxAge);
+          final meetsAgeRequirement = age >= minAge;
           // Check deposit requirements
           final meetsDepositRequirement = deposit >= minAmount;
 
@@ -143,7 +151,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
           // Check product type requirements (Conventional vs Alhuda)
           final meetsProductTypeRequirement =
               accountBankingType.toUpperCase() == productType.toUpperCase();
-
+          print(meetsProductTypeRequirement);
+          print(meetsGenderRequirement);
+          print(meetsDepositRequirement);
           return meetsAgeRequirement &&
               meetsDepositRequirement &&
               meetsGenderRequirement &&
@@ -203,9 +213,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
     final minAmount = accountType['minAmount']?.toString() ?? '0';
     final bankingType = accountType['bankingType']?.toString() ?? '';
 
-    final ageText =
-        maxAge > 100 ? 'Minimum Age: $minAge' : 'Age Range: $minAge - $maxAge';
-
+    // final ageText =
+    //     maxAge > 100 ? 'Minimum Age: $minAge' : 'Age Range: $minAge - $maxAge';
+    final ageText = 'Minimum Age : $minAge';
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -227,7 +237,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
               selectedAccountTypeId = accountType['id'].toString();
             });
             // Update registration data with ID
-            ref.read(registrationDataProvider.notifier).updateAccountType(accountType['id'].toString());
+            ref
+                .read(registrationDataProvider.notifier)
+                .updateAccountType(accountType['id'].toString());
             // Clear validation errors
             ref.read(formValidationProvider.notifier).clearError('accountType');
           },

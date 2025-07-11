@@ -86,11 +86,7 @@ class _UserInfoPageState extends State<UserListPage> {
                 const Icon(Icons.arrow_back_ios, size: 25, color: Colors.blue),
             onPressed: () => {
               Navigator.pop(context)
-              // Navigator.pushAndRemoveUntil(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => MainPage()),
-              //   (route) => false,
-              // )
+            
             },
           ),
         ),

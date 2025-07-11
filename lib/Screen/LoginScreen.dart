@@ -165,86 +165,84 @@ class _LoginscreenState extends State<Loginscreen> {
 
   Padding login(double width) {
     return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-            child: SizedBox(
-              width: width < 600 ? double.infinity : width * 0.5,
-              height: 48,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () async {
-                  if (isApiCallProcess) return;
-
-                  if (validateAndSave()) {
-                    setState(() => isApiCallProcess = true);
-                    await _handleLogin();
-                    setState(() => isApiCallProcess = false);
-                  }
-                },
-                child: isApiCallProcess
-                    ? const SpinKitThreeBounce(
-                        color: Colors.white,
-                        size: 24.0,
-                      )
-                    : const Text(
-                        "Login",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-              ),
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+      child: SizedBox(
+        width: width < 600 ? double.infinity : width * 0.5,
+        height: 48,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          );
+          ),
+          onPressed: () async {
+            if (isApiCallProcess) return;
+
+            if (validateAndSave()) {
+              setState(() => isApiCallProcess = true);
+              await _handleLogin();
+              setState(() => isApiCallProcess = false);
+            }
+          },
+          child: isApiCallProcess
+              ? const SpinKitThreeBounce(
+                  color: Colors.white,
+                  size: 24.0,
+                )
+              : const Text(
+                  "Login",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+        ),
+      ),
+    );
   }
 
   Padding password(double width) {
     return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-            child: Container(
-              width: width < 600 ? double.infinity : width * 0.5,
-              child: TextFormField(
-                obscureText: hidePassword,
-                decoration: InputDecoration(
-                  hintText: "Password",
-                  suffixIcon: IconButton(
-                    icon: Icon(hidePassword
-                        ? Icons.visibility_off
-                        : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        hidePassword = !hidePassword;
-                      });
-                    },
-                  ),
-                  labelStyle: const TextStyle(fontSize: 20),
-                  contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(15)),
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(15)),
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  errorBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(15)),
-                    borderSide: BorderSide(color: Colors.red),
-                  ),
-                ),
-                controller: _password,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password cannot be empty';
-                  }
-                  return null;
-                },
-              ),
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+      child: Container(
+        width: width < 600 ? double.infinity : width * 0.5,
+        child: TextFormField(
+          obscureText: hidePassword,
+          decoration: InputDecoration(
+            hintText: "Password",
+            suffixIcon: IconButton(
+              icon:
+                  Icon(hidePassword ? Icons.visibility_off : Icons.visibility),
+              onPressed: () {
+                setState(() {
+                  hidePassword = !hidePassword;
+                });
+              },
             ),
-          );
+            labelStyle: const TextStyle(fontSize: 20),
+            contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
+            border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(15)),
+              borderSide: BorderSide(color: Colors.black),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(15)),
+              borderSide: BorderSide(color: Colors.black),
+            ),
+            errorBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(15)),
+              borderSide: BorderSide(color: Colors.red),
+            ),
+          ),
+          controller: _password,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Password cannot be empty';
+            }
+            return null;
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _handleLogin() async {
@@ -296,9 +294,14 @@ class _LoginscreenState extends State<Loginscreen> {
           // SYNC ACCOUNT TYPES
           final accountTypesResponse =
               await networkHandler.get('/api/v1/account-types');
+
+      
           if (accountTypesResponse is List<dynamic>) {
             int localCount = await dbHelper.getAccountTypeCount();
             int incomingCount = accountTypesResponse.length;
+
+            // var localdata = await dbHelper.getAllAccountTypes();
+         
 
             if (localCount < incomingCount) {
               await dbHelper.clearAccountTypesTable();
@@ -321,6 +324,8 @@ class _LoginscreenState extends State<Loginscreen> {
               await dbHelper.insertAccountTypes(typesToSave);
             }
           }
+
+          //  var  account= await dbhelper.getAccountTypeCount();
 
           // NAVIGATION BASED ON ROLE
           List<dynamic> roles = decodedToken['role'] ?? [];

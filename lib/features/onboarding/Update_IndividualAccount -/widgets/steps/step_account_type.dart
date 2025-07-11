@@ -32,14 +32,16 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
 
   void _loadExistingData() {
     final registrationData = ref.read(registrationDataProvider);
-    
+
     // Load product type
-    if (registrationData.productType != null && registrationData.productType!.isNotEmpty) {
+    if (registrationData.productType != null &&
+        registrationData.productType!.isNotEmpty) {
       selectedProductType = registrationData.productType;
     }
-    
+
     // Load account type
-    if (registrationData.accountType != null && registrationData.accountType!.isNotEmpty) {
+    if (registrationData.accountType != null &&
+        registrationData.accountType!.isNotEmpty) {
       setState(() {
         selectedAccountTypeId = registrationData.accountType;
       });
@@ -48,14 +50,16 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
 
   void _loadExistingDataAfterLoad() {
     final registrationData = ref.read(registrationDataProvider);
-    
+
     // Load product type
-    if (registrationData.productType != null && registrationData.productType!.isNotEmpty) {
+    if (registrationData.productType != null &&
+        registrationData.productType!.isNotEmpty) {
       selectedProductType = registrationData.productType;
     }
-    
+
     // Load account type
-    if (registrationData.accountType != null && registrationData.accountType!.isNotEmpty) {
+    if (registrationData.accountType != null &&
+        registrationData.accountType!.isNotEmpty) {
       // Check if the stored value is a name (not a numeric ID)
       final storedValue = registrationData.accountType!;
       if (int.tryParse(storedValue) == null) {
@@ -66,7 +70,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
             selectedAccountTypeId = accountTypeDetails['id'].toString();
           });
           // Update the registration data with the ID
-          ref.read(registrationDataProvider.notifier).updateAccountType(accountTypeDetails['id'].toString());
+          ref
+              .read(registrationDataProvider.notifier)
+              .updateAccountType(accountTypeDetails['id'].toString());
         }
       } else {
         // It's already an ID
@@ -145,8 +151,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
               accountType['bankingType']?.toString() ?? '';
 
           // Check age requirements
-          final meetsAgeRequirement =
-              age >= minAge && (maxAge > 100 || age <= maxAge);
+          // final meetsAgeRequirement =
+          //     age >= minAge && (maxAge > 100 || age <= maxAge);
+          final meetsAgeRequirement = age >= minAge;
 
           // Check deposit requirements
           final meetsDepositRequirement = deposit >= minAmount;
@@ -176,17 +183,17 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
     setState(() {
       selectedProductType = value;
     });
-    
+
     // Update registration data
     ref.read(registrationDataProvider.notifier).updateBasicInfo(
-      productType: value,
-    );
-    
+          productType: value,
+        );
+
     // Clear validation error when user makes a selection
     if (value != null) {
       ref.read(formValidationProvider.notifier).clearError('productType');
     }
-    
+
     // Re-filter account types based on new product type
     _filterAccountTypes();
   }
@@ -248,8 +255,10 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
     final minAmount = accountType['minAmount']?.toString() ?? '0';
     final bankingType = accountType['bankingType']?.toString() ?? '';
 
-    final ageText =
-        maxAge > 100 ? 'Minimum Age: $minAge' : 'Age Range: $minAge - $maxAge';
+    // final ageText =
+    //     maxAge > 100 ? 'Minimum Age: $minAge' : 'Age Range: $minAge - $maxAge';
+
+    final ageText = 'Minimum Age : $minAge';
 
     return Container(
       width: double.infinity,
@@ -272,7 +281,9 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
               selectedAccountTypeId = accountType['id'].toString();
             });
             // Update registration data with ID
-            ref.read(registrationDataProvider.notifier).updateAccountType(accountType['id'].toString());
+            ref
+                .read(registrationDataProvider.notifier)
+                .updateAccountType(accountType['id'].toString());
             // Clear validation errors
             ref.read(formValidationProvider.notifier).clearError('accountType');
           },
@@ -401,7 +412,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
           selectedAccountTypeId = next.accountType;
         });
       }
-      
+
       if (previous?.productType != next.productType &&
           next.productType != null &&
           next.productType!.isNotEmpty) {
@@ -538,9 +549,12 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
                                 selectedAccountTypeId = null;
                               });
                               // Clear the account type when changing product type
-                              ref.read(registrationDataProvider.notifier).updateAccountType(null);
+                              ref
+                                  .read(registrationDataProvider.notifier)
+                                  .updateAccountType(null);
                             },
-                            icon: const Icon(Icons.edit, color: Colors.white, size: 16),
+                            icon: const Icon(Icons.edit,
+                                color: Colors.white, size: 16),
                             label: const Text(
                               'Change',
                               style: TextStyle(
@@ -550,7 +564,8 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
                               ),
                             ),
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
                               backgroundColor: Colors.white.withOpacity(0.2),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6),
@@ -661,7 +676,8 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.account_balance_outlined, color: cyanblueColor),
+                          Icon(Icons.account_balance_outlined,
+                              color: cyanblueColor),
                           const SizedBox(width: 8),
                           Text(
                             'Selected Account Type',

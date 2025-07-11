@@ -39,7 +39,20 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     // Initialize the registration process
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Reset any previous state
+      // ref.read(registrationControllerProvider).resetAllSteps();
+
+      ref.read(registrationDataProvider.notifier).updateBasicInfo(phone: null);
+      // Optionally, also clear the phone controller text if needed
+      ref.read(phoneControllerProvider).clear();
       ref.read(registrationControllerProvider).resetAllSteps();
+      // If you want to also clear the registration data:
+      ref.read(registrationDataProvider.notifier).reset();
+      // Clear only the phone number
+      ref.read(registrationDataProvider.notifier).updateBasicInfo(phone: null);
+      ref.read(phoneControllerProvider).clear();
+      // Reset step completion to the first step
+      ref.read(stepCompletionProvider.notifier).reset();
+      ref.read(registrationStepProvider.notifier).reset();
     });
   }
 

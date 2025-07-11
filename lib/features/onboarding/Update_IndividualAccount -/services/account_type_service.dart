@@ -33,7 +33,7 @@ class AccountTypeService {
     try {
       return types.firstWhere((type) => type.name == name);
     } catch (e) {
-      print('Account type not found: $name');
+      // print('Account type not found: $name');
       return null;
     }
   }

@@ -491,8 +491,12 @@ class NetworkHandler {
   Future<http.Response> getUserData(String url) async {
     String? token = await storage.read(key: "token");
     url = formater(url);
+    print("fhdfhdhjfhdhfjdj");
+    print(url);
 
     var uri = Uri.parse(url);
+
+    print(uri);
     var response = await http.get(
       uri,
       headers: {
@@ -500,7 +504,8 @@ class NetworkHandler {
         "Authorization": "Bearer $token"
       },
     );
-
+    print(token);
+    print(response.body);
     return response;
   }
 

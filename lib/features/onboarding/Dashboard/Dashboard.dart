@@ -5,7 +5,7 @@ import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/chart/AchievementBarChart.dart';
 import 'package:coopengageplus/common_widgets/chart/SkeletonBarChart.dart';
 import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
-import 'package:coopengageplus/features/onboarding/pages/userListView.dart';
+import 'package:coopengageplus/features/onboarding/pages/userInfoList/userListView.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../../../utils/language_store.dart';
 
 class Dashboard extends StatefulWidget {
   final VoidCallback onSettingsTap;
@@ -378,7 +377,7 @@ class _DashboardState extends State<Dashboard> {
           var decodedToken = JwtDecoder.decode(token);
           String userId = decodedToken['userId'].toString();
 
-          String url = '/api/v1/accounts/status-count?customerType=INDIVIDUAL';
+          String url = '/api/v1/accounts/status-count';
           var response = await networkHandler.fetchData(url);
 
           if (response.statusCode == 200 || response.statusCode == 201) {
@@ -583,5 +582,4 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-  // Your other methods (fetchData1, fetchUsers, _fetchToken) remain unchanged
 }

@@ -9,7 +9,7 @@ import 'dart:ui';
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/common_widgets/dropDown/DatePickerField.dart';
 import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
-import 'package:coopengageplus/features/onboarding/corporateCustomer/previous/RegistrationServices.dart';
+import 'package:coopengageplus/features/onboarding/_corporate/services/registration_service.dart';
 import 'package:coopengageplus/features/onboarding/pages/ConfirmationPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
@@ -21,14 +21,12 @@ import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 import 'package:intl_phone_field/countries.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
-// import 'package:searchfield/searchfield.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signature/signature.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
@@ -60,10 +58,6 @@ bool isSecondPersonExpanded = false;
 bool isExpandedPersonalInformation = false;
 List<bool> isExpandedList = [false, false];
 String? expandedAccountTypeId;
-
-// File? licenseFile;
-// File? articleFile;
-// File? letterOfRequestFile;
 String? licenseFile;
 String? articleFile;
 String? letterOfRequestFile;
@@ -71,7 +65,6 @@ String? tinNumberPhoto;
 String? tradeName;
 
 List<File> selectedFiles = [];
-// List<bool> isExpandedList = [];
 List<GlobalKey<FormState>> formKeys = [];
 List<TextEditingController> fullNameControllers = [];
 List<TextEditingController> phoneControllers = [];
@@ -276,7 +269,6 @@ class _Registration extends State<CorporateRegistration> {
   TextEditingController zoneSubsityController = TextEditingController();
   TextEditingController woredaController = TextEditingController();
 
-////************************************************/
   TextEditingController companyNameController = TextEditingController();
   TextEditingController tinNumberController = TextEditingController();
   TextEditingController phoneNumberController = TextEditingController();
@@ -312,7 +304,6 @@ class _Registration extends State<CorporateRegistration> {
   Uint8List? articleFileBytes;
 
   ///********************************************** */
-
   FocusNode focusNode = FocusNode();
   NetworkHandler networkHandler = NetworkHandler();
   String imagepath2 = "";
@@ -336,7 +327,6 @@ class _Registration extends State<CorporateRegistration> {
   List<Map<String, dynamic>> filteredAccountTypes = [];
   List<String> countries = ['Ethiopia'];
   int? selectedAccountId;
-
   String? selectedAccountName;
 
   GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
@@ -691,57 +681,9 @@ class _Registration extends State<CorporateRegistration> {
                             isRequired: true,
                           ),
                         ]),
-
                         SizedBox(
                           height: 10,
                         ),
-                        // _buildExpandablePersonalInformationSection(
-                        //     "Address Information",
-                        //     isExpandedAddressInfoList[i][0],
-                        //     // isExpandedPersonalList[i][0],
-                        //     () {
-                        //   setState(() {
-                        //     isExpandedAddressInfoList[i][0] =
-                        //         !isExpandedAddressInfoList[i][0];
-                        //     // isExpandedPersonalList[i][0] =
-                        //     //     !isExpandedPersonalList[i][0];
-                        //   });
-                        // }, [
-                        //   TextLabel("State"),
-                        //   ReusableDropdown(
-                        //     selectedValue: selectedState,
-                        //     items: ListContants.ethiopianStates,
-                        //     hintText: 'Select State',
-                        //     onChanged: (newState) {
-                        //       setState(() {
-                        //         selectedState = newState;
-                        //         print(selectedState);
-                        //       });
-                        //     },
-                        //     errorMessage: 'Please select a state',
-                        //     prefixIcon: Icons.map,
-                        //     isRequired: false,
-                        //   ),
-                        //   TextLabel("Zone Subcity"),
-                        //   ReusableTextFormField(
-                        //     hintText: "Zone Subcity",
-                        //     controller: cityController,
-                        //     // keyboardType: TextInputType.number,
-                        //     errorMessage: "Zone Subcity cannot be empty",
-                        //     leadingIcon: Icons.location_city,
-                        //     isRequired: false,
-                        //   ),
-                        //   TextLabel("Woreda"),
-                        //   ReusableTextFormField(
-                        //     hintText: "Woreda",
-                        //     controller: woredaController,
-                        //     // keyboardType: TextInputType.number,
-                        //     errorMessage: "Woreda cannot be empty",
-                        //     leadingIcon: Icons.location_city,
-                        //     isRequired: false,
-                        //   ),
-                        // ]),
-
                         _buildExpandablePersonalInformationSection(
                             "Document Information",
                             isExpandedDocumentInfoList[i][0],
@@ -782,7 +724,6 @@ class _Registration extends State<CorporateRegistration> {
                           signatureCard(i),
                           signaturePadSelection(i),
                         ]),
-
                         _buildExpandablePersonalInformationSection(
                             "ID Information", isExpandedIDInfoList[i][0],
                             // isExpandedPersonalList[i][0],
@@ -790,8 +731,6 @@ class _Registration extends State<CorporateRegistration> {
                           setState(() {
                             isExpandedIDInfoList[i][0] =
                                 !isExpandedIDInfoList[i][0];
-                            // isExpandedPersonalList[i][0] =
-                            //     !isExpandedPersonalList[i][0];
 
                             isExpandedDocumentInfoList[i][0] = false;
                             isExpandedPersonalList[i][0] = false;
@@ -801,7 +740,6 @@ class _Registration extends State<CorporateRegistration> {
                           ReusableTextFormField(
                             hintText: "Legal ID",
                             controller: legalIDControllers[i],
-                            // keyboardType: TextInputType.number,
                             errorMessage: "Legal ID cannot be empty",
                             leadingIcon: Icons.badge,
                             isRequired: true,
@@ -840,7 +778,6 @@ class _Registration extends State<CorporateRegistration> {
                             errorMessage: 'Please select an expire date',
                           ),
                         ]),
-
                         SizedBox(
                           height: 50,
                         ),
@@ -3874,7 +3811,8 @@ class _Registration extends State<CorporateRegistration> {
 
     if (response["statusCode"] == 200) {
       print("✅ Success: ${response["message"]}");
-      DialogHelper.showSuccessDialog(context, response["message"]);
+      print("registered successfully");
+      // DialogHelper.showSuccessDialog(context, response["message"]);
     } else {
       DialogHelper.showErrorDialog(context, response["message"]);
 

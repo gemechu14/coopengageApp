@@ -22,9 +22,9 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(registrationDataProvider.notifier).reset();
-    });
+    // Future.microtask(() {
+    //   ref.read(registrationDataProvider.notifier).reset();
+    // });
     _phoneController = ref.read(phoneControllerProvider);
     _emailController = ref.read(emailControllerProvider);
 

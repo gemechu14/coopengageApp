@@ -1,3 +1,4 @@
+import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 
@@ -89,14 +90,14 @@ class DialogHelper {
               style: TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
-                color: Colors.green[800], // Dark green for title
+                color: cyanblueColor, // Dark green for title
               ),
             ),
             content: Row(
               children: [
                 Icon(
                   Icons.check_circle_outline,
-                  color: Colors.green[800], // Success icon color
+                  color: cyanblueColor, // Success icon color
                   size: 32.0,
                 ),
                 SizedBox(width: 10),
@@ -127,13 +128,13 @@ class DialogHelper {
                   padding:
                       EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   decoration: BoxDecoration(
-                    color: Colors.green[800], // Button background color
+                    color: cyanblueColor, // Button background color
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: Text(
                     "OK",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: whiteColor,
                       fontSize: 16.0,
                     ),
                   ),
