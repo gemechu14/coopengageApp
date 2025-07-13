@@ -408,8 +408,8 @@ class _IndividualAccountByNationalIdState
     try {
       print('_buildContentArea - Step: ${stepperState.activeStep}, Auth completed: ${nationalIdState.isAuthCompleted}');
       
-      // Only show National ID Auth widget if we're on step 0 AND auth is not completed
-      if (stepperState.activeStep == 0 && !nationalIdState.isAuthCompleted) {
+      // Show National ID Auth widget if we're on step 0
+      if (stepperState.activeStep == 0) {
         print('Showing National ID Auth widget');
         return const NationalIdAuthWidget();
       } else {
@@ -557,6 +557,7 @@ class _IndividualAccountByNationalIdState
       print('Stepper state email: ${stepperState.email}');
       print('Stepper state selectedAccountType: ${stepperState.selectedAccountType}');
       print('Stepper state selectedBranch: ${stepperState.selectedBranch}');
+      print('Stepper state motherName: ${stepperState.motherName}');
       print('Stepper state initialDeposit: ${stepperState.initialDeposit}');
       
       // Try to get authId from stepper state first
@@ -587,6 +588,7 @@ class _IndividualAccountByNationalIdState
         'accountType': stepperState.selectedAccountType ?? '1', // Default to "1" if not selected
         'initialDeposit': (stepperState.initialDeposit ?? 1000.0).toString(),
         'branch': stepperState.selectedBranch ?? 'FINIFINNE', // Default branch
+        'motherName': stepperState.motherName ?? 'N/A',
         'state': stepperState.state ?? 'Addus abeba', // Use saved state from step 1
         'documentName': 'NATIONALID',
         'customerInfoInitialDeposit': '100', // Default value
@@ -601,6 +603,7 @@ class _IndividualAccountByNationalIdState
         accountType: stepperState.selectedAccountType ?? '1',
         initialDeposit: (stepperState.initialDeposit ?? 1000.0).toString(),
         branch: stepperState.selectedBranch ?? 'FINIFINNE',
+        motherName: stepperState.motherName ?? 'N/A',
         state: stepperState.state ?? 'Addus abeba',
         documentName: 'NATIONALID',
         customerInfoInitialDeposit: '100',
@@ -635,6 +638,8 @@ class _IndividualAccountByNationalIdState
                 Text('Account Type: ${stepperState.selectedAccountType ?? 'Default'}'),
                 const SizedBox(height: 5),
                 Text('Branch: ${stepperState.selectedBranch ?? 'FINIFINNE'}'),
+                const SizedBox(height: 5),
+                Text('Mother Name: ${stepperState.motherName ?? 'N/A'}'),
                 const SizedBox(height: 5),
                 Text('Initial Deposit: ${stepperState.initialDeposit ?? 1000.0} ETB'),
                 const SizedBox(height: 10),

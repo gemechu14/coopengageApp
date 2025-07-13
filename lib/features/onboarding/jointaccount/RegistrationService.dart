@@ -88,16 +88,7 @@ class RegistrationService {
         if (customer["sex"] != null && customer["sex"] != '') {
           request.fields["customers[$i].sex"] = customer["sex"];
         }
-        // Attach files dynamically (uncomment if necessary)
-
-        // if (customer["photo"] is Uint8List) {
-        //   print("Gemechuuuddddu");
-        //   request.files.add(http.MultipartFile.fromBytes(
-        //     "[customers[$i].photo]",
-        //     customer["photo"],
-        //     filename: "photo_$i.jpg",
-        //   ));
-        // }
+      
         if (customer["photo"] is Uint8List) {
           print("Gemechuuuddddu");
           print(customer['photo']);
@@ -109,7 +100,7 @@ class RegistrationService {
         }
         if (customer["signature"] is Uint8List) {
           request.files.add(http.MultipartFile.fromBytes(
-            "customers[$i].signature", // Remove the extra brackets in the string
+            "customers[$i].signature", 
             customer["signature"],
             filename: "signature_$i.jpg",
           ));
@@ -162,7 +153,7 @@ class RegistrationService {
       // var response = await request.send();
 
       var response = await request.send().timeout(
-        Duration(seconds: 15), // Timeout after 30 seconds
+        Duration(seconds: 100), // Timeout after 30 seconds
         onTimeout: () {
           throw TimeoutException("Request timed out. Please try again.");
         },

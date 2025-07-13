@@ -82,19 +82,22 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         if (responseData.containsKey('url')) {
           final authUrl = responseData['url'];
           print('NationalIdProvider: Auth URL from response: $authUrl');
-          
+
           state = state.copyWith(
             authUrl: authUrl,
             isLoading: false,
           );
-          print('NationalIdProvider: Auth URL stored in state: ${state.authUrl}');
+          print(
+              'NationalIdProvider: Auth URL stored in state: ${state.authUrl}');
         } else {
           print('NationalIdProvider: No URL found in response');
-          print('NationalIdProvider: Available keys in response: ${responseData.keys.toList()}');
+          print(
+              'NationalIdProvider: Available keys in response: ${responseData.keys.toList()}');
           throw Exception('No URL found in response');
         }
       } else {
-        print('NationalIdProvider: API call failed with status: ${response.statusCode}');
+        print(
+            'NationalIdProvider: API call failed with status: ${response.statusCode}');
         print('NationalIdProvider: Error response body: ${response.body}');
         throw Exception('API call failed with status: ${response.statusCode}');
       }
@@ -113,11 +116,12 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
   }
 
   // Account verification
-  Future<Map<String, dynamic>?> verifyAccount(String code, String stateParam) async {
+  Future<Map<String, dynamic>?> verifyAccount(
+      String code, String stateParam) async {
     print('NationalIdProvider: verifyAccount called');
     print('NationalIdProvider: Code: $code');
     print('NationalIdProvider: State: $stateParam');
-    
+
     try {
       state = state.copyWith(isLoading: true);
 
@@ -135,19 +139,22 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(const Duration(seconds: 30));
+      );
 
-      print('NationalIdProvider: Verification response status: ${response.statusCode}');
+      print(
+          'NationalIdProvider: Verification response status: ${response.statusCode}');
       print('NationalIdProvider: Verification response body: ${response.body}');
 
       state = state.copyWith(isLoading: false);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        print('NationalIdProvider: Verification successful, response data: $responseData');
-        
+        print(
+            'NationalIdProvider: Verification successful, response data: $responseData');
+
         // Validate that the response contains required fields
-        if (responseData.containsKey('id') || responseData.containsKey('fullName')) {
+        if (responseData.containsKey('id') ||
+            responseData.containsKey('fullName')) {
           // Mark authentication as completed and store the result
           state = state.copyWith(
             isAuthCompleted: true,
@@ -157,12 +164,16 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
           print('NationalIdProvider: Auth result stored: ${state.authResult}');
           return responseData;
         } else {
-          print('NationalIdProvider: Verification response missing required fields');
-          print('NationalIdProvider: Available fields: ${responseData.keys.toList()}');
-          throw Exception('Verification response missing required fields (id or fullName)');
+          print(
+              'NationalIdProvider: Verification response missing required fields');
+          print(
+              'NationalIdProvider: Available fields: ${responseData.keys.toList()}');
+          throw Exception(
+              'Verification response missing required fields (id or fullName)');
         }
       } else {
-        print('NationalIdProvider: Verification failed with status: ${response.statusCode}');
+        print(
+            'NationalIdProvider: Verification failed with status: ${response.statusCode}');
         print('NationalIdProvider: Error response body: ${response.body}');
         throw Exception(
             'Verification failed with status: ${response.statusCode}');
@@ -184,6 +195,11 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
     state = state.copyWith(isAuthCompleted: true);
   }
 
+  // Clear auth URL to force showing completion state
+  void clearAuthUrl() {
+    state = state.copyWith(authUrl: null);
+  }
+
   // Reset state
   void reset() {
     state = const NationalIdState();
@@ -194,4 +210,4 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
 final nationalIdProvider =
     StateNotifierProvider<NationalIdNotifier, NationalIdState>((ref) {
   return NationalIdNotifier();
-}); 
+});

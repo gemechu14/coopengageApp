@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:phonenumbers/phonenumbers.dart';
 import 'package:scrollable_table_view/scrollable_table_view.dart';
 // import 'package:searchfield/searchfield.dart';
@@ -517,11 +518,11 @@ class _Registration extends State<JointAccountStepperPage> {
 
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp("[a-zA-Z ]")),
-                TextInputFormatter.withFunction(
-                  (oldValue, newValue) {
-                    return newValue.copyWith(text: newValue.text.toUpperCase());
-                  },
-                ),
+                // TextInputFormatter.withFunction(
+                //   (oldValue, newValue) {
+                //     return newValue.copyWith(text: newValue.text.toUpperCase());
+                //   },
+                // ),
               ],
               isRequired: true,
             ),
@@ -610,12 +611,12 @@ class _Registration extends State<JointAccountStepperPage> {
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
                                   RegExp("[a-zA-Z ]")),
-                              TextInputFormatter.withFunction(
-                                (oldValue, newValue) {
-                                  return newValue.copyWith(
-                                      text: newValue.text.toUpperCase());
-                                },
-                              ),
+                              // TextInputFormatter.withFunction(
+                              //   (oldValue, newValue) {
+                              //     return newValue.copyWith(
+                              //         text: newValue.text.toUpperCase());
+                              //   },
+                              // ),
                             ],
                             isRequired: true,
                           ),
@@ -1916,61 +1917,373 @@ class _Registration extends State<JointAccountStepperPage> {
     }
   }
 
-  Future<void> _imgFromCamera(int i, String imageTypes) async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      File originalFile = File(pickedFile.path);
 
-      bool originalExists = await originalFile.exists();
-      print("Original file exists: $originalExists");
+Future<void> _imgFromCamera(int i, String imageTypes) async {
+  bool _isDialogShowing = false;
 
-      if (!originalExists) {
-        print("Error: Captured file does not exist.");
-        return;
-      }
-
-      Directory appDir = await getApplicationDocumentsDirectory();
-      String newPath =
-          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      try {
-        File newImage = await originalFile.copy(newPath);
-        bool newFileExists = await newImage.exists();
-        print("New saved path: $newPath");
-        print("New file exists: $newFileExists");
-
-        if (newFileExists) {
-          setState(() {
-            if (imageTypes == 'profilePath') {
-              profilePaths[i] = newPath;
-            } else if (imageTypes == 'resident') {
-              residentPaths[i] = newPath;
-            } else if (imageTypes == 'residentCardBack') {
-              residentCardBackPaths[i] = newPath;
-            } else if (imageTypes == 'signature') {
-              print("dkdnandjhahdadjsdfh");
-              // signatureImagePath = croppedFile.path;
-              // savedSignature = null;
-              // _signatureController.clear();
-
-              // Clear drawn signature
-              _signatureController1.clear();
-              _signatureController2.clear();
-              _signatureController3.clear();
-              savedSignature = null;
-
-              combinedSignatures[i] = File(newPath).readAsBytesSync();
-            }
-          });
-        } else {
-          print("Error: File was not copied successfully.");
-        }
-      } catch (e) {
-        print("Error copying file: $e");
-      }
+  Future<void> safeCloseDialog() async {
+    if (_isDialogShowing && mounted && Navigator.canPop(context)) {
+      Navigator.of(context, rootNavigator: true).pop();
+      _isDialogShowing = false;
     }
   }
+
+  try {
+    FocusScope.of(context).unfocus();
+
+    // Request camera permission
+    final permissionStatus = await Permission.camera.request();
+    if (!permissionStatus.isGranted) {
+      if (permissionStatus.isPermanentlyDenied) {
+        await openAppSettings();
+      }
+      return;
+    }
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        _isDialogShowing = true;
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    final XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+      imageQuality: 50,
+    );
+
+    if (pickedFile == null) {
+      await safeCloseDialog();
+      return;
+    }
+
+    final File originalFile = File(pickedFile.path);
+    if (!await originalFile.exists()) {
+      await safeCloseDialog();
+      return;
+    }
+
+    final appDir = await getApplicationDocumentsDirectory();
+    final newPath = '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final File newImage = await originalFile.copy(newPath);
+
+    if (!await newImage.exists()) {
+      await safeCloseDialog();
+      return;
+    }
+
+    final Uint8List bytes = await newImage.readAsBytes();
+
+    if (!mounted) {
+      await safeCloseDialog();
+      return;
+    }
+
+    // Ensure list has room at index i
+    void ensureIndex<T>(List<T> list, T defaultValue) {
+      if (i >= list.length) {
+        list.addAll(List.generate(i - list.length + 1, (_) => defaultValue));
+      }
+    }
+
+    // Safely update state
+    if (mounted) {
+      setState(() {
+        switch (imageTypes) {
+          case 'profilePath':
+            ensureIndex<String>(profilePaths, '');
+            profilePaths[i] = newPath;
+            break;
+          case 'resident':
+            ensureIndex<String>(residentPaths, '');
+            residentPaths[i] = newPath;
+            break;
+          case 'residentCardBack':
+            ensureIndex<String>(residentCardBackPaths, '');
+            residentCardBackPaths[i] = newPath;
+            break;
+          case 'signature':
+            _signatureController1.clear();
+            _signatureController2.clear();
+            _signatureController3.clear();
+            savedSignature = null;
+            ensureIndex<Uint8List>(combinedSignatures, Uint8List(0));
+            combinedSignatures[i] = bytes;
+            break;
+        }
+      });
+    }
+
+    await safeCloseDialog();
+  } catch (e, stack) {
+    debugPrint("Exception in _imgFromCamera: $e\n$stack");
+    await safeCloseDialog();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to capture image. Step not lost.")),
+      );
+    }
+  }
+}
+
+// Future<void> _imgFromCamera(int i, String imageTypes) async {
+//   bool _isDialogShowing = false;
+
+//   Future<void> safeCloseDialog() async {
+//     if (_isDialogShowing && mounted && Navigator.canPop(context)) {
+//       Navigator.of(context, rootNavigator: true).pop();
+//       _isDialogShowing = false;
+//     }
+//   }
+
+//   try {
+//     FocusScope.of(context).unfocus();
+
+//     // Request camera permission
+//     final permissionStatus = await Permission.camera.request();
+//     if (!permissionStatus.isGranted) {
+//       if (permissionStatus.isPermanentlyDenied) {
+//         await openAppSettings();
+//       }
+//       return;
+//     }
+
+//     // Show loading indicator
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder: (_) {
+//         _isDialogShowing = true;
+//         return const Center(child: CircularProgressIndicator());
+//       },
+//     );
+
+//     final XFile? pickedFile = await ImagePicker().pickImage(
+//       source: ImageSource.camera,
+//       imageQuality: 50,
+//     );
+
+//     if (pickedFile == null) {
+//       await safeCloseDialog();
+//       return;
+//     }
+
+//     final File originalFile = File(pickedFile.path);
+//     if (!await originalFile.exists()) {
+//       await safeCloseDialog();
+//       return;
+//     }
+
+//     final appDir = await getApplicationDocumentsDirectory();
+//     final newPath = '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+//     final File newImage = await originalFile.copy(newPath);
+
+//     if (!await newImage.exists()) {
+//       await safeCloseDialog();
+//       return;
+//     }
+
+//     final Uint8List bytes = await newImage.readAsBytes();
+
+//     if (!mounted) {
+//       await safeCloseDialog();
+//       return;
+//     }
+
+//     // Ensure list has room at index i
+//     void ensureIndex<T>(List<T> list, T defaultValue) {
+//       if (i >= list.length) {
+//         list.addAll(List.generate(i - list.length + 1, (_) => defaultValue));
+//       }
+//     }
+
+//     // Safely update state
+//     if (mounted) {
+//       setState(() {
+//         switch (imageTypes) {
+//           case 'profilePath':
+//             ensureIndex<String>(profilePaths, '');
+//             profilePaths[i] = newPath;
+//             break;
+//           case 'resident':
+//             ensureIndex<String>(residentPaths, '');
+//             residentPaths[i] = newPath;
+//             break;
+//           case 'residentCardBack':
+//             ensureIndex<String>(residentCardBackPaths, '');
+//             residentCardBackPaths[i] = newPath;
+//             break;
+//           case 'signature':
+//             _signatureController1.clear();
+//             _signatureController2.clear();
+//             _signatureController3.clear();
+//             savedSignature = null;
+//             ensureIndex<Uint8List>(combinedSignatures, Uint8List(0));
+//             combinedSignatures[i] = bytes;
+//             break;
+//         }
+//       });
+//     }
+
+//     await safeCloseDialog();
+//   } catch (e, stack) {
+//     debugPrint("Exception in _imgFromCamera: $e\n$stack");
+//     await safeCloseDialog();
+
+//     if (mounted) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Failed to capture image. Step not lost.")),
+//       );
+//     }
+//   }
+// }
+
+  // Future<void> _imgFromCamera(int i, String imageTypes) async {
+  //   try {
+  //     FocusScope.of(context).unfocus();
+
+  //     final permissionStatus = await Permission.camera.request();
+  //     if (!permissionStatus.isGranted) {
+  //       debugPrint("Camera permission denied");
+  //       return;
+  //     }
+
+  //     // Show loader
+  //     showDialog(
+  //       context: context,
+  //       barrierDismissible: false,
+  //       builder: (_) => const Center(child: CircularProgressIndicator()),
+  //     );
+
+  //     final pickedFile = await ImagePicker().pickImage(
+  //       source: ImageSource.camera,
+  //       imageQuality: 50,
+  //     );
+
+  //     if (pickedFile != null) {
+  //       final originalFile = File(pickedFile.path);
+
+  //       bool originalExists = await originalFile.exists();
+  //       debugPrint("Original file exists: $originalExists");
+
+  //       if (!originalExists) {
+  //         debugPrint("Error: Captured file does not exist.");
+  //         Navigator.of(context, rootNavigator: true).pop();
+  //         return;
+  //       }
+
+  //       final appDir = await getApplicationDocumentsDirectory();
+  //       final newPath =
+  //           '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+  //       try {
+  //         final newImage = await originalFile.copy(newPath);
+  //         final newFileExists = await newImage.exists();
+  //         debugPrint("New saved path: $newPath");
+  //         debugPrint("New file exists: $newFileExists");
+
+  //         if (newFileExists) {
+  //           if (!mounted) return;
+  //           setState(() {
+  //             switch (imageTypes) {
+  //               case 'profilePath':
+  //                 profilePaths[i] = newPath;
+  //                 break;
+  //               case 'resident':
+  //                 residentPaths[i] = newPath;
+  //                 break;
+  //               case 'residentCardBack':
+  //                 residentCardBackPaths[i] = newPath;
+  //                 break;
+  //               case 'signature':
+  //                 _signatureController1.clear();
+  //                 _signatureController2.clear();
+  //                 _signatureController3.clear();
+  //                 savedSignature = null;
+  //                 combinedSignatures[i] = File(newPath).readAsBytesSync();
+  //                 break;
+  //             }
+  //           });
+  //         } else {
+  //           debugPrint("Error: File was not copied successfully.");
+  //         }
+  //       } catch (e) {
+  //         debugPrint("Error copying file: $e");
+  //       }
+  //     }
+
+  //     // Dismiss loader
+  //     Navigator.of(context, rootNavigator: true).pop();
+  //   } catch (e, stack) {
+  //     debugPrint("Error in _imgFromCamera: $e\n$stack");
+  //     // Dismiss loader if still open
+  //     Navigator.of(context, rootNavigator: true).pop();
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //           content: Text("Failed to capture image. Please try again.")),
+  //     );
+  //   }
+  // }
+
+  // Future<void> _imgFromCamera(int i, String imageTypes) async {
+  //   final pickedFile =
+  //       await ImagePicker().pickImage(source: ImageSource.camera);
+  //   if (pickedFile != null) {
+  //     File originalFile = File(pickedFile.path);
+
+  //     bool originalExists = await originalFile.exists();
+  //     print("Original file exists: $originalExists");
+
+  //     if (!originalExists) {
+  //       print("Error: Captured file does not exist.");
+  //       return;
+  //     }
+
+  //     Directory appDir = await getApplicationDocumentsDirectory();
+  //     String newPath =
+  //         '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+  //     try {
+  //       File newImage = await originalFile.copy(newPath);
+  //       bool newFileExists = await newImage.exists();
+  //       print("New saved path: $newPath");
+  //       print("New file exists: $newFileExists");
+
+  //       if (newFileExists) {
+  //         setState(() {
+  //           if (imageTypes == 'profilePath') {
+  //             profilePaths[i] = newPath;
+  //           } else if (imageTypes == 'resident') {
+  //             residentPaths[i] = newPath;
+  //           } else if (imageTypes == 'residentCardBack') {
+  //             residentCardBackPaths[i] = newPath;
+  //           } else if (imageTypes == 'signature') {
+  //             print("dkdnandjhahdadjsdfh");
+  //             // signatureImagePath = croppedFile.path;
+  //             // savedSignature = null;
+  //             // _signatureController.clear();
+
+  //             // Clear drawn signature
+  //             _signatureController1.clear();
+  //             _signatureController2.clear();
+  //             _signatureController3.clear();
+  //             savedSignature = null;
+
+  //             combinedSignatures[i] = File(newPath).readAsBytesSync();
+  //           }
+  //         });
+  //       } else {
+  //         print("Error: File was not copied successfully.");
+  //       }
+  //     } catch (e) {
+  //       print("Error copying file: $e");
+  //     }
+  //   }
+  // }
 
   Future<Uint8List?> _getImageBytes(String imagePath) async {
     try {

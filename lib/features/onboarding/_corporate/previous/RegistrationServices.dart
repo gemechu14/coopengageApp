@@ -83,7 +83,7 @@ class RegistrationService {
 
       // var response = await request.send();
       var response = await request.send().timeout(
-        Duration(seconds: 15), // Timeout after 30 seconds
+        Duration(seconds: 115), // Timeout after 30 seconds
         onTimeout: () {
           throw TimeoutException("Request timed out. Please try again.");
         },

@@ -1,3 +1,4 @@
+import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -12,12 +13,21 @@ class RegistrationService {
     required String accountType,
     required String initialDeposit,
     required String branch,
+    required String motherName,
     required String state,
     required String documentName,
     required String customerInfoInitialDeposit,
     Uint8List? signature,
   }) async {
     try {
+      String? token = await storage.read(key: "token");
+
+      if (token == null) {
+        throw Exception("Token not found");
+      }
+
+      print("tokecn");
+      print(token);
       // Create multipart request
       final request = http.MultipartRequest(
         'PUT',
@@ -25,12 +35,14 @@ class RegistrationService {
       );
 
       // Add headers
-      request.headers['Authorization'] = 'Bearer YOUR_TOKEN_HERE'; // Replace with actual token
+      request.headers['Authorization'] = '$token'; // Replace with actual token
 
       // Add form fields
       request.fields['customerInfo.state'] = state;
-      request.fields['customerInfo.initialdeposit'] = customerInfoInitialDeposit;
+      request.fields['customerInfo.initialdeposit'] =
+          customerInfoInitialDeposit;
       request.fields['customerInfo.documentName'] = documentName;
+      request.fields['customerInfo.motherName'] = motherName;
       request.fields['accountType'] = accountType;
       request.fields['initialdeposit'] = initialDeposit;
       request.fields['branch'] = branch;
@@ -60,11 +72,12 @@ class RegistrationService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(responseBody);
       } else {
-        throw Exception('Registration failed with status: ${response.statusCode}. Response: $responseBody');
+        throw Exception(
+            'Registration failed with status: ${response.statusCode}. Response: $responseBody');
       }
     } catch (e) {
       print('Error submitting registration: $e');
       rethrow;
     }
   }
-} 
+}

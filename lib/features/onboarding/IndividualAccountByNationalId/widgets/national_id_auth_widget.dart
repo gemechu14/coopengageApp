@@ -19,6 +19,7 @@ class NationalIdAuthWidget extends ConsumerStatefulWidget {
 class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   WebViewController? _webViewController;
   bool _disposed = false;
+  bool _showingDialog = false;
 
   @override
   void initState() {
@@ -31,13 +32,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     // Always reset state when entering the page
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_disposed) {
-        // print('NationalIdAuthWidget: Post frame callback - resetting state');
-        // Reset the state first
+
         ref.read(nationalIdProvider.notifier).reset();
-        //print('NationalIdAuthWidget: State reset complete');
-        // Then start the API call
+   
         ref.read(nationalIdProvider.notifier).callEsignetApi();
-        //  print('NationalIdAuthWidget: API call initiated');
       }
     });
   }
@@ -54,16 +52,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     if (_disposed) return;
 
     try {
-      // Clear WebView state
       _webViewController?.clearCache();
       _webViewController?.clearLocalStorage();
       _webViewController = null;
-      // _isWebViewReady = false; // This line is removed
+ 
 
-      // Reset National ID state and restart
       ref.read(nationalIdProvider.notifier).reset();
 
-      // Add a small delay to ensure reset is complete before making API call
       Future.delayed(const Duration(milliseconds: 100), () {
         if (!_disposed) {
           ref.read(nationalIdProvider.notifier).callEsignetApi();
@@ -78,19 +73,17 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // print('NationalIdAuthWidget: build method called');
+  
     if (_disposed) return const SizedBox.shrink();
 
     try {
       final nationalIdState = ref.watch(nationalIdProvider);
-      // print('NationalIdAuthWidget: Watching national ID state');
 
       return Container(
         height: MediaQuery.of(context).size.height * 0.65,
         child: _buildContent(nationalIdState),
       );
     } catch (e) {
-      // print('Error in NationalIdAuthWidget build: $e');
       return const Center(
         child: Text(
           'Error loading authentication widget',
@@ -103,26 +96,11 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   Widget _buildContent(NationalIdState nationalIdState) {
     if (_disposed) return const SizedBox.shrink();
 
-    // print('NationalIdAuthWidget: Building content with state:');
-    // print('  - isLoading: ${nationalIdState.isLoading}');
-    // print('  - isError: ${nationalIdState.isError}');
-    // print('  - authUrl: ${nationalIdState.authUrl}');
-    // print('  - errorMessage: ${nationalIdState.errorMessage}');
-    // print('  - isAuthCompleted: ${nationalIdState.isAuthCompleted}');
 
-    // Show error state
     if (nationalIdState.isError) {
-      // print('NationalIdAuthWidget: Showing error state');
       return _buildErrorState(nationalIdState);
     }
 
-    // Show completion state
-    if (nationalIdState.isAuthCompleted) {
-      print('NationalIdAuthWidget: Showing completion state');
-      return _buildCompletionState();
-    }
-
-    // Show WebView immediately when URL is available
     if (nationalIdState.authUrl != null &&
         nationalIdState.authUrl!.isNotEmpty) {
       print(
@@ -130,7 +108,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       return _buildWebView(nationalIdState.authUrl!);
     }
 
-    // Show simple loading when API is loading
+    if (nationalIdState.isAuthCompleted) {
+      print('NationalIdAuthWidget: Showing completion state');
+      print('NationalIdAuthWidget: Auth URL is: ${nationalIdState.authUrl}');
+      return _buildCompletionState();
+    }
+
+    
     if (nationalIdState.isLoading) {
       print('NationalIdAuthWidget: Showing simple loading state');
       return const Center(
@@ -141,7 +125,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     }
 
     // Fallback - show simple loading with retry button
-    print('NationalIdAuthWidget: Showing fallback loading state');
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -195,120 +178,87 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             ),
             child: const Text('Test API'),
           ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              if (!_disposed) {
+            
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Test Verification'),
+          ),
         ],
       ),
     );
   }
 
-  // Widget _buildLoadingState() {
+  // Widget _buildWebViewLoadingState() {
   //   return Center(
   //     child: Column(
   //       mainAxisAlignment: MainAxisAlignment.center,
   //       children: [
   //         const CircularProgressIndicator(
   //           valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-  //         ),
-  //         const SizedBox(height: 16),
-  //         const Text(
-  //           'Initializing National ID Authentication...',
-  //           style: TextStyle(
-  //             fontSize: 16,
-  //             fontWeight: FontWeight.w500,
-  //             color: Colors.grey,
-  //           ),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //         const SizedBox(height: 8),
-  //         const Text(
-  //           'Please wait while we prepare the authentication service.',
-  //           style: TextStyle(
-  //             fontSize: 14,
-  //             color: Colors.grey,
-  //           ),
-  //           textAlign: TextAlign.center,
+  //           strokeWidth: 3,
   //         ),
   //         const SizedBox(height: 24),
-  //         ElevatedButton(
-  //           onPressed: () {
-  //             if (!_disposed) {
-  //               print('Manual API call triggered');
-  //               ref.read(nationalIdProvider.notifier).callEsignetApi();
-  //             }
-  //           },
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.orange,
-  //             foregroundColor: Colors.white,
-  //             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-  //             shape: RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(8),
-  //             ),
+  //         const Text(
+  //           'Loading Authentication Page',
+  //           style: TextStyle(
+  //             fontSize: 20,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.black87,
   //           ),
-  //           child: const Text('Test API Call'),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //         const SizedBox(height: 12),
+  //         const Text(
+  //           'Please wait while we load the National ID authentication service...',
+  //           style: TextStyle(
+  //             fontSize: 16,
+  //             color: Colors.grey,
+  //           ),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //         const SizedBox(height: 32),
+  //         Container(
+  //           padding: const EdgeInsets.all(16),
+  //           decoration: BoxDecoration(
+  //             color: Colors.blue.shade50,
+  //             borderRadius: BorderRadius.circular(12),
+  //             border: Border.all(color: Colors.blue.shade200),
+  //           ),
+  //           child: const Column(
+  //             children: [
+  //               Icon(
+  //                 Icons.security,
+  //                 color: Colors.blue,
+  //                 size: 24,
+  //               ),
+  //               SizedBox(height: 8),
+  //               Text(
+  //                 'Connecting to official Ethiopian National ID service',
+  //                 style: TextStyle(
+  //                   fontSize: 14,
+  //                   color: Colors.blue,
+  //                 ),
+  //                 textAlign: TextAlign.center,
+  //               ),
+  //             ],
+  //           ),
   //         ),
   //       ],
   //     ),
   //   );
   // }
-
-  Widget _buildWebViewLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-            strokeWidth: 3,
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Loading Authentication Page',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Please wait while we load the National ID authentication service...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: const Column(
-              children: [
-                Icon(
-                  Icons.security,
-                  color: Colors.blue,
-                  size: 24,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Connecting to official Ethiopian National ID service',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.blue,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildErrorState(NationalIdState nationalIdState) {
     return Center(
@@ -512,8 +462,12 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
             print('Navigating to: ${request.url}');
 
-            // Handle callback URL
-            if (request.url.contains('/api/v1/callback')) {
+            // Check if this is a callback URL
+            final isCallback = request.url.contains('callback') ||
+                              request.url.contains('code=') ||
+                              request.url.contains('state=');
+
+            if (isCallback) {
               print('Callback detected: ${request.url}');
               _handleCallback(request.url);
               return NavigationDecision.prevent;
@@ -589,28 +543,38 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   void _handleCallback(String callbackUrl) {
     if (_disposed) return;
 
-    print(
-        'NationalIdAuthWidget: _handleCallback called with URL: $callbackUrl');
+    print('NationalIdAuthWidget: _handleCallback called with URL: $callbackUrl');
 
     try {
       final uri = Uri.parse(callbackUrl);
       final queryParameters = uri.queryParameters;
 
       print('NationalIdAuthWidget: Callback parameters: $queryParameters');
+      print('NationalIdAuthWidget: All query parameters keys: ${queryParameters.keys.toList()}');
 
-      // If we have code and state, verify the account
-      if (queryParameters.containsKey('code') &&
-          queryParameters.containsKey('state')) {
-        print(
-            'NationalIdAuthWidget: Code and state found, starting verification');
-        print('NationalIdAuthWidget: Code: ${queryParameters['code']}');
-        print('NationalIdAuthWidget: State: ${queryParameters['state']}');
-        _verifyAccount(queryParameters['code']!, queryParameters['state']!);
+      // Check if we have code and state parameters
+      final hasCode = queryParameters.containsKey('code');
+      final hasState = queryParameters.containsKey('state');
+      
+      print('NationalIdAuthWidget: Has code: $hasCode');
+      print('NationalIdAuthWidget: Has state: $hasState');
+
+      if (hasCode && hasState) {
+        // We have both code and state - proceed with verification
+        final code = queryParameters['code']!;
+        final state = queryParameters['state']!;
+        
+        print('NationalIdAuthWidget: Code and state found, starting verification');
+        print('NationalIdAuthWidget: Code: $code');
+        print('NationalIdAuthWidget: State: $state');
+        
+        // Call the verification API
+        _verifyAccount(code, state);
       } else {
-        print(
-            'NationalIdAuthWidget: No code or state found, showing callback dialog');
-        // Show dialog with callback response
-        _showCallbackDialog(callbackUrl, queryParameters);
+        // No code or state found - show callback dialog for debugging
+        print('NationalIdAuthWidget: No code or state found, showing callback dialog');
+        print('NationalIdAuthWidget: Available parameters: ${queryParameters.entries.map((e) => '${e.key}=${e.value}').join(', ')}');
+        // _showCallbackDialog(callbackUrl, queryParameters);
       }
     } catch (e) {
       print('NationalIdAuthWidget: Error parsing callback URL: $e');
@@ -634,9 +598,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       print('Response data: $responseData');
 
       if (!_disposed) {
-        print('NationalIdAuthWidget: Showing verification success dialog');
-        _showVerificationSuccessDialog(responseData);
-
         // Save authentication data to stepper state immediately
         if (responseData != null) {
           print(
@@ -656,6 +617,14 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         // Mark as completed immediately
         print('NationalIdAuthWidget: Marking auth as completed immediately');
         ref.read(nationalIdProvider.notifier).markAuthCompleted();
+
+        // Show success dialog after a short delay to ensure state is updated
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (!_disposed) {
+            print('NationalIdAuthWidget: Showing verification success dialog');
+            _showVerificationSuccessDialog(responseData);
+          }
+        });
       }
     } catch (e) {
       print('NationalIdAuthWidget: Verification failed: $e');
@@ -668,202 +637,98 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     }
   }
 
-  void _showCallbackDialog(
-      String callbackUrl, Map<String, String> queryParameters) {
-    if (_disposed) return;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                queryParameters.containsKey('code')
-                    ? Icons.check_circle
-                    : Icons.error,
-                color: queryParameters.containsKey('code')
-                    ? Colors.green
-                    : Colors.red,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                queryParameters.containsKey('code')
-                    ? 'Authentication Success'
-                    : 'Authentication Error',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: queryParameters.containsKey('code')
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  void _showVerificationSuccessDialog(Map<String, dynamic>? responseData) {
+    if (_disposed || _showingDialog) return;
+
+    print('NationalIdAuthWidget: Showing verification success dialog');
+    print('Response data: $responseData');
+
+    _showingDialog = true;
+
+    // Add a small delay to ensure the dialog is properly displayed
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_disposed) return;
+      
+      print('NationalIdAuthWidget: About to show dialog after delay');
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          print('NationalIdAuthWidget: Dialog builder called');
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Callback URL:',
+                const Icon(Icons.check_circle, color: Colors.green, size: 60),
+                const SizedBox(height: 16),
+                const Text(
+                  'Success!',
                   style: TextStyle(
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.grey[700],
+                    color: Colors.green,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
+                const SizedBox(height: 8),
+                const Text(
+                  'National ID Authentication Complete',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black87,
                   ),
-                  child: Text(
-                    callbackUrl,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  'Parameters:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: Colors.green[50],
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
+                    border: Border.all(color: Colors.green[200]!),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: queryParameters.entries.map((entry) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${entry.key}: ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                entry.value,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ),
-                          ],
+                  child: Row(
+                    children: [
+                      Icon(Icons.info, color: Colors.green[600], size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Your authentication data has been saved successfully.',
+                          style: TextStyle(
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ],
                   ),
                 ),
-                if (queryParameters.containsKey('code')) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green[200]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle,
-                            color: Colors.green[600], size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Authorization successful! You can now proceed with the registration.',
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                if (queryParameters.containsKey('error')) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red[200]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error, color: Colors.red[600], size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Authentication failed: ${queryParameters['error']}',
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-            if (queryParameters.containsKey('code'))
+            actions: [
               ElevatedButton(
                 onPressed: () {
+                  print(
+                      'NationalIdAuthWidget: User clicked Continue in verification dialog');
                   Navigator.of(context).pop();
+                  _showingDialog = false;
                   if (!_disposed) {
-                    ref.read(nationalIdProvider.notifier).markAuthCompleted();
-
-                    // Save authentication data to stepper state
-                    final authData = {
-                      'id': queryParameters['code'],
-                      'fullName': 'User',
-                      'phone': 'N/A',
-                      'email': 'N/A',
-                      'state': 'N/A',
-                    };
-                    print(
-                        'NationalIdAuthWidget: Saving callback auth data to stepper state');
-                    ref
-                        .read(stepperProvider.notifier)
-                        .saveAuthenticationData(authData);
+                    print('NationalIdAuthWidget: Clearing WebView and showing completion state');
+                    
+                    // Clear the WebView
+                    _webViewController?.clearCache();
+                    _webViewController?.clearLocalStorage();
+                    _webViewController = null;
+                    
+                    // Clear the auth URL to force showing completion state
+                    ref.read(nationalIdProvider.notifier).clearAuthUrl();
+                    
+                    // Force rebuild to show completion state
+                    setState(() {});
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -872,82 +737,17 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 ),
                 child: const Text('Continue'),
               ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showVerificationSuccessDialog(Map<String, dynamic>? responseData) {
-    if (_disposed) return;
-
-    print('NationalIdAuthWidget: Showing verification success dialog');
-    print('Response data: $responseData');
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        // Auto-close dialog after 2 seconds
-        Future.delayed(const Duration(seconds: 2), () {
-          if (!_disposed && Navigator.canPop(context)) {
-            Navigator.of(context).pop();
-          }
-        });
-
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 60),
-              const SizedBox(height: 16),
-              const Text(
-                'Success!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'National ID Authentication Complete',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
             ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                print(
-                    'NationalIdAuthWidget: User clicked Continue in verification dialog');
-                Navigator.of(context).pop();
-                if (!_disposed) {
-                  print('NationalIdAuthWidget: Proceeding to next step');
-                  // The auth is already completed, just close the dialog
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cyanblueColor,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Continue'),
-            ),
-          ],
-        );
-      },
-    );
+          );
+        },
+      );
+    });
   }
 
   void _showErrorDialog(String errorMessage) {
-    if (_disposed) return;
+    if (_disposed || _showingDialog) return;
+
+    _showingDialog = true;
 
     showDialog(
       context: context,
@@ -974,6 +774,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                _showingDialog = false;
               },
               child: const Text('OK'),
             ),
@@ -999,7 +800,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(const Duration(seconds: 300));
+      ).timeout(const Duration(seconds: 400));
 
       print('Test response status: ${response.statusCode}');
       print('Test response body: ${response.body}');
@@ -1017,8 +818,11 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     }
   }
 
+
   void _showVerificationErrorDialog(String errorMessage) {
-    if (_disposed) return;
+    if (_disposed || _showingDialog) return;
+
+    _showingDialog = true;
 
     showDialog(
       context: context,
@@ -1058,6 +862,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 print(
                     'NationalIdAuthWidget: User clicked Retry in error dialog');
                 Navigator.of(context).pop();
+                _showingDialog = false;
                 if (!_disposed) {
                   print('NationalIdAuthWidget: Retrying verification');
                   // Reset the state and try again
@@ -1076,6 +881,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 print(
                     'NationalIdAuthWidget: User clicked Cancel in error dialog');
                 Navigator.of(context).pop();
+                _showingDialog = false;
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey,

@@ -263,10 +263,11 @@ class _IndividualAccountNationalState extends State<IndividualAccountNational> {
       // If we have code and state, verify the account
       if (queryParameters.containsKey('code') &&
           queryParameters.containsKey('state')) {
+            
         _verifyAccount(queryParameters['code']!, queryParameters['state']!);
       } else {
         // Show dialog with callback response
-        _showCallbackDialog(callbackUrl, queryParameters);
+        // _showCallbackDialog(callbackUrl, queryParameters);
       }
     } catch (e) {
       print('Error parsing callback URL: $e');
@@ -318,198 +319,198 @@ class _IndividualAccountNationalState extends State<IndividualAccountNational> {
     }
   }
 
-  void _showCallbackDialog(
-      String callbackUrl, Map<String, String> queryParameters) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                queryParameters.containsKey('code')
-                    ? Icons.check_circle
-                    : Icons.error,
-                color: queryParameters.containsKey('code')
-                    ? Colors.green
-                    : Colors.red,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                queryParameters.containsKey('code')
-                    ? 'Authentication Success'
-                    : 'Authentication Error',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: queryParameters.containsKey('code')
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Callback URL:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: Text(
-                    callbackUrl,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Parameters:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: queryParameters.entries.map((entry) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${entry.key}: ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                entry.value,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                if (queryParameters.containsKey('code')) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green[200]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle,
-                            color: Colors.green[600], size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Authorization successful! You can now proceed with the registration.',
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                if (queryParameters.containsKey('error')) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red[200]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error, color: Colors.red[600], size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Authentication failed: ${queryParameters['error']}',
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-            if (queryParameters.containsKey('code'))
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // Navigate to next step or close this page
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cyanblueColor,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Continue'),
-              ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showCallbackDialog(
+  //     String callbackUrl, Map<String, String> queryParameters) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(16),
+  //         ),
+  //         title: Row(
+  //           children: [
+  //             Icon(
+  //               queryParameters.containsKey('code')
+  //                   ? Icons.check_circle
+  //                   : Icons.error,
+  //               color: queryParameters.containsKey('code')
+  //                   ? Colors.green
+  //                   : Colors.red,
+  //               size: 24,
+  //             ),
+  //             const SizedBox(width: 8),
+  //             Text(
+  //               queryParameters.containsKey('code')
+  //                   ? 'Authentication Success'
+  //                   : 'Authentication Error',
+  //               style: TextStyle(
+  //                 fontWeight: FontWeight.bold,
+  //                 color: queryParameters.containsKey('code')
+  //                     ? Colors.green
+  //                     : Colors.red,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         content: SingleChildScrollView(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Text(
+  //                 'Callback URL:',
+  //                 style: TextStyle(
+  //                   fontWeight: FontWeight.bold,
+  //                   fontSize: 14,
+  //                   color: Colors.grey[700],
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 4),
+  //               Container(
+  //                 padding: const EdgeInsets.all(8),
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.grey[100],
+  //                   borderRadius: BorderRadius.circular(8),
+  //                   border: Border.all(color: Colors.grey[300]!),
+  //                 ),
+  //                 child: Text(
+  //                   callbackUrl,
+  //                   style: const TextStyle(
+  //                     fontSize: 12,
+  //                     fontFamily: 'monospace',
+  //                   ),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 16),
+  //               Text(
+  //                 'Parameters:',
+  //                 style: TextStyle(
+  //                   fontWeight: FontWeight.bold,
+  //                   fontSize: 14,
+  //                   color: Colors.grey[700],
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 4),
+  //               Container(
+  //                 padding: const EdgeInsets.all(8),
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.grey[100],
+  //                   borderRadius: BorderRadius.circular(8),
+  //                   border: Border.all(color: Colors.grey[300]!),
+  //                 ),
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: queryParameters.entries.map((entry) {
+  //                     return Padding(
+  //                       padding: const EdgeInsets.symmetric(vertical: 2),
+  //                       child: Row(
+  //                         crossAxisAlignment: CrossAxisAlignment.start,
+  //                         children: [
+  //                           Text(
+  //                             '${entry.key}: ',
+  //                             style: const TextStyle(
+  //                               fontWeight: FontWeight.bold,
+  //                               fontSize: 12,
+  //                             ),
+  //                           ),
+  //                           Expanded(
+  //                             child: Text(
+  //                               entry.value,
+  //                               style: const TextStyle(
+  //                                 fontSize: 12,
+  //                                 fontFamily: 'monospace',
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     );
+  //                   }).toList(),
+  //                 ),
+  //               ),
+  //               if (queryParameters.containsKey('code')) ...[
+  //                 const SizedBox(height: 16),
+  //                 Container(
+  //                   padding: const EdgeInsets.all(12),
+  //                   decoration: BoxDecoration(
+  //                     color: Colors.green[50],
+  //                     borderRadius: BorderRadius.circular(8),
+  //                     border: Border.all(color: Colors.green[200]!),
+  //                   ),
+  //                   child: Row(
+  //                     children: [
+  //                       Icon(Icons.check_circle,
+  //                           color: Colors.green[600], size: 20),
+  //                       const SizedBox(width: 8),
+  //                       Expanded(
+  //                         child: Text(
+  //                           'Authorization successful! You can now proceed with the registration.',
+  //                           style: TextStyle(
+  //                             color: Colors.green[700],
+  //                             fontWeight: FontWeight.w500,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ],
+  //               if (queryParameters.containsKey('error')) ...[
+  //                 const SizedBox(height: 16),
+  //                 Container(
+  //                   padding: const EdgeInsets.all(12),
+  //                   decoration: BoxDecoration(
+  //                     color: Colors.red[50],
+  //                     borderRadius: BorderRadius.circular(8),
+  //                     border: Border.all(color: Colors.red[200]!),
+  //                   ),
+  //                   child: Row(
+  //                     children: [
+  //                       Icon(Icons.error, color: Colors.red[600], size: 20),
+  //                       const SizedBox(width: 8),
+  //                       Expanded(
+  //                         child: Text(
+  //                           'Authentication failed: ${queryParameters['error']}',
+  //                           style: TextStyle(
+  //                             color: Colors.red[700],
+  //                             fontWeight: FontWeight.w500,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ],
+  //             ],
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: const Text('Close'),
+  //           ),
+  //           if (queryParameters.containsKey('code'))
+  //             ElevatedButton(
+  //               onPressed: () {
+  //                 Navigator.of(context).pop();
+  //                 // Navigate to next step or close this page
+  //                 Navigator.pop(context);
+  //               },
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: cyanblueColor,
+  //                 foregroundColor: Colors.white,
+  //               ),
+  //               child: const Text('Continue'),
+  //             ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   void _showVerificationSuccessDialog(Map<String, dynamic> responseData) {
     showDialog(
