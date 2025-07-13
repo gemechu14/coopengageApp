@@ -1,4 +1,4 @@
-// ignore_for_file: sort_child_properties_last, use_super_parameters, sized_box_for_whitespace
+// ignore_for_file: sort_child_properties_last, use_super_parameters, sized_box_for_whitespace, unused_local_variable
 
 import 'dart:convert';
 import 'package:coopengageplus/NetworkHandler.dart';
@@ -13,8 +13,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class Dashboard extends StatefulWidget {
-  final VoidCallback onSettingsTap; // Add the callback parameter
-
+  final VoidCallback onSettingsTap; 
   const Dashboard({Key? key, required this.onSettingsTap})
       : super(key: key);
 
@@ -27,12 +26,12 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     fetchUsers();
     _fetchToken();
-    fetchUserCounts(); // Fetch API data on initialization
+    fetchUserCounts(); 
   }
 
   final storage = FlutterSecureStorage();
   int? UserID;
-  int localCustomers = 0; // Initialize with 0 local customers
+  int localCustomers = 0; 
   int databaseCustomers = 0;
   Map<String, int> data = {
     "Total": 0,
@@ -401,7 +400,7 @@ class _DashboardState extends State<Dashboard> {
       String? token = await storage.read(key: "token");
       if (token != null && token.isNotEmpty) {
         try {
-          print("GemechuBulti");
+      
 
           // Decode the token to get userId
           var decodedToken = JwtDecoder.decode(token);

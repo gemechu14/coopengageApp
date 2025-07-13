@@ -1,8 +1,8 @@
 import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/IndividualAccountByNationalId.dart';
+import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/IndividualAccountNational.dart';
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
-import 'package:coopengageplus/features/onboarding/Update_IndividualAccount -/screens/registration_screen.dart';
 
 class IndividualAccountTypeSelection extends StatelessWidget {
   const IndividualAccountTypeSelection({Key? key}) : super(key: key);
@@ -44,7 +44,7 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
-              
+
               // Selection cards
               SizedBox(
                 height: 300,
@@ -52,17 +52,21 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                   children: [
                     _buildSelectionCard(
                       title: 'National ID',
-                      description: 'Register using your Ethiopian National ID card',
+                      description:
+                          'Register using your Ethiopian National ID card',
                       icon: Icons.credit_card,
                       gradientColors: [
                         cyanblueColor,
-                       const Color.fromARGB(255, 37, 113, 175),// darker cyanblue
+                        const Color.fromARGB(
+                            255, 37, 113, 175), // darker cyanblue
                       ],
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const IndividualAccountByNationalId(),
+                            builder: (context) =>
+                                // const IndividualAccountNational()
+                                const IndividualAccountByNationalId(),
                           ),
                         );
                       },
@@ -70,11 +74,13 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildSelectionCard(
                       title: 'Other ID Cards',
-                      description: 'Register using passport, driving license, or other valid ID',
+                      description:
+                          'Register using passport, driving license, or other valid ID',
                       icon: Icons.badge,
                       gradientColors: [
                         const Color(0xFFFF9800), // orange
-                        const Color.fromARGB(255, 196, 101, 12), // darker orange
+                        const Color.fromARGB(
+                            255, 196, 101, 12), // darker orange
                       ],
                       onTap: () {
                         Navigator.pushReplacement(
@@ -145,9 +151,9 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  
+
                   const SizedBox(width: 16),
-                  
+
                   // Content
                   Expanded(
                     child: Column(
@@ -176,7 +182,7 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // Arrow
                   Container(
                     padding: const EdgeInsets.all(8),

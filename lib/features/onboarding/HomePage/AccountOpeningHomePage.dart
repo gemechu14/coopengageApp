@@ -1,8 +1,8 @@
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/features/onboarding/_corporate/screens/registration_screen.dart';
-import 'package:coopengageplus/features/onboarding/corporate/corporateAccount.dart';
-
 import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
+import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
+// import 'package:coopengageplus/features/onboarding/_corporate/screens/registration_screen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/features/onboarding/jointaccount/jointAccount.dart';
 import 'package:coopengageplus/features/onboarding/HomePage/IndividualAccountTypeSelection.dart';
@@ -107,6 +107,8 @@ class AccountOnboardingScreen extends StatelessWidget {
                             builder: (context) =>
                                 CorporateCustomerRegistration(),
                                 // CorporateRegistrationScreen()
+                                // CorporateAccountRiverpodPage()
+                                // CorporateRegistrationScreen()
                                 // CorporateRegistration()
                           ),
                           (route) => false,
@@ -116,7 +118,7 @@ class AccountOnboardingScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 40), // Bottom padding for scroll
+              const SizedBox(height: 40),
             ],
           ),
         ),

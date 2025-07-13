@@ -564,6 +564,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
       }
     });
   }
+ 
+ 
+ 
   Widget _buildPlaceholderIcon(String imageType) {
     
     final title  = 'Personal Photo';

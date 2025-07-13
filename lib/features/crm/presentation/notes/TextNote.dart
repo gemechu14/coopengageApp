@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:coopengageplus/features/crm/data/model/high_profile_clients/high_profile_clients.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,13 +84,12 @@ class _TextNoteState extends ConsumerState<TextNote> {
 
         Get.to(() => CRMMainScreen(initialIndex: 2));
       } else {
-        // Show snackbar if form validation fails
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Please fill all the required fields')),
         );
       }
     } catch (e) {
-      print(e);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add note: $e')),
       );

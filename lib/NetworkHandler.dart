@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:logger/logger.dart';
@@ -13,7 +14,8 @@ import 'package:http_parser/http_parser.dart';
 class NetworkHandler {
   // String baseurl = "http://10.2.125.41:9061";
   // String baseurl = "http://10.8.100.111:9061";
-  String baseurl = "http://10.12.53.33:9061";
+  // String baseurl
+  String baseurl = AppConstants.baseURL;
   var log = Logger();
   FlutterSecureStorage storage = const FlutterSecureStorage();
   Future get(String url) async {
