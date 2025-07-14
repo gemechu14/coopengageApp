@@ -316,6 +316,7 @@ dependencies:
   crop_your_image: ^2.0.0
   enhance_stepper: ^1.0.2
   expandable: ^5.0.1
+  uuid: ^4.4.2
 
 dev_dependencies:
   flutter_test:

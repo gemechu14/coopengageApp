@@ -32,6 +32,7 @@ import 'package:signature/signature.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import '../../../common_widgets/dropDown/DatePickerField.dart';
 import 'dart:ui' as ui;
 import 'package:coopengageplus/NetworkHandler.dart';
@@ -1261,8 +1262,6 @@ class _Registration extends State<CorporateCustomerRegistration> {
                     fontWeight: FontWeight.bold),
                 textAlign: TextAlign.end,
               ),
-             
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: filteredAccountTypes.isNotEmpty
@@ -1393,9 +1392,6 @@ class _Registration extends State<CorporateCustomerRegistration> {
                         ),
                       ),
               )
-           
-           
-           
             ],
           ),
         ),
@@ -3852,30 +3848,71 @@ class _Registration extends State<CorporateCustomerRegistration> {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
-      allowMultiple: false, // Ensure only one file is selected
+      allowMultiple: false,
     );
 
     if (result != null && result.files.single.path != null) {
+      final originalPath = result.files.single.path!;
+      final appDir = await getApplicationDocumentsDirectory();
+      final filename = Uuid().v4() + "_" + originalPath.split('/').last;
+      final newPath = "${appDir.path}/$filename";
+
+      final newFile = await File(originalPath).copy(newPath);
+
       setState(() {
-        letterOfRequestFile =
-            result.files.single.path; // Set the file path as a string
+        letterOfRequestFile = newFile.path; // Now points to persistent storage
       });
     }
   }
+  // Future<void> letterOfRequest() async {
+  //   FilePickerResult? result = await FilePicker.platform.pickFiles(
+  //     type: FileType.custom,
+  //     allowedExtensions: ['pdf'],
+  //     allowMultiple: false, // Ensure only one file is selected
+  //   );
+
+  //   if (result != null && result.files.single.path != null) {
+  //     setState(() {
+  //       letterOfRequestFile =
+  //           result.files.single.path; // Set the file path as a string
+  //     });
+  //   }
+  // }
 
   Future<void> pickArticle() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
-      allowMultiple: false, // Ensure only one file is selected
+      allowMultiple: false,
     );
 
     if (result != null && result.files.single.path != null) {
+      final originalPath = result.files.single.path!;
+      final appDir = await getApplicationDocumentsDirectory();
+      final filename = Uuid().v4() + "_" + originalPath.split('/').last;
+      final newPath = "${appDir.path}/$filename";
+
+      final newFile = await File(originalPath).copy(newPath);
+
       setState(() {
-        articleFile = result.files.single.path; // Set the file path as a string
+        articleFile = newFile.path;
       });
     }
   }
+
+  // Future<void> pickArticle() async {
+  //   FilePickerResult? result = await FilePicker.platform.pickFiles(
+  //     type: FileType.custom,
+  //     allowedExtensions: ['pdf'],
+  //     allowMultiple: false, // Ensure only one file is selected
+  //   );
+
+  //   if (result != null && result.files.single.path != null) {
+  //     setState(() {
+  //       articleFile = result.files.single.path; // Set the file path as a string
+  //     });
+  //   }
+  // }
 
   registerAllUsers() async {
     List<Map<String, dynamic>> customers = [];
@@ -3888,7 +3925,6 @@ class _Registration extends State<CorporateCustomerRegistration> {
       Uint8List? tradeLicenseBytes;
       Uint8List? articleBytes;
       Uint8List? letterOfRequestBytes;
-   
 
       if (residentPaths[i].isNotEmpty) {
         residentBytes = await _getImageBytes(residentPaths[i]);
@@ -4044,6 +4080,4 @@ class _Registration extends State<CorporateCustomerRegistration> {
       ),
     );
   }
-
-
 }

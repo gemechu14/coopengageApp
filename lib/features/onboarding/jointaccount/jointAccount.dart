@@ -1917,118 +1917,139 @@ class _Registration extends State<JointAccountStepperPage> {
     }
   }
 
-
-Future<void> _imgFromCamera(int i, String imageTypes) async {
   bool _isDialogShowing = false;
+  Future<void> _imgFromCamera(int i, String imageTypes) async {
+    try {
+      FocusScope.of(context).unfocus();
 
-  Future<void> safeCloseDialog() async {
-    if (_isDialogShowing && mounted && Navigator.canPop(context)) {
-      Navigator.of(context, rootNavigator: true).pop();
+      final permissionStatus = await Permission.camera.request();
+      if (!permissionStatus.isGranted) {
+        if (permissionStatus.isPermanentlyDenied) {
+          await openAppSettings();
+        }
+        return;
+      }
+
+      if (mounted && !_isDialogShowing) {
+        _isDialogShowing = true;
+        // Await dialog to avoid racing issues
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      final XFile? pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        imageQuality: 50,
+      );
+      debugPrint('Picked file path: ${pickedFile?.path}');
+
+      if (!mounted || pickedFile == null) {
+        _closeDialogIfNeeded();
+        return;
+      }
+
+      final originalFile = File(pickedFile.path);
+      if (!await originalFile.exists()) {
+        debugPrint('Original file does not exist');
+        _closeDialogIfNeeded();
+        return;
+      }
+
+      final appDir = await getApplicationDocumentsDirectory();
+      final newPath =
+          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      File newImage;
+      try {
+        newImage = await originalFile.copy(newPath);
+      } catch (e) {
+        debugPrint('Error copying file: $e');
+        _closeDialogIfNeeded();
+        return;
+      }
+
+      if (!await newImage.exists()) {
+        debugPrint('Copied file does not exist');
+        _closeDialogIfNeeded();
+        return;
+      }
+
+      Uint8List bytes;
+      try {
+        bytes = await newImage.readAsBytes();
+      } catch (e) {
+        debugPrint('Error reading bytes from copied file: $e');
+        _closeDialogIfNeeded();
+        return;
+      }
+
+      if (!mounted) {
+        _closeDialogIfNeeded();
+        return;
+      }
+
+      void ensureIndex<T>(List<T> list, T defaultValue) {
+        if (i >= list.length) {
+          list.addAll(List.generate(i - list.length + 1, (_) => defaultValue));
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          switch (imageTypes) {
+            case 'profilePath':
+              ensureIndex<String>(profilePaths, '');
+              profilePaths[i] = newPath;
+              break;
+            case 'resident':
+              ensureIndex<String>(residentPaths, '');
+              residentPaths[i] = newPath;
+              break;
+            case 'residentCardBack':
+              ensureIndex<String>(residentCardBackPaths, '');
+              residentCardBackPaths[i] = newPath;
+              break;
+            case 'signature':
+              _signatureController1.clear();
+              _signatureController2.clear();
+              _signatureController3.clear();
+              savedSignature = null;
+              ensureIndex<Uint8List>(combinedSignatures, Uint8List(0));
+              combinedSignatures[i] = bytes;
+              break;
+          }
+        });
+      }
+
+      // Small delay to ensure UI settled before closing dialog
+      await Future.delayed(const Duration(milliseconds: 300));
+      _closeDialogIfNeeded();
+    } catch (e, stack) {
+      debugPrint("Exception in _imgFromCamera: $e\n$stack");
+      _closeDialogIfNeeded();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Failed to capture image. Step not lost.")),
+        );
+      }
+    }
+  }
+
+  void _closeDialogIfNeeded() {
+    if (_isDialogShowing && mounted) {
+      try {
+        Navigator.of(context, rootNavigator: true).pop();
+      } catch (e) {
+        debugPrint('Error closing dialog: $e');
+      }
       _isDialogShowing = false;
     }
   }
-
-  try {
-    FocusScope.of(context).unfocus();
-
-    // Request camera permission
-    final permissionStatus = await Permission.camera.request();
-    if (!permissionStatus.isGranted) {
-      if (permissionStatus.isPermanentlyDenied) {
-        await openAppSettings();
-      }
-      return;
-    }
-
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) {
-        _isDialogShowing = true;
-        return const Center(child: CircularProgressIndicator());
-      },
-    );
-
-    final XFile? pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      imageQuality: 50,
-    );
-
-    if (pickedFile == null) {
-      await safeCloseDialog();
-      return;
-    }
-
-    final File originalFile = File(pickedFile.path);
-    if (!await originalFile.exists()) {
-      await safeCloseDialog();
-      return;
-    }
-
-    final appDir = await getApplicationDocumentsDirectory();
-    final newPath = '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final File newImage = await originalFile.copy(newPath);
-
-    if (!await newImage.exists()) {
-      await safeCloseDialog();
-      return;
-    }
-
-    final Uint8List bytes = await newImage.readAsBytes();
-
-    if (!mounted) {
-      await safeCloseDialog();
-      return;
-    }
-
-    // Ensure list has room at index i
-    void ensureIndex<T>(List<T> list, T defaultValue) {
-      if (i >= list.length) {
-        list.addAll(List.generate(i - list.length + 1, (_) => defaultValue));
-      }
-    }
-
-    // Safely update state
-    if (mounted) {
-      setState(() {
-        switch (imageTypes) {
-          case 'profilePath':
-            ensureIndex<String>(profilePaths, '');
-            profilePaths[i] = newPath;
-            break;
-          case 'resident':
-            ensureIndex<String>(residentPaths, '');
-            residentPaths[i] = newPath;
-            break;
-          case 'residentCardBack':
-            ensureIndex<String>(residentCardBackPaths, '');
-            residentCardBackPaths[i] = newPath;
-            break;
-          case 'signature':
-            _signatureController1.clear();
-            _signatureController2.clear();
-            _signatureController3.clear();
-            savedSignature = null;
-            ensureIndex<Uint8List>(combinedSignatures, Uint8List(0));
-            combinedSignatures[i] = bytes;
-            break;
-        }
-      });
-    }
-
-    await safeCloseDialog();
-  } catch (e, stack) {
-    debugPrint("Exception in _imgFromCamera: $e\n$stack");
-    await safeCloseDialog();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to capture image. Step not lost.")),
-      );
-    }
-  }
-}
 
 // Future<void> _imgFromCamera(int i, String imageTypes) async {
 //   bool _isDialogShowing = false;
