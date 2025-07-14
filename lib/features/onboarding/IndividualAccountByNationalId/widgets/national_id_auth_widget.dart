@@ -26,7 +26,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   @override
   void initState() {
     super.initState();
-    print('NationalIdAuthWidget: initState called');
+    _isWebViewLoading = false;
 
     // Reset WebView state
     _webViewController = null;
@@ -99,17 +99,59 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       return _buildErrorState(nationalIdState);
     }
 
+    // Show beautiful success state after verification
+    if (nationalIdState.isAuthCompleted) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.verified, color: Colors.green, size: 80),
+            const SizedBox(height: 24),
+            Text(
+              'National ID Verified!',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[700],
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'You have successfully completed National ID authentication.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            // const SizedBox(height: 24),
+            // ElevatedButton.icon(
+            //   onPressed: () {
+            //     // Optionally, go to next step or close
+            //     Navigator.of(context).maybePop();
+            //   },
+            //   icon: const Icon(Icons.arrow_forward),
+            //   label: const Text('Continue'),
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: cyanblueColor,
+            //     foregroundColor: Colors.white,
+            //     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+            //     textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(8),
+            //     ),
+            //   ),
+            // ),
+          ],
+        ),
+      );
+    }
+
     if (nationalIdState.authUrl != null &&
         nationalIdState.authUrl!.isNotEmpty) {
       print(
           'NationalIdAuthWidget: Showing WebView with URL: ${nationalIdState.authUrl}');
       return _buildWebView(nationalIdState.authUrl!);
-    }
-
-    if (nationalIdState.isAuthCompleted) {
-      print('NationalIdAuthWidget: Showing completion state');
-      print('NationalIdAuthWidget: Auth URL is: ${nationalIdState.authUrl}');
-      return _buildCompletionState();
     }
 
     if (nationalIdState.isLoading) {
@@ -370,99 +412,93 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     );
   }
 
-Widget _buildWebView(String url) {
-  if (_disposed) return const SizedBox.shrink();
+  Widget _buildWebView(String url) {
+    if (_disposed) return const SizedBox.shrink();
 
-  _expectedFinalUrl = url;
+    _expectedFinalUrl = url;
 
-  print('NationalIdAuthWidget: Building WebView with URL: $url');
+    print('NationalIdAuthWidget: Building WebView with URL: $url');
 
-  try {
-    return Stack(
-      children: [
-        Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: WebViewWidget(
-              controller: _createWebViewController(url),
-            ),
-          ),
-        ),
-
-        // Loading overlay with text and spinner
-        if (_isWebViewLoading)
-          Positioned.fill(
-            child: Container(
-              color: Colors.white.withOpacity(0.75),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Loading National ID Authentication Page...',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  } catch (e) {
-    print('Error building WebView: $e');
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    try {
+      return Stack(
         children: [
-          const Icon(Icons.error, color: Colors.red, size: 48),
-          const SizedBox(height: 16),
-          Text(
-            'Error loading WebView: $e',
-            style: const TextStyle(color: Colors.red),
-            textAlign: TextAlign.center,
+          Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: WebViewWidget(
+                controller: _createWebViewController(url),
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              if (!_disposed) {
-                setState(() {});
-              }
-            },
-            child: const Text('Retry'),
-          ),
+
+          // Loading overlay with text and spinner
+          if (_isWebViewLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white.withOpacity(0.75),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Loading National ID Authentication Page...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
-      ),
-    );
+      );
+    } catch (e) {
+      print('Error building WebView: $e');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading WebView: $e',
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                if (!_disposed) {
+                  setState(() {});
+                }
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
   }
-}
 
-  // Widget _buildWebView(String url) {
-  //   if (_disposed) return const SizedBox.shrink();
-
-  //   print('NationalIdAuthWidget: Building WebView with URL: $url');
-
-  //   try {
   //     return Container(
   //       height: MediaQuery.of(context).size.height * 0.6,
   //       decoration: BoxDecoration(
@@ -512,74 +548,75 @@ Widget _buildWebView(String url) {
   //     );
   //   }
   // }
-WebViewController _createWebViewController(String url) {
-  print('NationalIdAuthWidget: Creating WebView controller for URL: $url');
+  WebViewController _createWebViewController(String url) {
+    print('NationalIdAuthWidget: Creating WebView controller for URL: $url');
 
-  if (_disposed) {
-    print('NationalIdAuthWidget: Widget disposed, returning dummy controller');
-    return WebViewController()
+    if (_disposed) {
+      print(
+          'NationalIdAuthWidget: Widget disposed, returning dummy controller');
+      return WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..loadRequest(Uri.parse('about:blank'));
+    }
+
+    if (_webViewController != null) {
+      print('NationalIdAuthWidget: Reusing existing WebView controller');
+      return _webViewController!;
+    }
+
+    print('NationalIdAuthWidget: Creating new WebView controller');
+
+    _expectedFinalUrl = url;
+
+    _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse('about:blank'));
-  }
+      ..setBackgroundColor(Colors.white)
+      ..enableZoom(false)
+      ..setUserAgent(
+          'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36')
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) {
+            if (_disposed) return NavigationDecision.prevent;
 
-  if (_webViewController != null) {
-    print('NationalIdAuthWidget: Reusing existing WebView controller');
-    return _webViewController!;
-  }
+            print('Navigating to: ${request.url}');
 
-  print('NationalIdAuthWidget: Creating new WebView controller');
+            final isCallback = request.url.contains('callback') ||
+                request.url.contains('code=') ||
+                request.url.contains('state=');
 
-  _expectedFinalUrl = url; // Set expected final URL to compare later
+            if (isCallback) {
+              print('Callback detected: ${request.url}');
+              _handleCallback(request.url);
+              return NavigationDecision.prevent;
+            }
 
-  _webViewController = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setBackgroundColor(Colors.white)
-    ..enableZoom(false)
-    ..setUserAgent(
-        'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36')
-    ..setNavigationDelegate(
-      NavigationDelegate(
-        onNavigationRequest: (NavigationRequest request) {
-          if (_disposed) return NavigationDecision.prevent;
-
-          print('Navigating to: ${request.url}');
-
-          final isCallback = request.url.contains('callback') ||
-              request.url.contains('code=') ||
-              request.url.contains('state=');
-
-          if (isCallback) {
-            print('Callback detected: ${request.url}');
-            _handleCallback(request.url);
-            return NavigationDecision.prevent;
-          }
-
-          return NavigationDecision.navigate;
-        },
-        onPageStarted: (String url) {
-          if (_disposed) return;
-          print('Page started loading: $url');
-          setState(() {
-            _isWebViewLoading = true;
-          });
-        },
-        onPageFinished: (String url) {
-          if (_disposed) return;
-          print('Page finished loading: $url');
-
-          // Only hide loader if final URL is reached
-          if (_expectedFinalUrl != null &&
-              Uri.parse(url).host == Uri.parse(_expectedFinalUrl!).host) {
-            print('Final auth page loaded — hiding loader');
+            return NavigationDecision.navigate;
+          },
+          onPageStarted: (String url) {
+            if (_disposed) return;
+            print('Page started loading: $url');
             setState(() {
-              _isWebViewLoading = false;
+              _isWebViewLoading = true;
             });
-          } else {
-            print('Intermediate redirect — keep showing loader');
-          }
+          },
+          onPageFinished: (String url) {
+            if (_disposed) return;
+            print('Page finished loading: $url');
 
-          // Inject useful CSS/JS
-          _webViewController?.runJavaScript('''
+            // Only hide loader if final URL is reached
+            if (_expectedFinalUrl != null &&
+                Uri.parse(url).host == Uri.parse(_expectedFinalUrl!).host) {
+              print('Final auth page loaded — hiding loader');
+              setState(() {
+                _isWebViewLoading = false;
+              });
+            } else {
+              print('Intermediate redirect — keep showing loader');
+            }
+
+            // Inject useful CSS/JS
+            _webViewController?.runJavaScript('''
             var meta = document.createElement('meta');
             meta.name = 'viewport';
             meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
@@ -621,127 +658,18 @@ WebViewController _createWebViewController(String url) {
               });
             });
           ''');
-        },
-        onWebResourceError: (WebResourceError error) {
-          if (_disposed) return;
-          print('Web resource error: ${error.description}');
-        },
-      ),
-    )
-    ..loadRequest(Uri.parse(url));
+          },
+          onWebResourceError: (WebResourceError error) {
+            if (_disposed) return;
+            print('Web resource error: ${error.description}');
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(url));
 
-  print('NationalIdAuthWidget: WebView controller created successfully');
-  return _webViewController!;
-}
-
-  // WebViewController _createWebViewController(String url) {
-  //   print('NationalIdAuthWidget: Creating WebView controller for URL: $url');
-
-  //   if (_disposed) {
-  //     print(
-  //         'NationalIdAuthWidget: Widget disposed, returning dummy controller');
-  //     // Return a dummy controller if disposed
-  //     return WebViewController()
-  //       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-  //       ..loadRequest(Uri.parse('about:blank'));
-  //   }
-
-  //   if (_webViewController != null) {
-  //     print('NationalIdAuthWidget: Reusing existing WebView controller');
-  //     return _webViewController!;
-  //   }
-
-  //   print('NationalIdAuthWidget: Creating new WebView controller');
-  //   _webViewController = WebViewController()
-  //     ..setJavaScriptMode(JavaScriptMode.unrestricted)
-  //     ..setBackgroundColor(Colors.white)
-  //     ..enableZoom(false)
-  //     ..setUserAgent(
-  //         'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36')
-  //     ..setNavigationDelegate(
-  //       NavigationDelegate(
-  //         onNavigationRequest: (NavigationRequest request) {
-  //           if (_disposed) return NavigationDecision.prevent;
-
-  //           print('Navigating to: ${request.url}');
-
-  //           // Check if this is a callback URL
-  //           final isCallback = request.url.contains('callback') ||
-  //               request.url.contains('code=') ||
-  //               request.url.contains('state=');
-
-  //           if (isCallback) {
-  //             print('Callback detected: ${request.url}');
-  //             _handleCallback(request.url);
-  //             return NavigationDecision.prevent;
-  //           }
-
-  //           return NavigationDecision.navigate;
-  //         },
-  //         onPageStarted: (String url) {
-  //           if (_disposed) return;
-  //           print('Page started loading: $url');
-  //         },
-  //         onPageFinished: (String url) {
-  //           if (_disposed) return;
-  //           print('Page finished loading: $url');
-
-  //           // Inject CSS to prevent zoom and improve mobile experience
-  //           _webViewController?.runJavaScript('''
-  //             var meta = document.createElement('meta');
-  //             meta.name = 'viewport';
-  //             meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-  //             document.getElementsByTagName('head')[0].appendChild(meta);
-
-  //             // Prevent double-tap zoom
-  //             document.addEventListener('touchstart', function(event) {
-  //               if (event.touches.length > 1) {
-  //                 event.preventDefault();
-  //               }
-  //             }, { passive: false });
-
-  //             // Prevent pinch zoom
-  //             document.addEventListener('gesturestart', function(event) {
-  //               event.preventDefault();
-  //             }, { passive: false });
-
-  //             // Improve input field experience
-  //             var inputs = document.querySelectorAll('input, textarea, select');
-  //             inputs.forEach(function(input) {
-  //               input.style.fontSize = '16px';
-  //               input.addEventListener('focus', function() {
-  //                 setTimeout(function() {
-  //                   input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  //                 }, 300);
-  //               });
-  //             });
-
-  //             // Optimize page performance
-  //             document.addEventListener('DOMContentLoaded', function() {
-  //               // Remove unnecessary animations
-  //               var elements = document.querySelectorAll('*');
-  //               elements.forEach(function(el) {
-  //                 if (el.style.animation) {
-  //                   el.style.animation = 'none';
-  //                 }
-  //                 if (el.style.transition) {
-  //                   el.style.transition = 'none';
-  //                 }
-  //               });
-  //             });
-  //           ''');
-  //         },
-  //         onWebResourceError: (WebResourceError error) {
-  //           if (_disposed) return;
-  //           print('Web resource error: ${error.description}');
-  //         },
-  //       ),
-  //     )
-  //     ..loadRequest(Uri.parse(url));
-
-  //   print('NationalIdAuthWidget: WebView controller created successfully');
-  //   return _webViewController!;
-  // }
+    print('NationalIdAuthWidget: WebView controller created successfully');
+    return _webViewController!;
+  }
 
   void _handleCallback(String callbackUrl) {
     if (_disposed) return;
@@ -753,11 +681,6 @@ WebViewController _createWebViewController(String url) {
       final uri = Uri.parse(callbackUrl);
       final queryParameters = uri.queryParameters;
 
-      print('NationalIdAuthWidget: Callback parameters: $queryParameters');
-      print(
-          'NationalIdAuthWidget: All query parameters keys: ${queryParameters.keys.toList()}');
-
-      // Check if we have code and state parameters
       final hasCode = queryParameters.containsKey('code');
       final hasState = queryParameters.containsKey('state');
 
@@ -765,28 +688,13 @@ WebViewController _createWebViewController(String url) {
       print('NationalIdAuthWidget: Has state: $hasState');
 
       if (hasCode && hasState) {
-        // We have both code and state - proceed with verification
         final code = queryParameters['code']!;
         final state = queryParameters['state']!;
 
-        print(
-            'NationalIdAuthWidget: Code and state found, starting verification');
-        print('NationalIdAuthWidget: Code: $code');
-        print('NationalIdAuthWidget: State: $state');
-
         // Call the verification API
         _verifyAccount(code, state);
-      } else {
-        // No code or state found - show callback dialog for debugging
-        print(
-            'NationalIdAuthWidget: No code or state found, showing callback dialog');
-        print(
-            'NationalIdAuthWidget: Available parameters: ${queryParameters.entries.map((e) => '${e.key}=${e.value}').join(', ')}');
-        // _showCallbackDialog(callbackUrl, queryParameters);
-      }
+      } else {}
     } catch (e) {
-      print('NationalIdAuthWidget: Error parsing callback URL: $e');
-      print('NationalIdAuthWidget: Callback URL was: $callbackUrl');
       _showErrorDialog('Error parsing callback URL: $e');
     }
   }
@@ -802,9 +710,6 @@ WebViewController _createWebViewController(String url) {
           .read(nationalIdProvider.notifier)
           .verifyAccount(code, state);
 
-      print('NationalIdAuthWidget: Verification successful');
-      print('Response data: $responseData');
-
       if (!_disposed) {
         // Save authentication data to stepper state immediately
         if (responseData != null) {
@@ -817,7 +722,7 @@ WebViewController _createWebViewController(String url) {
           // Verify the save immediately
           final stepperState = ref.read(stepperProvider);
           print(
-              'NationalIdAuthWidget: Verification - Auth ID: ${stepperState.authId}');
+              'NationalIdAuthWidget: Verification - Auth ID:  [32m${stepperState.authId} [0m');
           print(
               'NationalIdAuthWidget: Verification - Full Name: ${stepperState.fullName}');
         }
@@ -825,6 +730,11 @@ WebViewController _createWebViewController(String url) {
         // Mark as completed immediately
         print('NationalIdAuthWidget: Marking auth as completed immediately');
         ref.read(nationalIdProvider.notifier).markAuthCompleted();
+
+        // Hide loader and show success state
+        setState(() {
+          _isWebViewLoading = false;
+        });
 
         // Show success dialog after a short delay to ensure state is updated
         Future.delayed(const Duration(milliseconds: 200), () {
@@ -856,9 +766,6 @@ WebViewController _createWebViewController(String url) {
     // Add a small delay to ensure the dialog is properly displayed
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_disposed) return;
-
-      print('NationalIdAuthWidget: About to show dialog after delay');
-
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -919,13 +826,11 @@ WebViewController _createWebViewController(String url) {
             actions: [
               ElevatedButton(
                 onPressed: () {
-                  print(
-                      'NationalIdAuthWidget: User clicked Continue in verification dialog');
+            
                   Navigator.of(context).pop();
                   _showingDialog = false;
                   if (!_disposed) {
-                    print(
-                        'NationalIdAuthWidget: Clearing WebView and showing completion state');
+
 
                     // Clear the WebView
                     _webViewController?.clearCache();
@@ -936,7 +841,9 @@ WebViewController _createWebViewController(String url) {
                     ref.read(nationalIdProvider.notifier).clearAuthUrl();
 
                     // Force rebuild to show completion state
-                    setState(() {});
+                    setState(() {
+                      _isWebViewLoading = false;
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(

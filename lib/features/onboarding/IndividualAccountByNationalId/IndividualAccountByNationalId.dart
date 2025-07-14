@@ -12,7 +12,6 @@ import 'widgets/national_id_auth_widget.dart';
 import 'widgets/AdditionalInformation.dart';
 import 'widgets/account_type_step.dart';
 import 'services/registration_service.dart';
-import 'widgets/registration_summary_dialog.dart';
 import 'model/registration_data.dart';
 
 class IndividualAccountByNationalId extends ConsumerStatefulWidget {
@@ -38,7 +37,6 @@ class _IndividualAccountByNationalIdState
       if (!_disposed) {
         ref.read(stepperProvider.notifier).reset();
         ref.read(nationalIdProvider.notifier).reset();
-        print('All state reset successfully');
       }
     });
   }
@@ -269,22 +267,16 @@ class _IndividualAccountByNationalIdState
                     print('Current step: ${stepperState.activeStep}');
 
                     if (stepperState.activeStep == 0) {
-                      // For National ID Auth step, check if auth is completed
-                      print(
-                          'Checking National ID auth completion: ${nationalIdState.isAuthCompleted}');
-                      print(
-                          'National ID auth result: ${nationalIdState.authResult}');
+               
 
                       if (nationalIdState.isAuthCompleted) {
-                        // Save authentication data to stepper state
                         if (nationalIdState.authResult != null) {
-                          print('Saving authentication data to stepper state');
                           ref
                               .read(stepperProvider.notifier)
                               .saveAuthenticationData(
                                   nationalIdState.authResult!);
 
-                          // Verify the data was saved
+                        
                           final updatedState = ref.read(stepperProvider);
                         } else {}
                         ref.read(stepperProvider.notifier).nextStep();
@@ -299,9 +291,6 @@ class _IndividualAccountByNationalIdState
                       }
                     } else if (stepperState.activeStep == 1) {
                       final stepperState = ref.read(stepperProvider);
-                      print(
-                          'Validating step 1 - Product Type:  [32m${stepperState.selectedProductType} [0m, Branch: ${stepperState.selectedBranch}');
-                      // Custom validation for required fields
                       if (stepperState.initialDeposit == null ||
                           stepperState.motherName == null ||
                           stepperState.motherName!.isEmpty ||
@@ -346,7 +335,6 @@ class _IndividualAccountByNationalIdState
                           documentName: 'NATIONALID',
                           signature: stepperState.signature,
                           sex: stepperState.sex,
-                          // Add more fields as needed from stepperState
                         );
 
                         await Navigator.push(
@@ -355,8 +343,7 @@ class _IndividualAccountByNationalIdState
                             builder: (context) => RegistrationSummaryScreen(
                               registrationData: registrationData,
                               onConfirm: () async {
-                                // Navigator.of(context)
-                                //     .pop(); // Pop the summary page
+                        
                                 await _submitRegistration();
                               },
                             ),
@@ -457,12 +444,10 @@ class _IndividualAccountByNationalIdState
       print(
           '_buildContentArea - Step: ${stepperState.activeStep}, Auth completed: ${nationalIdState.isAuthCompleted}');
 
-      // Show National ID Auth widget if we're on step 0
+
       if (stepperState.activeStep == 0) {
-        print('Showing National ID Auth widget');
         return const NationalIdAuthWidget();
       } else {
-        print('Showing step content for step: ${stepperState.activeStep}');
         return Container(
           padding: const EdgeInsets.all(16),
           child: SingleChildScrollView(
@@ -476,7 +461,7 @@ class _IndividualAccountByNationalIdState
         );
       }
     } catch (e) {
-      print('Error in _buildContentArea: $e');
+  
       return const Center(
         child: Text(
           'Something went wrong. Please try again.',
