@@ -292,8 +292,7 @@ class _Registration extends State<RegistrationScreen> {
           ],
         ),
       ),
-     
-     
+
       Step(
         title: Text(
           isSmallScreen ? "" : "ID TYPE",
@@ -337,8 +336,7 @@ class _Registration extends State<RegistrationScreen> {
           ),
         ),
       ),
-     
-     
+
       Step(
         title: Text(isSmallScreen ? "" : "Signature"),
         isActive: _activeStepIndex >= 2,
@@ -365,8 +363,7 @@ class _Registration extends State<RegistrationScreen> {
           ),
         ),
       ),
-      
-      
+
       Step(
         title: Text(isSmallScreen ? "" : "Financial Information"),
         isActive: _activeStepIndex >= 3,
@@ -452,8 +449,7 @@ class _Registration extends State<RegistrationScreen> {
           ),
         ),
       ),
-      
-      
+
       Step(
         title: Text(isSmallScreen ? "" : "Payment"),
         isActive: _activeStepIndex >= 5,
@@ -561,9 +557,7 @@ class _Registration extends State<RegistrationScreen> {
           ),
         ),
       ),
-   
-   
-   
+
       Step(
         title: Text(isSmallScreen ? "" : "Address Information "),
         isActive: _activeStepIndex >= 6,
@@ -830,8 +824,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
           ),
         ),
       )
-    
-    
     ];
   }
 
@@ -1833,10 +1825,9 @@ By accepting these terms, you agree to comply with all banking regulations and p
     });
     final formIsValid = validateData();
 
-
     if (formIsValid) {
       final isLastStep = _activeStepIndex == stepList().length - 1;
-    
+
       if (_activeStepIndex == 0) {
         await handleFirstStep();
       } else if (_activeStepIndex == 1) {
@@ -2035,9 +2026,8 @@ By accepting these terms, you agree to comply with all banking regulations and p
           response = await networkHandler
               .post1('/api/v1/accounts/individual', registrationData)
               .timeout(const Duration(seconds: 20));
-      
+
           var responseData = json.decode(response.body);
-     
 
           if (response.statusCode == 200 || response.statusCode == 201) {
             setState(() {
@@ -2064,7 +2054,6 @@ By accepting these terms, you agree to comply with all banking regulations and p
                 Navigator.of(context).pop();
               },
             );
-        
           }
         } on TimeoutException catch (_) {
           registerStatus = false;
@@ -2541,12 +2530,10 @@ By accepting these terms, you agree to comply with all banking regulations and p
   Future<void> updateUser() async {
     if (isOnline) {
       try {
-     
         print(registrationData);
         var response = await networkHandler
             .put1('/api/v1/accounts/individual/$userId', registrationData)
             .timeout(const Duration(seconds: 15));
-
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           setState(() {
@@ -2594,13 +2581,11 @@ By accepting these terms, you agree to comply with all banking regulations and p
         await networkHandler.fetchAccountTypesFromDatabase();
 
     setState(() {
-      accountTypes =
-          fetchedAccountTypes; 
+      accountTypes = fetchedAccountTypes;
     });
   }
 
   void _filterAccountTypes(String bankingType) {
-
     setState(() {
       // Parse user's date of birth
       DateTime? dateOfBirth;
@@ -2683,6 +2668,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
   }
 
   Map<String, dynamic>? getAccountTypeDetails(String selectedAccountType) {
+    print("account type filteration ");
     if (selectedAccountType != null && filteredAccountTypes.isNotEmpty) {
       try {
         var selectedAccountTypeDetails = filteredAccountTypes.firstWhere(

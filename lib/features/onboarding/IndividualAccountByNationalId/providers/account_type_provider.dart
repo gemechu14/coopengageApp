@@ -61,40 +61,62 @@ class AccountTypeStepNotifier extends StateNotifier<AccountTypeStepState> {
     // Only initialize once
     if (state.isInitialized) return;
 
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      state = state.copyWith(isLoading: true, errorMessage: null);
+    } catch (e) {
+      // If notifier is disposed, ignore
+      if (e is StateError) return;
+      rethrow;
+    }
 
     try {
       final accountTypes = await _accountTypeService.fetchAccountTypes();
-
       if (_isDisposed) return;
 
       if (accountTypes.isEmpty) {
-        state = state.copyWith(
-          availableAccountTypes: [],
-          isLoading: false,
-          errorMessage: 'No account types available',
-          isInitialized: true,
-        );
+        try {
+          if (!_isDisposed) {
+            state = state.copyWith(
+              availableAccountTypes: [],
+              isLoading: false,
+              errorMessage: 'No account types available',
+              isInitialized: true,
+            );
+          }
+        } catch (e) {
+          if (e is StateError) return;
+          rethrow;
+        }
         return;
       }
 
       // Show all account types instead of filtering
-      if (!_isDisposed) {
-        state = state.copyWith(
-          availableAccountTypes: accountTypes, // Use all account types
-          isLoading: false,
-          errorMessage: null,
-          isInitialized: true,
-        );
+      try {
+        if (!_isDisposed) {
+          state = state.copyWith(
+            availableAccountTypes: accountTypes, // Use all account types
+            isLoading: false,
+            errorMessage: null,
+            isInitialized: true,
+          );
+        }
+      } catch (e) {
+        if (e is StateError) return;
+        rethrow;
       }
     } catch (e) {
-      if (!_isDisposed) {
-        state = state.copyWith(
-          availableAccountTypes: [],
-          errorMessage: 'Failed to load account types: ${e.toString()}',
-          isLoading: false,
-          isInitialized: true,
-        );
+      try {
+        if (!_isDisposed) {
+          state = state.copyWith(
+            availableAccountTypes: [],
+            errorMessage: 'Failed to load account types:  [31m${e.toString()} [0m',
+            isLoading: false,
+            isInitialized: true,
+          );
+        }
+      } catch (err) {
+        if (err is StateError) return;
+        rethrow;
       }
     }
   }

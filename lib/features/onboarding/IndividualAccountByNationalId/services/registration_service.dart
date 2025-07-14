@@ -16,6 +16,7 @@ class RegistrationService {
     required String motherName,
     required String state,
     required String documentName,
+    
     required String customerInfoInitialDeposit,
     Uint8List? signature,
   }) async {
@@ -26,7 +27,6 @@ class RegistrationService {
         throw Exception("Token not found");
       }
 
-      print("tokecn");
       print(token);
       // Create multipart request
       final request = http.MultipartRequest(
@@ -34,14 +34,13 @@ class RegistrationService {
         Uri.parse('$baseUrl/api/v1/accounts/individual/$authId'),
       );
 
-      // Add headers
-      request.headers['Authorization'] = '$token'; // Replace with actual token
+      request.headers['Authorization'] = 'Bearer $token';
 
       // Add form fields
       request.fields['customerInfo.state'] = state;
       request.fields['customerInfo.initialdeposit'] =
           customerInfoInitialDeposit;
-      request.fields['customerInfo.documentName'] = documentName;
+      // request.fields['customerInfo.documentName'] = "NATIONAILID";
       request.fields['customerInfo.motherName'] = motherName;
       request.fields['accountType'] = accountType;
       request.fields['initialdeposit'] = initialDeposit;

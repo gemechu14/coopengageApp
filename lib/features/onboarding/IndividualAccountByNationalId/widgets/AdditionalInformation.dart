@@ -23,6 +23,8 @@ class PhoneFanWidget extends ConsumerStatefulWidget {
 
 class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
   final TextEditingController motherNameController = TextEditingController();
+  final TextEditingController initialdepositController =
+      TextEditingController();
   String? selectedProductType;
   String? selectedBranch;
   late SignatureController _signatureController1;
@@ -60,7 +62,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
       penStrokeWidth: 5,
       exportBackgroundColor: Colors.white,
     );
-    
+
     // Initialize with existing values from state
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final stepperState = ref.read(stepperProvider);
@@ -73,6 +75,12 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
       if (stepperState.motherName != null &&
           stepperState.motherName!.isNotEmpty) {
         motherNameController.text = stepperState.motherName!;
+      }
+
+      if (stepperState.initialDeposit != null &&
+          initialdepositController.text !=
+              stepperState.initialDeposit.toString()) {
+        initialdepositController.text = stepperState.initialDeposit.toString();
       }
     });
   }
@@ -115,6 +123,21 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
             ref.read(stepperProvider.notifier).updateBranch(value);
           },
         ),
+        textLabel("Initial Amount"),
+        ReusableTextFormField(
+          hintText: "Initial Amount",
+          controller: initialdepositController,
+          keyboardType: TextInputType.number,
+          errorMessage: "Initial amount cannot be empty",
+          leadingIcon: Icons.balance,
+          isRequired: true,
+          onChanged: (value) {
+            // Save to stepper state
+            ref
+                .read(stepperProvider.notifier)
+                .updateInitialDeposit(double.tryParse(value));
+          },
+        ),
         textLabel("Product Type"),
         ReusableDropdown(
           selectedValue: selectedProductType,
@@ -127,7 +150,9 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
 
             if (selectedProductType != null) {
               // Save to stepper state
-              ref.read(stepperProvider.notifier).updateProductType(selectedProductType!);
+              ref
+                  .read(stepperProvider.notifier)
+                  .updateProductType(selectedProductType!);
               setState(() {
                 // _filterAccountTypes(selectedProductType!);
               });
@@ -417,8 +442,8 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
 
   bool _areAllSignaturesCompleted() {
     return _signatureController1.isNotEmpty &&
-           _signatureController2.isNotEmpty &&
-           _signatureController3.isNotEmpty;
+        _signatureController2.isNotEmpty &&
+        _signatureController3.isNotEmpty;
   }
 
   Future<void> _saveCombinedSignature() async {
