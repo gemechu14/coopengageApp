@@ -8,6 +8,8 @@ import 'widgets/national_id_auth_widget.dart';
 import 'widgets/phone_fan_widget.dart';
 import 'widgets/account_type_step.dart';
 import 'services/registration_service.dart';
+import 'widgets/registration_summary_dialog.dart';
+import 'model/registration_data.dart';
 
 class IndividualAccountByNationalId extends ConsumerStatefulWidget {
   const IndividualAccountByNationalId({Key? key}) : super(key: key);
@@ -311,11 +313,33 @@ class _IndividualAccountByNationalIdState
                       // For Account Type step, validate form
                       print('Validating step 2 - Account Type form');
                       final currentFormKey = formKeys[stepperState.activeStep];
-                      print('Form key exists: ${currentFormKey.currentState != null}');
                       if (currentFormKey.currentState?.validate() ?? false) {
-                        // Submit registration
-                        print('Step 2 validation successful, submitting registration');
-                        await _submitRegistration();
+                        // Build RegistrationData from stepperState
+                        final registrationData = RegistrationData(
+                          fullName: stepperState.fullName,
+                          email: stepperState.email,
+                          phone: stepperState.authPhone,
+                          accountType: stepperState.selectedAccountType,
+                          branch: stepperState.selectedBranch,
+                          motherName: stepperState.motherName,
+                          initialDeposit: stepperState.initialDeposit?.toString(),
+                          // Add more fields as needed from stepperState
+                        );
+                        // Show summary dialog
+                        await showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => RegistrationSummaryDialog(
+                            registrationData: registrationData,
+                            onConfirm: () async {
+                              Navigator.of(context).pop();
+                              await _submitRegistration();
+                            },
+                            onCancel: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        );
                       } else {
                         print('Step 2 validation failed');
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -688,4 +712,26 @@ class _IndividualAccountByNationalIdState
       }
     }
   }
+}
+
+Widget _infoRow(String label, dynamic value) {
+  if (value == null || (value is String && value.isEmpty)) return SizedBox.shrink();
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6.0),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label: ',
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        Expanded(
+          child: Text(
+            value.toString(),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+      ],
+    ),
+  );
 }
