@@ -605,6 +605,7 @@ class _IndividualAccountByNationalIdState
         documentName: 'NATIONALID',
         customerInfoInitialDeposit: '100',
         signature: stepperState.signature,
+         title: stepperState.selectedTitle,
       );
 
       // Close loading dialog

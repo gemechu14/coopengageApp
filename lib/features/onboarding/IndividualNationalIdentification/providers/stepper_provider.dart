@@ -116,6 +116,9 @@ class StepperState {
       fanNumber: fanNumber ?? this.fanNumber,
       otpCode: otpCode ?? this.otpCode,
       selectedProductType: selectedProductType ?? this.selectedProductType,
+      selectedMaritalStatus:
+          selectedMaritalStatus ?? this.selectedMaritalStatus,
+      selectedTitle: selectedTitle ?? this.selectedTitle,
       selectedBranch: selectedBranch ?? this.selectedBranch,
       motherName: motherName ?? this.motherName,
       signature: signature ?? this.signature,
@@ -207,12 +210,12 @@ class StepperNotifier extends StateNotifier<StepperState> {
     state = state.copyWith(selectedProductType: productType);
   }
 
-  void updateMaritalStatus(String? productType) {
-    state = state.copyWith(selectedMaritalStatus: productType);
+  void updateMaritalStatus(String? maritalStatus) {
+    state = state.copyWith(selectedMaritalStatus: maritalStatus);
   }
 
-  void updateTitle(String? productType) {
-    state = state.copyWith(selectedTitle: productType);
+  void updateTitle(String? title) {
+    state = state.copyWith(selectedTitle: title);
   }
 
   // Update branch
@@ -258,6 +261,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
   void updateBankShare(int? value) {
     state = state.copyWith(bankShare: value);
   }
+
   void updateCustomerShare(int? value) {
     state = state.copyWith(customerShare: value);
   }
@@ -316,6 +320,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
       // Always preserve existing non-nullable values if null
       customerAge: calculatedAge != null ? calculatedAge : state.customerAge,
       customerGender: sex.isNotEmpty ? sex : state.customerGender,
+
       // initialDeposit and bankingType are omitted so they are preserved
     );
 

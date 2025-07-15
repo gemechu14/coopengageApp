@@ -25,10 +25,6 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
   final TextEditingController motherNameController = TextEditingController();
   final TextEditingController initialdepositController =
       TextEditingController();
-  String? selectedProductType;
-  String? selectedTitle;
-  String? selectedMaritalStatus;
-  String? selectedBranch;
   late SignatureController _signatureController1;
   late SignatureController _signatureController2;
   late SignatureController _signatureController3;
@@ -68,23 +64,10 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
     // Initialize with existing values from state
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final stepperState = ref.read(stepperProvider);
-      if (stepperState.selectedProductType != null) {
-        selectedProductType = stepperState.selectedProductType;
-      }
-      if (stepperState.selectedTitle != null) {
-        selectedTitle = stepperState.selectedTitle;
-      }
-      if (stepperState.selectedMaritalStatus != null) {
-        selectedMaritalStatus = stepperState.selectedMaritalStatus;
-      }
-      if (stepperState.selectedBranch != null) {
-        selectedBranch = stepperState.selectedBranch;
-      }
       if (stepperState.motherName != null &&
           stepperState.motherName!.isNotEmpty) {
         motherNameController.text = stepperState.motherName!;
       }
-
       if (stepperState.initialDeposit != null &&
           initialdepositController.text !=
               stepperState.initialDeposit.toString()) {
@@ -124,10 +107,8 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
         ),
         textLabel("Branch"),
         BranchSelector(
-          initialValue: selectedBranch,
+          initialValue: stepperState.selectedBranch,
           onChanged: (value) {
-            selectedBranch = value;
-            // Save to stepper state
             ref.read(stepperProvider.notifier).updateBranch(value);
           },
         ),
@@ -148,22 +129,12 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
         ),
         textLabel("Product Type"),
         ReusableDropdown(
-          selectedValue: selectedProductType,
+          selectedValue: stepperState.selectedProductType,
           items: ListContants.productType,
           hintText: 'Select Product Type',
           onChanged: (newStatus) {
-            setState(() {
-              selectedProductType = newStatus;
-            });
-
-            if (selectedProductType != null) {
-              // Save to stepper state
-              ref
-                  .read(stepperProvider.notifier)
-                  .updateProductType(selectedProductType!);
-              setState(() {
-                // _filterAccountTypes(selectedProductType!);
-              });
+            if (newStatus != null) {
+              ref.read(stepperProvider.notifier).updateProductType(newStatus);
             }
           },
           prefixIcon: Icons.business,
@@ -173,7 +144,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
 
         textLabel("Title"),
         ReusableDropdown(
-          selectedValue: selectedTitle,
+          selectedValue: stepperState.selectedTitle,
           items: ListContants.title,
           hintText: 'Select Title',
           onChanged: (newStatus) {
@@ -188,7 +159,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
 
         textLabel("Marital Status"),
         ReusableDropdown(
-          selectedValue: selectedMaritalStatus,
+          selectedValue: stepperState.selectedMaritalStatus,
           items: ListContants.maritalStatuses,
           hintText: 'Select Marital status',
           onChanged: (newStatus) {
