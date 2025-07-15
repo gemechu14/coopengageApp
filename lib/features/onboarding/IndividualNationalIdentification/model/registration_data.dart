@@ -32,6 +32,8 @@ class RegistrationData {
   final bool? termsAccepted;
   final double percentageCompleted;
   final String? status;
+  final int? bankShare;
+  final int? customerShare;
 
   RegistrationData({
     this.phone,
@@ -67,5 +69,87 @@ class RegistrationData {
     this.termsAccepted,
     this.percentageCompleted = 0.0,
     this.status,
+    this.bankShare,
+    this.customerShare,
   });
+
+  factory RegistrationData.fromMap(Map<String, dynamic> map) {
+    return RegistrationData(
+      phone: map['phone'],
+      email: map['email'],
+      productType: map['productType'],
+      fullName: map['fullName'],
+      surname: map['surname'],
+      motherName: map['motherName'],
+      title: map['title'],
+      sex: map['sex'],
+      dateOfBirth: map['dateOfBirth'],
+      maritalStatus: map['maritalStatus'],
+      branch: map['branch'],
+      documentName: map['documentName'],
+      residenceCard: map['residenceCard'],
+      residenceCardBack: map['residenceCardBack'],
+      occupation: map['occupation'],
+      monthlyIncome: map['monthlyIncome'],
+      initialDeposit: map['initialDeposit'],
+      sector: map['sector'],
+      country: map['country'],
+      state: map['state'],
+      zoneSubCity: map['zoneSubCity'],
+      streetAddress: map['streetAddress'],
+      legalId: map['legalId'],
+      issueAuthority: map['issueAuthority'],
+      issueDate: map['issueDate'],
+      expirayDate: map['expirayDate'],
+      accountType: map['accountType'],
+      currency: map['currency'],
+      signature: map['signature'],
+      photo: map['photo'],
+      termsAccepted: map['termsAccepted'],
+      percentageCompleted: map['percentageCompleted'] != null ? double.tryParse(map['percentageCompleted'].toString()) ?? 0.0 : 0.0,
+      status: map['status'],
+      bankShare: map['bankShare'] != null ? int.tryParse(map['bankShare'].toString()) : null,
+      customerShare: map['customerShare'] != null ? int.tryParse(map['customerShare'].toString()) : null,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'phone': phone,
+      'email': email,
+      'productType': productType,
+      'fullName': fullName,
+      'surname': surname,
+      'motherName': motherName,
+      'title': title,
+      'sex': sex,
+      'dateOfBirth': dateOfBirth,
+      'maritalStatus': maritalStatus,
+      'branch': branch,
+      'documentName': documentName,
+      'residenceCard': residenceCard,
+      'residenceCardBack': residenceCardBack,
+      'occupation': occupation,
+      'monthlyIncome': monthlyIncome,
+      'initialDeposit': initialDeposit,
+      'sector': sector,
+      'country': country,
+      'state': state,
+      'zoneSubCity': zoneSubCity,
+      'streetAddress': streetAddress,
+      'legalId': legalId,
+      'issueAuthority': issueAuthority,
+      'issueDate': issueDate,
+      'expirayDate': expirayDate,
+      'accountType': accountType,
+      'currency': currency,
+      'signature': signature,
+      'photo': photo,
+      'termsAccepted': termsAccepted,
+      'percentageCompleted': percentageCompleted,
+      'status': status,
+      'bankShare': bankShare,
+      'customerShare': customerShare,
+    };
+  }
 } 

@@ -157,7 +157,19 @@ class RegistrationSummaryScreen extends StatelessWidget {
                       Icons.account_balance,
                       [
                         _buildSummaryItem('Account Type',
-                            registrationData.accountType ?? 'Not selected'),
+                          registrationData.accountType ?? 'Not selected'),
+                        _buildSummaryItem(
+                          'Bank Share',
+                          registrationData.bankShare != null
+                              ? '${registrationData.bankShare}%'
+                              : 'Not provided',
+                        ),
+                        _buildSummaryItem(
+                          'Customer Share',
+                          registrationData.customerShare != null
+                              ? '${registrationData.customerShare}%'
+                              : 'Not provided',
+                        ),
                         _buildSummaryItem('Currency',
                             registrationData.currency ?? 'Not provided'),
                       ],
@@ -184,7 +196,6 @@ class RegistrationSummaryScreen extends StatelessWidget {
                                 : 'No'),
                       ],
                     ),
-                 
                   ],
                 ),
               ),

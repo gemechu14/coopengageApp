@@ -38,6 +38,9 @@ class AccountTypeStep extends ConsumerStatefulWidget {
 class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   bool _disposed = false;
   List<AccountType> filteredAccountTypes = [];
+  final TextEditingController _bankShareController = TextEditingController();
+  final TextEditingController _customerShareController = TextEditingController();
+  String? _shareError;
 
   @override
   void initState() {
@@ -60,6 +63,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   @override
   void dispose() {
     _disposed = true;
+    _bankShareController.dispose();
+    _customerShareController.dispose();
     super.dispose();
   }
 
@@ -134,15 +139,43 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
 
     // Watch the account type step state
     final accountTypeStepState = ref.watch(accountTypeStepProvider);
+
+    // Show loading indicator while fetching account types
+    if (accountTypeStepState.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     // Helper to handle selection and notify parent
     void _onAccountTypeTap(AccountType account_type) {
       widget.onAccountTypeChanged(account_type.id.toString());
       widget.onAccountTypeSelected(account_type);
+      // Reset share fields when changing selection
+      _bankShareController.text = '';
+      _customerShareController.text = '';
+      setState(() {
+        _shareError = null;
+      });
     }
 
     final allAccountTypes = filteredAccountTypes.isNotEmpty
         ? filteredAccountTypes
         : accountTypeStepState.availableAccountTypes;
+
+    // Find the selected account type object
+    AccountType? selectedType;
+    try {
+      selectedType = allAccountTypes.firstWhere(
+        (type) => widget.selectedAccountType == type.id.toString(),
+      );
+    } catch (_) {
+      selectedType = null;
+    }
+    final showShares = selectedType != null &&
+        selectedType.category == 'MUDARABAH' &&
+        selectedType.bankingType == 'ALHUDA';
+
     return Form(
       key: widget.formKey,
       child: Column(
@@ -155,101 +188,164 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             child: allAccountTypes.isNotEmpty
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: allAccountTypes.map<Widget>((account_type) {
-                      final bool isSelected = widget.selectedAccountType ==
-                          account_type.id.toString();
-                      return InkWell(
-                        onTap: () => _onAccountTypeTap(account_type),
-                        borderRadius: BorderRadius.circular(18),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? const Color(0xFF1976D2)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
+                    children: [
+                      ...allAccountTypes.map<Widget>((account_type) {
+                        final bool isSelected = widget.selectedAccountType ==
+                            account_type.id.toString();
+                        return InkWell(
+                          onTap: () => _onAccountTypeTap(account_type),
+                          borderRadius: BorderRadius.circular(18),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
                               color: isSelected
                                   ? const Color(0xFF1976D2)
-                                  : Colors.grey.shade300,
-                              width: isSelected ? 2.2 : 1.2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF1976D2).withOpacity(0.18)
-                                    : Colors.grey.withOpacity(0.10),
-                                blurRadius: isSelected ? 16 : 8,
-                                offset: const Offset(0, 4),
+                                    ? const Color(0xFF1976D2)
+                                    : Colors.grey.shade300,
+                                width: isSelected ? 2.2 : 1.2,
                               ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 18),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle
-                                    : Icons.account_balance,
-                                color:
-                                    isSelected ? Colors.white : Colors.blueGrey,
-                                size: 28,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      account_type.name,
-                                      style: TextStyle(
-                                        fontSize: 19,
-                                        fontWeight: FontWeight.bold,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      account_type.bankingType,
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.white70
-                                            : Colors.blueGrey,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Min Age: ${account_type.minAge}  |  Max Age: ${account_type.maxAge}',
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.white70
-                                            : Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Min Deposit: ${account_type.minAmount}',
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.white70
-                                            : Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isSelected
+                                      ? const Color(0xFF1976D2).withOpacity(0.18)
+                                      : Colors.grey.withOpacity(0.10),
+                                  blurRadius: isSelected ? 16 : 8,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 18),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  isSelected
+                                      ? Icons.check_circle
+                                      : Icons.account_balance,
+                                  color:
+                                      isSelected ? Colors.white : Colors.blueGrey,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        account_type.name,
+                                        style: TextStyle(
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        account_type.bankingType,
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : Colors.blueGrey,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Min Age: ${account_type.minAge}  |  Max Age: ${account_type.maxAge}',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : Colors.grey[600],
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Min Deposit: ${account_type.minAmount}',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : Colors.grey[600],
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      if (showShares) ...[
+                        const SizedBox(height: 24),
+                        Text('Bank Share (%)', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextFormField(
+                          controller: _bankShareController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            hintText: 'Enter bank share',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Bank share is required';
+                            }
+                            final bank = int.tryParse(value);
+                            final customer = int.tryParse(_customerShareController.text);
+                            if (bank == null || bank < 0 || bank > 100) {
+                              return 'Enter a valid percent (0-100)';
+                            }
+                            if (customer == null) {
+                              return 'Customer share is required';
+                            }
+                            if (bank + customer != 100) {
+                              return 'Sum must be 100';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            final bank = int.tryParse(value);
+                            if (bank != null && bank >= 0 && bank <= 100) {
+                              final customer = 100 - bank;
+                              _customerShareController.text = customer.toString();
+                              setState(() {
+                                _shareError = null;
+                              });
+                              ref.read(stepperProvider.notifier).updateBankShare(bank);
+                              ref.read(stepperProvider.notifier).updateCustomerShare(customer);
+                            } else {
+                              setState(() {
+                                _shareError = 'Enter a valid percent (0-100)';
+                              });
+                              ref.read(stepperProvider.notifier).updateBankShare(null);
+                              ref.read(stepperProvider.notifier).updateCustomerShare(null);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Text('Customer Share (%)', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextFormField(
+                          controller: _customerShareController,
+                          keyboardType: TextInputType.number,
+                          readOnly: true,
+                          decoration: const InputDecoration(
+                            hintText: 'Auto-calculated',
                           ),
                         ),
-                      );
-                    }).toList(),
+                        if (_shareError != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(_shareError!, style: const TextStyle(color: Colors.red)),
+                          ),
+                      ],
+                    ],
                   )
                 : Center(
                     child: Padding(

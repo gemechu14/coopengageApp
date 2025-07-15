@@ -18,6 +18,8 @@ class StepperState {
   final String customerGender;
   final double? initialDeposit;
   final String bankingType;
+  final int? bankShare;
+  final int? customerShare;
 
   // National ID Authentication Data
   final int? authId;
@@ -53,6 +55,8 @@ class StepperState {
     this.customerGender = 'MALE',
     this.initialDeposit,
     this.bankingType = 'DIGITAL',
+    this.bankShare,
+    this.customerShare,
     this.authId,
     this.fullName,
     this.email,
@@ -87,6 +91,8 @@ class StepperState {
     String? customerGender,
     double? initialDeposit,
     String? bankingType,
+    int? bankShare,
+    int? customerShare,
     int? authId,
     String? fullName,
     String? email,
@@ -118,6 +124,8 @@ class StepperState {
       customerGender: customerGender ?? this.customerGender,
       initialDeposit: initialDeposit ?? this.initialDeposit,
       bankingType: bankingType ?? this.bankingType,
+      bankShare: bankShare ?? this.bankShare,
+      customerShare: customerShare ?? this.customerShare,
       authId: authId ?? this.authId,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
@@ -245,6 +253,13 @@ class StepperNotifier extends StateNotifier<StepperState> {
   // Update banking type
   void updateBankingType(String bankingType) {
     state = state.copyWith(bankingType: bankingType);
+  }
+
+  void updateBankShare(int? value) {
+    state = state.copyWith(bankShare: value);
+  }
+  void updateCustomerShare(int? value) {
+    state = state.copyWith(customerShare: value);
   }
 
   // Helper method to calculate age from date of birth

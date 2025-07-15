@@ -2,6 +2,7 @@ class AccountType {
   final int id;
   final String name;
   final String type;
+  final String category;
   final int minAge;
   final int maxAge;
   final double minAmount;
@@ -12,6 +13,7 @@ class AccountType {
     required this.id,
     required this.name,
     required this.type,
+    required this.category,
     required this.minAge,
     required this.maxAge,
     required this.minAmount,
@@ -24,6 +26,7 @@ class AccountType {
       id: int.tryParse(map['id']?.toString() ?? '0') ?? 0,
       name: map['name']?.toString() ?? 'Unknown Account Type',
       type: map['type']?.toString() ?? 'Unknown',
+      category: map['category']?.toString() ?? '',
       minAge: int.tryParse(map['minAge']?.toString() ?? '0') ?? 0,
       maxAge: int.tryParse(map['maxAge']?.toString() ?? '300') ?? 300,
       minAmount: double.tryParse(map['minAmount']?.toString() ?? '0') ?? 0,
@@ -37,6 +40,7 @@ class AccountType {
       'id': id,
       'name': name,
       'type': type,
+      'category': category,
       'minAge': minAge,
       'maxAge': maxAge,
       'minAmount': minAmount,

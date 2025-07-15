@@ -105,14 +105,14 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.verified, color: Colors.green, size: 80),
+            const Icon(Icons.verified, color: cyanblueColor, size: 80),
             const SizedBox(height: 24),
             Text(
               'National ID Verified!',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.green[700],
+                color: cyanblueColor,
               ),
             ),
             const SizedBox(height: 12),

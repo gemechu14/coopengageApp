@@ -361,23 +361,26 @@ class _IndividualAccountByNationalIdState
                       if (currentFormKey.currentState?.validate() ?? false) {
                         // Build RegistrationData from stepperState
                         final registrationData = RegistrationData(
-                          fullName: stepperState.fullName,
-                          email: stepperState.email,
-                          phone: stepperState.authPhone,
-                          accountType: stepperState.selectedAccountType,
-                          branch: stepperState.selectedBranch,
-                          motherName: stepperState.motherName,
-                          initialDeposit:
-                              stepperState.initialDeposit?.toString(),
-                          dateOfBirth: stepperState.dateOfBirth,
-                          productType: stepperState.selectedProductType,
-                          documentName: 'NATIONALID',
-                          signature: stepperState.signature,
-                          sex: stepperState.sex,
-                          country: stepperState.country,
-                          state: stepperState.state,
-                          legalId: stepperState.legalId,
-                        );
+                            fullName: stepperState.fullName,
+                            email: stepperState.email,
+                            phone: stepperState.authPhone,
+                            accountType: stepperState.selectedAccountType,
+                            branch: stepperState.selectedBranch,
+                            motherName: stepperState.motherName,
+                            initialDeposit:
+                                stepperState.initialDeposit?.toString(),
+                            dateOfBirth: stepperState.dateOfBirth,
+                            productType: stepperState.selectedProductType,
+                            documentName: 'NATIONALID',
+                            signature: stepperState.signature,
+                            sex: stepperState.sex,
+                            country: stepperState.country,
+                            state: stepperState.state,
+                            legalId: stepperState.legalId,
+                            bankShare: stepperState.bankShare,
+                            customerShare: stepperState.customerShare,
+                            title: stepperState.selectedTitle,
+                            maritalStatus: stepperState.selectedMaritalStatus);
 
                         await Navigator.push(
                           context,
@@ -620,13 +623,15 @@ class _IndividualAccountByNationalIdState
             title: Row(
               children: const [
                 Icon(Icons.check_circle, color: cyanblueColor), // cyan blue
-
+                SizedBox(
+                  width: 5,
+                ),
                 Text(
-                  'Registration Successful',
+                  'Confirm Registration',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 15,
                     color: cyanblueColor,
-                    fontWeight: FontWeight.w100,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -636,12 +641,12 @@ class _IndividualAccountByNationalIdState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'Your account registration has been submitted successfully.',
+                  'Are you sure you want to submit your registration?',
                   style: TextStyle(fontSize: 16),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: 10),
                 Text(
-                  'We will review your application and contact you soon.',
+                  'Once submitted, your information will be sent for review.',
                   style: TextStyle(fontSize: 16),
                 ),
               ],
