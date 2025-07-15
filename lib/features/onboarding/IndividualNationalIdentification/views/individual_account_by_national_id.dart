@@ -1,19 +1,27 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/registration_data.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/national_id_provider.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/services/registration_service.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/account_type_step.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/additional_information.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_stepper/easy_stepper.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'providers/national_id_provider.dart';
-import 'providers/stepper_provider.dart';
-import 'widgets/national_id_auth_widget.dart';
-import 'widgets/AdditionalInformation.dart';
-import 'widgets/account_type_step.dart';
-import 'services/registration_service.dart';
-import 'model/registration_data.dart';
+
+// 1. Add StepConfig class at the top
+class StepConfig {
+  final String title;
+  final Icon icon;
+  final Widget Function(BuildContext, WidgetRef) builder;
+  StepConfig({required this.title, required this.icon, required this.builder});
+}
 
 class NationalIdentification extends ConsumerStatefulWidget {
   const NationalIdentification({Key? key}) : super(key: key);
@@ -28,10 +36,41 @@ class _IndividualAccountByNationalIdState
   List<GlobalKey<FormState>> formKeys = [];
   bool _disposed = false;
 
+  // 2. Replace the static steps list with a dynamic one using StepConfig
+  late final List<StepConfig> stepConfigs;
+
   @override
   void initState() {
     super.initState();
     formKeys = List.generate(3, (index) => GlobalKey<FormState>());
+    stepConfigs = [
+      StepConfig(
+        title: 'National ID Auth',
+        icon: Icon(Icons.fingerprint),
+        builder: (context, ref) => const NationalIdAuthWidget(),
+      ),
+      StepConfig(
+        title: 'Additional Information',
+        icon: Icon(Icons.info_outline),
+        builder: (context, ref) => const PhoneFanWidget(),
+      ),
+      StepConfig(
+        title: 'Account Type',
+        icon: Icon(Icons.account_balance),
+        builder: (context, ref) => AccountTypeStep(
+          selectedAccountType: ref.watch(stepperProvider).selectedAccountType,
+          onAccountTypeChanged: (value) {
+            ref.read(stepperProvider.notifier).updateAccountType(value);
+          },
+          onAccountTypeSelected: (accountType) {},
+          formKey: formKeys[2],
+          customerAge: ref.watch(stepperProvider).customerAge,
+          customerGender: ref.watch(stepperProvider).customerGender,
+          initialDeposit: ref.watch(stepperProvider).initialDeposit,
+          bankingType: ref.watch(stepperProvider).bankingType,
+        ),
+      ),
+    ];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_disposed) {
         ref.read(stepperProvider.notifier).reset();
@@ -46,20 +85,8 @@ class _IndividualAccountByNationalIdState
     super.dispose();
   }
 
-  List<EasyStep> steps = [
-    EasyStep(
-      title: 'National ID Auth',
-      icon: Icon(Icons.fingerprint),
-    ),
-    EasyStep(
-      title: 'Additional Information',
-      icon: Icon(Icons.info_outline),
-    ),
-    EasyStep(
-      title: 'Account Type',
-      icon: Icon(Icons.account_balance),
-    ),
-  ];
+  // 3. Refactor the steps and stepper to use stepConfigs
+  List<EasyStep> steps = [];
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +101,11 @@ class _IndividualAccountByNationalIdState
     try {
       final stepperState = ref.watch(stepperProvider);
       final nationalIdState = ref.watch(nationalIdProvider);
+      steps = stepConfigs
+          .map((config) => EasyStep(title: config.title, icon: config.icon))
+          .toList();
       return Scaffold(
-        key: ValueKey('stepper_scaffold_${stepperState.activeStep}'),
+        key: ValueKey('stepper_scaffold_ ${stepperState.activeStep}'),
         resizeToAvoidBottomInset: false,
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
@@ -121,9 +151,7 @@ class _IndividualAccountByNationalIdState
                     ),
                   ],
                 ),
-                child:
-             
-                    EasyStepper(
+                child: EasyStepper(
                   activeStep: stepperState.activeStep,
                   lineStyle: LineStyle(
                     lineLength: 30,
@@ -160,7 +188,7 @@ class _IndividualAccountByNationalIdState
               // Content Area
               Expanded(
                 child: Container(
-                  key: ValueKey('content_area_${stepperState.activeStep}'),
+                  key: ValueKey('content_area_ ${stepperState.activeStep}'),
                   margin:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
@@ -337,6 +365,9 @@ class _IndividualAccountByNationalIdState
                           documentName: 'NATIONALID',
                           signature: stepperState.signature,
                           sex: stepperState.sex,
+                          country: stepperState.country,
+                          state: stepperState.state,
+                          legalId: stepperState.legalId,
                         );
 
                         await Navigator.push(
@@ -470,33 +501,20 @@ class _IndividualAccountByNationalIdState
     }
   }
 
+  // 4. Refactor _buildStepContent to use stepConfigs
   Widget _buildStepContent(int step) {
-    final stepperState = ref.watch(stepperProvider);
-
-    switch (step) {
-      case 0:
-        return const SizedBox
-            .shrink(); // National ID Auth is handled separately
-      case 1:
-        return const PhoneFanWidget();
-      case 2:
-        return AccountTypeStep(
-          selectedAccountType: stepperState.selectedAccountType,
-          onAccountTypeChanged: (value) {
-            ref.read(stepperProvider.notifier).updateAccountType(value);
-          },
-          onAccountTypeSelected: (accountType) {
-            // Handle account type selection if needed
-          },
-          formKey: formKeys[2], // Use fixed index
-          customerAge: stepperState.customerAge,
-          customerGender: stepperState.customerGender,
-          initialDeposit: stepperState.initialDeposit,
-          bankingType: stepperState.bankingType,
-        );
-      default:
-        return const Center(child: Text('Step not found'));
+    if (step < 0 || step >= stepConfigs.length) {
+      return const Center(child: Text('Step not found'));
     }
+    return stepConfigs[step].builder(context, ref);
+  }
+
+  // 5. (Optional) Add a helper to add new steps easily
+  void addStep(StepConfig config) {
+    setState(() {
+      stepConfigs.add(config);
+      formKeys.add(GlobalKey<FormState>());
+    });
   }
 
   // Submit registration

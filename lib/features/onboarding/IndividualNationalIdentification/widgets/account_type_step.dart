@@ -75,14 +75,14 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   }
 
   void _filterAccountTypes() {
-    final accountTypeState = ref.read(accountTypeStepProvider);
-    final accountTypes = accountTypeState.availableAccountTypes;
-    final stepperState = ref.read(stepperProvider);
+    final accountTypeStepState = ref.read(accountTypeStepProvider);
+    final account_types = accountTypeStepState.availableAccountTypes;
+    final stepper_state = ref.read(stepperProvider);
 
-    final String? productType = stepperState.selectedProductType;
-    final String? userSex = stepperState.sex;
+    final String? product_type = stepper_state.selectedProductType;
+    final String? user_sex = stepper_state.sex;
 
-    List<AccountType> filtered = accountTypes;
+    List<AccountType> filtered = account_types;
 
     // ✅ 1. Filter by age
     if (widget.dateOfBirth != null) {
@@ -94,31 +94,31 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       }
 
       filtered = filtered
-          .where((accountType) =>
-              age >= accountType.minAge && age <= accountType.maxAge)
+          .where((account_type) =>
+              age >= account_type.minAge && age <= account_type.maxAge)
           .toList();
     } else {
       // ✅ If no DOB, exclude any account types that have a maxAge limit less than 100 (assuming 100+ is universal)
       filtered =
-          filtered.where((accountType) => accountType.maxAge >= 100).toList();
+          filtered.where((account_type) => account_type.maxAge >= 100).toList();
     }
 
     // ✅ 2. Filter by bankingType (productType)
-    if (productType != null && productType.trim().isNotEmpty) {
-      final normalizedProductType = productType.trim().toLowerCase();
+    if (product_type != null && product_type.trim().isNotEmpty) {
+      final normalizedProductType = product_type.trim().toLowerCase();
       filtered = filtered
-          .where((accountType) =>
-              accountType.bankingType.trim().toLowerCase() ==
+          .where((account_type) =>
+              account_type.bankingType.trim().toLowerCase() ==
               normalizedProductType)
           .toList();
     }
 
     // ✅ 3. Filter by sex
-    if (userSex != null && userSex.trim().isNotEmpty) {
-      final normalizedUserSex = userSex.trim().toUpperCase();
+    if (user_sex != null && user_sex.trim().isNotEmpty) {
+      final normalizedUserSex = user_sex.trim().toUpperCase();
       filtered = filtered
-          .where((accountType) =>
-              accountType.sex == 'BOTH' || accountType.sex == normalizedUserSex)
+          .where((account_type) =>
+              account_type.sex == 'BOTH' || account_type.sex == normalizedUserSex)
           .toList();
     }
 
@@ -133,16 +133,16 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     if (_disposed) return const SizedBox.shrink();
 
     // Watch the account type step state
-    final accountTypeState = ref.watch(accountTypeStepProvider);
+    final accountTypeStepState = ref.watch(accountTypeStepProvider);
     // Helper to handle selection and notify parent
-    void _onAccountTypeTap(AccountType accountType) {
-      widget.onAccountTypeChanged(accountType.id.toString());
-      widget.onAccountTypeSelected(accountType);
+    void _onAccountTypeTap(AccountType account_type) {
+      widget.onAccountTypeChanged(account_type.id.toString());
+      widget.onAccountTypeSelected(account_type);
     }
 
     final allAccountTypes = filteredAccountTypes.isNotEmpty
         ? filteredAccountTypes
-        : accountTypeState.availableAccountTypes;
+        : accountTypeStepState.availableAccountTypes;
     return Form(
       key: widget.formKey,
       child: Column(
@@ -155,11 +155,11 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             child: allAccountTypes.isNotEmpty
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: allAccountTypes.map<Widget>((accountType) {
+                    children: allAccountTypes.map<Widget>((account_type) {
                       final bool isSelected = widget.selectedAccountType ==
-                          accountType.id.toString();
+                          account_type.id.toString();
                       return InkWell(
-                        onTap: () => _onAccountTypeTap(accountType),
+                        onTap: () => _onAccountTypeTap(account_type),
                         borderRadius: BorderRadius.circular(18),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
@@ -204,7 +204,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      accountType.name,
+                                      account_type.name,
                                       style: TextStyle(
                                         fontSize: 19,
                                         fontWeight: FontWeight.bold,
@@ -215,7 +215,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      accountType.bankingType,
+                                      account_type.bankingType,
                                       style: TextStyle(
                                         color: isSelected
                                             ? Colors.white70
@@ -225,7 +225,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      'Min Age: ${accountType.minAge}  |  Max Age: ${accountType.maxAge}',
+                                      'Min Age: ${account_type.minAge}  |  Max Age: ${account_type.maxAge}',
                                       style: TextStyle(
                                         color: isSelected
                                             ? Colors.white70
@@ -234,7 +234,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                                       ),
                                     ),
                                     Text(
-                                      'Min Deposit: ${accountType.minAmount}',
+                                      'Min Deposit: ${account_type.minAmount}',
                                       style: TextStyle(
                                         color: isSelected
                                             ? Colors.white70

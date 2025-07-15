@@ -1,7 +1,8 @@
 import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/IndividualAccountByNationalId.dart';
-import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/IndividualAccountNational.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/IndividualAccountByNationalId.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/views/individual_account_by_national_id.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/IndividualAccountNational.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/IndividualAccountByNationalId.dart';
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
 
@@ -68,6 +69,7 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                               builder: (context) =>
                                   // const IndividualAccountNational()
                                   // const IndividualAccountByNationalId(),
+
                                   const NationalIdentification()),
                         );
                       },
