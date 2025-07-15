@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
-import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/widgets/registration_summary_page.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,16 +15,16 @@ import 'widgets/account_type_step.dart';
 import 'services/registration_service.dart';
 import 'model/registration_data.dart';
 
-class IndividualAccountByNationalId extends ConsumerStatefulWidget {
-  const IndividualAccountByNationalId({Key? key}) : super(key: key);
+class NationalIdentification extends ConsumerStatefulWidget {
+  const NationalIdentification({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<IndividualAccountByNationalId> createState() =>
+  ConsumerState<NationalIdentification> createState() =>
       _IndividualAccountByNationalIdState();
 }
 
 class _IndividualAccountByNationalIdState
-    extends ConsumerState<IndividualAccountByNationalId> {
+    extends ConsumerState<NationalIdentification> {
   List<GlobalKey<FormState>> formKeys = [];
   bool _disposed = false;
 
@@ -86,7 +86,7 @@ class _IndividualAccountByNationalIdState
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
-            'National ID Registration',
+            'National ID Registration11',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -122,31 +122,7 @@ class _IndividualAccountByNationalIdState
                   ],
                 ),
                 child:
-                    // EasyStepper(
-                    //   activeStep: stepperState.activeStep,
-                    //   lineStyle: LineStyle(
-                    //     lineLength: 30,
-                    //     lineSpace: 0,
-                    //     lineType: LineType.normal,
-                    //     defaultLineColor: Colors.grey.shade300,
-                    //     finishedLineColor: cyanblueColor,
-                    //     lineThickness: 2,
-                    //   ),
-                    //   stepShape: StepShape.circle,
-                    //   stepBorderRadius: 15,
-                    //   borderThickness: 2,
-                    //   padding:
-                    //       const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    //   stepRadius: 15,
-                    //   finishedStepTextColor: Colors.white,
-                    //   finishedStepBackgroundColor: cyanblueColor,
-                    //   activeStepTextColor: cyanblueColor,
-                    //   activeStepBackgroundColor: Colors.white,
-                    //   showLoadingAnimation: true,
-                    //   steps: steps,
-                    //   // Disable stepper icon navigation
-                    //   onStepReached: null,
-                    // ),
+             
                     EasyStepper(
                   activeStep: stepperState.activeStep,
                   lineStyle: LineStyle(
