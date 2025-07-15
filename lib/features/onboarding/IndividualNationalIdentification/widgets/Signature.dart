@@ -1,54 +1,24 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:io';
-
-import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
-import 'package:coopengageplus/common_widgets/dropDown/branch_selector.dart';
-import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
-import 'package:coopengageplus/widget/ReusableTextFormField.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:coopengageplus/constants/listConstants.dart';
+import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
 import 'package:signature/signature.dart';
-import '../providers/stepper_provider.dart';
 
-class PhoneFanWidget extends ConsumerStatefulWidget {
-  const PhoneFanWidget({Key? key}) : super(key: key);
+class SignatureStep extends ConsumerStatefulWidget {
+  const SignatureStep({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<PhoneFanWidget> createState() => _PhoneFanWidgetState();
+  ConsumerState<SignatureStep> createState() => _SignatureStepStepState();
 }
 
-class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
-  final TextEditingController motherNameController = TextEditingController();
-  final TextEditingController initialdepositController =
-      TextEditingController();
-  String? selectedProductType;
-  String? selectedTitle;
-  String? selectedMaritalStatus;
-  String? selectedBranch;
-  late SignatureController _signatureController1;
-  late SignatureController _signatureController2;
-  late SignatureController _signatureController3;
-  final ImagePicker _picker = ImagePicker();
-  Uint8List? _signatureData;
-  // Mock data - replace with your actual data
-  final List<String> productTypes = [
-    'Savings Account',
-    'Current Account',
-    'Fixed Deposit',
-    'Business Account',
-  ];
-
-  final List<String> branches = [
-    'Addis Ababa Main Branch',
-    'Bole Branch',
-    'Kazanchis Branch',
-    'Meskel Square Branch',
-  ];
-
+class _SignatureStepStepState extends ConsumerState<SignatureStep> {
   @override
   void initState() {
     super.initState();
@@ -64,169 +34,29 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
       penStrokeWidth: 5,
       exportBackgroundColor: Colors.white,
     );
-
-    // Initialize with existing values from state
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final stepperState = ref.read(stepperProvider);
-      if (stepperState.selectedProductType != null) {
-        selectedProductType = stepperState.selectedProductType;
-      }
-      if (stepperState.selectedBranch != null) {
-        selectedBranch = stepperState.selectedBranch;
-      }
-      if (stepperState.motherName != null &&
-          stepperState.motherName!.isNotEmpty) {
-        motherNameController.text = stepperState.motherName!;
-      }
-
-      if (stepperState.initialDeposit != null &&
-          initialdepositController.text !=
-              stepperState.initialDeposit.toString()) {
-        initialdepositController.text = stepperState.initialDeposit.toString();
-      }
-    });
   }
 
-  @override
-  void dispose() {
-    motherNameController.dispose();
-    _signatureController1.dispose();
-    _signatureController2.dispose();
-    _signatureController3.dispose();
-    super.dispose();
-  }
+  late SignatureController _signatureController1;
+  late SignatureController _signatureController2;
+  late SignatureController _signatureController3;
+  final ImagePicker _picker = ImagePicker();
+  Uint8List? _signatureData;
 
   @override
   Widget build(BuildContext context) {
     final stepperState = ref.watch(stepperProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        textLabel("Mother Name"),
-        ReusableTextFormField(
-          hintText: "Mother Name",
-          controller: motherNameController,
-          keyboardType: TextInputType.text,
-          errorMessage: "Mother Name cannot be empty",
-          leadingIcon: Icons.person,
-          isRequired: false,
-          onChanged: (value) {
-            // Save to stepper state
-            ref.read(stepperProvider.notifier).updateMotherName(value);
-          },
-        ),
-        textLabel("Branch"),
-        BranchSelector(
-          initialValue: selectedBranch,
-          onChanged: (value) {
-            selectedBranch = value;
-            // Save to stepper state
-            ref.read(stepperProvider.notifier).updateBranch(value);
-          },
-        ),
-        textLabel("Initial Amount"),
-        ReusableTextFormField(
-          hintText: "Initial Amount",
-          controller: initialdepositController,
-          keyboardType: TextInputType.number,
-          errorMessage: "Initial amount cannot be empty",
-          leadingIcon: Icons.balance,
-          isRequired: true,
-          onChanged: (value) {
-            // Save to stepper state
-            ref
-                .read(stepperProvider.notifier)
-                .updateInitialDeposit(double.tryParse(value));
-          },
-        ),
-        textLabel("Product Type"),
-        ReusableDropdown(
-          selectedValue: selectedProductType,
-          items: ListContants.productType,
-          hintText: 'Select Product Type',
-          onChanged: (newStatus) {
-            setState(() {
-              selectedProductType = newStatus;
-            });
-
-            if (selectedProductType != null) {
-              // Save to stepper state
-              ref
-                  .read(stepperProvider.notifier)
-                  .updateProductType(selectedProductType!);
-              setState(() {
-                // _filterAccountTypes(selectedProductType!);
-              });
-            }
-          },
-          prefixIcon: Icons.business,
-          errorMessage: 'Please select a product type',
-          isRequired: true,
-        ),
-
-        textLabel("Title"),
-        ReusableDropdown(
-          selectedValue: selectedTitle,
-          items: ListContants.title,
-          hintText: 'Select Title',
-          onChanged: (newStatus) {
-            setState(() {
-              selectedTitle = newStatus;
-            });
-
-            if (selectedTitle != null) {
-              // Save to stepper state
-              ref.read(stepperProvider.notifier).updateTitle(selectedTitle);
-              setState(() {
-                // _filterAccountTypes(selectedProductType!);
-              });
-            }
-          },
-          prefixIcon: Icons.person,
-          errorMessage: 'Please select a title',
-          isRequired: true,
-        ),
-
-        textLabel("Marital Status"),
-        ReusableDropdown(
-          selectedValue: selectedMaritalStatus,
-          items: ListContants.maritalStatuses,
-          hintText: 'Select Marital status',
-          onChanged: (newStatus) {
-            setState(() {
-              selectedMaritalStatus = newStatus;
-            });
-
-            if (selectedMaritalStatus != null) {
-              // Save to stepper state
-              ref
-                  .read(stepperProvider.notifier)
-                  .updateMaritalStatus(selectedMaritalStatus!);
-              setState(() {
-                // _filterAccountTypes(selectedProductType!);
-              });
-            }
-          },
-          prefixIcon: Icons.family_restroom,
-          errorMessage: 'Please select a marital status',
-          isRequired: true,
-        ),
-        // _buildSignatureCard(stepperState.signature ?? _signatureData),
-        // _buildSignaturePadSelection(),
-      ],
-    );
-  }
-
-  Padding textLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Signature',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          _buildSignatureCard(stepperState.signature ?? _signatureData),
+          _buildSignaturePadSelection(),
+        ],
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:coopengageplus/features/onboarding/IndividualNationalIdentificat
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/national_id_provider.dart';
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/services/registration_service.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/Signature.dart';
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/account_type_step.dart';
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/additional_information.dart';
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/national_id_auth_widget.dart';
@@ -42,7 +43,7 @@ class _IndividualAccountByNationalIdState
   @override
   void initState() {
     super.initState();
-    formKeys = List.generate(3, (index) => GlobalKey<FormState>());
+    formKeys = List.generate(4, (index) => GlobalKey<FormState>());
     stepConfigs = [
       StepConfig(
         title: 'National ID Auth',
@@ -55,6 +56,11 @@ class _IndividualAccountByNationalIdState
         builder: (context, ref) => const PhoneFanWidget(),
       ),
       StepConfig(
+        title: 'Signature',
+        icon: Icon(Icons.edit),
+        builder: (context, ref) => const SignatureStep(),
+      ),
+      StepConfig(
         title: 'Account Type',
         icon: Icon(Icons.account_balance),
         builder: (context, ref) => AccountTypeStep(
@@ -63,7 +69,7 @@ class _IndividualAccountByNationalIdState
             ref.read(stepperProvider.notifier).updateAccountType(value);
           },
           onAccountTypeSelected: (accountType) {},
-          formKey: formKeys[2],
+          formKey: formKeys[3],
           customerAge: ref.watch(stepperProvider).customerAge,
           customerGender: ref.watch(stepperProvider).customerGender,
           initialDeposit: ref.watch(stepperProvider).initialDeposit,
@@ -243,13 +249,12 @@ class _IndividualAccountByNationalIdState
                 child: ElevatedButton(
                   onPressed: stepperState.activeStep > 1
                       ? () {
-                          // Only allow going back to step 1 from step 2 or higher
-                          ref.read(stepperProvider.notifier).goToStep(1);
+                          ref.read(stepperProvider.notifier).previousStep();
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: stepperState.activeStep > 0
+                    foregroundColor: stepperState.activeStep > 1
                         ? Colors.grey.shade700
                         : Colors.grey.shade400,
                     padding: const EdgeInsets.symmetric(
@@ -257,7 +262,7 @@ class _IndividualAccountByNationalIdState
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                       side: BorderSide(
-                          color: stepperState.activeStep > 0
+                          color: stepperState.activeStep > 1
                               ? Colors.grey.shade300
                               : Colors.grey.shade200),
                     ),
@@ -322,6 +327,7 @@ class _IndividualAccountByNationalIdState
                     } else if (stepperState.activeStep == 1) {
                       final stepperState = ref.read(stepperProvider);
                       if (stepperState.initialDeposit == null ||
+                          // stepperState.selectedMaritalStatus == null ||
                           stepperState.motherName == null ||
                           stepperState.motherName!.isEmpty ||
                           stepperState.selectedProductType == null ||
@@ -348,7 +354,10 @@ class _IndividualAccountByNationalIdState
                         );
                       }
                     } else if (stepperState.activeStep == 2) {
-                      final currentFormKey = formKeys[stepperState.activeStep];
+                      print("step 2");
+                      ref.read(stepperProvider.notifier).nextStep();
+                    } else if (stepperState.activeStep == 3) {
+                      final currentFormKey = formKeys[3];
                       if (currentFormKey.currentState?.validate() ?? false) {
                         // Build RegistrationData from stepperState
                         final registrationData = RegistrationData(
@@ -408,7 +417,7 @@ class _IndividualAccountByNationalIdState
                       Builder(
                         builder: (context) {
                           final buttonText =
-                              stepperState.activeStep == 2 ? 'Submit' : 'Next';
+                              stepperState.activeStep == 3 ? 'Submit' : 'Next';
                           print(
                               'Button text for step ${stepperState.activeStep}: $buttonText');
                           return Text(
@@ -422,7 +431,7 @@ class _IndividualAccountByNationalIdState
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        stepperState.activeStep == 2
+                        stepperState.activeStep == 3
                             ? Icons.check
                             : Icons.arrow_forward,
                         size: 20,

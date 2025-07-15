@@ -8,6 +8,8 @@ class StepperState {
   final String fanNumber;
   final String otpCode;
   final String? selectedProductType;
+  final String? selectedTitle;
+  final String? selectedMaritalStatus;
   final String? selectedBranch;
   final String? motherName;
   final Uint8List? signature;
@@ -16,7 +18,7 @@ class StepperState {
   final String customerGender;
   final double? initialDeposit;
   final String bankingType;
-  
+
   // National ID Authentication Data
   final int? authId;
   final String? fullName;
@@ -41,6 +43,8 @@ class StepperState {
     this.fanNumber = '',
     this.otpCode = '',
     this.selectedProductType,
+    this.selectedTitle,
+    this.selectedMaritalStatus,
     this.selectedBranch,
     this.motherName,
     this.signature,
@@ -73,6 +77,8 @@ class StepperState {
     String? fanNumber,
     String? otpCode,
     String? selectedProductType,
+    String? selectedTitle,
+    String? selectedMaritalStatus,
     String? selectedBranch,
     String? motherName,
     Uint8List? signature,
@@ -135,8 +141,8 @@ class StepperState {
 // Provider for stepper state
 class StepperNotifier extends StateNotifier<StepperState> {
   bool _disposed = false;
-  
-  StepperNotifier() : super(const StepperState());
+  final int maxStep;
+  StepperNotifier({required this.maxStep}) : super(const StepperState());
 
   @override
   void dispose() {
@@ -146,9 +152,9 @@ class StepperNotifier extends StateNotifier<StepperState> {
 
   // Navigate to next step with safety checks
   void nextStep() {
-    if (state.activeStep < 2) {
-      print('Stepper: Moving from step ${state.activeStep} to step ${state.activeStep + 1}');
-      // Immediate step transition to prevent going back to step 0
+    if (state.activeStep < maxStep) {
+      print(
+          'Stepper: Moving from step ${state.activeStep} to step ${state.activeStep + 1}');
       state = state.copyWith(activeStep: state.activeStep + 1);
       print('Stepper: Successfully moved to step ${state.activeStep}');
     }
@@ -157,8 +163,8 @@ class StepperNotifier extends StateNotifier<StepperState> {
   // Navigate to previous step with safety checks
   void previousStep() {
     if (state.activeStep > 0) {
-      print('Stepper: Moving from step ${state.activeStep} to step ${state.activeStep - 1}');
-      // Immediate step transition
+      print(
+          'Stepper: Moving from step ${state.activeStep} to step ${state.activeStep - 1}');
       state = state.copyWith(activeStep: state.activeStep - 1);
       print('Stepper: Successfully moved to step ${state.activeStep}');
     }
@@ -166,9 +172,8 @@ class StepperNotifier extends StateNotifier<StepperState> {
 
   // Navigate to specific step with safety checks
   void goToStep(int step) {
-    if (step >= 0 && step <= 2) {
+    if (step >= 0 && step <= maxStep) {
       print('Stepper: Moving to specific step $step');
-      // Immediate step transition
       state = state.copyWith(activeStep: step);
       print('Stepper: Successfully moved to step ${state.activeStep}');
     }
@@ -192,6 +197,14 @@ class StepperNotifier extends StateNotifier<StepperState> {
   // Update product type
   void updateProductType(String? productType) {
     state = state.copyWith(selectedProductType: productType);
+  }
+
+  void updateMaritalStatus(String? productType) {
+    state = state.copyWith(selectedMaritalStatus: productType);
+  }
+
+  void updateTitle(String? productType) {
+    state = state.copyWith(selectedTitle: productType);
   }
 
   // Update branch
@@ -237,12 +250,12 @@ class StepperNotifier extends StateNotifier<StepperState> {
   // Helper method to calculate age from date of birth
   int _calculateAgeFromDateOfBirth(String? dateOfBirth) {
     if (dateOfBirth == null) return 25; // Default age
-    
+
     try {
       final birthDate = DateTime.parse(dateOfBirth);
       final today = DateTime.now();
       int age = today.year - birthDate.year;
-      if (today.month < birthDate.month || 
+      if (today.month < birthDate.month ||
           (today.month == birthDate.month && today.day < birthDate.day)) {
         age--;
       }
@@ -256,14 +269,16 @@ class StepperNotifier extends StateNotifier<StepperState> {
   void saveAuthenticationData(Map<String, dynamic> authResult) {
     print('StepperProvider: saveAuthenticationData called');
     print('StepperProvider: Auth result: $authResult');
-    
+
     final dateOfBirth = authResult['dateOfBirth']?.toString();
     final calculatedAge = _calculateAgeFromDateOfBirth(dateOfBirth);
     final sexString = authResult['sex']?.toString();
     final sex = sexString != null ? sexString.toUpperCase() : 'MALE';
-    
+
     final newState = state.copyWith(
-      authId: authResult['id'] != null ? int.tryParse(authResult['id'].toString()) : null,
+      authId: authResult['id'] != null
+          ? int.tryParse(authResult['id'].toString())
+          : null,
       fullName: authResult['fullName']?.toString(),
       email: authResult['email']?.toString(),
       emailVerified: authResult['emailVerified'] as bool?,
@@ -275,18 +290,22 @@ class StepperNotifier extends StateNotifier<StepperState> {
       dateOfBirth: dateOfBirth,
       customerType: authResult['customerType']?.toString(),
       legalId: authResult['legalId']?.toString(),
-      percentageComplete: authResult['percentageComplete'] != null ? double.tryParse(authResult['percentageComplete'].toString()) : null,
+      percentageComplete: authResult['percentageComplete'] != null
+          ? double.tryParse(authResult['percentageComplete'].toString())
+          : null,
       createdAt: authResult['createdAt']?.toString(),
       updatedAt: authResult['updatedAt']?.toString(),
-      accountId: authResult['accountId'] != null ? int.tryParse(authResult['accountId'].toString()) : null,
+      accountId: authResult['accountId'] != null
+          ? int.tryParse(authResult['accountId'].toString())
+          : null,
       // Always preserve existing non-nullable values if null
       customerAge: calculatedAge != null ? calculatedAge : state.customerAge,
       customerGender: sex.isNotEmpty ? sex : state.customerGender,
       // initialDeposit and bankingType are omitted so they are preserved
     );
-    
+
     state = newState;
-    
+
     print('StepperProvider: Authentication data saved successfully');
     print('StepperProvider: Auth ID: ${state.authId}');
     print('StepperProvider: Full Name: ${state.fullName}');
@@ -368,5 +387,6 @@ class StepperNotifier extends StateNotifier<StepperState> {
 // Provider
 final stepperProvider =
     StateNotifierProvider<StepperNotifier, StepperState>((ref) {
-  return StepperNotifier();
-}); 
+  // Set maxStep to 3 for 4 steps (0-based)
+  return StepperNotifier(maxStep: 3);
+});

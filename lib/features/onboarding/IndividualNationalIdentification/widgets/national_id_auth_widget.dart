@@ -737,12 +737,12 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         });
 
         // Show success dialog after a short delay to ensure state is updated
-        Future.delayed(const Duration(milliseconds: 200), () {
-          if (!_disposed) {
-            print('NationalIdAuthWidget: Showing verification success dialog');
-            _showVerificationSuccessDialog(responseData);
-          }
-        });
+        // Future.delayed(const Duration(milliseconds: 200), () {
+        //   if (!_disposed) {
+        //     print('NationalIdAuthWidget: Showing verification success dialog');
+        //     // _showVerificationSuccessDialog(responseData);
+        //   }
+        // });
       }
     } catch (e) {
       print('NationalIdAuthWidget: Verification failed: $e');
@@ -826,12 +826,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             actions: [
               ElevatedButton(
                 onPressed: () {
-            
                   Navigator.of(context).pop();
                   _showingDialog = false;
                   if (!_disposed) {
-
-
                     // Clear the WebView
                     _webViewController?.clearCache();
                     _webViewController?.clearLocalStorage();
