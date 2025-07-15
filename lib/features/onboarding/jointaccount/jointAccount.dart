@@ -531,6 +531,9 @@ class _Registration extends State<JointAccountStepperPage> {
           ],
         ),
       ),
+    
+    
+    
       Step(
         title: Text(isSmallScreen ? "" : "Signature"),
         isActive: _activeStepIndex >= 1,

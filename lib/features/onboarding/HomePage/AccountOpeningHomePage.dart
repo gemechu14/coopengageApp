@@ -1,4 +1,5 @@
 import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/features/onboarding/JointNationalIdentification/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
 import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
 // import 'package:coopengageplus/features/onboarding/_corporate/screens/registration_screen.dart';
@@ -86,8 +87,10 @@ class AccountOnboardingScreen extends StatelessWidget {
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => JointAccountStepperPage(),
-                          ),
+                              builder: (context) => 
+                              JointNationalIdentification()
+                              //JointAccountStepperPage(),
+                              ),
                           (route) => false,
                         );
                       },
@@ -106,10 +109,10 @@ class AccountOnboardingScreen extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (context) =>
                                 CorporateCustomerRegistration(),
-                                // CorporateRegistrationScreen()
-                                // CorporateAccountRiverpodPage()
-                                // CorporateRegistrationScreen()
-                                // CorporateRegistration()
+                            // CorporateRegistrationScreen()
+                            // CorporateAccountRiverpodPage()
+                            // CorporateRegistrationScreen()
+                            // CorporateRegistration()
                           ),
                           (route) => false,
                         );

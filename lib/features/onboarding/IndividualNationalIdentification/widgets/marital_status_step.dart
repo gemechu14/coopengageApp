@@ -1,10 +1,10 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'dart:io';
+// import 'dart:ui' as ui;
+// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
+// import 'package:coopengageplus/constants/listConstants.dart';
+// import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
