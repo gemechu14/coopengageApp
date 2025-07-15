@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +32,6 @@ class _IndividualAccountByNationalIdState
   void initState() {
     super.initState();
     formKeys = List.generate(3, (index) => GlobalKey<FormState>());
-
-    // Reset all state when entering the page
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_disposed) {
         ref.read(stepperProvider.notifier).reset();
@@ -75,9 +74,6 @@ class _IndividualAccountByNationalIdState
     try {
       final stepperState = ref.watch(stepperProvider);
       final nationalIdState = ref.watch(nationalIdProvider);
-
-      print('Main build - Current step: ${stepperState.activeStep}');
-
       return Scaffold(
         key: ValueKey('stepper_scaffold_${stepperState.activeStep}'),
         resizeToAvoidBottomInset: false,
@@ -125,7 +121,33 @@ class _IndividualAccountByNationalIdState
                     ),
                   ],
                 ),
-                child: EasyStepper(
+                child:
+                    // EasyStepper(
+                    //   activeStep: stepperState.activeStep,
+                    //   lineStyle: LineStyle(
+                    //     lineLength: 30,
+                    //     lineSpace: 0,
+                    //     lineType: LineType.normal,
+                    //     defaultLineColor: Colors.grey.shade300,
+                    //     finishedLineColor: cyanblueColor,
+                    //     lineThickness: 2,
+                    //   ),
+                    //   stepShape: StepShape.circle,
+                    //   stepBorderRadius: 15,
+                    //   borderThickness: 2,
+                    //   padding:
+                    //       const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    //   stepRadius: 15,
+                    //   finishedStepTextColor: Colors.white,
+                    //   finishedStepBackgroundColor: cyanblueColor,
+                    //   activeStepTextColor: cyanblueColor,
+                    //   activeStepBackgroundColor: Colors.white,
+                    //   showLoadingAnimation: true,
+                    //   steps: steps,
+                    //   // Disable stepper icon navigation
+                    //   onStepReached: null,
+                    // ),
+                    EasyStepper(
                   activeStep: stepperState.activeStep,
                   lineStyle: LineStyle(
                     lineLength: 30,
@@ -146,8 +168,15 @@ class _IndividualAccountByNationalIdState
                   activeStepTextColor: cyanblueColor,
                   activeStepBackgroundColor: Colors.white,
                   showLoadingAnimation: true,
-                  steps: steps,
-                  // Disable stepper icon navigation
+                  steps: List.generate(
+                    steps.length,
+                    (index) => EasyStep(
+                      icon: steps[index].icon,
+                      title: index == stepperState.activeStep
+                          ? steps[index].title
+                          : '',
+                    ),
+                  ),
                   onStepReached: null,
                 ),
               ),
@@ -267,8 +296,6 @@ class _IndividualAccountByNationalIdState
                     print('Current step: ${stepperState.activeStep}');
 
                     if (stepperState.activeStep == 0) {
-               
-
                       if (nationalIdState.isAuthCompleted) {
                         if (nationalIdState.authResult != null) {
                           ref
@@ -276,7 +303,6 @@ class _IndividualAccountByNationalIdState
                               .saveAuthenticationData(
                                   nationalIdState.authResult!);
 
-                        
                           final updatedState = ref.read(stepperProvider);
                         } else {}
                         ref.read(stepperProvider.notifier).nextStep();
@@ -343,7 +369,6 @@ class _IndividualAccountByNationalIdState
                             builder: (context) => RegistrationSummaryScreen(
                               registrationData: registrationData,
                               onConfirm: () async {
-                        
                                 await _submitRegistration();
                               },
                             ),
@@ -444,7 +469,6 @@ class _IndividualAccountByNationalIdState
       print(
           '_buildContentArea - Step: ${stepperState.activeStep}, Auth completed: ${nationalIdState.isAuthCompleted}');
 
-
       if (stepperState.activeStep == 0) {
         return const NationalIdAuthWidget();
       } else {
@@ -461,7 +485,6 @@ class _IndividualAccountByNationalIdState
         );
       }
     } catch (e) {
-  
       return const Center(
         child: Text(
           'Something went wrong. Please try again.',
@@ -583,64 +606,15 @@ class _IndividualAccountByNationalIdState
         Navigator.pop(context);
       }
 
-      if (!_disposed) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Registration Successful'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                    'Your account registration has been submitted successfully.'),
-                const Text(
-                    'We will review your application and contact you soon.'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  if (!_disposed) {
-                    Navigator.pop(context); // close dialog
-
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => MainPage()),
-                    );
-                  }
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
+      if (!_disposed) {}
     } catch (e) {
-      // Close loading dialog
       if (!_disposed && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
 
-      // Show error dialog
       if (!_disposed) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Registration Failed'),
-            content: Text('Please try again '),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  if (!_disposed) {
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        DialogHelper.showErrorDialog(
+            context, "Registration Failed, please try later");
       }
     }
   }

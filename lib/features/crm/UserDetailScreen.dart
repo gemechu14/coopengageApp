@@ -1,7 +1,7 @@
 // ignore_for_file: use_super_parameters
 
 import 'package:flutter/material.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+
 
 class UserDetailScreen extends StatelessWidget {
   final Map<String, String> user;

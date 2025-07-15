@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:coopengageplus/NetworkHandler.dart';
+import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 
@@ -29,18 +30,15 @@ class ViewCustomerInfo extends StatefulWidget {
 class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
   NetworkHandler networkHandler = NetworkHandler();
 
-  @override
-  void initState() {
-    _initializeGlobal();
-  }
+  // @override
+  // void initState() {
+  //   _initializeGlobal();
+  // }
 
   List<Map<String, dynamic>> accountTypes = [];
 
   @override
   Widget build(BuildContext context) {
-    String accountTypeName = getAccountTypeNameById(
-        widget.registrationData['accountType'].toString());
-
     final dynamic signatureBytes = widget.registrationData['signature'];
     final dynamic photoData = widget.registrationData['photo'];
     final dynamic residenceCardData = widget.registrationData['residenceCard'];
@@ -76,34 +74,21 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
 
     return WillPopScope(
       onWillPop: () async {
-        // Navigator.pushAndRemoveUntil(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => MainPage(),
-        //   ),
-        //   (route) => false,
-        // );
         Navigator.pop(context);
         return false;
       },
       child: Scaffold(
+        backgroundColor: whiteColor,
         appBar: AppBar(
           backgroundColor: Colors.white,
           title: const Text(
             'Customer Information',
             style: TextStyle(
-                color: Colors.blue, fontSize: 21, fontWeight: FontWeight.bold),
+                color: Colors.blue, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
-              // Navigator.pushAndRemoveUntil(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => MainPage(),
-              //   ),
-              //   (route) => false,
-              // );
             },
             icon: const Icon(
               Icons.arrow_back_ios_new_outlined,
@@ -119,7 +104,7 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   Card(
                     elevation: 5,
                     color: Colors.white,
@@ -151,9 +136,11 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
                               } else if (field == 'dateOfBirth') {
                                 displayValue = formatDateOfBirth(
                                     widget.registrationData[field]);
-                              } else if (field == 'accountType') {
-                                displayValue = accountTypeName;
-                              } else {
+                              }
+                              //else if (field == 'accountType') {
+                              //   displayValue = accountTypeName;
+                              // }
+                              else {
                                 displayValue =
                                     widget.registrationData[field].toString();
                               }
@@ -362,25 +349,8 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
     List<Map<String, dynamic>> fetchedAccountTypes =
         await networkHandler.fetchAccountTypesFromDatabase();
 
-    print("Gemechu bulti ");
-    print(fetchedAccountTypes);
-
     setState(() {
       accountTypes = fetchedAccountTypes;
     });
-  }
-
-  String getAccountTypeNameById(String accountTypeId) {
-    try {
-      final match = accountTypes.firstWhere(
-        (type) => type['id'].toString() == accountTypeId,
-        orElse: () =>
-            {'name': 'Unknown'}, // Return a real Map with expected keys
-      );
-      return match['name'] ?? "Unknown";
-    } catch (e) {
-      print("Error finding account type name: $e");
-      return "Unknown";
-    }
   }
 }

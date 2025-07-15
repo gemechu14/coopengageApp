@@ -13,7 +13,7 @@ import 'package:coopengageplus/pages/MainPage.dart';
 import '../widgets/steps/step_AddressInformation.dart';
 import '../widgets/steps/step_personal_info.dart';
 import '../widgets/steps/step_personal_photo.dart';
-import '../widgets/steps/step_signature.dart';
+// import '../widgets/steps/step_signature.dart';
 import '../providers/registration_providers.dart';
 import '../controllers/registration_controller.dart';
 

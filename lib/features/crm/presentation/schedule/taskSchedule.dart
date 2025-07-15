@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, prefer_const_constructors
+// ignore_for_file: use_build_context_synchronously, prefer_const_constructors, unused_local_variable, prefer_final_fields, non_constant_identifier_names
 
 import 'package:coopengageplus/features/crm/data/model/high_profile_clients/high_profile_clients.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +54,7 @@ class _TaskscheduleState extends ConsumerState<Taskschedule> {
 
     super.initState();
     final clientId = Get.arguments;
-    selectedPerson = clientId ?? null;
+    selectedPerson = clientId;
     isDropDownEnabled = clientId != null ? false : true;
   }
 
@@ -385,7 +385,7 @@ class _TaskscheduleState extends ConsumerState<Taskschedule> {
         },
         decoration: const InputDecoration(
           hintText: "Date",
-          hintStyle: const TextStyle(
+          hintStyle:  TextStyle(
             fontSize: 13,
             color: Colors.grey,
           ),

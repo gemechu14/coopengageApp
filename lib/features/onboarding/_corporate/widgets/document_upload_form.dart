@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../_corporate/providers/registration_providers.dart';
-import '../../_corporate/models/corporate_registration_form.dart';
+// import '../../_corporate/models/corporate_registration_form.dart';
 import 'dart:typed_data';
 
 class DocumentUploadForm extends ConsumerWidget {

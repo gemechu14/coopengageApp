@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/registration_service.dart';

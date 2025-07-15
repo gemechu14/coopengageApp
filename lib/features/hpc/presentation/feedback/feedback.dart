@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable, use_build_context_synchronously
+
 import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/common_widgets/textField/reusable_text_field.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
@@ -8,7 +10,6 @@ import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../common_widgets/button/btn_gradient.dart';
 import '../../../../common_widgets/textField/description_text_field.dart';
@@ -39,7 +40,7 @@ class _HPCFeedbackState extends ConsumerState<HPCFeedback> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   final DateTime _selectedDate = DateTime.now();
-  int _selectedColor = 0;
+  final int _selectedColor = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +109,7 @@ class _HPCFeedbackState extends ConsumerState<HPCFeedback> {
                   await Future.delayed(const Duration(seconds: 1));
                   Get.offAll(() => HPCDashBoard());
                 } catch (e) {
-                  print(e);
+               
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to add task: $e')),
                   );

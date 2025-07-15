@@ -37,7 +37,7 @@ class Meeting extends _$Meeting {
     final updatedMeetings = await _meetingRepository.getMeetings(token: token);
 
     // Update the state with the new list of meetings
-    state = AsyncData(updatedMeetings!);
+    state = AsyncData(updatedMeetings);
 
     return response;
   }

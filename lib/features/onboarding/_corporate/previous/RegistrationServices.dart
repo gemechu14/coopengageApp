@@ -79,7 +79,6 @@ class RegistrationService {
             filename: "articles.pdf"));
       }
 
-      print("Final request payload: ${request.fields}");
 
       // var response = await request.send();
       var response = await request.send().timeout(
