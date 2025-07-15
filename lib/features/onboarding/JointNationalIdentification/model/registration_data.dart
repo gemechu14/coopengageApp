@@ -1,3 +1,73 @@
+class JointMemberInfo {
+  final String? nationalId;
+  final String? fullName;
+  final String? motherName;
+  final String? title;
+  final String? sex;
+  final String? dateOfBirth;
+  final String? maritalStatus;
+  final dynamic signature;
+
+  JointMemberInfo({
+    this.nationalId,
+    this.fullName,
+    this.motherName,
+    this.title,
+    this.sex,
+    this.dateOfBirth,
+    this.maritalStatus,
+    this.signature,
+  });
+
+  JointMemberInfo copyWith({
+    String? nationalId,
+    String? fullName,
+    String? motherName,
+    String? title,
+    String? sex,
+    String? dateOfBirth,
+    String? maritalStatus,
+    dynamic signature,
+  }) {
+    return JointMemberInfo(
+      nationalId: nationalId ?? this.nationalId,
+      fullName: fullName ?? this.fullName,
+      motherName: motherName ?? this.motherName,
+      title: title ?? this.title,
+      sex: sex ?? this.sex,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      maritalStatus: maritalStatus ?? this.maritalStatus,
+      signature: signature ?? this.signature,
+    );
+  }
+
+  factory JointMemberInfo.fromMap(Map<String, dynamic> map) {
+    return JointMemberInfo(
+      nationalId: map['nationalId'],
+      fullName: map['fullName'],
+      motherName: map['motherName'],
+      title: map['title'],
+      sex: map['sex'],
+      dateOfBirth: map['dateOfBirth'],
+      maritalStatus: map['maritalStatus'],
+      signature: map['signature'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'nationalId': nationalId,
+      'fullName': fullName,
+      'motherName': motherName,
+      'title': title,
+      'sex': sex,
+      'dateOfBirth': dateOfBirth,
+      'maritalStatus': maritalStatus,
+      'signature': signature,
+    };
+  }
+}
+
 class RegistrationData {
   final String? phone;
   final String? email;
@@ -34,6 +104,7 @@ class RegistrationData {
   final String? status;
   final int? bankShare;
   final int? customerShare;
+  final List<JointMemberInfo>? members;
 
   RegistrationData({
     this.phone,
@@ -71,6 +142,7 @@ class RegistrationData {
     this.status,
     this.bankShare,
     this.customerShare,
+    this.members,
   });
 
   factory RegistrationData.fromMap(Map<String, dynamic> map) {
@@ -110,6 +182,10 @@ class RegistrationData {
       status: map['status'],
       bankShare: map['bankShare'] != null ? int.tryParse(map['bankShare'].toString()) : null,
       customerShare: map['customerShare'] != null ? int.tryParse(map['customerShare'].toString()) : null,
+      members: map['members'] != null
+          ? List<JointMemberInfo>.from(
+              (map['members'] as List).map((x) => JointMemberInfo.fromMap(x)))
+          : null,
     );
   }
 
@@ -150,6 +226,7 @@ class RegistrationData {
       'status': status,
       'bankShare': bankShare,
       'customerShare': customerShare,
+      'members': members?.map((x) => x.toMap()).toList(),
     };
   }
 } 

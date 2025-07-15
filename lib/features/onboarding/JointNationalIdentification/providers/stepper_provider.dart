@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
+import 'package:coopengageplus/features/onboarding/JointNationalIdentification/model/registration_data.dart';
 
 // State class for stepper
 class StepperState {
@@ -20,6 +21,8 @@ class StepperState {
   final String bankingType;
   final int? bankShare;
   final int? customerShare;
+  final int numberOfMembers;
+  final List<JointMemberInfo> members;
 
   // National ID Authentication Data
   final int? authId;
@@ -57,6 +60,8 @@ class StepperState {
     this.bankingType = 'DIGITAL',
     this.bankShare,
     this.customerShare,
+    this.numberOfMembers = 2,
+    this.members = const [],
     this.authId,
     this.fullName,
     this.email,
@@ -93,6 +98,8 @@ class StepperState {
     String? bankingType,
     int? bankShare,
     int? customerShare,
+    int? numberOfMembers,
+    List<JointMemberInfo>? members,
     int? authId,
     String? fullName,
     String? email,
@@ -129,6 +136,8 @@ class StepperState {
       bankingType: bankingType ?? this.bankingType,
       bankShare: bankShare ?? this.bankShare,
       customerShare: customerShare ?? this.customerShare,
+      numberOfMembers: numberOfMembers ?? this.numberOfMembers,
+      members: members ?? this.members,
       authId: authId ?? this.authId,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
@@ -264,6 +273,34 @@ class StepperNotifier extends StateNotifier<StepperState> {
 
   void updateCustomerShare(int? value) {
     state = state.copyWith(customerShare: value);
+  }
+
+  void updateNumberOfMembers(int number) {
+    state = state.copyWith(numberOfMembers: number);
+    // Optionally reset members list
+    if (state.members.length != number) {
+      final newMembers = List<JointMemberInfo>.generate(
+        number,
+        (i) => JointMemberInfo(),
+      );
+      state = state.copyWith(members: newMembers);
+    }
+  }
+  void updateMember(int index, JointMemberInfo member) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = member;
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+
+  void updateMemberSignature(int index, Uint8List signature) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      final updatedMember = updatedMembers[index].copyWith(signature: signature);
+      updatedMembers[index] = updatedMember;
+      state = state.copyWith(members: updatedMembers);
+    }
   }
 
   // Helper method to calculate age from date of birth
@@ -408,5 +445,5 @@ class StepperNotifier extends StateNotifier<StepperState> {
 final stepperProvider =
     StateNotifierProvider<StepperNotifier, StepperState>((ref) {
   // Set maxStep to 3 for 4 steps (0-based)
-  return StepperNotifier(maxStep: 3);
+  return StepperNotifier(maxStep: 5);
 });

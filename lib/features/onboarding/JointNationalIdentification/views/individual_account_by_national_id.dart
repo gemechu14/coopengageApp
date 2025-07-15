@@ -5,11 +5,16 @@ import 'package:coopengageplus/features/onboarding/JointNationalIdentification/m
 import 'package:coopengageplus/features/onboarding/JointNationalIdentification/providers/national_id_provider.dart';
 import 'package:coopengageplus/features/onboarding/JointNationalIdentification/providers/stepper_provider.dart';
 import 'package:coopengageplus/features/onboarding/JointNationalIdentification/services/registration_service.dart';
+
+import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/basic_info_step.dart';
+import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/Signature.dart';
 import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/account_type_step.dart';
-import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/additional_information.dart';
-import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/national_id_auth_widget.dart';
+
 import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/registration_summary_page.dart';
+import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/branch_and_deposit_step.dart';
+import 'package:coopengageplus/features/onboarding/JointNationalIdentification/widgets/member_additional_info_step.dart';
+import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
 
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +28,37 @@ class StepConfig {
   final Icon icon;
   final Widget Function(BuildContext, WidgetRef) builder;
   StepConfig({required this.title, required this.icon, required this.builder});
+}
+
+class MemberVerificationStep extends ConsumerWidget {
+  final int memberIndex;
+  MemberVerificationStep({required this.memberIndex});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Text('Verify Member ${memberIndex + 1} by National ID');
+  }
+}
+
+// Placeholder widgets for new steps
+class NationalIdAuthStep extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const NationalIdAuthWidget();
+  }
+}
+
+class MemberSignatureStep extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SignatureStep();
+  }
+}
+
+class AccountTypeSummaryStep extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Text('Account Type Summary Step');
+  }
 }
 
 class JointNationalIdentification extends ConsumerStatefulWidget {
@@ -39,27 +75,34 @@ class _IndividualAccountByNationalIdState
   bool _disposed = false;
 
   // 2. Replace the static steps list with a dynamic one using StepConfig
-  late final List<StepConfig> stepConfigs;
+  late List<StepConfig> stepConfigs;
 
-  @override
-  void initState() {
-    super.initState();
-    formKeys = List.generate(4, (index) => GlobalKey<FormState>());
+  void buildStepConfigs() {
     stepConfigs = [
       StepConfig(
-        title: 'National ID Auth',
-        icon: Icon(Icons.fingerprint),
-        builder: (context, ref) => const NationalIdAuthWidget(),
+        title: 'Basic Information',
+        icon: Icon(Icons.info),
+        builder: (context, ref) => BasicInfoStep(),
       ),
       StepConfig(
-        title: 'Additional Information',
+        title: 'Branch & Deposit',
+        icon: Icon(Icons.account_balance_wallet),
+        builder: (context, ref) => BranchAndDepositStep(),
+      ),
+      StepConfig(
+        title: 'National ID Authentication',
+        icon: Icon(Icons.fingerprint),
+        builder: (context, ref) => NationalIdAuthStep(),
+      ),
+      StepConfig(
+        title: 'Additional Info',
         icon: Icon(Icons.info_outline),
-        builder: (context, ref) => const PhoneFanWidget(),
+        builder: (context, ref) => MemberAdditionalInfoStep(),
       ),
       StepConfig(
         title: 'Signature',
         icon: Icon(Icons.edit),
-        builder: (context, ref) => const SignatureStep(),
+        builder: (context, ref) => MemberSignatureStep(),
       ),
       StepConfig(
         title: 'Account Type',
@@ -70,7 +113,7 @@ class _IndividualAccountByNationalIdState
             ref.read(stepperProvider.notifier).updateAccountType(value);
           },
           onAccountTypeSelected: (accountType) {},
-          formKey: formKeys[3],
+          formKey: GlobalKey<FormState>(),
           customerAge: ref.watch(stepperProvider).customerAge,
           customerGender: ref.watch(stepperProvider).customerGender,
           initialDeposit: ref.watch(stepperProvider).initialDeposit,
@@ -78,6 +121,14 @@ class _IndividualAccountByNationalIdState
         ),
       ),
     ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    buildStepConfigs();
+    formKeys =
+        List.generate(stepConfigs.length, (index) => GlobalKey<FormState>());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_disposed) {
         ref.read(stepperProvider.notifier).reset();
@@ -87,12 +138,17 @@ class _IndividualAccountByNationalIdState
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    buildStepConfigs();
+  }
+
+  @override
   void dispose() {
     _disposed = true;
     super.dispose();
   }
 
-  // 3. Refactor the steps and stepper to use stepConfigs
   List<EasyStep> steps = [];
 
   @override
@@ -108,6 +164,7 @@ class _IndividualAccountByNationalIdState
     try {
       final stepperState = ref.watch(stepperProvider);
       final nationalIdState = ref.watch(nationalIdProvider);
+      buildStepConfigs();
       steps = stepConfigs
           .map((config) => EasyStep(title: config.title, icon: config.icon))
           .toList();
@@ -128,7 +185,7 @@ class _IndividualAccountByNationalIdState
                     (route) => false,
                   )),
           title: const Text(
-            'National ID Registration11',
+            'Joint Account Registration',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -166,7 +223,7 @@ class _IndividualAccountByNationalIdState
                 child: EasyStepper(
                   activeStep: stepperState.activeStep,
                   lineStyle: LineStyle(
-                    lineLength: 30,
+                    lineLength: 15,
                     lineSpace: 0,
                     lineType: LineType.normal,
                     defaultLineColor: Colors.grey.shade300,
@@ -253,7 +310,7 @@ class _IndividualAccountByNationalIdState
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: stepperState.activeStep > 1
+                  onPressed: stepperState.activeStep > 0
                       ? () {
                           ref.read(stepperProvider.notifier).previousStep();
                         }
@@ -311,43 +368,33 @@ class _IndividualAccountByNationalIdState
                     print('Current step: ${stepperState.activeStep}');
 
                     if (stepperState.activeStep == 0) {
-                      if (nationalIdState.isAuthCompleted) {
-                        if (nationalIdState.authResult != null) {
-                          ref
-                              .read(stepperProvider.notifier)
-                              .saveAuthenticationData(
-                                  nationalIdState.authResult!);
+                      // if (nationalIdState.isAuthCompleted) {
+                      //   if (nationalIdState.authResult != null) {
 
-                          final updatedState = ref.read(stepperProvider);
-                        } else {}
-                        ref.read(stepperProvider.notifier).nextStep();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Please complete National ID authentication first'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+                      //   } else {}
+                      ref.read(stepperProvider.notifier).nextStep();
+                      // } else {
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     const SnackBar(
+                      //       content: Text(
+                      //           'Please complete all required field'),
+                      //       backgroundColor: Colors.red,
+                      //     ),
+                      //   );
+                      // }
                     } else if (stepperState.activeStep == 1) {
                       final stepperState = ref.read(stepperProvider);
-                      if (stepperState.initialDeposit == null ||
-                          // stepperState.selectedMaritalStatus == null ||
-                          stepperState.motherName == null ||
-                          stepperState.motherName!.isEmpty ||
-                          stepperState.selectedProductType == null ||
-                          stepperState.selectedProductType!.isEmpty) {
+                      if (stepperState.initialDeposit == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                                'Please fill in all required fields: Initial Deposit, Mother Name, and Product Type'),
+                                'Please fill in all required fields: Initial Deposit'),
                             backgroundColor: Colors.red,
                           ),
                         );
                         return;
                       }
-                      if (stepperState.selectedProductType != null &&
+                      if (stepperState.initialDeposit != null &&
                           stepperState.selectedBranch != null) {
                         ref.read(stepperProvider.notifier).nextStep();
                         final newStep = ref.read(stepperProvider).activeStep;
@@ -363,52 +410,103 @@ class _IndividualAccountByNationalIdState
                       print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 3) {
-                      final currentFormKey = formKeys[3];
-                      if (currentFormKey.currentState?.validate() ?? false) {
-                        // Build RegistrationData from stepperState
-                        final registrationData = RegistrationData(
-                            fullName: stepperState.fullName,
-                            email: stepperState.email,
-                            phone: stepperState.authPhone,
-                            accountType: stepperState.selectedAccountType,
-                            branch: stepperState.selectedBranch,
-                            motherName: stepperState.motherName,
-                            initialDeposit:
-                                stepperState.initialDeposit?.toString(),
-                            dateOfBirth: stepperState.dateOfBirth,
-                            productType: stepperState.selectedProductType,
-                            documentName: 'NATIONALID',
-                            signature: stepperState.signature,
-                            sex: stepperState.sex,
-                            country: stepperState.country,
-                            state: stepperState.state,
-                            legalId: stepperState.legalId,
-                            bankShare: stepperState.bankShare,
-                            customerShare: stepperState.customerShare,
-                            title: stepperState.selectedTitle,
-                            maritalStatus: stepperState.selectedMaritalStatus);
+                      print("current step is: 22");
+                      ref.read(stepperProvider.notifier).nextStep();
+                      //   final currentFormKey = formKeys[3];
+                      //   if (currentFormKey.currentState?.validate() ?? false) {
+                      //     // Build RegistrationData from stepperState
+                      //     final registrationData = RegistrationData(
+                      //         fullName: stepperState.fullName,
+                      //         email: stepperState.email,
+                      //         phone: stepperState.authPhone,
+                      //         accountType: stepperState.selectedAccountType,
+                      //         branch: stepperState.selectedBranch,
+                      //         motherName: stepperState.motherName,
+                      //         initialDeposit:
+                      //             stepperState.initialDeposit?.toString(),
+                      //         dateOfBirth: stepperState.dateOfBirth,
+                      //         productType: stepperState.selectedProductType,
+                      //         documentName: 'NATIONALID',
+                      //         signature: stepperState.signature,
+                      //         sex: stepperState.sex,
+                      //         country: stepperState.country,
+                      //         state: stepperState.state,
+                      //         legalId: stepperState.legalId,
+                      //         bankShare: stepperState.bankShare,
+                      //         customerShare: stepperState.customerShare,
+                      //         title: stepperState.selectedTitle,
+                      //         maritalStatus: stepperState.selectedMaritalStatus);
 
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RegistrationSummaryScreen(
-                              registrationData: registrationData,
-                              onConfirm: () async {
-                                await _submitRegistration();
-                              },
-                            ),
+                      //     await Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) => RegistrationSummaryScreen(
+                      //           registrationData: registrationData,
+                      //           onConfirm: () async {
+                      //             await _submitRegistration();
+                      //           },
+                      //         ),
+                      //       ),
+                      //     );
+                      //   } else {
+                      //     print('Step 2 validation failed');
+                      //     ScaffoldMessenger.of(context).showSnackBar(
+                      //       const SnackBar(
+                      //         content: Text('Please select an account type'),
+                      //         backgroundColor: Colors.red,
+                      //       ),
+                      //     );
+                      //   }
+                    } else if (stepperState.activeStep == 4) {
+                      print("step 2");
+                      ref.read(stepperProvider.notifier).nextStep();
+                    } else if (stepperState.activeStep == 5) {
+                      final currentFormKey = formKeys[5];
+                      // if (currentFormKey.currentState?.validate() ?? false) {
+                      // Build RegistrationData from stepperState
+                      final registrationData = RegistrationData(
+                          fullName: stepperState.fullName,
+                          email: stepperState.email,
+                          phone: stepperState.authPhone,
+                          accountType: stepperState.selectedAccountType,
+                          branch: stepperState.selectedBranch,
+                          motherName: stepperState.motherName,
+                          initialDeposit:
+                              stepperState.initialDeposit?.toString(),
+                          dateOfBirth: stepperState.dateOfBirth,
+                          productType: stepperState.selectedProductType,
+                          documentName: 'NATIONALID',
+                          signature: stepperState.signature,
+                          sex: stepperState.sex,
+                          country: stepperState.country,
+                          state: stepperState.state,
+                          legalId: stepperState.legalId,
+                          bankShare: stepperState.bankShare,
+                          customerShare: stepperState.customerShare,
+                          title: stepperState.selectedTitle,
+                          maritalStatus: stepperState.selectedMaritalStatus);
+
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RegistrationSummaryScreen(
+                            registrationData: registrationData,
+                            onConfirm: () async {
+                              await _submitRegistration();
+                            },
                           ),
-                        );
-                      } else {
-                        print('Step 2 validation failed');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select an account type'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+                        ),
+                      );
+                    } else {
+                      print('Step 2 validation failed');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select an account type'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     }
+                    // }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
@@ -426,7 +524,7 @@ class _IndividualAccountByNationalIdState
                       Builder(
                         builder: (context) {
                           final buttonText =
-                              stepperState.activeStep == 3 ? 'Submit' : 'Next';
+                              stepperState.activeStep == 5 ? 'Submit' : 'Next';
                           print(
                               'Button text for step ${stepperState.activeStep}: $buttonText');
                           return Text(
@@ -440,7 +538,7 @@ class _IndividualAccountByNationalIdState
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        stepperState.activeStep == 3
+                        stepperState.activeStep == 5
                             ? Icons.check
                             : Icons.arrow_forward,
                         size: 20,
@@ -491,24 +589,17 @@ class _IndividualAccountByNationalIdState
     if (_disposed) return const SizedBox.shrink();
 
     try {
-      print(
-          '_buildContentArea - Step: ${stepperState.activeStep}, Auth completed: ${nationalIdState.isAuthCompleted}');
-
-      if (stepperState.activeStep == 0) {
-        return const NationalIdAuthWidget();
-      } else {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildStepContent(stepperState.activeStep),
-                const SizedBox(height: 80), // Reduced space for keyboard
-              ],
-            ),
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildStepContent(stepperState.activeStep),
+              const SizedBox(height: 80), // Reduced space for keyboard
+            ],
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
       return const Center(
         child: Text(

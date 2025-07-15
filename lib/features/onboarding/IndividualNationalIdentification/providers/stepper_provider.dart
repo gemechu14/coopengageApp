@@ -402,6 +402,8 @@ class StepperNotifier extends StateNotifier<StepperState> {
   void reset() {
     state = const StepperState();
   }
+
+  void updateMemberSignature(int index, Uint8List signatureBytes) {}
 }
 
 // Provider
