@@ -55,13 +55,10 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         errorMessage: null,
       );
 
-
       // Construct the API URL
       final String baseUrl = AppConstants.baseURL;
-      
 
       final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url';
-
 
       final response = await http.get(
         Uri.parse(apiUrl),
@@ -69,29 +66,24 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
           'Content-Type': 'application/json',
         },
       ).timeout(const Duration(seconds: 400));
-     
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData.containsKey('url')) {
-          final authUrl = responseData['url'];          
+          final authUrl = responseData['url'];
 
           state = state.copyWith(
             authUrl: authUrl,
             isLoading: false,
           );
-      
         } else {
-        
           throw Exception('No URL found in response');
         }
       } else {
-
         throw Exception('API call failed with status: ${response.statusCode}');
       }
     } catch (e) {
-   
-      if (e.toString().contains('SocketException')) {
-      }
+      if (e.toString().contains('SocketException')) {}
       state = state.copyWith(
         isError: true,
         errorMessage: e.toString(),
@@ -103,8 +95,6 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
   // Account verification
   Future<Map<String, dynamic>?> verifyAccount(
       String code, String stateParam) async {
-
-
     try {
       state = state.copyWith(isLoading: true);
       String? token = await storage.read(key: "token");
@@ -116,8 +106,8 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
       // Construct the verification URL
       final String baseUrl = AppConstants.baseURL;
       final String verifyUrl =
-          '$baseUrl/api/v1/fayda/verify-account?code=$code&state=$stateParam';
-
+          // '$baseUrl/api/v1/fayda/verify-account?code=$code&state=$stateParam';
+          '$baseUrl/api/v1/fayda/get-verify-account-info?code=$code&state=$stateParam';
 
       // Make the verification API call
       final response = await http.post(
@@ -128,32 +118,44 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         },
       );
 
-   
-
       state = state.copyWith(isLoading: false);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData.containsKey('id') ||
-            responseData.containsKey('fullName')) {
+        // Map new response fields to old expected fields
+        final Map<String, dynamic> mappedData =
+            Map<String, dynamic>.from(responseData);
+        if (responseData.containsKey('phone_number')) {
+          mappedData['phone'] = responseData['phone_number'];
+        }
+        if (responseData.containsKey('gender')) {
+          mappedData['sex'] = responseData['gender'];
+        }
+        if (responseData.containsKey('birthdate')) {
+          mappedData['dateOfBirth'] = responseData['birthdate'];
+        }
+        if (responseData.containsKey('name')) {
+          mappedData['fullName'] = responseData['name'];
+        }
+        if (responseData.containsKey('sub')) {
+          mappedData['legalId'] = responseData['sub'];
+        }
+        if (mappedData.containsKey('id') ||
+            mappedData.containsKey('fullName')) {
           state = state.copyWith(
             isAuthCompleted: true,
-            authResult: responseData,
+            authResult: mappedData,
           );
-    
-          return responseData;
+          return mappedData;
         } else {
-    
           throw Exception(
               'Verification response missing required fields (id or fullName)');
         }
       } else {
- 
         throw Exception(
             'Verification failed with status: ${response.statusCode}');
       }
     } catch (e) {
-    
       state = state.copyWith(
         isLoading: false,
         isError: true,

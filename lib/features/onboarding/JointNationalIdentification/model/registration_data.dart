@@ -7,6 +7,8 @@ class JointMemberInfo {
   final String? dateOfBirth;
   final String? maritalStatus;
   final dynamic signature;
+  final bool isVerified;
+  final Map<String, dynamic>? verifiedData;
 
   JointMemberInfo({
     this.nationalId,
@@ -17,6 +19,8 @@ class JointMemberInfo {
     this.dateOfBirth,
     this.maritalStatus,
     this.signature,
+    this.isVerified = false,
+    this.verifiedData,
   });
 
   JointMemberInfo copyWith({
@@ -28,6 +32,8 @@ class JointMemberInfo {
     String? dateOfBirth,
     String? maritalStatus,
     dynamic signature,
+    bool? isVerified,
+    Map<String, dynamic>? verifiedData,
   }) {
     return JointMemberInfo(
       nationalId: nationalId ?? this.nationalId,
@@ -38,10 +44,19 @@ class JointMemberInfo {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       maritalStatus: maritalStatus ?? this.maritalStatus,
       signature: signature ?? this.signature,
+      isVerified: isVerified ?? this.isVerified,
+      verifiedData: verifiedData ?? this.verifiedData,
     );
   }
 
   factory JointMemberInfo.fromMap(Map<String, dynamic> map) {
+    bool safeIsVerified;
+    if (map.containsKey('isVerified')) {
+      final v = map['isVerified'];
+      safeIsVerified = v is bool ? v : (v == true);
+    } else {
+      safeIsVerified = false;
+    }
     return JointMemberInfo(
       nationalId: map['nationalId'],
       fullName: map['fullName'],
@@ -51,6 +66,8 @@ class JointMemberInfo {
       dateOfBirth: map['dateOfBirth'],
       maritalStatus: map['maritalStatus'],
       signature: map['signature'],
+      isVerified: safeIsVerified,
+      verifiedData: map['verifiedData'],
     );
   }
 
@@ -64,6 +81,8 @@ class JointMemberInfo {
       'dateOfBirth': dateOfBirth,
       'maritalStatus': maritalStatus,
       'signature': signature,
+      'isVerified': isVerified,
+      'verifiedData': verifiedData,
     };
   }
 }

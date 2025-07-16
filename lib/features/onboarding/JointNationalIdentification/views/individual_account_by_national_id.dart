@@ -407,9 +407,21 @@ class _IndividualAccountByNationalIdState
                         );
                       }
                     } else if (stepperState.activeStep == 2) {
+                      final allVerified = stepperState.members.isNotEmpty &&
+                          stepperState.members
+                              .every((m) => m.isVerified == true);
+                      if (!allVerified) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Please verify all members before proceeding.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
                       print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();
-                    } else if (stepperState.activeStep == 3) {
                       print("current step is: 22");
                       ref.read(stepperProvider.notifier).nextStep();
                       //   final currentFormKey = formKeys[3];
@@ -457,6 +469,9 @@ class _IndividualAccountByNationalIdState
                       //       ),
                       //     );
                       //   }
+                    } else if (stepperState.activeStep == 3) {
+                      print("step 4");
+                      ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 4) {
                       print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();

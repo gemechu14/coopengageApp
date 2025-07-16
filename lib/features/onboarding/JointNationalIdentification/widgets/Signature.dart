@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:io';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
+import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/features/onboarding/JointNationalIdentification/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
@@ -19,121 +20,254 @@ class SignatureStep extends ConsumerStatefulWidget {
 }
 
 class _SignatureStepStepState extends ConsumerState<SignatureStep> {
+  List<List<SignatureController>> _memberSignatureControllers = [];
+  List<Uint8List?> _signatureData = [];
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
-    _signatureController1 = SignatureController(
-      penStrokeWidth: 5,
-      exportBackgroundColor: Colors.white,
-    );
-    _signatureController2 = SignatureController(
-      penStrokeWidth: 5,
-      exportBackgroundColor: Colors.white,
-    );
-    _signatureController3 = SignatureController(
-      penStrokeWidth: 5,
-      exportBackgroundColor: Colors.white,
-    );
+    // Controllers will be initialized in build based on member count
   }
-
-  late SignatureController _signatureController1;
-  late SignatureController _signatureController2;
-  late SignatureController _signatureController3;
-  final ImagePicker _picker = ImagePicker();
-  Uint8List? _signatureData;
 
   @override
   Widget build(BuildContext context) {
     final stepperState = ref.watch(stepperProvider);
+    final memberCount = stepperState.members.length;
+
+    // Ensure controllers and data lists are up to date
+    while (_memberSignatureControllers.length < memberCount) {
+      _memberSignatureControllers.add([
+        SignatureController(
+            penStrokeWidth: 5, exportBackgroundColor: Colors.white),
+        SignatureController(
+            penStrokeWidth: 5, exportBackgroundColor: Colors.white),
+        SignatureController(
+            penStrokeWidth: 5, exportBackgroundColor: Colors.white),
+      ]);
+      _signatureData.add(null);
+    }
+    while (_memberSignatureControllers.length > memberCount) {
+      _memberSignatureControllers.removeLast();
+      _signatureData.removeLast();
+    }
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Signature',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          _buildSignatureCard(stepperState.signature ?? _signatureData),
-          _buildSignaturePadSelection(),
+          const Text('Signatures',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ...List.generate(memberCount, (memberIndex) {
+            final member = stepperState.members[memberIndex];
+            final signature =
+                member.signature as Uint8List? ?? _signatureData[memberIndex];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Member ${memberIndex + 1}: ${member.fullName ?? ''}'),
+                _buildSignatureCard(signature),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () =>
+                          _showSignaturePadDialog(context, memberIndex),
+                      child: const Text(
+                        '   Sign   ',
+                        style: TextStyle(
+                          color: cyanblueColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () => _showImagePicker(context, memberIndex),
+                      child: const Text('  Upload  ',
+                          style: TextStyle(color: cyanblueColor)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildSignatureCard(Uint8List? signature) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-        child: Container(
-          height: 150, // Reduced height
-          width: MediaQuery.of(context).size.width * 0.8,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8.0), // Smaller radius
-            border: Border.all(
-                color: Colors.grey.shade300, width: 1), // Minimized border
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 2, // Reduced spread
-                blurRadius: 4, // Reduced blur
-              ),
-            ],
-          ),
-          child: signature != null
-              ? Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0), // Smaller radius
-                    child: Image.memory(
-                      signature,
-                      fit: BoxFit.cover,
+  void _showSignaturePadDialog(BuildContext context, int memberIndex) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.zero, // ✅ Remove default padding
+          backgroundColor: Colors.white, // ✅ Ensure background fills
+          child: SizedBox.expand(
+            // ✅ Expand to fill the screen
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text('Draw Signatures for Member ${memberIndex + 1}'),
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                automaticallyImplyLeading: false,
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0), // Smaller radius
-                  child: Image.asset(
-                    'assets/signature.png',
-                    height: 10.0,
-                    width: MediaQuery.of(context).size.width * 0.1,
-                    fit: BoxFit.contain,
-                  ),
+                ],
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    ...List.generate(
+                      3,
+                      (padIndex) => Column(
+                        children: [
+                          SignaturePad(
+                            controller: _memberSignatureControllers[memberIndex]
+                                [padIndex],
+                            label: 'Signature ${padIndex + 1}',
+                            onClear: () =>
+                                _memberSignatureControllers[memberIndex]
+                                        [padIndex]
+                                    .clear(),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final combinedSignature = await _combineSignatures(
+                            _memberSignatureControllers[memberIndex]);
+                        if (combinedSignature != null) {
+                          setState(() {
+                            _signatureData[memberIndex] = combinedSignature;
+                          });
+                          ref
+                              .read(stepperProvider.notifier)
+                              .updateMemberSignature(
+                                  memberIndex, combinedSignature);
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please complete all signatures'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cyanblueColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 14,
+                        ),
+                      ),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(color: whiteColor),
+                      ),
+                    ),
+                  ],
                 ),
-        ),
-      ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildSignaturePadSelection() {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () => _showSignaturePadDialog(context),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.black,
-            ),
-            child: const Text("      Sign     "),
-          ),
-          const SizedBox(width: 20),
-          ElevatedButton(
-            onPressed: () => _showImagePicker(context),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.black,
-            ),
-            child: const Text("Upload"),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showSignaturePadDialog(BuildContext context, int memberIndex) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return Dialog(
+  //         child: SingleChildScrollView(
+  //           child: Container(
+  //             padding: const EdgeInsets.all(1),
+  //             child: Column(
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 const SizedBox(height: 10),
+  //                 Text('Draw Signatures for Member ${memberIndex + 1}',
+  //                     style: const TextStyle(
+  //                         fontSize: 17,
+  //                         color: Colors.blue,
+  //                         fontWeight: FontWeight.bold)),
+  //                 const SizedBox(height: 20),
+  //                 ...List.generate(
+  //                     3,
+  //                     (padIndex) => Column(
+  //                           children: [
+  //                             SignaturePad(
+  //                               controller:
+  //                                   _memberSignatureControllers[memberIndex]
+  //                                       [padIndex],
+  //                               label: 'Signature ${padIndex + 1}',
+  //                               onClear: () =>
+  //                                   _memberSignatureControllers[memberIndex]
+  //                                           [padIndex]
+  //                                       .clear(),
+  //                             ),
+  //                             const SizedBox(height: 20),
+  //                           ],
+  //                         )),
+  //                 Row(
+  //                   mainAxisAlignment: MainAxisAlignment.end,
+  //                   children: [
+  //                     TextButton(
+  //                       onPressed: () => Navigator.pop(context),
+  //                       child: const Text('Cancel'),
+  //                     ),
+  //                     ElevatedButton(
+  //                       onPressed: () async {
+  //                         final combinedSignature = await _combineSignatures(
+  //                             _memberSignatureControllers[memberIndex]);
+  //                         if (combinedSignature != null) {
+  //                           setState(() {
+  //                             _signatureData[memberIndex] = combinedSignature;
+  //                           });
+  //                           ref
+  //                               .read(stepperProvider.notifier)
+  //                               .updateMemberSignature(
+  //                                   memberIndex, combinedSignature);
+  //                           Navigator.pop(context);
+  //                         } else {
+  //                           ScaffoldMessenger.of(context).showSnackBar(
+  //                             const SnackBar(
+  //                               content: Text('Please complete all signatures'),
+  //                               backgroundColor: Colors.red,
+  //                             ),
+  //                           );
+  //                         }
+  //                       },
+  //                       child: const Text('Save'),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
-  void _showImagePicker(BuildContext context) {
+  void _showImagePicker(BuildContext context, int memberIndex) {
     showModalBottomSheet(
       context: context,
       builder: (builder) {
@@ -150,7 +284,7 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
                   child: InkWell(
                     onTap: () async {
                       Navigator.pop(context);
-                      await _pickImage(ImageSource.gallery);
+                      await _pickImage(ImageSource.gallery, memberIndex);
                     },
                     child: const Column(
                       children: [
@@ -169,7 +303,7 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
                   child: InkWell(
                     onTap: () async {
                       Navigator.pop(context);
-                      await _pickImage(ImageSource.camera);
+                      await _pickImage(ImageSource.camera, memberIndex);
                     },
                     child: const Column(
                       children: [
@@ -192,89 +326,13 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
     );
   }
 
-  void _showSignaturePadDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Draw Signatures',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SignaturePad(
-                    controller: _signatureController1,
-                    label: "Signature 1",
-                    onClear: () => _clearSignature(1),
-                  ),
-                  const SizedBox(height: 20),
-                  SignaturePad(
-                    controller: _signatureController2,
-                    label: "Signature 2",
-                    onClear: () => _clearSignature(2),
-                  ),
-                  const SizedBox(height: 20),
-                  SignaturePad(
-                    controller: _signatureController3,
-                    label: "Signature 3",
-                    onClear: () => _clearSignature(3),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_areAllSignaturesCompleted()) {
-                            _saveCombinedSignature();
-                            Navigator.pop(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please complete all signatures'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Save'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImage(ImageSource source, int memberIndex) async {
     try {
-      // Check permissions first
       bool hasPermission = await _checkPermission(source);
       if (!hasPermission) {
         _showErrorSnackBar('Permission required to continue');
         return;
       }
-
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -282,73 +340,103 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
           child: CircularProgressIndicator(),
         ),
       );
-
       final XFile? image = await _picker.pickImage(
         source: source,
         imageQuality: 80,
         maxWidth: 1920,
         maxHeight: 1080,
       );
-
-      // Dismiss loading indicator
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       }
-
       if (image != null) {
-        await _cropAndProcessImage(File(image.path));
+        final bytes = await File(image.path).readAsBytes();
+        setState(() {
+          _signatureData[memberIndex] = bytes;
+        });
+        ref
+            .read(stepperProvider.notifier)
+            .updateMemberSignature(memberIndex, bytes);
       }
     } catch (e) {
-      // Dismiss loading indicator if still showing
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       }
-
-      String errorMessage = 'Failed to pick image';
-      if (e.toString().contains('permission')) {
-        errorMessage =
-            'Permission denied. Please grant camera permission in settings.';
-      } else if (e.toString().contains('camera')) {
-        errorMessage = 'Camera not available. Please try again or use gallery.';
-      } else if (e.toString().contains('cancel')) {
-        return; // User cancelled, no need to show error
-      } else {
-        errorMessage = 'Failed to pick image: ${e.toString()}';
-      }
-
-      _showErrorSnackBar(errorMessage);
+      _showErrorSnackBar('Failed to pick image: ${e.toString()}');
     }
   }
 
-  bool _areAllSignaturesCompleted() {
-    return _signatureController1.isNotEmpty &&
-        _signatureController2.isNotEmpty &&
-        _signatureController3.isNotEmpty;
+  Future<Uint8List?> _combineSignatures(
+      List<SignatureController> controllers) async {
+    final signature1 = await controllers[0].toPngBytes();
+    final signature2 = await controllers[1].toPngBytes();
+    final signature3 = await controllers[2].toPngBytes();
+    if (signature1 == null || signature2 == null || signature3 == null) {
+      return null;
+    }
+    final ui.Image image1 = await decodeImageFromList(signature1);
+    final ui.Image image2 = await decodeImageFromList(signature2);
+    final ui.Image image3 = await decodeImageFromList(signature3);
+    final int totalWidth = image1.width + image2.width + image3.width + 20;
+    final int maxHeight = [image1.height, image2.height, image3.height]
+        .reduce((a, b) => a > b ? a : b);
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder,
+        Rect.fromLTWH(0, 0, totalWidth.toDouble(), maxHeight.toDouble()));
+    double currentX = 0;
+    canvas.drawImage(image1, Offset(currentX, 0), Paint());
+    currentX += image1.width.toDouble() + 10;
+    canvas.drawImage(image2, Offset(currentX, 0), Paint());
+    currentX += image2.width.toDouble() + 10;
+    canvas.drawImage(image3, Offset(currentX, 0), Paint());
+    final picture = recorder.endRecording();
+    final combinedImage = await picture.toImage(totalWidth, maxHeight);
+    final byteData =
+        await combinedImage.toByteData(format: ui.ImageByteFormat.png);
+    return byteData?.buffer.asUint8List();
   }
 
-  Future<void> _saveCombinedSignature() async {
-    final combinedSignature = await _combineSignatures();
-    if (combinedSignature != null) {
-      setState(() {
-        _signatureData = combinedSignature;
-      });
-      // Update the stepper provider with signature data
-      ref.read(stepperProvider.notifier).updateSignature(combinedSignature);
-    }
-  }
-
-  Future<void> _cropAndProcessImage(File imageFile) async {
-    try {
-      // Read the image file
-      final bytes = await imageFile.readAsBytes();
-      setState(() {
-        _signatureData = bytes;
-      });
-      // Update the stepper provider with signature data
-      ref.read(stepperProvider.notifier).updateSignature(bytes);
-    } catch (e) {
-      _showErrorSnackBar('Failed to process image: ${e.toString()}');
-    }
+  Widget _buildSignatureCard(Uint8List? signature) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
+        child: Container(
+          height: 150,
+          width: MediaQuery.of(context).size.width * 0.8,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8.0),
+            border: Border.all(color: Colors.grey.shade300, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 2,
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: signature != null
+              ? Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.memory(
+                      signature,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image.asset(
+                    'assets/signature.png',
+                    height: 10.0,
+                    width: MediaQuery.of(context).size.width * 0.1,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+        ),
+      ),
+    );
   }
 
   void _showErrorSnackBar(String message) {
@@ -359,71 +447,6 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
         behavior: SnackBarBehavior.floating,
       ),
     );
-  }
-
-  Future<Uint8List?> _combineSignatures() async {
-    // Get individual signature bytes
-    final signature1 = await _signatureController1.toPngBytes();
-    final signature2 = await _signatureController2.toPngBytes();
-    final signature3 = await _signatureController3.toPngBytes();
-
-    if (signature1 == null || signature2 == null || signature3 == null) {
-      return null;
-    }
-
-    // Decode the individual images
-    final ui.Image image1 = await decodeImageFromList(signature1);
-    final ui.Image image2 = await decodeImageFromList(signature2);
-    final ui.Image image3 = await decodeImageFromList(signature3);
-
-    // Calculate the total width and height (maximum height of all signatures)
-    final int totalWidth =
-        image1.width + image2.width + image3.width + 20; // Add spacing
-    final int maxHeight = [image1.height, image2.height, image3.height]
-        .reduce((a, b) => a > b ? a : b);
-
-    // Draw the images onto a single canvas
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder,
-        Rect.fromLTWH(0, 0, totalWidth.toDouble(), maxHeight.toDouble()));
-
-    double currentX = 0;
-
-    // Draw signature 1
-    canvas.drawImage(image1, Offset(currentX, 0), Paint());
-    currentX += image1.width.toDouble() + 10; // Add spacing
-
-    // Draw signature 2
-    canvas.drawImage(image2, Offset(currentX, 0), Paint());
-    currentX += image2.width.toDouble() + 10;
-
-    // Draw signature 3
-    canvas.drawImage(image3, Offset(currentX, 0), Paint());
-
-    // End the recording
-    final picture = recorder.endRecording();
-    final combinedImage = await picture.toImage(totalWidth, maxHeight);
-
-    // Convert the combined image to bytes
-    final byteData =
-        await combinedImage.toByteData(format: ui.ImageByteFormat.png);
-    return byteData?.buffer.asUint8List();
-  }
-
-  void _clearSignature(int index) {
-    setState(() {
-      switch (index) {
-        case 1:
-          _signatureController1.clear();
-          break;
-        case 2:
-          _signatureController2.clear();
-          break;
-        case 3:
-          _signatureController3.clear();
-          break;
-      }
-    });
   }
 
   Future<bool> _checkPermission(ImageSource source) async {

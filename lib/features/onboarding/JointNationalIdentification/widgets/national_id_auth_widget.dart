@@ -109,17 +109,40 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         itemBuilder: (context, index) {
           final member = members[index];
           return ListTile(
-            leading: const Icon(Icons.person),
+            leading: Icon(
+              member.isVerified ? Icons.verified : Icons.person,
+              color: member.isVerified ? cyanblueColor : null,
+            ),
             title: Text('Authorize Member ${index + 1}'),
             subtitle: Text(member.fullName ?? 'No Name'),
-            trailing: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _selectedMemberIndex = index;
-                });
-              },
-              child: const Text('Authorize'),
-            ),
+            trailing: member.isVerified
+                ? ElevatedButton.icon(
+                    onPressed: () {
+                      _showMemberDetailsDialog(member);
+                    },
+                    icon: const Icon(Icons.info_outline),
+                    label: const Text(
+                      'Details',
+                      style: TextStyle(color: whiteColor),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: cyanblueColor,
+                    ),
+                  )
+                : ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedMemberIndex = index;
+                        _webViewController = null; // Reset WebView
+                        _isWebViewLoading =
+                            true; // Show loading spinner if needed
+                      });
+                      // Reset the provider state and get a new auth URL
+                      ref.read(nationalIdProvider.notifier).reset();
+                      ref.read(nationalIdProvider.notifier).callEsignetApi();
+                    },
+                    child: const Text('Authorize'),
+                  ),
           );
         },
       );
@@ -127,34 +150,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
     if (nationalIdState.isError) {
       return _buildErrorState(nationalIdState);
-    }
-    if (nationalIdState.isAuthCompleted) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.verified, color: cyanblueColor, size: 80),
-            const SizedBox(height: 24),
-            Text(
-              'National ID Verified!',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: cyanblueColor,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'You have successfully completed National ID authentication.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
     }
 
     if (nationalIdState.authUrl != null &&
@@ -399,7 +394,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       return Stack(
         children: [
           Container(
-            height: MediaQuery.of(context).size.height * 0.85, // Increase height
+            height:
+                MediaQuery.of(context).size.height * 0.85, // Increase height
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
@@ -638,43 +634,20 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           .verifyAccount(code, state);
 
       if (!_disposed) {
-        // Save authentication data to stepper state immediately
         if (responseData != null) {
-          print(
-              'NationalIdAuthWidget: Saving authentication data to stepper state');
-          ref
-              .read(stepperProvider.notifier)
-              .saveAuthenticationData(responseData);
-
-          // Verify the save immediately
-          final stepperState = ref.read(stepperProvider);
-          print(
-              'NationalIdAuthWidget: Verification - Auth ID:  [32m${stepperState.authId} [0m');
-          print(
-              'NationalIdAuthWidget: Verification - Full Name: ${stepperState.fullName}');
+          // Save authentication data to stepper state immediately
+          _onMemberVerified(_selectedMemberIndex!, responseData);
+          setState(() {
+            _selectedMemberIndex = null; // Return to member list
+          });
         }
-
-        // Mark as completed immediately
-        print('NationalIdAuthWidget: Marking auth as completed immediately');
-        ref.read(nationalIdProvider.notifier).markAuthCompleted();
-
-        // Hide loader and show success state
+        // No longer mark as completed or show success screen
         setState(() {
           _isWebViewLoading = false;
         });
-
-        // Show success dialog after a short delay to ensure state is updated
-        // Future.delayed(const Duration(milliseconds: 200), () {
-        //   if (!_disposed) {
-        //     print('NationalIdAuthWidget: Showing verification success dialog');
-        //     // _showVerificationSuccessDialog(responseData);
-        //   }
-        // });
       }
     } catch (e) {
       print('NationalIdAuthWidget: Verification failed: $e');
-
-      // Show error dialog when verification fails
       if (!_disposed) {
         print('NationalIdAuthWidget: Showing verification error dialog');
         _showVerificationErrorDialog('Verification failed: $e');
@@ -1005,6 +978,93 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
           content: Text('Fetched data for all members! (simulated)')),
+    );
+  }
+
+  void _onMemberVerified(int memberIndex, Map<String, dynamic> data) {
+    final stepperNotifier = ref.read(stepperProvider.notifier);
+    final stepperState = ref.read(stepperProvider);
+    final updatedMember = stepperState.members[memberIndex].copyWith(
+      isVerified: true,
+      verifiedData: data,
+    );
+    stepperNotifier.updateMember(memberIndex, updatedMember);
+  }
+
+  void _showMemberDetailsDialog(dynamic member) {
+    final data = member.verifiedData as Map<String, dynamic>?;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(member.fullName ?? 'Member Details'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: data == null
+                ? const Text('No details available.')
+                : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: data.entries.map((entry) {
+                        final key = entry.key;
+                        final value = entry.value;
+
+                        if (value is Map) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${key.replaceAll('_', ' ').toUpperCase()}:',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: (value as Map<String, dynamic>)
+                                        .entries
+                                        .map((subEntry) {
+                                      return Text(
+                                          '${subEntry.key}: ${subEntry.value}');
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${key.replaceAll('_', ' ').toUpperCase()}: ',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              Expanded(child: Text(value.toString())),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
