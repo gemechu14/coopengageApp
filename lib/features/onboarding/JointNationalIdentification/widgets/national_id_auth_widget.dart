@@ -22,16 +22,14 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   bool _showingDialog = false;
   bool _isWebViewLoading = true;
   String? _expectedFinalUrl;
+  int? _selectedMemberIndex; // <-- Add this line
 
   @override
   void initState() {
     super.initState();
     _isWebViewLoading = false;
 
-    // Reset WebView state
     _webViewController = null;
-
-    // Always reset state when entering the page
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_disposed) {
         ref.read(nationalIdProvider.notifier).reset();
@@ -78,9 +76,11 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     try {
       final nationalIdState = ref.watch(nationalIdProvider);
 
-      return Container(
-        height: MediaQuery.of(context).size.height * 0.65,
-        child: _buildContent(nationalIdState),
+      return SingleChildScrollView(
+        child: Container(
+          // height: MediaQuery.of(context).size.height * 0.65,
+          child: _buildContent(nationalIdState),
+        ),
       );
     } catch (e) {
       return const Center(
@@ -95,11 +95,39 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   Widget _buildContent(NationalIdState nationalIdState) {
     if (_disposed) return const SizedBox.shrink();
 
+    // Show member list first if no member is selected
+    if (_selectedMemberIndex == null) {
+      final stepperState = ref.watch(stepperProvider);
+      final members = stepperState.members;
+      if (members.isEmpty) {
+        return const Center(child: Text('No members found.'));
+      }
+      return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: members.length,
+        itemBuilder: (context, index) {
+          final member = members[index];
+          return ListTile(
+            leading: const Icon(Icons.person),
+            title: Text('Authorize Member ${index + 1}'),
+            subtitle: Text(member.fullName ?? 'No Name'),
+            trailing: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _selectedMemberIndex = index;
+                });
+              },
+              child: const Text('Authorize'),
+            ),
+          );
+        },
+      );
+    }
+
     if (nationalIdState.isError) {
       return _buildErrorState(nationalIdState);
     }
-
-    // Show beautiful success state after verification
     if (nationalIdState.isAuthCompleted) {
       return Center(
         child: Column(
@@ -124,24 +152,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               ),
               textAlign: TextAlign.center,
             ),
-            // const SizedBox(height: 24),
-            // ElevatedButton.icon(
-            //   onPressed: () {
-            //     // Optionally, go to next step or close
-            //     Navigator.of(context).maybePop();
-            //   },
-            //   icon: const Icon(Icons.arrow_forward),
-            //   label: const Text('Continue'),
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: cyanblueColor,
-            //     foregroundColor: Colors.white,
-            //     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-            //     textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       );
@@ -149,8 +159,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
     if (nationalIdState.authUrl != null &&
         nationalIdState.authUrl!.isNotEmpty) {
-      print(
-          'NationalIdAuthWidget: Showing WebView with URL: ${nationalIdState.authUrl}');
       return _buildWebView(nationalIdState.authUrl!);
     }
 
@@ -162,9 +170,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         ),
       );
     }
-
-    // Fallback - show simple loading with retry button
-    return Center(
+    return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -232,70 +238,40 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             ),
             child: const Text('Test Verification'),
           ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              _showMembersDialog();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Show Members'),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              _fetchDataForAllMembers();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Fetch Data for All Members'),
+          ),
         ],
       ),
     );
   }
-
-  // Widget _buildWebViewLoadingState() {
-  //   return Center(
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: [
-  //         const CircularProgressIndicator(
-  //           valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-  //           strokeWidth: 3,
-  //         ),
-  //         const SizedBox(height: 24),
-  //         const Text(
-  //           'Loading Authentication Page',
-  //           style: TextStyle(
-  //             fontSize: 20,
-  //             fontWeight: FontWeight.bold,
-  //             color: Colors.black87,
-  //           ),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //         const SizedBox(height: 12),
-  //         const Text(
-  //           'Please wait while we load the National ID authentication service...',
-  //           style: TextStyle(
-  //             fontSize: 16,
-  //             color: Colors.grey,
-  //           ),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //         const SizedBox(height: 32),
-  //         Container(
-  //           padding: const EdgeInsets.all(16),
-  //           decoration: BoxDecoration(
-  //             color: Colors.blue.shade50,
-  //             borderRadius: BorderRadius.circular(12),
-  //             border: Border.all(color: Colors.blue.shade200),
-  //           ),
-  //           child: const Column(
-  //             children: [
-  //               Icon(
-  //                 Icons.security,
-  //                 color: Colors.blue,
-  //                 size: 24,
-  //               ),
-  //               SizedBox(height: 8),
-  //               Text(
-  //                 'Connecting to official Ethiopian National ID service',
-  //                 style: TextStyle(
-  //                   fontSize: 14,
-  //                   color: Colors.blue,
-  //                 ),
-  //                 textAlign: TextAlign.center,
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildErrorState(NationalIdState nationalIdState) {
     return Center(
@@ -423,7 +399,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       return Stack(
         children: [
           Container(
-            height: MediaQuery.of(context).size.height * 0.6,
+            height: MediaQuery.of(context).size.height * 0.85, // Increase height
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
@@ -499,55 +475,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     }
   }
 
-  //     return Container(
-  //       height: MediaQuery.of(context).size.height * 0.6,
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(8),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.grey.withOpacity(0.1),
-  //             spreadRadius: 1,
-  //             blurRadius: 3,
-  //             offset: const Offset(0, 1),
-  //           ),
-  //         ],
-  //       ),
-  //       child: ClipRRect(
-  //         borderRadius: BorderRadius.circular(8),
-  //         child: WebViewWidget(
-  //           controller: _createWebViewController(url),
-  //         ),
-  //       ),
-  //     );
-  //   } catch (e) {
-  //     print('Error building WebView: $e');
-  //     return Center(
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: [
-  //           const Icon(Icons.error, color: Colors.red, size: 48),
-  //           const SizedBox(height: 16),
-  //           Text(
-  //             'Error loading WebView: $e',
-  //             style: const TextStyle(color: Colors.red),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //           const SizedBox(height: 16),
-  //           ElevatedButton(
-  //             onPressed: () {
-  //               if (!_disposed) {
-  //                 //  print('Retrying WebView creation');
-  //                 setState(() {});
-  //               }
-  //             },
-  //             child: const Text('Retry'),
-  //           ),
-  //         ],
-  //       ),
-  //     );
-  //   }
-  // }
   WebViewController _createWebViewController(String url) {
     print('NationalIdAuthWidget: Creating WebView controller for URL: $url');
 
@@ -1003,6 +930,81 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           ],
         );
       },
+    );
+  }
+
+  void _showMembersDialog() {
+    final stepperState = ref.read(stepperProvider);
+    final members = stepperState.members;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Authorize Members'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: members.isEmpty
+                ? const Text('No members found.')
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: members.length,
+                    itemBuilder: (context, index) {
+                      final member = members[index];
+                      return ListTile(
+                        leading: const Icon(Icons.person),
+                        title: Text('Authorize Member ${index + 1}'),
+                        subtitle: Text(member.fullName ?? 'No Name'),
+                        trailing: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _authorizeMember(index, member);
+                          },
+                          child: const Text('Authorize'),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _authorizeMember(int index, dynamic member) async {
+    // Simulate fetch/authorize logic for the selected member
+    print(
+        'Authorizing Member ${index + 1}: ${member.fullName ?? 'No Name'} (ID: ${member.nationalId ?? 'N/A'})');
+    // TODO: Replace with your real API call or logic
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Authorized Member ${index + 1} (simulated)')),
+    );
+  }
+
+  Future<void> _fetchDataForAllMembers() async {
+    final stepperState = ref.read(stepperProvider);
+    final members = stepperState.members;
+    if (members.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No members to fetch data for.')),
+      );
+      return;
+    }
+    for (final member in members) {
+      // Simulate fetching data for each member (replace with real API call as needed)
+      print(
+          'Fetching data for member: ${member.fullName ?? 'No Name'} (ID: ${member.nationalId ?? 'N/A'})');
+      // await fetchMemberData(member.nationalId); // Implement this if you have an API
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('Fetched data for all members! (simulated)')),
     );
   }
 }
