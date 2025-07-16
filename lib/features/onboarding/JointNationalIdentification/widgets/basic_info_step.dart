@@ -24,7 +24,10 @@ class BasicInfoStep extends ConsumerWidget {
           // Text('Basic Information',
           //     style: Theme.of(context).textTheme.titleLarge),
           // const SizedBox(height: 16),
-          Text('Product Type'),
+          Text(
+            'Product Type',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           ReusableDropdown(
             selectedValue: stepperState.selectedProductType,
             items: ListContants.productType,
@@ -39,14 +42,17 @@ class BasicInfoStep extends ConsumerWidget {
             isRequired: true,
           ),
           const SizedBox(height: 16),
-          Text('Account Type'),
+          Text(
+            'Account Type',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           ReusableDropdown(
-            selectedValue: stepperState.selectedAccountType,
+            selectedValue: stepperState.jointAccountType,
             items: ListContants.AccountTypeSelection,
             hintText: 'Select Account Type',
             onChanged: (newStatus) {
               if (newStatus != null) {
-                notifier.updateAccountType(newStatus);
+                notifier.updateJointAccountType(newStatus);
               }
             },
             prefixIcon: Icons.merge,
@@ -54,7 +60,8 @@ class BasicInfoStep extends ConsumerWidget {
             isRequired: true,
           ),
           const SizedBox(height: 16),
-          Text('Number of Members'),
+          Text('Number of Members',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           ReusableDropdown(
             selectedValue: stepperState.numberOfMembers.toString(),
             items: ['2', '3'],

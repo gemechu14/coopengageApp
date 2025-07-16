@@ -39,7 +39,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   bool _disposed = false;
   List<AccountType> filteredAccountTypes = [];
   final TextEditingController _bankShareController = TextEditingController();
-  final TextEditingController _customerShareController = TextEditingController();
+  final TextEditingController _customerShareController =
+      TextEditingController();
   String? _shareError;
 
   @override
@@ -85,30 +86,18 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     final stepper_state = ref.read(stepperProvider);
 
     final String? product_type = stepper_state.selectedProductType;
-    final String? user_sex = stepper_state.sex;
+    final double? initial_deposit = widget.initialDeposit;
 
-    List<AccountType> filtered = account_types;
+    // 1. Filter: Only BOTH sex and maxAge > 18
+    List<AccountType> filtered = account_types
+        .where((account_type) =>
+            account_type.sex == 'BOTH' &&
+            account_type.maxAge > 18 &&
+            (initial_deposit == null ||
+                account_type.minAmount <= initial_deposit))
+        .toList();
 
-    // ✅ 1. Filter by age
-    if (widget.dateOfBirth != null) {
-      final DateTime dob = widget.dateOfBirth!;
-      int age = DateTime.now().year - dob.year;
-      if (DateTime.now().month < dob.month ||
-          (DateTime.now().month == dob.month && DateTime.now().day < dob.day)) {
-        age--;
-      }
-
-      filtered = filtered
-          .where((account_type) =>
-              age >= account_type.minAge && age <= account_type.maxAge)
-          .toList();
-    } else {
-      // ✅ If no DOB, exclude any account types that have a maxAge limit less than 100 (assuming 100+ is universal)
-      filtered =
-          filtered.where((account_type) => account_type.maxAge >= 100).toList();
-    }
-
-    // ✅ 2. Filter by bankingType (productType)
+    // 2. Further filter by product type (bankingType)
     if (product_type != null && product_type.trim().isNotEmpty) {
       final normalizedProductType = product_type.trim().toLowerCase();
       filtered = filtered
@@ -118,20 +107,63 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
           .toList();
     }
 
-    // ✅ 3. Filter by sex
-    if (user_sex != null && user_sex.trim().isNotEmpty) {
-      final normalizedUserSex = user_sex.trim().toUpperCase();
-      filtered = filtered
-          .where((account_type) =>
-              account_type.sex == 'BOTH' || account_type.sex == normalizedUserSex)
-          .toList();
-    }
-
-    // ✅ Final result
     setState(() {
       filteredAccountTypes = filtered;
     });
   }
+  // void _filterAccountTypes() {
+  //   final accountTypeStepState = ref.read(accountTypeStepProvider);
+  //   final account_types = accountTypeStepState.availableAccountTypes;
+  //   final stepper_state = ref.read(stepperProvider);
+
+  //   final String? product_type = stepper_state.selectedProductType;
+  //   final String? user_sex = stepper_state.sex;
+
+  //   List<AccountType> filtered = account_types;
+
+  //   // ✅ 1. Filter by age
+  //   if (widget.dateOfBirth != null) {
+  //     final DateTime dob = widget.dateOfBirth!;
+  //     int age = DateTime.now().year - dob.year;
+  //     if (DateTime.now().month < dob.month ||
+  //         (DateTime.now().month == dob.month && DateTime.now().day < dob.day)) {
+  //       age--;
+  //     }
+
+  //     filtered = filtered
+  //         .where((account_type) =>
+  //             age >= account_type.minAge && age <= account_type.maxAge)
+  //         .toList();
+  //   } else {
+  //     // ✅ If no DOB, exclude any account types that have a maxAge limit less than 100 (assuming 100+ is universal)
+  //     filtered =
+  //         filtered.where((account_type) => account_type.maxAge >= 100).toList();
+  //   }
+
+  //   // ✅ 2. Filter by bankingType (productType)
+  //   if (product_type != null && product_type.trim().isNotEmpty) {
+  //     final normalizedProductType = product_type.trim().toLowerCase();
+  //     filtered = filtered
+  //         .where((account_type) =>
+  //             account_type.bankingType.trim().toLowerCase() ==
+  //             normalizedProductType)
+  //         .toList();
+  //   }
+
+  //   // ✅ 3. Filter by sex
+  //   if (user_sex != null && user_sex.trim().isNotEmpty) {
+  //     final normalizedUserSex = user_sex.trim().toUpperCase();
+  //     filtered = filtered
+  //         .where((account_type) =>
+  //             account_type.sex == 'BOTH' || account_type.sex == normalizedUserSex)
+  //         .toList();
+  //   }
+
+  //   // ✅ Final result
+  //   setState(() {
+  //     filteredAccountTypes = filtered;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +244,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                               boxShadow: [
                                 BoxShadow(
                                   color: isSelected
-                                      ? const Color(0xFF1976D2).withOpacity(0.18)
+                                      ? const Color(0xFF1976D2)
+                                          .withOpacity(0.18)
                                       : Colors.grey.withOpacity(0.10),
                                   blurRadius: isSelected ? 16 : 8,
                                   offset: const Offset(0, 4),
@@ -228,14 +261,16 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                                   isSelected
                                       ? Icons.check_circle
                                       : Icons.account_balance,
-                                  color:
-                                      isSelected ? Colors.white : Colors.blueGrey,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.blueGrey,
                                   size: 28,
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         account_type.name,
@@ -286,7 +321,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                       }).toList(),
                       if (showShares) ...[
                         const SizedBox(height: 24),
-                        Text('Bank Share (%)', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Bank Share (%)',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         TextFormField(
                           controller: _bankShareController,
                           keyboardType: TextInputType.number,
@@ -298,7 +334,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                               return 'Bank share is required';
                             }
                             final bank = int.tryParse(value);
-                            final customer = int.tryParse(_customerShareController.text);
+                            final customer =
+                                int.tryParse(_customerShareController.text);
                             if (bank == null || bank < 0 || bank > 100) {
                               return 'Enter a valid percent (0-100)';
                             }
@@ -314,23 +351,33 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                             final bank = int.tryParse(value);
                             if (bank != null && bank >= 0 && bank <= 100) {
                               final customer = 100 - bank;
-                              _customerShareController.text = customer.toString();
+                              _customerShareController.text =
+                                  customer.toString();
                               setState(() {
                                 _shareError = null;
                               });
-                              ref.read(stepperProvider.notifier).updateBankShare(bank);
-                              ref.read(stepperProvider.notifier).updateCustomerShare(customer);
+                              ref
+                                  .read(stepperProvider.notifier)
+                                  .updateBankShare(bank);
+                              ref
+                                  .read(stepperProvider.notifier)
+                                  .updateCustomerShare(customer);
                             } else {
                               setState(() {
                                 _shareError = 'Enter a valid percent (0-100)';
                               });
-                              ref.read(stepperProvider.notifier).updateBankShare(null);
-                              ref.read(stepperProvider.notifier).updateCustomerShare(null);
+                              ref
+                                  .read(stepperProvider.notifier)
+                                  .updateBankShare(null);
+                              ref
+                                  .read(stepperProvider.notifier)
+                                  .updateCustomerShare(null);
                             }
                           },
                         ),
                         const SizedBox(height: 12),
-                        Text('Customer Share (%)', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Customer Share (%)',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         TextFormField(
                           controller: _customerShareController,
                           keyboardType: TextInputType.number,
@@ -342,7 +389,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                         if (_shareError != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(_shareError!, style: const TextStyle(color: Colors.red)),
+                            child: Text(_shareError!,
+                                style: const TextStyle(color: Colors.red)),
                           ),
                       ],
                     ],

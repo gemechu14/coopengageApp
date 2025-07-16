@@ -140,6 +140,25 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         if (responseData.containsKey('sub')) {
           mappedData['legalId'] = responseData['sub'];
         }
+
+        ///
+
+        // ✅ Map nested address fields
+        if (responseData.containsKey('address') &&
+            responseData['address'] is Map) {
+          final address = responseData['address'] as Map<String, dynamic>;
+
+          if (address.containsKey('country')) {
+            mappedData['country'] = address['country'];
+          }
+          if (address.containsKey('region')) {
+            mappedData['state'] = address[
+                'region']; // Assuming "region" maps to your "state" field
+          }
+        }
+
+        ///
+
         if (mappedData.containsKey('id') ||
             mappedData.containsKey('fullName')) {
           state = state.copyWith(

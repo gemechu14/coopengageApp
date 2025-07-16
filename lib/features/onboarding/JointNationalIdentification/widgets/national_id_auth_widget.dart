@@ -114,7 +114,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               color: member.isVerified ? cyanblueColor : null,
             ),
             title: Text('Authorize Member ${index + 1}'),
-            subtitle: Text(member.fullName ?? 'No Name'),
+            // subtitle: Text(member.fullName ?? 'No Name'),
             trailing: member.isVerified
                 ? ElevatedButton.icon(
                     onPressed: () {
@@ -984,9 +984,20 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   void _onMemberVerified(int memberIndex, Map<String, dynamic> data) {
     final stepperNotifier = ref.read(stepperProvider.notifier);
     final stepperState = ref.read(stepperProvider);
+    // Map verified fields into the member's main fields for consistency
     final updatedMember = stepperState.members[memberIndex].copyWith(
       isVerified: true,
       verifiedData: data,
+      fullName: data['fullName'] ?? stepperState.members[memberIndex].fullName,
+      motherName:
+          data['motherName'] ?? stepperState.members[memberIndex].motherName,
+      title: data['title'] ?? stepperState.members[memberIndex].title,
+      sex: data['sex'] ?? stepperState.members[memberIndex].sex,
+      dateOfBirth:
+          data['dateOfBirth'] ?? stepperState.members[memberIndex].dateOfBirth,
+      maritalStatus: data['maritalStatus'] ??
+          stepperState.members[memberIndex].maritalStatus,
+      // Add more fields as needed
     );
     stepperNotifier.updateMember(memberIndex, updatedMember);
   }

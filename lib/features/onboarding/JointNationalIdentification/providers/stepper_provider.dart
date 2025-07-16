@@ -15,6 +15,7 @@ class StepperState {
   final String? motherName;
   final Uint8List? signature;
   final String? selectedAccountType;
+  final String? jointAccountType;
   final int customerAge;
   final String customerGender;
   final double? initialDeposit;
@@ -54,6 +55,7 @@ class StepperState {
     this.motherName,
     this.signature,
     this.selectedAccountType,
+    this.jointAccountType,
     this.customerAge = 25,
     this.customerGender = 'MALE',
     this.initialDeposit,
@@ -88,6 +90,7 @@ class StepperState {
     String? selectedProductType,
     String? selectedTitle,
     String? selectedMaritalStatus,
+    String? jointAccountType,
     String? selectedBranch,
     String? motherName,
     Uint8List? signature,
@@ -125,6 +128,7 @@ class StepperState {
       selectedProductType: selectedProductType ?? this.selectedProductType,
       selectedMaritalStatus:
           selectedMaritalStatus ?? this.selectedMaritalStatus,
+      jointAccountType: jointAccountType ?? this.jointAccountType,
       selectedTitle: selectedTitle ?? this.selectedTitle,
       selectedBranch: selectedBranch ?? this.selectedBranch,
       motherName: motherName ?? this.motherName,
@@ -223,6 +227,10 @@ class StepperNotifier extends StateNotifier<StepperState> {
     state = state.copyWith(selectedMaritalStatus: maritalStatus);
   }
 
+ void updateJointAccountType(String? jointAccountType) {
+    state = state.copyWith(jointAccountType: jointAccountType);
+  }
+
   void updateTitle(String? title) {
     state = state.copyWith(selectedTitle: title);
   }
@@ -286,6 +294,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
       state = state.copyWith(members: newMembers);
     }
   }
+
   void updateMember(int index, JointMemberInfo member) {
     final updatedMembers = List<JointMemberInfo>.from(state.members);
     if (index >= 0 && index < updatedMembers.length) {
@@ -297,7 +306,8 @@ class StepperNotifier extends StateNotifier<StepperState> {
   void updateMemberSignature(int index, Uint8List signature) {
     final updatedMembers = List<JointMemberInfo>.from(state.members);
     if (index >= 0 && index < updatedMembers.length) {
-      final updatedMember = updatedMembers[index].copyWith(signature: signature);
+      final updatedMember =
+          updatedMembers[index].copyWith(signature: signature);
       updatedMembers[index] = updatedMember;
       state = state.copyWith(members: updatedMembers);
     }

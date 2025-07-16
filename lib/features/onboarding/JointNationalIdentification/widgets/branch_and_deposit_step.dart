@@ -7,7 +7,8 @@ import 'package:flutter/services.dart';
 
 class BranchAndDepositStep extends ConsumerStatefulWidget {
   @override
-  ConsumerState<BranchAndDepositStep> createState() => _BranchAndDepositStepState();
+  ConsumerState<BranchAndDepositStep> createState() =>
+      _BranchAndDepositStepState();
 }
 
 class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
@@ -18,7 +19,8 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
     super.initState();
     final stepperState = ref.read(stepperProvider);
     initialDepositController = TextEditingController(
-      text: stepperState.initialDeposit != null && stepperState.initialDeposit! > 0
+      text: stepperState.initialDeposit != null &&
+              stepperState.initialDeposit! > 0
           ? stepperState.initialDeposit!.toInt().toString()
           : '',
     );
@@ -28,9 +30,10 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
   void didUpdateWidget(covariant BranchAndDepositStep oldWidget) {
     super.didUpdateWidget(oldWidget);
     final stepperState = ref.read(stepperProvider);
-    final newText = stepperState.initialDeposit != null && stepperState.initialDeposit! > 0
-        ? stepperState.initialDeposit!.toInt().toString()
-        : '';
+    final newText =
+        stepperState.initialDeposit != null && stepperState.initialDeposit! > 0
+            ? stepperState.initialDeposit!.toInt().toString()
+            : '';
     if (initialDepositController.text != newText) {
       initialDepositController.text = newText;
     }
@@ -52,7 +55,7 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
-          Text('Branch'),
+          Text('Branch', style: TextStyle(fontWeight: FontWeight.bold)),
           BranchSelector(
             initialValue: stepperState.selectedBranch,
             onChanged: (value) {
@@ -60,7 +63,8 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
             },
           ),
           const SizedBox(height: 16),
-          Text('Initial Deposit'),
+          Text('Initial Deposit',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           ReusableTextFormField(
             hintText: 'Initial Deposit',
             controller: initialDepositController,
