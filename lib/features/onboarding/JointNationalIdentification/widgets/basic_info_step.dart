@@ -9,14 +9,21 @@ class BasicInfoStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stepperState = ref.watch(stepperProvider);
     final notifier = ref.read(stepperProvider.notifier);
+
+    // Ensure default members list is initialized if not already, but not during build
+    if (stepperState.numberOfMembers == 2 && stepperState.members.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.updateNumberOfMembers(2);
+      });
+    }
     return Padding(
       padding: const EdgeInsets.all(1.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Basic Information',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
+          // Text('Basic Information',
+          //     style: Theme.of(context).textTheme.titleLarge),
+          // const SizedBox(height: 16),
           Text('Product Type'),
           ReusableDropdown(
             selectedValue: stepperState.selectedProductType,
@@ -53,8 +60,18 @@ class BasicInfoStep extends ConsumerWidget {
             items: ['2', '3'],
             hintText: 'Select Number of Members',
             onChanged: (newStatus) {
+              print('Dropdown changed: newStatus = '
+                  ' [32m$newStatus [0m, type = '
+                  ' [34m${newStatus.runtimeType} [0m');
               if (newStatus != null) {
-                notifier.updateNumberOfMembers(int.parse(newStatus));
+                final parsed = int.tryParse(newStatus);
+                print('Parsed int: $parsed');
+                if (parsed != null) {
+                  notifier.updateNumberOfMembers(parsed);
+                  print('Called notifier.updateNumberOfMembers($parsed)');
+                } else {
+                  print('Failed to parse newStatus to int');
+                }
               }
             },
             prefixIcon: Icons.group,
