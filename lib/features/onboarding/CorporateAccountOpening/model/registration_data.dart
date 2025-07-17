@@ -14,6 +14,14 @@ class JointMemberInfo {
   final String? zoneSubCity;
   final String? woreda;
   final String? state;
+  final String? issueDate;
+  final String? expirayDate;
+  final String? documentType;
+  final String? residentPath;
+  final String? residentCardBackPath;
+  final String? profilePath;
+  final String? legalId;
+  final String? issueAuthority;
 
   JointMemberInfo({
     this.nationalId,
@@ -31,6 +39,14 @@ class JointMemberInfo {
     this.zoneSubCity,
     this.woreda,
     this.state,
+    this.issueDate,
+    this.expirayDate,
+    this.documentType,
+    this.residentPath,
+    this.residentCardBackPath,
+    this.profilePath,
+    this.legalId,
+    this.issueAuthority,
   });
 
   JointMemberInfo copyWith({
@@ -49,6 +65,14 @@ class JointMemberInfo {
     String? zoneSubCity,
     String? woreda,
     String? state,
+    String? issueDate,
+    String? expirayDate,
+    String? documentType,
+    String? residentPath,
+    String? residentCardBackPath,
+    String? profilePath,
+    String? legalId,
+    String? issueAuthority,
   }) {
     return JointMemberInfo(
       nationalId: nationalId ?? this.nationalId,
@@ -66,6 +90,14 @@ class JointMemberInfo {
       zoneSubCity: zoneSubCity ?? this.zoneSubCity,
       woreda: woreda ?? this.woreda,
       state: state ?? this.state,
+      issueDate: issueDate ?? this.issueDate,
+      expirayDate: expirayDate ?? this.expirayDate,
+      documentType: documentType ?? this.documentType,
+      residentPath: residentPath ?? this.residentPath,
+      residentCardBackPath: residentCardBackPath ?? this.residentCardBackPath,
+      profilePath: profilePath ?? this.profilePath,
+      legalId: legalId ?? this.legalId,
+      issueAuthority: issueAuthority ?? this.issueAuthority,
     );
   }
 
@@ -93,6 +125,14 @@ class JointMemberInfo {
       zoneSubCity: map['zoneSubCity'],
       woreda: map['woreda'],
       state: map['state'],
+      issueDate: map['issueDate'],
+      expirayDate: map['expirayDate'],
+      documentType: map['documentType'],
+      residentPath: map['residentPath'],
+      residentCardBackPath: map['residentCardBackPath'],
+      profilePath: map['profilePath'],
+      legalId: map['legalId'],
+      issueAuthority: map['issueAuthority'],
     );
   }
 
@@ -113,6 +153,14 @@ class JointMemberInfo {
       'zoneSubCity': zoneSubCity,
       'woreda': woreda,
       'state': state,
+      'issueDate': issueDate,
+      'expirayDate': expirayDate,
+      'documentType': documentType,
+      'residentPath': residentPath,
+      'residentCardBackPath': residentCardBackPath,
+      'profilePath': profilePath,
+      'legalId': legalId,
+      'issueAuthority': issueAuthority,
     };
   }
 }

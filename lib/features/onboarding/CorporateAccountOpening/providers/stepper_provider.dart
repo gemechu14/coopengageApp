@@ -449,6 +449,90 @@ class StepperNotifier extends StateNotifier<StepperState> {
       state = state.copyWith(members: updatedMembers);
     }
   }
+  void updateMemberPhone(int index, String? phone) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(phone: phone);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberEmail(int index, String? email) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(email: email);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberSex(int index, String? sex) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(sex: sex);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberTitle(int index, String? title) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(title: title);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberIssueDate(int index, String? issueDate) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(issueDate: issueDate);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberExpirayDate(int index, String? expirayDate) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(expirayDate: expirayDate);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberDocumentType(int index, String? documentType) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(documentType: documentType);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberResidentPath(int index, String? residentPath) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(residentPath: residentPath);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberResidentCardBackPath(int index, String? residentCardBackPath) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(residentCardBackPath: residentCardBackPath);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberProfilePath(int index, String? profilePath) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(profilePath: profilePath);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberLegalId(int index, String? legalId) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(legalId: legalId);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberIssueAuthority(int index, String? issueAuthority) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(issueAuthority: issueAuthority);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
 
   // Helper method to calculate age from date of birth
   int _calculateAgeFromDateOfBirth(String? dateOfBirth) {

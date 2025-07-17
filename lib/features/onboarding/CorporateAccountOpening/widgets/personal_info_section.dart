@@ -15,6 +15,7 @@ class PersonalInfoSection extends StatelessWidget {
   final ValueChanged<String?> onTitleChanged;
   final ValueChanged<String> onFullNameChanged;
   final ValueChanged<String> onPhoneChanged;
+  final ValueChanged<String> onEmailChanged;
 
   const PersonalInfoSection({
     Key? key,
@@ -27,6 +28,7 @@ class PersonalInfoSection extends StatelessWidget {
     required this.onTitleChanged,
     required this.onFullNameChanged,
     required this.onPhoneChanged,
+    required this.onEmailChanged,
   }) : super(key: key);
 
   @override
@@ -50,7 +52,7 @@ class PersonalInfoSection extends StatelessWidget {
           onChanged: onPhoneChanged,
         ),
         Text('Email'),
-        EmailWidget(emailController: emailController),
+        EmailWidget(emailController: emailController, onChanged: onEmailChanged),
         Text('Gender'),
         ReusableDropdown(
           selectedValue: selectedGender,

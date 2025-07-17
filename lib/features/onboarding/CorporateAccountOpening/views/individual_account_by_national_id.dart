@@ -685,7 +685,7 @@ class _IndividualAccountByNationalIdState
         'initialDeposit': (stepperState.initialDeposit ?? 100).toString(),
         // 'percentageCompleted':
         //     (stepperState.percentageComplete ?? 10).toString(),
-        'jointAccountType': 'AND_OR'
+        // 'jointAccountType': 'AND_OR'
       };
 
       print("submitted data");

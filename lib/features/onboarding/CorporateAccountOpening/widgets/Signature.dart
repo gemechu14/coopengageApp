@@ -58,7 +58,7 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Signatures',
+          const Text('Signaturescc',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ...List.generate(memberCount, (memberIndex) {
             final member = stepperState.members[memberIndex];

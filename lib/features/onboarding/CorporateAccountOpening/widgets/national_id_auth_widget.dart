@@ -86,62 +86,81 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       }
       return controller;
     });
-    selectedGender = List.generate(numberOfMembers, (i) => i < members.length ? members[i].sex : null);
-    selectedTitle = List.generate(numberOfMembers, (i) => i < members.length ? members[i].title : null);
+    selectedGender = List.generate(
+        numberOfMembers, (i) => i < members.length ? members[i].sex : null);
+    selectedTitle = List.generate(
+        numberOfMembers, (i) => i < members.length ? members[i].title : null);
     expandedIndex = 0;
     expandedSubIndexList = List.generate(
         numberOfMembers, (_) => 0); // 0: Personal, 1: Document, 2: ID
     selectedDocumentType = List.generate(numberOfMembers, (_) => null);
-    legalIDControllers =
-        List.generate(numberOfMembers, (i) {
-          final controller = TextEditingController();
-          if (i < members.length && members[i].nationalId != null) {
-            controller.text = members[i].nationalId!;
-          }
-          return controller;
-        });
-    issueAuthorityControllers =
-        List.generate(numberOfMembers, (i) {
-          final controller = TextEditingController();
-          if (i < members.length && members[i].motherName != null) {
-            controller.text = members[i].motherName!;
-          }
-          return controller;
-        });
-    cityControllers =
-        List.generate(numberOfMembers, (i) {
-          final controller = TextEditingController();
-          if (i < members.length && members[i].zoneSubCity != null) {
-            controller.text = members[i].zoneSubCity!;
-          }
-          return controller;
-        });
-    woredaControllers =
-        List.generate(numberOfMembers, (i) {
-          final controller = TextEditingController();
-          if (i < members.length && members[i].woreda != null) {
-            controller.text = members[i].woreda!;
-          }
-          return controller;
-        });
-    residenceControllers =
-        List.generate(numberOfMembers, (i) {
-          final controller = TextEditingController();
-          // Add if you have a residence field in JointMemberInfo
-          return controller;
-        });
-    issueDateControllers =
-        List.generate(numberOfMembers, (i) {
-          final controller = TextEditingController();
-          // Add if you have an issueDate field in JointMemberInfo
-          return controller;
-        });
-    expireDateControllers =
-        List.generate(numberOfMembers, (i) {
-          final controller = TextEditingController();
-          // Add if you have an expireDate field in JointMemberInfo
-          return controller;
-        });
+    legalIDControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].legalId != null) {
+        controller.text = members[i].legalId!;
+      }
+      controller.addListener(() {
+        ref
+            .read(stepperProvider.notifier)
+            .updateMemberLegalId(i, controller.text);
+      });
+      return controller;
+    });
+    issueAuthorityControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].issueAuthority != null) {
+        controller.text = members[i].issueAuthority!;
+      }
+      controller.addListener(() {
+        ref
+            .read(stepperProvider.notifier)
+            .updateMemberIssueAuthority(i, controller.text);
+      });
+      return controller;
+    });
+    cityControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].zoneSubCity != null) {
+        controller.text = members[i].zoneSubCity!;
+      }
+      return controller;
+    });
+    woredaControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].woreda != null) {
+        controller.text = members[i].woreda!;
+      }
+      return controller;
+    });
+    residenceControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      // Add if you have a residence field in JointMemberInfo
+      return controller;
+    });
+    issueDateControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].issueDate != null) {
+        controller.text = members[i].issueDate!;
+      }
+      controller.addListener(() {
+        ref
+            .read(stepperProvider.notifier)
+            .updateMemberIssueDate(i, controller.text);
+      });
+      return controller;
+    });
+    expireDateControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].expirayDate != null) {
+        controller.text = members[i].expirayDate!;
+      }
+      controller.addListener(() {
+        ref
+            .read(stepperProvider.notifier)
+            .updateMemberExpirayDate(i, controller.text);
+      });
+      return controller;
+    });
     residentPaths = List.generate(numberOfMembers, (_) => "");
     residentCardBackPaths = List.generate(numberOfMembers, (_) => "");
     profilePaths = List.generate(numberOfMembers, (_) => "");
@@ -254,10 +273,18 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                                       onFullNameChanged: (value) {
                                         fullNameControllers[i].text = value;
                                         notifier.updateMemberFullName(i, value);
-                                        print('Updated member $i full name to $value');
+                                        print(
+                                            'Updated member $i full name to $value');
                                         print('Provider value: '
                                             '${ref.read(stepperProvider).members.length > i ? ref.read(stepperProvider).members[i].fullName : "(no member)"}');
-                                      }, onPhoneChanged: (String value) {  },
+                                      },
+                                      onPhoneChanged: (value) {
+                                        notifier.updateMemberPhone(i, value);
+                                      },
+                                      onEmailChanged: (value) {
+                                        emailControllers[i].text = value;
+                                        notifier.updateMemberEmail(i, value);
+                                      },
                                     ),
                                   ),
                                   ExpansionPanelRadio(
@@ -268,32 +295,77 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                                                 Text('Document Information')),
                                     body: DocumentInfoSection(
                                       selectedDocumentType:
-                                          selectedDocumentType[i],
-                                      onDocumentTypeChanged: (newStatus) {
-                                        setState(() {
-                                          selectedDocumentType[i] = newStatus;
-                                        });
+                                          stepperState.members.length > i
+                                              ? stepperState
+                                                  .members[i].documentType
+                                              : null,
+                                      onDocumentTypeChanged: (value) {
+                                        notifier.updateMemberDocumentType(
+                                            i, value);
                                       },
                                       idCardPhotoWidget: IdCardPhoto(
                                         index: i,
                                         selectedDocumentType:
-                                            selectedDocumentType[i],
-                                        residentPath: residentPaths[i],
+                                            stepperState.members.length > i
+                                                ? stepperState
+                                                    .members[i].documentType
+                                                : null,
+                                        residentPath:
+                                            stepperState.members.length > i
+                                                ? stepperState.members[i]
+                                                        .residentPath ??
+                                                    ''
+                                                : '',
                                         residentCardBackPath:
-                                            residentCardBackPaths[i],
-                                        profilePath: profilePaths[i],
-                                        onUploadFront: () =>
-                                            _imgFromGallery(i, "resident"),
-                                        onCaptureFront: () =>
-                                            _imgFromCamera(i, "resident"),
-                                        onUploadBack: () => _imgFromGallery(
-                                            i, "residentCardBack"),
-                                        onCaptureBack: () => _imgFromCamera(
-                                            i, "residentCardBack"),
-                                        onUploadProfile: () =>
-                                            _imgFromGallery(i, "profilePath"),
-                                        onCaptureProfile: () =>
-                                            _imgFromCamera(i, "profilePath"),
+                                            stepperState.members.length > i
+                                                ? stepperState.members[i]
+                                                        .residentCardBackPath ??
+                                                    ''
+                                                : '',
+                                        profilePath:
+                                            stepperState.members.length > i
+                                                ? stepperState.members[i]
+                                                        .profilePath ??
+                                                    ''
+                                                : '',
+                                        onUploadFront: () async {
+                                          final newPath = await _imgFromGallery(
+                                              i, "resident");
+                                          notifier.updateMemberResidentPath(
+                                              i, newPath);
+                                        },
+                                        onCaptureFront: () async {
+                                          final newPath = await _imgFromCamera(
+                                              i, "resident");
+                                          notifier.updateMemberResidentPath(
+                                              i, newPath);
+                                        },
+                                        onUploadBack: () async {
+                                          final newPath = await _imgFromGallery(
+                                              i, "residentCardBack");
+                                          notifier
+                                              .updateMemberResidentCardBackPath(
+                                                  i, newPath);
+                                        },
+                                        onCaptureBack: () async {
+                                          final newPath = await _imgFromCamera(
+                                              i, "residentCardBack");
+                                          notifier
+                                              .updateMemberResidentCardBackPath(
+                                                  i, newPath);
+                                        },
+                                        onUploadProfile: () async {
+                                          final newPath = await _imgFromGallery(
+                                              i, "profilePath");
+                                          notifier.updateMemberProfilePath(
+                                              i, newPath);
+                                        },
+                                        onCaptureProfile: () async {
+                                          final newPath = await _imgFromCamera(
+                                              i, "profilePath");
+                                          notifier.updateMemberProfilePath(
+                                              i, newPath);
+                                        },
                                         showFullScreen: (path) =>
                                             _showFullScreenImage(context, path),
                                       ),
@@ -312,6 +384,15 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                                           issueDateControllers[i],
                                       expireDateController:
                                           expireDateControllers[i],
+                                      onLegalIdChanged: (value) => notifier
+                                          .updateMemberLegalId(i, value),
+                                      onIssueAuthorityChanged: (value) =>
+                                          notifier.updateMemberIssueAuthority(
+                                              i, value),
+                                      onIssueDateChanged: (value) => notifier
+                                          .updateMemberIssueDate(i, value),
+                                      onExpireDateChanged: (value) => notifier
+                                          .updateMemberExpirayDate(i, value),
                                     ),
                                   ),
                                 ],
@@ -394,7 +475,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     );
   }
 
-  Future<void> _imgFromGallery(int i, String imageTypes) async {
+  Future<String?> _imgFromGallery(int i, String imageTypes) async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -404,7 +485,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       bool originalExists = await originalFile.exists();
 
       if (!originalExists) {
-        return;
+        return null;
       }
 
       // Step 2: Get the application's document directory
@@ -430,14 +511,16 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             }
             // Add other imageTypes as needed
           });
+          return newPath; // Return the new path
         } else {}
       } catch (e) {
         print("Error copying file: $e");
       }
     }
+    return null; // Return null if picking fails or file is not found
   }
 
-  Future<void> _imgFromCamera(int i, String imageTypes) async {
+  Future<String?> _imgFromCamera(int i, String imageTypes) async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
@@ -446,7 +529,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       bool originalExists = await originalFile.exists();
 
       if (!originalExists) {
-        return;
+        return null;
       }
 
       Directory appDir = await getApplicationDocumentsDirectory();
@@ -468,11 +551,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             }
             // Add other imageTypes as needed
           });
+          return newPath;
         } else {}
       } catch (e) {
         print("Error copying file: $e");
       }
     }
+    return null;
   }
 }
 

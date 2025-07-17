@@ -93,12 +93,7 @@ class RegistrationService {
         throw Exception("Token not found");
       }
 
-      print("Gemechu Bulti");
-      print(token);
-      print("Members");
-      print(members);
-      print("others");
-      print(otherFields);
+     
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/api/v1/accounts/joint'),

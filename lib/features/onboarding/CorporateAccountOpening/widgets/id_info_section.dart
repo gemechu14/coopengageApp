@@ -7,6 +7,10 @@ class IDInfoSection extends StatelessWidget {
   final TextEditingController issueAuthorityController;
   final TextEditingController issueDateController;
   final TextEditingController expireDateController;
+  final ValueChanged<String>? onLegalIdChanged;
+  final ValueChanged<String>? onIssueAuthorityChanged;
+  final ValueChanged<String>? onIssueDateChanged;
+  final ValueChanged<String>? onExpireDateChanged;
 
   const IDInfoSection({
     Key? key,
@@ -14,6 +18,10 @@ class IDInfoSection extends StatelessWidget {
     required this.issueAuthorityController,
     required this.issueDateController,
     required this.expireDateController,
+    this.onLegalIdChanged,
+    this.onIssueAuthorityChanged,
+    this.onIssueDateChanged,
+    this.onExpireDateChanged,
   }) : super(key: key);
 
   @override
@@ -28,6 +36,7 @@ class IDInfoSection extends StatelessWidget {
           errorMessage: "Legal ID cannot be empty",
           leadingIcon: Icons.badge,
           isRequired: true,
+          onChanged: onLegalIdChanged,
         ),
         Text('ISSUE AUTHORITY'),
         ReusableTextFormField(
@@ -36,6 +45,7 @@ class IDInfoSection extends StatelessWidget {
           errorMessage: "ISSUE AUTHORITY cannot be empty",
           leadingIcon: Icons.verified,
           isRequired: false,
+          onChanged: onIssueAuthorityChanged,
         ),
         Text('ISSUE DATE'),
         DatePickerField(
@@ -47,6 +57,7 @@ class IDInfoSection extends StatelessWidget {
           lastDate: DateTime.now(),
           isRequired: false,
           errorMessage: 'Please select an issue date',
+          // DatePickerField does not support onChanged, so add a listener in parent if needed
         ),
         Text('EXPIRY DATE'),
         DatePickerField(
@@ -58,6 +69,7 @@ class IDInfoSection extends StatelessWidget {
           lastDate: DateTime.now().add(const Duration(days: 365 * 12)),
           isRequired: false,
           errorMessage: 'Please select an expire date',
+          // DatePickerField does not support onChanged, so add a listener in parent if needed
         ),
       ],
     );
