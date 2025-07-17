@@ -1,51 +1,71 @@
 class JointMemberInfo {
   final String? nationalId;
   final String? fullName;
+  final String? phone;
   final String? motherName;
   final String? title;
   final String? sex;
   final String? dateOfBirth;
   final String? maritalStatus;
+  final String? email;
   final dynamic signature;
   final bool isVerified;
   final Map<String, dynamic>? verifiedData;
+  final String? zoneSubCity;
+  final String? woreda;
+  final String? state;
 
   JointMemberInfo({
     this.nationalId,
     this.fullName,
+    this.phone,
     this.motherName,
     this.title,
     this.sex,
     this.dateOfBirth,
     this.maritalStatus,
+    this.email,
     this.signature,
     this.isVerified = false,
     this.verifiedData,
+    this.zoneSubCity,
+    this.woreda,
+    this.state,
   });
 
   JointMemberInfo copyWith({
     String? nationalId,
     String? fullName,
+    String? phone,
     String? motherName,
     String? title,
     String? sex,
     String? dateOfBirth,
     String? maritalStatus,
+    String? email,
     dynamic signature,
     bool? isVerified,
     Map<String, dynamic>? verifiedData,
+    String? zoneSubCity,
+    String? woreda,
+    String? state,
   }) {
     return JointMemberInfo(
       nationalId: nationalId ?? this.nationalId,
       fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
       motherName: motherName ?? this.motherName,
       title: title ?? this.title,
       sex: sex ?? this.sex,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       maritalStatus: maritalStatus ?? this.maritalStatus,
+      email: email ?? this.email,
       signature: signature ?? this.signature,
       isVerified: isVerified ?? this.isVerified,
       verifiedData: verifiedData ?? this.verifiedData,
+      zoneSubCity: zoneSubCity ?? this.zoneSubCity,
+      woreda: woreda ?? this.woreda,
+      state: state ?? this.state,
     );
   }
 
@@ -60,14 +80,19 @@ class JointMemberInfo {
     return JointMemberInfo(
       nationalId: map['nationalId'],
       fullName: map['fullName'],
+      phone: map['phone'],
       motherName: map['motherName'],
       title: map['title'],
       sex: map['sex'],
       dateOfBirth: map['dateOfBirth'],
       maritalStatus: map['maritalStatus'],
+      email: map['email'],
       signature: map['signature'],
       isVerified: safeIsVerified,
       verifiedData: map['verifiedData'],
+      zoneSubCity: map['zoneSubCity'],
+      woreda: map['woreda'],
+      state: map['state'],
     );
   }
 
@@ -75,14 +100,19 @@ class JointMemberInfo {
     return {
       'nationalId': nationalId,
       'fullName': fullName,
+      'phone': phone,
       'motherName': motherName,
       'title': title,
       'sex': sex,
       'dateOfBirth': dateOfBirth,
       'maritalStatus': maritalStatus,
+      'email': email,
       'signature': signature,
       'isVerified': isVerified,
       'verifiedData': verifiedData,
+      'zoneSubCity': zoneSubCity,
+      'woreda': woreda,
+      'state': state,
     };
   }
 }

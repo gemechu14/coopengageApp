@@ -64,32 +64,84 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   void _initMemberControllers(int numberOfMembers) {
-    fullNameControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
-    phoneControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
-    emailControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
-    selectedGender = List.generate(numberOfMembers, (_) => null);
-    selectedTitle = List.generate(numberOfMembers, (_) => null);
+    final members = ref.read(stepperProvider).members;
+    fullNameControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].fullName != null) {
+        controller.text = members[i].fullName!;
+      }
+      return controller;
+    });
+    phoneControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].phone != null) {
+        controller.text = members[i].phone!;
+      }
+      return controller;
+    });
+    emailControllers = List.generate(numberOfMembers, (i) {
+      final controller = TextEditingController();
+      if (i < members.length && members[i].email != null) {
+        controller.text = members[i].email!;
+      }
+      return controller;
+    });
+    selectedGender = List.generate(numberOfMembers, (i) => i < members.length ? members[i].sex : null);
+    selectedTitle = List.generate(numberOfMembers, (i) => i < members.length ? members[i].title : null);
     expandedIndex = 0;
     expandedSubIndexList = List.generate(
         numberOfMembers, (_) => 0); // 0: Personal, 1: Document, 2: ID
     selectedDocumentType = List.generate(numberOfMembers, (_) => null);
     legalIDControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
+        List.generate(numberOfMembers, (i) {
+          final controller = TextEditingController();
+          if (i < members.length && members[i].nationalId != null) {
+            controller.text = members[i].nationalId!;
+          }
+          return controller;
+        });
     issueAuthorityControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
+        List.generate(numberOfMembers, (i) {
+          final controller = TextEditingController();
+          if (i < members.length && members[i].motherName != null) {
+            controller.text = members[i].motherName!;
+          }
+          return controller;
+        });
     cityControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
+        List.generate(numberOfMembers, (i) {
+          final controller = TextEditingController();
+          if (i < members.length && members[i].zoneSubCity != null) {
+            controller.text = members[i].zoneSubCity!;
+          }
+          return controller;
+        });
     woredaControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
+        List.generate(numberOfMembers, (i) {
+          final controller = TextEditingController();
+          if (i < members.length && members[i].woreda != null) {
+            controller.text = members[i].woreda!;
+          }
+          return controller;
+        });
     residenceControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
+        List.generate(numberOfMembers, (i) {
+          final controller = TextEditingController();
+          // Add if you have a residence field in JointMemberInfo
+          return controller;
+        });
     issueDateControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
+        List.generate(numberOfMembers, (i) {
+          final controller = TextEditingController();
+          // Add if you have an issueDate field in JointMemberInfo
+          return controller;
+        });
     expireDateControllers =
-        List.generate(numberOfMembers, (_) => TextEditingController());
+        List.generate(numberOfMembers, (i) {
+          final controller = TextEditingController();
+          // Add if you have an expireDate field in JointMemberInfo
+          return controller;
+        });
     residentPaths = List.generate(numberOfMembers, (_) => "");
     residentCardBackPaths = List.generate(numberOfMembers, (_) => "");
     profilePaths = List.generate(numberOfMembers, (_) => "");
@@ -134,6 +186,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final notifier = ref.read(stepperProvider.notifier);
     if (_disposed) return const SizedBox.shrink();
 
     try {
@@ -198,6 +251,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                                           selectedTitle[i] = newStatus;
                                         });
                                       },
+                                      onFullNameChanged: (value) {
+                                        fullNameControllers[i].text = value;
+                                        notifier.updateMemberFullName(i, value);
+                                        print('Updated member $i full name to $value');
+                                        print('Provider value: '
+                                            '${ref.read(stepperProvider).members.length > i ? ref.read(stepperProvider).members[i].fullName : "(no member)"}');
+                                      }, onPhoneChanged: (String value) {  },
                                     ),
                                   ),
                                   ExpansionPanelRadio(

@@ -9,7 +9,7 @@ import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widge
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widgets/account_type_step.dart';
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widgets/basic_info_step.dart';
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widgets/branch_and_deposit_step.dart';
-import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widgets/member_additional_info_step.dart';
+import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widgets/AttachDocuments.dart';
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/widgets/registration_summary_page.dart';
 
@@ -98,9 +98,9 @@ class _IndividualAccountByNationalIdState
         builder: (context, ref) => NationalIdAuthStep(),
       ),
       StepConfig(
-        title: 'Additional Info',
+        title: 'Attach Files',
         icon: Icon(Icons.info_outline),
-        builder: (context, ref) => MemberAdditionalInfoStep(),
+        builder: (context, ref) => AttachDocumentsStep(),
       ),
       StepConfig(
         title: 'Signature',

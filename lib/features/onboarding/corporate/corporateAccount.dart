@@ -1254,6 +1254,9 @@ class _Registration extends State<CorporateRegistration> {
           ),
         ),
       ),
+     
+     
+     
       Step(
         title: Text(isSmallScreen ? "" : "Financial Information"),
         isActive: _activeStepIndex >= 5,

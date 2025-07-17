@@ -25,6 +25,20 @@ class StepperState {
   final int? customerShare;
   final int numberOfMembers;
   final List<JointMemberInfo> members;
+  final String? licenseFile;
+  final String? articleFile;
+  final String? letterOfRequestFile;
+  final String? tinNumberPhoto;
+  final String? tradeName;
+  final List<String> otherFiles;
+  final String? companyName;
+  final String? companyPhoneNumber;
+  final String? companyDateOfEstablishment;
+  final String? companyTinNumber;
+  final String? companyEmail;
+  final String? companyState;
+  final String? companyZoneSubCity;
+  final String? companyWoreda;
 
   // National ID Authentication Data
   final int? authId;
@@ -65,6 +79,20 @@ class StepperState {
     this.customerShare,
     this.numberOfMembers = 2,
     this.members = const [],
+    this.licenseFile,
+    this.articleFile,
+    this.letterOfRequestFile,
+    this.tinNumberPhoto,
+    this.tradeName,
+    this.otherFiles = const [],
+    this.companyName,
+    this.companyPhoneNumber,
+    this.companyDateOfEstablishment,
+    this.companyTinNumber,
+    this.companyEmail,
+    this.companyState,
+    this.companyZoneSubCity,
+    this.companyWoreda,
     this.authId,
     this.fullName,
     this.email,
@@ -104,6 +132,20 @@ class StepperState {
     int? customerShare,
     int? numberOfMembers,
     List<JointMemberInfo>? members,
+    String? licenseFile,
+    String? articleFile,
+    String? letterOfRequestFile,
+    String? tinNumberPhoto,
+    String? tradeName,
+    List<String>? otherFiles,
+    String? companyName,
+    String? companyPhoneNumber,
+    String? companyDateOfEstablishment,
+    String? companyTinNumber,
+    String? companyEmail,
+    String? companyState,
+    String? companyZoneSubCity,
+    String? companyWoreda,
     int? authId,
     String? fullName,
     String? email,
@@ -143,6 +185,20 @@ class StepperState {
       customerShare: customerShare ?? this.customerShare,
       numberOfMembers: numberOfMembers ?? this.numberOfMembers,
       members: members ?? this.members,
+      licenseFile: licenseFile ?? this.licenseFile,
+      articleFile: articleFile ?? this.articleFile,
+      letterOfRequestFile: letterOfRequestFile ?? this.letterOfRequestFile,
+      tinNumberPhoto: tinNumberPhoto ?? this.tinNumberPhoto,
+      tradeName: tradeName ?? this.tradeName,
+      otherFiles: otherFiles ?? this.otherFiles,
+      companyName: companyName ?? this.companyName,
+      companyPhoneNumber: companyPhoneNumber ?? this.companyPhoneNumber,
+      companyDateOfEstablishment: companyDateOfEstablishment ?? this.companyDateOfEstablishment,
+      companyTinNumber: companyTinNumber ?? this.companyTinNumber,
+      companyEmail: companyEmail ?? this.companyEmail,
+      companyState: companyState ?? this.companyState,
+      companyZoneSubCity: companyZoneSubCity ?? this.companyZoneSubCity,
+      companyWoreda: companyWoreda ?? this.companyWoreda,
       authId: authId ?? this.authId,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
@@ -228,7 +284,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
     state = state.copyWith(selectedMaritalStatus: maritalStatus);
   }
 
- void updateJointAccountType(String? jointAccountType) {
+  void updateJointAccountType(String? jointAccountType) {
     state = state.copyWith(jointAccountType: jointAccountType);
   }
 
@@ -310,6 +366,86 @@ class StepperNotifier extends StateNotifier<StepperState> {
       final updatedMember =
           updatedMembers[index].copyWith(signature: signature);
       updatedMembers[index] = updatedMember;
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+
+  void updateMemberFullName(int index, String fullName) {
+    print("dfdfdkfkdkfkdkdfkkdfk");
+
+    print(fullName);
+    print(index);
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] =
+          updatedMembers[index].copyWith(fullName: fullName);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+
+  void updateLicenseFile(String? path) {
+    state = state.copyWith(licenseFile: path);
+  }
+  void updateArticleFile(String? path) {
+    state = state.copyWith(articleFile: path);
+  }
+  void updateLetterOfRequestFile(String? path) {
+    state = state.copyWith(letterOfRequestFile: path);
+  }
+  void updateTinNumberPhoto(String? path) {
+    state = state.copyWith(tinNumberPhoto: path);
+  }
+  void updateTradeName(String? path) {
+    state = state.copyWith(tradeName: path);
+  }
+  void updateOtherFiles(List<String> files) {
+    state = state.copyWith(otherFiles: files);
+  }
+
+  // Add company info update methods
+  void updateCompanyName(String? name) {
+    state = state.copyWith(companyName: name);
+  }
+  void updateCompanyPhoneNumber(String? phone) {
+    state = state.copyWith(companyPhoneNumber: phone);
+  }
+  void updateCompanyDateOfEstablishment(String? date) {
+    state = state.copyWith(companyDateOfEstablishment: date);
+  }
+  void updateCompanyTinNumber(String? tin) {
+    state = state.copyWith(companyTinNumber: tin);
+  }
+  void updateCompanyEmail(String? email) {
+    state = state.copyWith(companyEmail: email);
+  }
+  void updateCompanyState(String? value) {
+    state = state.copyWith(companyState: value);
+  }
+  void updateCompanyZoneSubCity(String? value) {
+    state = state.copyWith(companyZoneSubCity: value);
+  }
+  void updateCompanyWoreda(String? value) {
+    state = state.copyWith(companyWoreda: value);
+  }
+
+  void updateMemberZoneSubCity(int index, String? zoneSubCity) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(zoneSubCity: zoneSubCity);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberWoreda(int index, String? woreda) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(woreda: woreda);
+      state = state.copyWith(members: updatedMembers);
+    }
+  }
+  void updateMemberState(int index, String? stateValue) {
+    final updatedMembers = List<JointMemberInfo>.from(state.members);
+    if (index >= 0 && index < updatedMembers.length) {
+      updatedMembers[index] = updatedMembers[index].copyWith(state: stateValue);
       state = state.copyWith(members: updatedMembers);
     }
   }

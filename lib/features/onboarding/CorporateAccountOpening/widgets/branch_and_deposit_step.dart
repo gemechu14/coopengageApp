@@ -2,6 +2,7 @@
 
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:coopengageplus/features/onboarding/JointNationalIdentification/providers/stepper_provider.dart';
 import 'package:coopengageplus/common_widgets/dropDown/branch_selector.dart';
@@ -34,7 +35,7 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
           ? stepperState.initialDeposit!.toInt().toString()
           : '',
     );
-    selectedState = stepperState.state;
+    selectedState = stepperState.companyState;
     selectedNumberOfMembers = stepperState.numberOfMembers.toString();
   }
 
@@ -49,7 +50,7 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
     if (initialDepositController.text != newText) {
       initialDepositController.text = newText;
     }
-    selectedState = stepperState.state;
+    selectedState = stepperState.companyState;
     selectedNumberOfMembers = stepperState.numberOfMembers.toString();
   }
 
@@ -66,6 +67,14 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
   Widget build(BuildContext context) {
     final stepperState = ref.watch(stepperProvider);
     final notifier = ref.read(stepperProvider.notifier);
+
+    // Sync controller values with provider state (add these fields to provider if not present)
+    if (cityController.text != (stepperState.companyZoneSubCity ?? '')) {
+      cityController.text = stepperState.companyZoneSubCity ?? '';
+    }
+    if (woredaController.text != (stepperState.companyWoreda ?? '')) {
+      woredaController.text = stepperState.companyWoreda ?? '';
+    }
     return Padding(
       padding: const EdgeInsets.all(1.0),
       child: Column(
@@ -98,6 +107,24 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
             prefixIcon: Icons.group,
             isRequired: false,
           ),
+          Text('Initial Deposit',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          ReusableTextFormField(
+            hintText: 'Initial Deposit',
+            controller: initialDepositController,
+            keyboardType: TextInputType.number,
+            errorMessage: 'Initial Deposit cannot be empty',
+            leadingIcon: Icons.account_balance_wallet,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+            ],
+            isRequired: true,
+            onChanged: (value) {
+              // Only allow integer values
+              final intValue = int.tryParse(value);
+              notifier.updateInitialDeposit(intValue?.toDouble());
+            },
+          ),
           const SizedBox(height: 16),
           Text('State', style: TextStyle(fontWeight: FontWeight.bold)),
           ReusableDropdown(
@@ -108,7 +135,7 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
               setState(() {
                 selectedState = newState;
               });
-              notifier.updateState(newState);
+              notifier.updateCompanyState(newState);
             },
             errorMessage: 'Please select a state',
             prefixIcon: Icons.map,
@@ -122,8 +149,7 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
             leadingIcon: Icons.location_city,
             isRequired: false,
             onChanged: (value) {
-              // If you have an updateZoneSubCity method, use it here
-              // notifier.updateZoneSubCity(value);
+              notifier.updateCompanyZoneSubCity(value);
             },
           ),
           Text('Woreda', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -134,23 +160,22 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
             leadingIcon: Icons.location_city,
             isRequired: false,
             onChanged: (value) {
-              // If you have an updateWoreda method, use it here
-              // notifier.updateWoreda(value);
+              notifier.updateCompanyWoreda(value);
             },
           ),
-          Text('Resident', style: TextStyle(fontWeight: FontWeight.bold)),
-          ReusableTextFormField(
-            hintText: "Resident ",
-            controller: residenceController,
-            keyboardType: TextInputType.text,
-            errorMessage: "Resident cannot be empty",
-            leadingIcon: Icons.location_city,
-            isRequired: true,
-            onChanged: (value) {
-              // If you have an updateResident method, use it here
-              // notifier.updateResident(value);
-            },
-          ),
+          // Text('Resident', style: TextStyle(fontWeight: FontWeight.bold)),
+          // ReusableTextFormField(
+          //   hintText: "Resident ",
+          //   controller: residenceController,
+          //   keyboardType: TextInputType.text,
+          //   errorMessage: "Resident cannot be empty",
+          //   leadingIcon: Icons.location_city,
+          //   isRequired: true,
+          //   onChanged: (value) {
+          //     // If you have an updateResident method, use it here
+          //     // notifier.updateResident(value);
+          //   },
+          // ),
           const SizedBox(height: 16),
         ],
       ),

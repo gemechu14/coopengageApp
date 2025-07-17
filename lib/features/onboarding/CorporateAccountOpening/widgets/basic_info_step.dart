@@ -20,7 +20,8 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController tinNumberController = TextEditingController();
-  final TextEditingController dateOfEstabilishmentController = TextEditingController();
+  final TextEditingController dateOfEstabilishmentController =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -33,9 +34,39 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    dateOfEstabilishmentController.addListener(() {
+      final notifier = ref.read(stepperProvider.notifier);
+      notifier.updateCompanyDateOfEstablishment(
+          dateOfEstabilishmentController.text);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final stepperState = ref.watch(stepperProvider);
     final notifier = ref.read(stepperProvider.notifier);
+
+    // Sync controller values with provider state
+    if (companyNameController.text != (stepperState.companyName ?? '')) {
+      companyNameController.text = stepperState.companyName ?? '';
+    }
+    if (phoneNumberController.text != (stepperState.companyPhoneNumber ?? '')) {
+      phoneNumberController.text = stepperState.companyPhoneNumber ?? '';
+    }
+    if (emailController.text != (stepperState.companyEmail ?? '')) {
+      emailController.text = stepperState.companyEmail ?? '';
+    }
+    if (tinNumberController.text != (stepperState.companyTinNumber ?? '')) {
+      tinNumberController.text = stepperState.companyTinNumber ?? '';
+    }
+    if (dateOfEstabilishmentController.text !=
+        (stepperState.companyDateOfEstablishment ?? '')) {
+      dateOfEstabilishmentController.text =
+          stepperState.companyDateOfEstablishment ?? '';
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: Column(
@@ -68,8 +99,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
             ],
             isRequired: true,
             onChanged: (value) {
-              // If you have an updateCompanyName method, use it. Otherwise, update fullName or similar.
-              notifier.updateFullName(value);
+              notifier.updateCompanyName(value);
             },
           ),
           const SizedBox(height: 8),
@@ -79,13 +109,18 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
             phoneNumberController: phoneNumberController,
             isRequired: true,
             onChanged: (value) {
-              notifier.updatePhoneNumber(value);
+              notifier.updateCompanyPhoneNumber(value);
             },
           ),
           const SizedBox(height: 8),
           // Email
           Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
-          EmailWidget(emailController: emailController),
+          EmailWidget(
+            emailController: emailController,
+            onChanged: (value) {
+              notifier.updateCompanyEmail(value);
+            },
+          ),
           const SizedBox(height: 8),
           // TIN
           Text('TIN', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -100,10 +135,14 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
               LengthLimitingTextInputFormatter(10),
             ],
             isRequired: false,
+            onChanged: (value) {
+              notifier.updateCompanyTinNumber(value);
+            },
           ),
           const SizedBox(height: 8),
           // Date of Establishment
-          Text('Date of Establishment', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('Date of Establishment',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           DatePickerField(
             controller: dateOfEstabilishmentController,
             hintText: 'Date of Establishment',

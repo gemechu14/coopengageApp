@@ -13,6 +13,8 @@ class PersonalInfoSection extends StatelessWidget {
   final String? selectedTitle;
   final ValueChanged<String?> onGenderChanged;
   final ValueChanged<String?> onTitleChanged;
+  final ValueChanged<String> onFullNameChanged;
+  final ValueChanged<String> onPhoneChanged;
 
   const PersonalInfoSection({
     Key? key,
@@ -23,6 +25,8 @@ class PersonalInfoSection extends StatelessWidget {
     required this.selectedTitle,
     required this.onGenderChanged,
     required this.onTitleChanged,
+    required this.onFullNameChanged,
+    required this.onPhoneChanged,
   }) : super(key: key);
 
   @override
@@ -38,9 +42,13 @@ class PersonalInfoSection extends StatelessWidget {
           errorMessage: "Full Name cannot be empty",
           leadingIcon: Icons.person,
           isRequired: true,
+          onChanged: onFullNameChanged,
         ),
         Text('Phone Number'),
-        PhoneNumberWidget(phoneNumberController: phoneController),
+        PhoneNumberWidget(
+          phoneNumberController: phoneController,
+          onChanged: onPhoneChanged,
+        ),
         Text('Email'),
         EmailWidget(emailController: emailController),
         Text('Gender'),
