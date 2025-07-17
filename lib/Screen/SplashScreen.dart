@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
       var connectivityResult = await Connectivity().checkConnectivity();
       bool isOnline = connectivityResult != ConnectivityResult.none;
       if (token != null) {
-        if (isOnline && JwtDecoder.isExpired(token)) {
+        if (isOnline && !JwtDecoder.isExpired(token)) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const Loginscreen()),
           );

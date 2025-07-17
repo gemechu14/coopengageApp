@@ -1,4 +1,5 @@
 import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/JointNationalIdentification/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
 import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
@@ -108,7 +109,9 @@ class AccountOnboardingScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                CorporateCustomerRegistration(),
+                                // CorporateCustomerRegistration(),
+                                // CorporateAcc
+                                CorporateAccountOpening()
                             // CorporateRegistrationScreen()
                             // CorporateAccountRiverpodPage()
                             // CorporateRegistrationScreen()

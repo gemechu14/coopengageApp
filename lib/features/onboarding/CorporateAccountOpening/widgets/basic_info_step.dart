@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
+import 'package:coopengageplus/constants/listConstants.dart';
+import 'package:coopengageplus/widget/ReusableTextFormField.dart';
+import 'package:coopengageplus/common_widgets/textField/PhoneNumberWidget.dart';
+import 'package:coopengageplus/common_widgets/textField/emailWidget.dart';
+import 'package:coopengageplus/common_widgets/dropDown/DatePickerField.dart';
+import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/providers/stepper_provider.dart';
+
+class BasicInfoStep extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<BasicInfoStep> createState() => _BasicInfoStepState();
+}
+
+class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
+  String? selectedProductType;
+  final TextEditingController companyNameController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController tinNumberController = TextEditingController();
+  final TextEditingController dateOfEstabilishmentController = TextEditingController();
+
+  @override
+  void dispose() {
+    companyNameController.dispose();
+    phoneNumberController.dispose();
+    emailController.dispose();
+    tinNumberController.dispose();
+    dateOfEstabilishmentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stepperState = ref.watch(stepperProvider);
+    final notifier = ref.read(stepperProvider.notifier);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Type
+          Text('Product Type', style: TextStyle(fontWeight: FontWeight.bold)),
+          ReusableDropdown(
+            selectedValue: stepperState.selectedProductType,
+            items: ListContants.productType,
+            hintText: 'Select Product Type',
+            onChanged: (newStatus) {
+              notifier.updateProductType(newStatus);
+            },
+            prefixIcon: Icons.business,
+            errorMessage: 'Please select a product type',
+            isRequired: true,
+          ),
+          const SizedBox(height: 8),
+          // Company Name
+          Text('Company Name', style: TextStyle(fontWeight: FontWeight.bold)),
+          ReusableTextFormField(
+            hintText: "Company Name",
+            controller: companyNameController,
+            keyboardType: TextInputType.text,
+            errorMessage: "Company Name cannot be empty",
+            leadingIcon: Icons.business,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+')),
+            ],
+            isRequired: true,
+            onChanged: (value) {
+              // If you have an updateCompanyName method, use it. Otherwise, update fullName or similar.
+              notifier.updateFullName(value);
+            },
+          ),
+          const SizedBox(height: 8),
+          // Phone Number
+          Text('Phone Number', style: TextStyle(fontWeight: FontWeight.bold)),
+          PhoneNumberWidget(
+            phoneNumberController: phoneNumberController,
+            isRequired: true,
+            onChanged: (value) {
+              notifier.updatePhoneNumber(value);
+            },
+          ),
+          const SizedBox(height: 8),
+          // Email
+          Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
+          EmailWidget(emailController: emailController),
+          const SizedBox(height: 8),
+          // TIN
+          Text('TIN', style: TextStyle(fontWeight: FontWeight.bold)),
+          ReusableTextFormField(
+            hintText: "TIN ",
+            controller: tinNumberController,
+            keyboardType: TextInputType.number,
+            errorMessage: "TIN cannot be empty",
+            leadingIcon: Icons.badge,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
+            isRequired: false,
+          ),
+          const SizedBox(height: 8),
+          // Date of Establishment
+          Text('Date of Establishment', style: TextStyle(fontWeight: FontWeight.bold)),
+          DatePickerField(
+            controller: dateOfEstabilishmentController,
+            hintText: 'Date of Establishment',
+            prefixIcon: Icons.date_range,
+            initialDate: DateTime.now().add(const Duration(days: -10000)),
+            firstDate: DateTime(1940),
+            lastDate: DateTime.now(),
+            isRequired: false,
+            isGreyBorder: true,
+            errorMessage: 'Please select a date of Establishment',
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+}
