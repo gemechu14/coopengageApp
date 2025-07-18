@@ -202,6 +202,20 @@ class RegistrationData {
   final int? bankShare;
   final int? customerShare;
   final List<JointMemberInfo>? members;
+  final String? licenseFile;
+  final String? articleFile;
+  final String? letterOfRequestFile;
+  final String? tinNumberPhoto;
+  final String? tradeName;
+  final List<String>? otherFiles;
+  final String? companyName;
+  final String? companyPhoneNumber;
+  final String? companyEmail;
+  final String? companyTinNumber;
+  final String? companyDateOfEstablishment;
+  final String? companyState;
+  final String? companyZoneSubCity;
+  final String? companyWoreda;
 
   RegistrationData({
     this.phone,
@@ -240,6 +254,20 @@ class RegistrationData {
     this.bankShare,
     this.customerShare,
     this.members,
+    this.licenseFile,
+    this.articleFile,
+    this.letterOfRequestFile,
+    this.tinNumberPhoto,
+    this.tradeName,
+    this.otherFiles,
+    this.companyName,
+    this.companyPhoneNumber,
+    this.companyEmail,
+    this.companyTinNumber,
+    this.companyDateOfEstablishment,
+    this.companyState,
+    this.companyZoneSubCity,
+    this.companyWoreda,
   });
 
   factory RegistrationData.fromMap(Map<String, dynamic> map) {
@@ -283,8 +311,24 @@ class RegistrationData {
           ? List<JointMemberInfo>.from(
               (map['members'] as List).map((x) => JointMemberInfo.fromMap(x)))
           : null,
+      licenseFile: map['licenseFile'],
+      articleFile: map['articleFile'],
+      letterOfRequestFile: map['letterOfRequestFile'],
+      tinNumberPhoto: map['tinNumberPhoto'],
+      tradeName: map['tradeName'],
+      otherFiles: map['otherFiles'] != null ? List<String>.from(map['otherFiles']) : null,
+      companyName: map['companyName'],
+      companyPhoneNumber: map['companyPhoneNumber'],
+      companyEmail: map['companyEmail'],
+      companyTinNumber: map['companyTinNumber'],
+      companyDateOfEstablishment: map['companyDateOfEstablishment'],
+      companyState: map['companyState'],
+      companyZoneSubCity: map['companyZoneSubCity'],
+      companyWoreda: map['companyWoreda'],
     );
   }
+
+
 
   Map<String, dynamic> toMap() {
     return {
@@ -324,6 +368,20 @@ class RegistrationData {
       'bankShare': bankShare,
       'customerShare': customerShare,
       'members': members?.map((x) => x.toMap()).toList(),
+      'licenseFile': licenseFile,
+      'articleFile': articleFile,
+      'letterOfRequestFile': letterOfRequestFile,
+      'tinNumberPhoto': tinNumberPhoto,
+      'tradeName': tradeName,
+      'otherFiles': otherFiles,
+      'companyName': companyName,
+      'companyPhoneNumber': companyPhoneNumber,
+      'companyEmail': companyEmail,
+      'companyTinNumber': companyTinNumber,
+      'companyDateOfEstablishment': companyDateOfEstablishment,
+      'companyState': companyState,
+      'companyZoneSubCity': companyZoneSubCity,
+      'companyWoreda': companyWoreda,
     };
   }
 } 

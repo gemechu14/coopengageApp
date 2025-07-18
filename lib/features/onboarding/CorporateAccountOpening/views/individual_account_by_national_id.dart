@@ -479,10 +479,22 @@ class _IndividualAccountByNationalIdState
                         productType: stepperState.selectedProductType,
                         documentName: 'NATIONALID',
                         signature: stepperState.signature,
-                        bankShare: stepperState.bankShare,
+                        companyName: stepperState.companyName,
+                        companyPhoneNumber: stepperState.companyPhoneNumber,
+                        companyEmail: stepperState.companyEmail,
+                        companyTinNumber: stepperState.companyTinNumber,
+                        companyDateOfEstablishment: stepperState.companyDateOfEstablishment,
+                        companyState: stepperState.companyState,
+                        companyZoneSubCity: stepperState.companyZoneSubCity,
+                        companyWoreda: stepperState.companyWoreda,
                         customerShare: stepperState.customerShare,
-                        members:
-                            stepperState.members, // <-- List<JointMemberInfo>
+                        members: stepperState.members, // <-- List<JointMemberInfo>
+                        licenseFile: stepperState.licenseFile,
+                        articleFile: stepperState.articleFile,
+                        letterOfRequestFile: stepperState.letterOfRequestFile,
+                        tinNumberPhoto: stepperState.tinNumberPhoto,
+                        tradeName: stepperState.tradeName,
+                        otherFiles: stepperState.otherFiles,
                       );
 
                       await Navigator.push(

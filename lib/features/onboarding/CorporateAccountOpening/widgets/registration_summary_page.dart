@@ -17,16 +17,29 @@ class RegistrationSummaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    print("jdsjfdjhfjdjfjdjfd");
+    print(registrationData.toMap());
     // Get the list of account types from the provider
-    final accountTypes = ref.watch(accountTypeStepProvider).availableAccountTypes;
+    final accountTypes =
+        ref.watch(accountTypeStepProvider).availableAccountTypes;
     String? getAccountTypeNameById(String? id) {
       if (id == null) return null;
       final found = accountTypes.firstWhere(
         (type) => type.id.toString() == id,
-        orElse: () => AccountType(id: 0, name: '', minAge: 0, maxAge: 0, minAmount: 0, sex: '', bankingType: '', type: '', category: ''),
+        orElse: () => AccountType(
+            id: 0,
+            name: '',
+            minAge: 0,
+            maxAge: 0,
+            minAmount: 0,
+            sex: '',
+            bankingType: '',
+            type: '',
+            category: ''),
       );
       return found.name.isNotEmpty ? found.name : null;
     }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
@@ -72,8 +85,85 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 2. Joint Account Info Section (once, at the end)
+                    _buildSection(
+                      'Company  Information',
+                      Icons.account_balance,
+                      [
+                        _buildSummaryItem('Branch',
+                            registrationData.branch ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'Account Type',
+                            getAccountTypeNameById(
+                                    registrationData.accountType) ??
+                                'Not selected'),
+                        _buildSummaryItem('Initial Deposit',
+                            registrationData.initialDeposit ?? 'Not provided'),
+                        _buildSummaryItem('Product Type',
+                            registrationData.productType ?? 'Not provided'),
+                        _buildSummaryItem('Company Name',
+                            registrationData.companyName ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'Company Phone Number',
+                            registrationData.companyPhoneNumber ??
+                                'Not provided'),
+                        _buildSummaryItem('Company Email',
+                            registrationData.companyEmail ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'Company TIN',
+                            registrationData.companyTinNumber ??
+                                'Not provided'),
+                        _buildSummaryItem(
+                            'Date of Establishment',
+                            registrationData.companyDateOfEstablishment ??
+                                'Not provided'),
+                        _buildSummaryItem('State',
+                            registrationData.companyState ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'Zone Sub City',
+                            registrationData.companyZoneSubCity ??
+                                'Not provided'),
+                        _buildSummaryItem('Woreda',
+                            registrationData.companyWoreda ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'License File',
+                            registrationData.licenseFile != null
+                                ? registrationData.licenseFile!.split('/').last
+                                : 'Not provided'),
+                        _buildSummaryItem(
+                            'Article File',
+                            registrationData.articleFile != null
+                                ? registrationData.articleFile!.split('/').last
+                                : 'Not provided'),
+                        _buildSummaryItem(
+                            'Letter of Request File',
+                            registrationData.letterOfRequestFile != null
+                                ? registrationData.letterOfRequestFile!
+                                    .split('/')
+                                    .last
+                                : 'Not provided'),
+                        _buildSummaryItem(
+                            'TIN Number Photo',
+                            registrationData.tinNumberPhoto != null
+                                ? registrationData.tinNumberPhoto!
+                                    .split('/')
+                                    .last
+                                : 'Not provided'),
+                        _buildSummaryItem('Trade Name',
+                            registrationData.tradeName ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'Other Files',
+                            (registrationData.otherFiles != null &&
+                                    registrationData.otherFiles!.isNotEmpty)
+                                ? registrationData.otherFiles!
+                                    .map((f) => f.split('/').last)
+                                    .join(', ')
+                                : 'Not provided'),
+                      ],
+                    ),
                     // 1. Show each member in their own section with all fields
-                    if (registrationData.members != null && registrationData.members!.isNotEmpty)
+                    if (registrationData.members != null &&
+                        registrationData.members!.isNotEmpty)
                       ...registrationData.members!.asMap().entries.map((entry) {
                         final i = entry.key;
                         final member = entry.value;
@@ -81,51 +171,34 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                           'Member ${i + 1}',
                           Icons.person,
                           [
-                            _buildSummaryItem('Full Name', member.fullName ?? 'Not provided'),
-                            _buildSummaryItem('Surname', member.verifiedData?['surname'] ?? 'Not provided'),
-                            _buildSummaryItem('Mother Name', member.motherName ?? 'Not provided'),
-                            _buildSummaryItem('Title', member.title ?? 'Not provided'),
-                            _buildSummaryItem('Sex', member.sex ?? 'Not provided'),
-                            _buildSummaryItem('Date of Birth', member.dateOfBirth ?? 'Not provided'),
-                            _buildSummaryItem('Marital Status', member.maritalStatus ?? 'Not provided'),
-                            _buildSummaryItem('Phone', member.verifiedData?['phone'] ?? 'Not provided'),
-                            _buildSummaryItem('Email', member.verifiedData?['email'] ?? 'Not provided'),
-                            _buildSummaryItem('Country', member.verifiedData?['country'] ?? 'Not provided'),
-                            _buildSummaryItem('State', member.verifiedData?['state'] ?? 'Not provided'),
-                            _buildSummaryItem('City', member.verifiedData?['city'] ?? 'Not provided'),
-                            _buildSummaryItem('Zone/Sub City', member.verifiedData?['zoneSubCity'] ?? 'Not provided'),
-                            _buildSummaryItem('Street Address', member.verifiedData?['streetAddress'] ?? 'Not provided'),
-                            _buildSummaryItem('House No', member.verifiedData?['houseNo'] ?? 'Not provided'),
-                            _buildSummaryItem('Zip Code', member.verifiedData?['zipCode'] ?? 'Not provided'),
-                            _buildSummaryItem('Occupation', member.verifiedData?['occupation'] ?? 'Not provided'),
-                            _buildSummaryItem('Monthly Income', member.verifiedData?['monthlyIncome'] ?? 'Not provided'),
-                            _buildSummaryItem('Sector', member.verifiedData?['sector'] ?? 'Not provided'),
-                            _buildSummaryItem('Employer Name', member.verifiedData?['employerName'] ?? 'Not provided'),
-                            _buildSummaryItem('Document Name', member.verifiedData?['documentName'] ?? 'Not provided'),
-                            _buildSummaryItem('Legal ID', member.verifiedData?['legalId'] ?? 'Not provided'),
-                            _buildSummaryItem('Issue Authority', member.verifiedData?['issueAuthority'] ?? 'Not provided'),
-                            _buildSummaryItem('Issue Date', member.verifiedData?['issueDate'] ?? 'Not provided'),
-                            _buildSummaryItem('Expiry Date', member.verifiedData?['expiryDate'] ?? 'Not provided'),
-                            _buildSummaryItem('Verified', member.isVerified ? 'Yes' : 'No'),
+                            _buildSummaryItem(
+                                'Full Name', member.fullName ?? 'Not provided'),
+                            _buildSummaryItem(
+                                'Title', member.title ?? 'Not provided'),
+                            _buildSummaryItem(
+                                'Sex', member.sex ?? 'Not provided'),
+                            // _buildSummaryItem('Marital Status',
+                            //     member.maritalStatus ?? 'Not provided'),
+                            _buildSummaryItem(
+                                'Phone Number', member.phone ?? 'Not provided'),
+                        
+                            _buildSummaryItem(
+                                'Email', member.email ?? 'Not provided'),
+                            _buildSummaryItem('Document Name',
+                                member.documentType ?? 'Not provided'),
+                            _buildSummaryItem(
+                                'Legal ID', member.legalId ?? 'Not provided'),
+                            _buildSummaryItem('Issue Authority',
+                                member.issueAuthority ?? 'Not provided'),
+                            _buildSummaryItem('Issue Date',
+                                member.issueDate ?? 'Not provided'),
+                            _buildSummaryItem('Expiry Date',
+                                member.expirayDate ?? 'Not provided'),
+                            _buildSummaryItem('residentFront',
+                                member.isVerified ? 'Yes' : 'No'),
                           ],
                         );
                       }),
-
-                    // 2. Joint Account Info Section (once, at the end)
-                    _buildSection(
-                      'Joint Account Information',
-                      Icons.account_balance,
-                      [
-                        _buildSummaryItem('Branch', registrationData.branch ?? 'Not provided'),
-                        _buildSummaryItem('Account Type', getAccountTypeNameById(registrationData.accountType) ?? 'Not selected'),
-                        _buildSummaryItem('Initial Deposit', registrationData.initialDeposit ?? 'Not provided'),
-                        _buildSummaryItem('Bank Share', registrationData.bankShare != null ? '${registrationData.bankShare}%' : 'Not provided'),
-                        _buildSummaryItem('Customer Share', registrationData.customerShare != null ? '${registrationData.customerShare}%' : 'Not provided'),
-                        _buildSummaryItem('Signature', registrationData.signature != null ? 'Uploaded' : 'Not uploaded'),
-                        _buildSummaryItem('Terms Accepted', registrationData.termsAccepted == true ? 'Yes' : 'No'),
-                        // Add more joint account fields as needed
-                      ],
-                    ),
                   ],
                 ),
               ),
