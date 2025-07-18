@@ -22,6 +22,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
   final TextEditingController tinNumberController = TextEditingController();
   final TextEditingController dateOfEstabilishmentController =
       TextEditingController();
+  bool companyNameTouched = false;
 
   @override
   void dispose() {
@@ -92,7 +93,10 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
             hintText: "Company Name",
             controller: companyNameController,
             keyboardType: TextInputType.text,
-            errorMessage: "Company Name cannot be empty",
+            errorMessage:
+                companyNameTouched && companyNameController.text.trim().isEmpty
+                    ? "Please enter company name"
+                    : null,
             leadingIcon: Icons.business,
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z\s]+')),
@@ -100,6 +104,13 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
             isRequired: true,
             onChanged: (value) {
               notifier.updateCompanyName(value);
+              if (!companyNameTouched) {
+                setState(() {
+                  companyNameTouched = true;
+                });
+              } else {
+                setState(() {});
+              }
             },
           ),
           const SizedBox(height: 8),

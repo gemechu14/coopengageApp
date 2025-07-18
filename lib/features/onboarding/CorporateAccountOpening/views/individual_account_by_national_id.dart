@@ -443,26 +443,7 @@ class _IndividualAccountByNationalIdState
 
                       print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();
-                    }
-                    // else if (stepperState.activeStep == 2) {
-                    //   final allVerified = stepperState.members.isNotEmpty &&
-                    //       stepperState.members
-                    //           .every((m) => m.isVerified == true);
-                    //   if (!allVerified) {
-                    //     ScaffoldMessenger.of(context).showSnackBar(
-                    //       const SnackBar(
-                    //         content: Text(
-                    //             'Please verify all members before proceeding.'),
-                    //         backgroundColor: Colors.red,
-                    //       ),
-                    //     );
-                    //     return;
-                    //   }
-                    //   print("step 2");
-                    //   ref.read(stepperProvider.notifier).nextStep();
-                    // }
-
-                    else if (stepperState.activeStep == 3) {
+                    } else if (stepperState.activeStep == 3) {
                       print("step 4");
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 4) {
@@ -483,12 +464,14 @@ class _IndividualAccountByNationalIdState
                         companyPhoneNumber: stepperState.companyPhoneNumber,
                         companyEmail: stepperState.companyEmail,
                         companyTinNumber: stepperState.companyTinNumber,
-                        companyDateOfEstablishment: stepperState.companyDateOfEstablishment,
+                        companyDateOfEstablishment:
+                            stepperState.companyDateOfEstablishment,
                         companyState: stepperState.companyState,
                         companyZoneSubCity: stepperState.companyZoneSubCity,
                         companyWoreda: stepperState.companyWoreda,
                         customerShare: stepperState.customerShare,
-                        members: stepperState.members, // <-- List<JointMemberInfo>
+                        members:
+                            stepperState.members, // <-- List<JointMemberInfo>
                         licenseFile: stepperState.licenseFile,
                         articleFile: stepperState.articleFile,
                         letterOfRequestFile: stepperState.letterOfRequestFile,

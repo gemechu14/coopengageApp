@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import '../model/registration_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/account_type_provider.dart';
 import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
+import 'dart:io';
 
 class RegistrationSummaryScreen extends ConsumerWidget {
   final RegistrationData registrationData;
@@ -173,6 +176,7 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                           [
                             _buildSummaryItem(
                                 'Full Name', member.fullName ?? 'Not provided'),
+
                             _buildSummaryItem(
                                 'Title', member.title ?? 'Not provided'),
                             _buildSummaryItem(
@@ -181,7 +185,7 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                             //     member.maritalStatus ?? 'Not provided'),
                             _buildSummaryItem(
                                 'Phone Number', member.phone ?? 'Not provided'),
-                        
+
                             _buildSummaryItem(
                                 'Email', member.email ?? 'Not provided'),
                             _buildSummaryItem('Document Name',
@@ -194,8 +198,41 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                                 member.issueDate ?? 'Not provided'),
                             _buildSummaryItem('Expiry Date',
                                 member.expirayDate ?? 'Not provided'),
+                            buildImageSummary(
+                                'Photo', member.profilePath, context),
                             _buildSummaryItem('residentFront',
                                 member.isVerified ? 'Yes' : 'No'),
+                            buildImageSummary('Resident Card Front',
+                                member.residentPath, context),
+                            buildImageSummary('Resident Card Back',
+                                member.residentCardBackPath, context),
+
+                            if (member.signature != null &&
+                                member.signature is Uint8List)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Signature',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    SizedBox(height: 8),
+                                    Image.memory(
+                                      member.signature,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.85,
+                                      height: 200,
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              _buildSummaryItem('Signature', 'Not provided'),
+                            // buildImageSummary(
+                            //     'Signature', member.signature, context),
                           ],
                         );
                       }),
@@ -323,5 +360,110 @@ class RegistrationSummaryScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  // Widget buildImageSummary(
+  //     String label, String? filePath, BuildContext context) {
+  //   if (filePath != null && filePath.isNotEmpty) {
+  //     return Padding(
+  //       padding: const EdgeInsets.symmetric(vertical: 0.0),
+  //       child: Card(
+  //         shape:
+  //             RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  //         elevation: 2,
+  //         child: Padding(
+  //           padding: const EdgeInsets.all(0.0),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             mainAxisAlignment: MainAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 label,
+  //                 style: const TextStyle(
+  //                   fontWeight: FontWeight.bold,
+  //                   fontSize: 16,
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 10),
+  //               ClipRRect(
+  //                 borderRadius: BorderRadius.circular(8),
+  //                 child: Image.file(
+  //                   File(filePath),
+  //                   width: MediaQuery.of(context).size.width * 0.85,
+  //                   height: 200,
+  //                   fit: BoxFit.fill,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   } else {
+  //     return _buildSummaryItem(label, 'Not provided');
+  //   }
+  // }
+
+  Widget buildImageSummary(
+      String label, String? filePath, BuildContext context) {
+    if (filePath != null && filePath.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 0.0),
+        child: Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(0.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => Dialog(
+                        backgroundColor: Colors.transparent,
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: InteractiveViewer(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.file(
+                                File(filePath),
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(filePath),
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      height: 200,
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      return _buildSummaryItem(label, 'Not provided');
+    }
   }
 }

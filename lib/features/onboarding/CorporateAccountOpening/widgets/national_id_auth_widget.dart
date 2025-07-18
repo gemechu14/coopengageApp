@@ -29,6 +29,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   bool _disposed = false;
   String? _expectedFinalUrl;
   int? _selectedMemberIndex;
+  bool _isLoading = false;
   int? expandedIndex;
   int? _prevNumberOfMembers;
   List<TextEditingController> fullNameControllers = [];
@@ -524,44 +525,109 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   Future<String?> _imgFromCamera(int i, String imageTypes) async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      File originalFile = File(pickedFile.path);
+    setState(() {
+      _isLoading = true;
+    });
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
 
-      bool originalExists = await originalFile.exists();
-
-      if (!originalExists) {
+    try {
+      final pickedFile =
+          await ImagePicker().pickImage(source: ImageSource.camera);
+      if (pickedFile == null) {
+        if (mounted) Navigator.of(context).pop(); // Hide loading
+        setState(() {
+          _isLoading = false;
+        });
         return null;
       }
 
-      Directory appDir = await getApplicationDocumentsDirectory();
-      String newPath =
+      final originalFile = File(pickedFile.path);
+      if (!await originalFile.exists()) {
+        if (mounted) Navigator.of(context).pop();
+        setState(() {
+          _isLoading = false;
+        });
+        return null;
+      }
+
+      final appDir = await getApplicationDocumentsDirectory();
+      final newPath =
           '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      try {
-        File newImage = await originalFile.copy(newPath);
-        bool newFileExists = await newImage.exists();
-
-        if (newFileExists) {
-          setState(() {
-            if (imageTypes == 'resident') {
-              residentPaths[i] = newPath;
-            } else if (imageTypes == 'residentCardBack') {
-              residentCardBackPaths[i] = newPath;
-            } else if (imageTypes == 'profilePath') {
-              profilePaths[i] = newPath;
-            }
-            // Add other imageTypes as needed
-          });
-          return newPath;
-        } else {}
-      } catch (e) {
-        print("Error copying file: $e");
+      final newImage = await originalFile.copy(newPath);
+      if (!await newImage.exists()) {
+        if (mounted) Navigator.of(context).pop();
+        setState(() {
+          _isLoading = false;
+        });
+        return null;
       }
+
+      if (mounted) {
+        setState(() {
+          if (imageTypes == 'resident') {
+            residentPaths[i] = newPath;
+          } else if (imageTypes == 'residentCardBack') {
+            residentCardBackPaths[i] = newPath;
+          } else if (imageTypes == 'profilePath') {
+            profilePaths[i] = newPath;
+          }
+          _isLoading = false;
+        });
+        Navigator.of(context).pop(); // Hide loading
+      }
+      return newPath;
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      setState(() {
+        _isLoading = false;
+      });
+      return null;
     }
-    return null;
   }
+  // Future<String?> _imgFromCamera(int i, String imageTypes) async {
+  //   final pickedFile =
+  //       await ImagePicker().pickImage(source: ImageSource.camera);
+  //   if (pickedFile != null) {
+  //     File originalFile = File(pickedFile.path);
+
+  //     bool originalExists = await originalFile.exists();
+
+  //     if (!originalExists) {
+  //       return null;
+  //     }
+
+  //     Directory appDir = await getApplicationDocumentsDirectory();
+  //     String newPath =
+  //         '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+  //     try {
+  //       File newImage = await originalFile.copy(newPath);
+  //       bool newFileExists = await newImage.exists();
+
+  //       if (newFileExists) {
+  //         setState(() {
+  //           if (imageTypes == 'resident') {
+  //             residentPaths[i] = newPath;
+  //           } else if (imageTypes == 'residentCardBack') {
+  //             residentCardBackPaths[i] = newPath;
+  //           } else if (imageTypes == 'profilePath') {
+  //             profilePaths[i] = newPath;
+  //           }
+  //           // Add other imageTypes as needed
+  //         });
+  //         return newPath;
+  //       } else {}
+  //     } catch (e) {
+  //       print("Error copying file: $e");
+  //     }
+  //   }
+  //   return null;
+  // }
 }
 
 class PersonalPhotoSection extends StatelessWidget {
