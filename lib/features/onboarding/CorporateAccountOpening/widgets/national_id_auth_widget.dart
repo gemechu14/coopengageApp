@@ -260,15 +260,18 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                                       emailController: emailControllers[i],
                                       selectedGender: selectedGender[i],
                                       selectedTitle: selectedTitle[i],
-                                      onGenderChanged: (newStatus) {
-                                        setState(() {
-                                          selectedGender[i] = newStatus;
-                                        });
+                                      onGenderChanged: (value) {
+                                        // setState(() {
+                                        //   selectedGender[i] = newStatus;
+                                        // });
+                                        notifier.updateMemberSex(i, value);
                                       },
-                                      onTitleChanged: (newStatus) {
-                                        setState(() {
-                                          selectedTitle[i] = newStatus;
-                                        });
+                                      onTitleChanged: (value) {
+                                        //  notifier.upd(i, value);
+                                        notifier.updateMemberTitle(i, value);
+                                        // setState(() {
+                                        //   selectedTitle[i] = newStatus;
+                                        // });
                                       },
                                       onFullNameChanged: (value) {
                                         fullNameControllers[i].text = value;

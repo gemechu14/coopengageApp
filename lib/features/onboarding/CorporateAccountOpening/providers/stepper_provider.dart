@@ -58,7 +58,7 @@ class StepperState {
   final String? updatedAt;
   final int? accountId;
 
-  const StepperState({
+  StepperState({
     this.activeStep = 0,
     this.phoneNumber = '',
     this.fanNumber = '',
@@ -77,8 +77,8 @@ class StepperState {
     this.bankingType = 'DIGITAL',
     this.bankShare,
     this.customerShare,
-    this.numberOfMembers = 2,
-    this.members = const [],
+    this.numberOfMembers = 1, // changed from 2 to 1
+    List<JointMemberInfo>? members,
     this.licenseFile,
     this.articleFile,
     this.letterOfRequestFile,
@@ -109,7 +109,7 @@ class StepperState {
     this.createdAt,
     this.updatedAt,
     this.accountId,
-  });
+  }) : members = members ?? List<JointMemberInfo>.generate(numberOfMembers, (i) => JointMemberInfo());
 
   StepperState copyWith({
     int? activeStep,
@@ -223,7 +223,7 @@ class StepperState {
 class StepperNotifier extends StateNotifier<StepperState> {
   bool _disposed = false;
   final int maxStep;
-  StepperNotifier({required this.maxStep}) : super(const StepperState());
+  StepperNotifier({required this.maxStep}) : super(StepperState());
 
   @override
   void dispose() {
@@ -668,7 +668,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
 
   // Reset stepper
   void reset() {
-    state = const StepperState();
+    state = StepperState();
   }
 }
 

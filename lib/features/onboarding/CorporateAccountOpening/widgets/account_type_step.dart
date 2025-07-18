@@ -88,24 +88,15 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     final String? product_type = stepper_state.selectedProductType;
     final double? initial_deposit = widget.initialDeposit;
 
-    // 1. Filter: Only BOTH sex and maxAge > 18
+    // Filter: Only category == 'CURRENT', matches productType (bankingType), and minAmount <= initialDeposit
     List<AccountType> filtered = account_types
         .where((account_type) =>
-            account_type.sex == 'BOTH' &&
-            account_type.maxAge > 18 &&
-            (initial_deposit == null ||
-                account_type.minAmount <= initial_deposit))
+            account_type.category.toUpperCase() == 'CURRENT' &&
+            (product_type == null || product_type.trim().isEmpty ||
+             account_type.bankingType.trim().toLowerCase() == product_type.trim().toLowerCase()) &&
+            (initial_deposit == null || account_type.minAmount <= initial_deposit)
+        )
         .toList();
-
-    // 2. Further filter by product type (bankingType)
-    if (product_type != null && product_type.trim().isNotEmpty) {
-      final normalizedProductType = product_type.trim().toLowerCase();
-      filtered = filtered
-          .where((account_type) =>
-              account_type.bankingType.trim().toLowerCase() ==
-              normalizedProductType)
-          .toList();
-    }
 
     setState(() {
       filteredAccountTypes = filtered;
