@@ -85,12 +85,12 @@ class _IndividualAccountByNationalIdState
       StepConfig(
         title: 'Basic Information',
         icon: Icon(Icons.info),
-        builder: (context, ref) => BasicInfoStep(),
+        builder: (context, ref) => BasicInfoStep(formkey: formKeys[0]),
       ),
       StepConfig(
         title: 'Branch & Deposit',
         icon: Icon(Icons.account_balance_wallet),
-        builder: (context, ref) => BranchAndDepositStep(),
+        builder: (context, ref) => BranchAndDepositStep(formkey: formKeys[1]),
       ),
       StepConfig(
         title: 'Detail Information',
@@ -372,12 +372,38 @@ class _IndividualAccountByNationalIdState
 
                     if (stepperState.activeStep == 0) {
                       final stepperState = ref.read(stepperProvider);
-                      if (
-                          // stepperState.jointAccountType == null ||
-                          stepperState.selectedProductType == null) {
+
+                      final isValid =
+                          formKeys[0].currentState?.validate() ?? false;
+                      if (!isValid) return;
+                      // if (isFormValid) {
+                      //   return;
+                      // }
+
+                      // Check required fields
+                      final hasProductType =
+                          stepperState.selectedProductType != null;
+                      final hasCompanyName =
+                          (stepperState.companyName ?? '').trim().isNotEmpty;
+                      final hasPhoneNumber =
+                          (stepperState.companyPhoneNumber ?? '')
+                              .trim()
+                              .isNotEmpty;
+
+                      if (!hasProductType ||
+                          !hasCompanyName ||
+                          !hasPhoneNumber) {
+                        List<String> errors = [];
+                        if (!hasProductType)
+                          errors.add('Please select a product type');
+                        if (!hasCompanyName)
+                          errors.add('Please enter company name');
+                        if (!hasPhoneNumber)
+                          errors.add('Please enter phone number');
+
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please fill in all required fields'),
+                          SnackBar(
+                            content: Text(errors.join(', ')),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -401,6 +427,11 @@ class _IndividualAccountByNationalIdState
                       // }
                     } else if (stepperState.activeStep == 1) {
                       final stepperState = ref.read(stepperProvider);
+
+                      final isValid =
+                          formKeys[1].currentState?.validate() ?? false;
+                      if (!isValid) return;
+
                       if (stepperState.selectedBranch == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(

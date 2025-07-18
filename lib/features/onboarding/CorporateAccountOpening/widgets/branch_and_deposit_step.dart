@@ -12,6 +12,10 @@ import 'package:coopengageplus/constants/listConstants.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 
 class BranchAndDepositStep extends ConsumerStatefulWidget {
+  final GlobalKey<FormState>? formkey;
+
+  const BranchAndDepositStep({Key? key, this.formkey}) : super(key: key);
+
   @override
   ConsumerState<BranchAndDepositStep> createState() =>
       _BranchAndDepositStepState();
@@ -22,8 +26,10 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
   final TextEditingController cityController = TextEditingController();
   final TextEditingController woredaController = TextEditingController();
   final TextEditingController residenceController = TextEditingController();
+  
   String? selectedState;
   String? selectedNumberOfMembers;
+  bool isUserEditing = false;
 
   @override
   void initState() {
@@ -35,6 +41,19 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
           ? stepperState.initialDeposit!.toInt().toString()
           : '',
     );
+
+    // Add listener to reset editing flag when user stops editing
+    initialDepositController.addListener(() {
+      // Reset editing flag after a short delay to allow for user input
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() {
+            isUserEditing = false;
+          });
+        }
+      });
+    });
+
     selectedState = stepperState.companyState;
     selectedNumberOfMembers = stepperState.numberOfMembers.toString();
   }
@@ -43,10 +62,17 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
   void didUpdateWidget(covariant BranchAndDepositStep oldWidget) {
     super.didUpdateWidget(oldWidget);
     final stepperState = ref.read(stepperProvider);
+
+    // Don't update if user is actively editing
+    if (isUserEditing) {
+      return;
+    }
+
     final newText =
         stepperState.initialDeposit != null && stepperState.initialDeposit! > 0
             ? stepperState.initialDeposit!.toInt().toString()
             : '';
+
     if (initialDepositController.text != newText) {
       initialDepositController.text = newText;
     }
@@ -77,107 +103,118 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
     }
     return Padding(
       padding: const EdgeInsets.all(1.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Branch', style: TextStyle(fontWeight: FontWeight.bold)),
-          BranchSelector(
-            initialValue: stepperState.selectedBranch,
-            onChanged: (value) {
-              notifier.updateBranch(value);
-            },
-          ),
-          SizedBox(height: 10),
-          Text('Number of Authorized Signers',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          ReusableDropdown(
-            selectedValue: selectedNumberOfMembers,
-            items: ListContants.NumberOfMembersForOrganization,
-            hintText: 'Select Number of Authorized Signers',
-            onChanged: (newValue) {
-              setState(() {
-                selectedNumberOfMembers = newValue;
-              });
-              final parsed = int.tryParse(newValue ?? '');
-              if (parsed != null) {
-                notifier.updateNumberOfMembers(parsed);
-              }
-            },
-            errorMessage: 'Please select number of authorized signers',
-            prefixIcon: Icons.group,
-            isRequired: false,
-          ),
-          Text('Initial Deposit',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          ReusableTextFormField(
-            hintText: 'Initial Deposit',
-            controller: initialDepositController,
-            keyboardType: TextInputType.number,
-            errorMessage: 'Initial Deposit cannot be empty',
-            leadingIcon: Icons.account_balance_wallet,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
-            isRequired: true,
-            onChanged: (value) {
-              // Only allow integer values
-              final intValue = int.tryParse(value);
-              notifier.updateInitialDeposit(intValue?.toDouble());
-            },
-          ),
-          const SizedBox(height: 16),
-          Text('State', style: TextStyle(fontWeight: FontWeight.bold)),
-          ReusableDropdown(
-            selectedValue: selectedState,
-            items: ListContants.ethiopianStates,
-            hintText: 'Select State',
-            onChanged: (newState) {
-              setState(() {
-                selectedState = newState;
-              });
-              notifier.updateCompanyState(newState);
-            },
-            errorMessage: 'Please select a state',
-            prefixIcon: Icons.map,
-            isRequired: false,
-          ),
-          Text('Zone Subcity', style: TextStyle(fontWeight: FontWeight.bold)),
-          ReusableTextFormField(
-            hintText: "Zone Subcity",
-            controller: cityController,
-            errorMessage: "Zone Subcity cannot be empty",
-            leadingIcon: Icons.location_city,
-            isRequired: false,
-            onChanged: (value) {
-              notifier.updateCompanyZoneSubCity(value);
-            },
-          ),
-          Text('Woreda', style: TextStyle(fontWeight: FontWeight.bold)),
-          ReusableTextFormField(
-            hintText: "Woreda",
-            controller: woredaController,
-            errorMessage: "Woreda cannot be empty",
-            leadingIcon: Icons.location_city,
-            isRequired: false,
-            onChanged: (value) {
-              notifier.updateCompanyWoreda(value);
-            },
-          ),
-          // Text('Resident', style: TextStyle(fontWeight: FontWeight.bold)),
-          // ReusableTextFormField(
-          //   hintText: "Resident ",
-          //   controller: residenceController,
-          //   keyboardType: TextInputType.text,
-          //   errorMessage: "Resident cannot be empty",
-          //   leadingIcon: Icons.location_city,
-          //   isRequired: true,
-          //   onChanged: (value) {
-          //     // If you have an updateResident method, use it here
-          //     // notifier.updateResident(value);
-          //   },
-          // ),
-          const SizedBox(height: 16),
-        ],
+      child: Form(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Branch', style: TextStyle(fontWeight: FontWeight.bold)),
+            BranchSelector(
+              initialValue: stepperState.selectedBranch,
+              onChanged: (value) {
+                notifier.updateBranch(value);
+              },
+            ),
+            SizedBox(height: 10),
+            Text('Number of Authorized Signers',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            ReusableDropdown(
+              selectedValue: selectedNumberOfMembers,
+              items: ListContants.NumberOfMembersForOrganization,
+              hintText: 'Select Number of Authorized Signers',
+              onChanged: (newValue) {
+                setState(() {
+                  selectedNumberOfMembers = newValue;
+                });
+                final parsed = int.tryParse(newValue ?? '');
+                if (parsed != null) {
+                  notifier.updateNumberOfMembers(parsed);
+                }
+              },
+              errorMessage: 'Please select number of authorized signers',
+              prefixIcon: Icons.group,
+              isRequired: false,
+            ),
+            Text('Initial Deposit',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            ReusableTextFormField(
+              hintText: 'Initial Deposit',
+              controller: initialDepositController,
+              keyboardType: TextInputType.number,
+              errorMessage: 'Initial Deposit cannot be empty',
+              leadingIcon: Icons.account_balance_wallet,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              isRequired: true,
+              onChanged: (value) {
+                // Set editing flag
+                isUserEditing = true;
+
+                // Handle empty value
+                if (value.isEmpty) {
+                  notifier.updateInitialDeposit(null);
+                  return;
+                }
+
+                // Only allow integer values
+                final intValue = int.tryParse(value);
+                notifier.updateInitialDeposit(intValue?.toDouble());
+              },
+            ),
+            const SizedBox(height: 16),
+            Text('State', style: TextStyle(fontWeight: FontWeight.bold)),
+            ReusableDropdown(
+              selectedValue: selectedState,
+              items: ListContants.ethiopianStates,
+              hintText: 'Select State',
+              onChanged: (newState) {
+                setState(() {
+                  selectedState = newState;
+                });
+                notifier.updateCompanyState(newState);
+              },
+              errorMessage: 'Please select a state',
+              prefixIcon: Icons.map,
+              isRequired: false,
+            ),
+            Text('Zone Subcity', style: TextStyle(fontWeight: FontWeight.bold)),
+            ReusableTextFormField(
+              hintText: "Zone Subcity",
+              controller: cityController,
+              errorMessage: "Zone Subcity cannot be empty",
+              leadingIcon: Icons.location_city,
+              isRequired: false,
+              onChanged: (value) {
+                notifier.updateCompanyZoneSubCity(value);
+              },
+            ),
+            Text('Woreda', style: TextStyle(fontWeight: FontWeight.bold)),
+            ReusableTextFormField(
+              hintText: "Woreda",
+              controller: woredaController,
+              errorMessage: "Woreda cannot be empty",
+              leadingIcon: Icons.location_city,
+              isRequired: false,
+              onChanged: (value) {
+                notifier.updateCompanyWoreda(value);
+              },
+            ),
+            // Text('Resident', style: TextStyle(fontWeight: FontWeight.bold)),
+            // ReusableTextFormField(
+            //   hintText: "Resident ",
+            //   controller: residenceController,
+            //   keyboardType: TextInputType.text,
+            //   errorMessage: "Resident cannot be empty",
+            //   leadingIcon: Icons.location_city,
+            //   isRequired: true,
+            //   onChanged: (value) {
+            //     // If you have an updateResident method, use it here
+            //     // notifier.updateResident(value);
+            //   },
+            // ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
