@@ -26,10 +26,44 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
   final TextEditingController cityController = TextEditingController();
   final TextEditingController woredaController = TextEditingController();
   final TextEditingController residenceController = TextEditingController();
-  
   String? selectedState;
   String? selectedNumberOfMembers;
   bool isUserEditing = false;
+
+  // Method to validate the form - can be called from parent
+  bool validateForm() {
+    final stepperState = ref.read(stepperProvider);
+    
+    // Check if form is valid
+    final isFormValid = widget.formkey?.currentState?.validate() ?? false;
+    
+    // Check required fields from provider state
+    final hasBranch = stepperState.selectedBranch != null;
+    final hasInitialDeposit = stepperState.initialDeposit != null && stepperState.initialDeposit! > 0;
+    
+    return isFormValid && hasBranch && hasInitialDeposit;
+  }
+
+  // Method to get validation errors
+  List<String> getValidationErrors() {
+    final stepperState = ref.read(stepperProvider);
+    List<String> errors = [];
+    
+    if (stepperState.selectedBranch == null) {
+      errors.add('Please select a branch');
+    }
+    if (stepperState.initialDeposit == null || stepperState.initialDeposit! <= 0) {
+      errors.add('Please enter initial deposit amount');
+    }
+    
+    return errors;
+  }
+
+  // Method to trigger validation and show errors
+  void triggerValidation() {
+    // Trigger form validation
+    widget.formkey?.currentState?.validate();
+  }
 
   @override
   void initState() {
@@ -59,7 +93,7 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
   }
 
   @override
-  void didUpdateWidget(covariant BranchAndDepositStep oldWidget) {
+  void didUpdateWidget(BranchAndDepositStep oldWidget) {
     super.didUpdateWidget(oldWidget);
     final stepperState = ref.read(stepperProvider);
 
@@ -104,6 +138,7 @@ class _BranchAndDepositStepState extends ConsumerState<BranchAndDepositStep> {
     return Padding(
       padding: const EdgeInsets.all(1.0),
       child: Form(
+        key: widget.formkey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

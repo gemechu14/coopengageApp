@@ -70,6 +70,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   }
 
   Future<void> _initializeStep() async {
+    print("dkfkdfkdkjfdkfkdfkdkjf");
     if (_disposed) return;
     await ref.read(accountTypeStepProvider.notifier).initializeStep(
           customerAge: widget.customerAge,
@@ -92,17 +93,18 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     List<AccountType> filtered = account_types
         .where((account_type) =>
             account_type.category.toUpperCase() == 'CURRENT' &&
-            (product_type == null || product_type.trim().isEmpty ||
-             account_type.bankingType.trim().toLowerCase() == product_type.trim().toLowerCase()) &&
-            (initial_deposit == null || account_type.minAmount <= initial_deposit)
-        )
+            (product_type == null ||
+                product_type.trim().isEmpty ||
+                account_type.bankingType.trim().toLowerCase() ==
+                    product_type.trim().toLowerCase()) &&
+            (initial_deposit == null ||
+                account_type.minAmount <= initial_deposit))
         .toList();
 
     setState(() {
       filteredAccountTypes = filtered;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -223,16 +225,16 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                                           fontSize: 14,
                                         ),
                                       ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'Min Age: ${account_type.minAge}  |  Max Age: ${account_type.maxAge}',
-                                        style: TextStyle(
-                                          color: isSelected
-                                              ? Colors.white70
-                                              : Colors.grey[600],
-                                          fontSize: 13,
-                                        ),
-                                      ),
+                                      const SizedBox(height: 12),
+                                      // Text(
+                                      //   ': ${account_type.}  |  Max Age: ${account_type.maxAge}',
+                                      //   style: TextStyle(
+                                      //     color: isSelected
+                                      //         ? Colors.white70
+                                      //         : Colors.grey[600],
+                                      //     fontSize: 13,
+                                      //   ),
+                                      // ),
                                       Text(
                                         'Min Deposit: ${account_type.minAmount}',
                                         style: TextStyle(
