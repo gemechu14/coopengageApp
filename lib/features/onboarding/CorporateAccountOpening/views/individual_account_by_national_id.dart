@@ -694,6 +694,7 @@ class _IndividualAccountByNationalIdState
         "initialDeposit": stepperState.initialDeposit?.toString(),
         "percentageCompleted":
             stepperState.percentageComplete?.toString() ?? "0",
+        "tinNumber": stepperState.companyTinNumber
       };
       // Add file bytes if available (assuming you store them in stepperState)
       if (stepperState.letterOfRequestFiles.isNotEmpty) {
@@ -717,19 +718,58 @@ class _IndividualAccountByNationalIdState
           requestData["articlesOfAssociation"] = await file.readAsBytes();
         }
       }
-      // Prepare members (personalInfo)
-      requestData["customers"] = stepperState.members
-          .map((m) => {
-                "fullName": m.fullName ?? "",
-                "email": m.email ?? "",
-                "phone": m.phone ?? "",
-                "title": m.title ?? "",
-                "legalId": m.legalId ?? "",
-                "documentName": m.documentType ?? "",
-                "issueDate": m.issueDate ?? "",
-                "expiryDate": m.expirayDate ?? "",
-              })
-          .toList();
+
+      if (stepperState.tinNumberPhotos.isNotEmpty) {
+        // Read the first file from the list
+        final file = File(stepperState.tinNumberPhotos.first);
+        if (await file.exists()) {
+          requestData["tinNumberFile"] = await file.readAsBytes();
+        }
+      }
+      // Prepare members (personalInfo) with file data
+      requestData["customers"] = await Future.wait(
+        stepperState.members.map((m) async {
+          Map<String, dynamic> memberData = {
+            "fullName": m.fullName ?? "",
+            "legalId": m.legalId ?? "",
+            "email": m.email ?? "",
+            "phone": m.phone ?? "",
+            "title": m.title ?? "",
+            "documentName": m.documentType ?? "",
+            "issueDate": m.issueDate ?? "",
+            "expiryDate": m.expirayDate ?? "",
+          };
+
+          // Add file data if available
+          if (m.residentPath != null && m.residentPath!.isNotEmpty) {
+            final file = File(m.residentPath!);
+            if (await file.exists()) {
+              memberData["residenceCard"] = await file.readAsBytes();
+            }
+          }
+
+          if (m.residentCardBackPath != null &&
+              m.residentCardBackPath!.isNotEmpty) {
+            final file = File(m.residentCardBackPath!);
+            if (await file.exists()) {
+              memberData["residenceCardBack"] = await file.readAsBytes();
+            }
+          }
+
+          if (m.profilePath != null && m.profilePath!.isNotEmpty) {
+            final file = File(m.profilePath!);
+            if (await file.exists()) {
+              memberData["photo"] = await file.readAsBytes();
+            }
+          }
+
+          if (m.signature != null) {
+            memberData["signature"] = m.signature;
+          }
+
+          return memberData;
+        }),
+      );
 
       final result = await registrationService.submitOrganizationalRegistration(
           requestData: requestData);
@@ -791,11 +831,11 @@ class _IndividualAccountByNationalIdState
             ),
           ).then((_) {
             if (!_disposed) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const MainPage()),
-                (route) => false,
-              );
+              // Navigator.pushAndRemoveUntil(
+              //   context,
+              //   MaterialPageRoute(builder: (_) => const MainPage()),
+              //   (route) => false,
+              // );
             }
           });
         } else {

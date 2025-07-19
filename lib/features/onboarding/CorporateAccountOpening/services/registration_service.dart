@@ -317,7 +317,10 @@ class RegistrationService {
       // Add company details
       request.fields["companyName"] = requestData["companyName"] ?? "";
       request.fields["email"] = requestData["email"] ?? "";
-      request.fields["phoneNumber"] = requestData["phoneNumber"] ?? "";
+      request.fields["tinNumber"] = requestData["tinNumber"] ?? "";
+      request.fields["legalId"] = requestData["legalId"] ?? "";
+      // request.fields["phoneNumber"] = 0+ requestData["phoneNumber"] ?? "";
+      request.fields["phoneNumber"] = '0${requestData["phoneNumber"] ?? ""}';
       request.fields["dateOfEstablishment"] =
           requestData["dateOfEstablishment"] ?? "";
       request.fields["residence"] = requestData["residence"] ?? "";
@@ -338,16 +341,51 @@ class RegistrationService {
         var person = personalInfo[i];
         request.fields["personalInfo[$i].fullName"] = person["fullName"] ?? "";
         request.fields["personalInfo[$i].email"] = person["email"] ?? "";
-        request.fields["personalInfo[$i].phone"] = person["phone"] ?? "";
+        request.fields["personalInfo[$i].phone"] = '0${person["phone"] ?? ""}';
         request.fields["personalInfo[$i].title"] = person["title"] ?? "";
-        request.fields["personalInfo[$i].documentNumber"] =
-            person["legalId"] ?? "";
+        request.fields["personalInfo[$i].legalId"] = person["legalId"] ?? "";
         request.fields["personalInfo[$i].documentName"] =
             person["documentName"] ?? "";
         request.fields["personalInfo[$i].issueDate"] =
             person["issueDate"] ?? "";
         request.fields["personalInfo[$i].expiryDate"] =
             person["expiryDate"] ?? "";
+
+        // Handle resident card front
+        if (person["residenceCard"] != null) {
+          request.files.add(await http.MultipartFile.fromBytes(
+            "personalInfo[$i].residenceCard",
+            person["residenceCard"],
+            filename: "residence_front_$i.jpg",
+          ));
+        }
+
+        // Handle resident card back
+        if (person["residenceCardBack"] != null) {
+          request.files.add(await http.MultipartFile.fromBytes(
+            "personalInfo[$i].residenceCardBack",
+            person["residenceCardBack"],
+            filename: "residence_back_$i.jpg",
+          ));
+        }
+
+        // Handle signature
+        if (person["signature"] != null) {
+          request.files.add(await http.MultipartFile.fromBytes(
+            "personalInfo[$i].signature",
+            person["signature"],
+            filename: "signature_$i.jpg",
+          ));
+        }
+
+        // Handle photo
+        if (person["photo"] != null) {
+          request.files.add(await http.MultipartFile.fromBytes(
+            "personalInfo[$i].photo",
+            person["photo"],
+            filename: "photo_$i.jpg",
+          ));
+        }
       }
 
       // Handle files (if provided)
@@ -367,12 +405,18 @@ class RegistrationService {
             filename: "articles.pdf"));
       }
 
+      if (requestData["tinNumberFile"] != null) {
+        request.files.add(await http.MultipartFile.fromBytes(
+            "tinNumberFile", requestData["tinNumberFile"],
+            filename: "tinNumberFile.pdf"));
+      }
       print("Final request payload: ");
-      print(requestData['articlesOfAssociation']);
-      print(requestData['letterOfRequest']);
-      request.fields.forEach((k, v) => print('$k: $v'));
-      print(requestData['articlesOfAssociation']);
-      print(requestData['tradeLicense']);
+      print("Fields:");
+      request.fields.forEach((k, v) => print('  $k: $v'));
+      print("Files:");
+      for (final file in request.files) {
+        print('  ${file.field}: ${file.filename} (${file.length} bytes)');
+      }
 
       final response = await request.send().timeout(
         const Duration(seconds: 30),
