@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, use_key_in_widget_constructors
 
+import 'dart:io';
+
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/model/registration_data.dart';
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/providers/national_id_provider.dart';
@@ -481,6 +483,15 @@ class _IndividualAccountByNationalIdState
                       print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 5) {
+                      if (stepperState.selectedAccountType == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please selecte account Type'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
                       final currentFormKey = formKeys[5];
 
                       final registrationData = RegistrationData(
@@ -503,11 +514,11 @@ class _IndividualAccountByNationalIdState
                         customerShare: stepperState.customerShare,
                         members:
                             stepperState.members, // <-- List<JointMemberInfo>
-                        licenseFile: stepperState.licenseFile,
-                        articleFile: stepperState.articleFile,
-                        letterOfRequestFile: stepperState.letterOfRequestFile,
-                        tinNumberPhoto: stepperState.tinNumberPhoto,
-                        tradeName: stepperState.tradeName,
+                        licenseFiles: stepperState.licenseFiles,
+                        articleFiles: stepperState.articleFiles,
+                        letterOfRequestFiles: stepperState.letterOfRequestFiles,
+                        tinNumberPhotos: stepperState.tinNumberPhotos,
+                        tradeNameFiles: stepperState.tradeNameFiles,
                         otherFiles: stepperState.otherFiles,
                       );
 
@@ -650,7 +661,6 @@ class _IndividualAccountByNationalIdState
     });
   }
 
-  // Submit registration
   Future<void> _submitRegistration() async {
     if (_disposed) return;
     final stepperState = ref.read(stepperProvider);
@@ -664,127 +674,160 @@ class _IndividualAccountByNationalIdState
               child: CircularProgressIndicator(color: cyanblueColor)),
     );
     try {
-      // Prepare members data for API
-      final members = stepperState.members.map((m) {
-        final v = m.verifiedData ?? {};
-        return {
-          'fullName': v['fullName'] ?? m.fullName,
-          'surname': v['surname'] ?? v['lastName'] ?? '',
-          'motherName': v['motherName'] ?? m.motherName ?? '',
-          'email': v['email'] ?? '',
-          'phone': v['phone'] ?? '',
-          'dateOfBirth': normalizeDate(v['dateOfBirth'] ?? m.dateOfBirth ?? ''),
-          'country': v['country'] ?? '',
-          'state': v['state'] ?? '',
-          'city': v['city'] ?? '',
-          'streetAddress': v['streetAddress'] ?? '',
-          'zipCode': v['zipCode'] ?? '',
-          'occupation': v['occupation'] ?? '',
-          'title': v['title'] ?? m.title ?? '',
-          'maritalStatus': v['maritalStatus'] ?? m.maritalStatus ?? '',
-          'postCode': v['postCode'] ?? '',
-          'zoneSubCity': v['zoneSubCity'] ?? '',
-          'houseNo': v['houseNo'] ?? '',
-          'documentName': v['documentName'] ?? '',
-          'issueAuthority': v['issueAuthority'] ?? '',
-          'issueDate': v['issueDate'] ?? '',
-          'expiryDate': v['expiryDate'] ?? '',
-          'employeeStatus': v['employeeStatus'] ?? '',
-          'legalId': v['legalId'] ?? '',
-          'salary': v['salary'] ?? '',
-          'sector': v['sector'] ?? '',
-          'industry': v['industry'] ?? '',
-          'employerName': v['employerName'] ?? '',
-          'monthlyIncome': v['monthlyIncome'] ?? '',
-          'sex': v['sex'] ?? m.sex ?? '',
-        };
-      }).toList();
+      print("indd3232242424");
 
-      print("ddfjdfhdfhdfhdh");
-      print(members);
-      final signatures =
-          stepperState.members.map((m) => m.signature as Uint8List?).toList();
-      final otherFields = {
-        'branch': stepperState.selectedBranch ?? '',
-        'currency': 'ETB',
-        'accountType': stepperState.selectedAccountType ?? '1',
-        'initialDeposit': (stepperState.initialDeposit ?? 100).toString(),
-        // 'percentageCompleted':
-        //     (stepperState.percentageComplete ?? 10).toString(),
-        // 'jointAccountType': 'AND_OR'
+      // Prepare co
+      //mpany and members data for API
+      final requestData = <String, dynamic>{
+        "companyName": stepperState.companyName,
+        "email": stepperState.companyEmail,
+        "phoneNumber": stepperState.companyPhoneNumber,
+        "dateOfEstablishment": stepperState.companyDateOfEstablishment,
+        "residence":
+            stepperState.companyZoneSubCity, // or another field if needed
+        "state": stepperState.companyState,
+        "zone": stepperState.companyZoneSubCity,
+        "woreda": stepperState.companyWoreda,
+        "branch": stepperState.selectedBranch,
+        "currency": "ETB",
+        "accountType": stepperState.selectedAccountType,
+        "initialDeposit": stepperState.initialDeposit?.toString(),
+        "percentageCompleted":
+            stepperState.percentageComplete?.toString() ?? "0",
       };
+      // Add file bytes if available (assuming you store them in stepperState)
+      if (stepperState.letterOfRequestFiles.isNotEmpty) {
+        // Read the first file from the list
+        final file = File(stepperState.letterOfRequestFiles.first);
+        if (await file.exists()) {
+          requestData["letterOfRequest"] = await file.readAsBytes();
+        }
+      }
+      if (stepperState.licenseFiles.isNotEmpty) {
+        // Read the first file from the list
+        final file = File(stepperState.licenseFiles.first);
+        if (await file.exists()) {
+          requestData["tradeLicense"] = await file.readAsBytes();
+        }
+      }
+      if (stepperState.articleFiles.isNotEmpty) {
+        // Read the first file from the list
+        final file = File(stepperState.articleFiles.first);
+        if (await file.exists()) {
+          requestData["articlesOfAssociation"] = await file.readAsBytes();
+        }
+      }
+      // Prepare members (personalInfo)
+      requestData["customers"] = stepperState.members
+          .map((m) => {
+                "fullName": m.fullName ?? "",
+                "email": m.email ?? "",
+                "phone": m.phone ?? "",
+                "title": m.title ?? "",
+                "legalId": m.legalId ?? "",
+                "documentName": m.documentType ?? "",
+                "issueDate": m.issueDate ?? "",
+                "expiryDate": m.expirayDate ?? "",
+              })
+          .toList();
 
-      print("submitted data");
-      print(members);
-      final result = await registrationService.submitJointRegistration(
-        members: members,
-        otherFields: otherFields,
-        signatures: signatures,
-      );
+      final result = await registrationService.submitOrganizationalRegistration(
+          requestData: requestData);
       if (!_disposed && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
       if (!_disposed) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-            title: Row(children: const [
-              Icon(Icons.check_circle, color: cyanblueColor),
-              SizedBox(width: 5),
-              Text('Registration Complete',
-                  style: TextStyle(
-                      fontSize: 15,
-                      color: cyanblueColor,
-                      fontWeight: FontWeight.bold)),
-            ]),
-            content: const Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Your registration has been submitted successfully!',
-                    style: TextStyle(fontSize: 16)),
-                SizedBox(height: 10),
-                Text('Thank you!', style: TextStyle(fontSize: 16)),
+        if (result["statusCode"] == 200 || result["statusCode"] == 201) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5)),
+              title: Row(children: const [
+                Icon(Icons.check_circle, color: cyanblueColor),
+                SizedBox(width: 5),
+                Text('Registration Complete',
+                    style: TextStyle(
+                        fontSize: 15,
+                        color: cyanblueColor,
+                        fontWeight: FontWeight.bold)),
+              ]),
+              content: const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Your registration has been submitted successfully!',
+                      style: TextStyle(fontSize: 16)),
+                  SizedBox(height: 10),
+                  Text('Thank you!', style: TextStyle(fontSize: 16)),
+                ],
+              ),
+              actionsPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (!_disposed) {
+                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MainPage()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: cyanblueColor,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('OK'),
+                ),
               ],
             ),
-            actionsPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  if (!_disposed) {
-                    Navigator.pop(context);
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainPage()),
-                      (route) => false,
-                    );
-                  }
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: cyanblueColor,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text('OK'),
+          ).then((_) {
+            if (!_disposed) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const MainPage()),
+                (route) => false,
+              );
+            }
+          });
+        } else {
+          // Error dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: Row(children: const [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(width: 5),
+                Text('Registration Failed',
+                    style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold)),
+              ]),
+              content: Text(
+                result["message"] ?? "Registration failed. Please try again.",
+                style: const TextStyle(fontSize: 16),
               ),
-            ],
-          ),
-        ).then((_) {
-          if (!_disposed) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const MainPage()),
-              (route) => false,
-            );
-          }
-        });
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
       }
     } catch (e) {
       if (!_disposed && Navigator.canPop(context)) {
@@ -796,4 +839,150 @@ class _IndividualAccountByNationalIdState
       }
     }
   }
+  // Submit registration
+  // Future<void> _submitRegistration() async {
+  //   if (_disposed) return;
+  //   final stepperState = ref.read(stepperProvider);
+  //   final registrationService = RegistrationService();
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => _disposed
+  //         ? const SizedBox.shrink()
+  //         : const Center(
+  //             child: CircularProgressIndicator(color: cyanblueColor)),
+  //   );
+  //   try {
+  //     // Prepare members data for API
+  //     final members = stepperState.members.map((m) {
+  //       final v = m.verifiedData ?? {};
+  //       return {
+  //         'fullName': v['fullName'] ?? m.fullName,
+  //         'surname': v['surname'] ?? v['lastName'] ?? '',
+  //         'motherName': v['motherName'] ?? m.motherName ?? '',
+  //         'email': v['email'] ?? '',
+  //         'phone': v['phone'] ?? '',
+  //         'dateOfBirth': normalizeDate(v['dateOfBirth'] ?? m.dateOfBirth ?? ''),
+  //         'country': v['country'] ?? '',
+  //         'state': v['state'] ?? '',
+  //         'city': v['city'] ?? '',
+  //         'streetAddress': v['streetAddress'] ?? '',
+  //         'zipCode': v['zipCode'] ?? '',
+  //         'occupation': v['occupation'] ?? '',
+  //         'title': v['title'] ?? m.title ?? '',
+  //         'maritalStatus': v['maritalStatus'] ?? m.maritalStatus ?? '',
+  //         'postCode': v['postCode'] ?? '',
+  //         'zoneSubCity': v['zoneSubCity'] ?? '',
+  //         'houseNo': v['houseNo'] ?? '',
+  //         'documentName': v['documentName'] ?? '',
+  //         'issueAuthority': v['issueAuthority'] ?? '',
+  //         'issueDate': v['issueDate'] ?? '',
+  //         'expiryDate': v['expiryDate'] ?? '',
+  //         'employeeStatus': v['employeeStatus'] ?? '',
+  //         'legalId': v['legalId'] ?? '',
+  //         'salary': v['salary'] ?? '',
+  //         'sector': v['sector'] ?? '',
+  //         'industry': v['industry'] ?? '',
+  //         'employerName': v['employerName'] ?? '',
+  //         'monthlyIncome': v['monthlyIncome'] ?? '',
+  //         'sex': v['sex'] ?? m.sex ?? '',
+  //       };
+  //     }).toList();
+
+  //     print("ddfjdfhdfhdfhdh");
+  //     print(members);
+  //     final signatures =
+  //         stepperState.members.map((m) => m.signature as Uint8List?).toList();
+  //     final otherFields = {
+  //       'branch': stepperState.selectedBranch ?? '',
+  //       'currency': 'ETB',
+  //       'accountType': stepperState.selectedAccountType ?? '1',
+  //       'initialDeposit': (stepperState.initialDeposit ?? 100).toString(),
+  //       // 'percentageCompleted':
+  //       //     (stepperState.percentageComplete ?? 10).toString(),
+  //       // 'jointAccountType': 'AND_OR'
+  //     };
+
+  //     print("submitted data");
+  //     print(members);
+  //     final result = await registrationService.submitJointRegistration(
+  //       members: members,
+  //       otherFields: otherFields,
+  //       signatures: signatures,
+  //     );
+  //     if (!_disposed && Navigator.canPop(context)) {
+  //       Navigator.pop(context);
+  //     }
+  //     if (!_disposed) {
+  //       showDialog(
+  //         context: context,
+  //         barrierDismissible: false,
+  //         builder: (context) => AlertDialog(
+  //           shape:
+  //               RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+  //           title: Row(children: const [
+  //             Icon(Icons.check_circle, color: cyanblueColor),
+  //             SizedBox(width: 5),
+  //             Text('Registration Complete',
+  //                 style: TextStyle(
+  //                     fontSize: 15,
+  //                     color: cyanblueColor,
+  //                     fontWeight: FontWeight.bold)),
+  //           ]),
+  //           content: const Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text('Your registration has been submitted successfully!',
+  //                   style: TextStyle(fontSize: 16)),
+  //               SizedBox(height: 10),
+  //               Text('Thank you!', style: TextStyle(fontSize: 16)),
+  //             ],
+  //           ),
+  //           actionsPadding:
+  //               const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () {
+  //                 if (!_disposed) {
+  //                   Navigator.pop(context);
+  //                   Navigator.pushAndRemoveUntil(
+  //                     context,
+  //                     MaterialPageRoute(builder: (_) => const MainPage()),
+  //                     (route) => false,
+  //                   );
+  //                 }
+  //               },
+  //               style: TextButton.styleFrom(
+  //                 foregroundColor: Colors.white,
+  //                 backgroundColor: cyanblueColor,
+  //                 padding:
+  //                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+  //                 shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(8)),
+  //               ),
+  //               child: const Text('OK'),
+  //             ),
+  //           ],
+  //         ),
+  //       ).then((_) {
+  //         if (!_disposed) {
+  //           Navigator.pushAndRemoveUntil(
+  //             context,
+  //             MaterialPageRoute(builder: (_) => const MainPage()),
+  //             (route) => false,
+  //           );
+  //         }
+  //       });
+  //     }
+  //   } catch (e) {
+  //     if (!_disposed && Navigator.canPop(context)) {
+  //       Navigator.pop(context);
+  //     }
+  //     if (!_disposed) {
+  //       DialogHelper.showErrorDialog(
+  //           context, "Registration Failed, please try later");
+  //     }
+  //   }
+  // }
 }

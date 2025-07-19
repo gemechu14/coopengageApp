@@ -129,31 +129,44 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                         _buildSummaryItem('Woreda',
                             registrationData.companyWoreda ?? 'Not provided'),
                         _buildSummaryItem(
-                            'License File',
-                            registrationData.licenseFile != null
-                                ? registrationData.licenseFile!.split('/').last
+                            'License Files',
+                            (registrationData.licenseFiles != null &&
+                                    registrationData.licenseFiles!.isNotEmpty)
+                                ? registrationData.licenseFiles!
+                                    .map((f) => f.split('/').last)
+                                    .join(', ')
                                 : 'Not provided'),
                         _buildSummaryItem(
-                            'Article File',
-                            registrationData.articleFile != null
-                                ? registrationData.articleFile!.split('/').last
+                            'Article Files',
+                            (registrationData.articleFiles != null &&
+                                    registrationData.articleFiles!.isNotEmpty)
+                                ? registrationData.articleFiles!
+                                    .map((f) => f.split('/').last)
+                                    .join(', ')
                                 : 'Not provided'),
                         _buildSummaryItem(
-                            'Letter of Request File',
-                            registrationData.letterOfRequestFile != null
-                                ? registrationData.letterOfRequestFile!
-                                    .split('/')
-                                    .last
+                            'Letter of Request Files',
+                            (registrationData.letterOfRequestFiles != null &&
+                                    registrationData.letterOfRequestFiles!.isNotEmpty)
+                                ? registrationData.letterOfRequestFiles!
+                                    .map((f) => f.split('/').last)
+                                    .join(', ')
                                 : 'Not provided'),
                         _buildSummaryItem(
-                            'TIN Number Photo',
-                            registrationData.tinNumberPhoto != null
-                                ? registrationData.tinNumberPhoto!
-                                    .split('/')
-                                    .last
+                            'TIN Number Photos',
+                            (registrationData.tinNumberPhotos != null &&
+                                    registrationData.tinNumberPhotos!.isNotEmpty)
+                                ? registrationData.tinNumberPhotos!
+                                    .map((f) => f.split('/').last)
+                                    .join(', ')
                                 : 'Not provided'),
-                        _buildSummaryItem('Trade Name',
-                            registrationData.tradeName ?? 'Not provided'),
+                        _buildSummaryItem('Trade Name Files',
+                            (registrationData.tradeNameFiles != null &&
+                                    registrationData.tradeNameFiles!.isNotEmpty)
+                                ? registrationData.tradeNameFiles!
+                                    .map((f) => f.split('/').last)
+                                    .join(', ')
+                                : 'Not provided'),
                         _buildSummaryItem(
                             'Other Files',
                             (registrationData.otherFiles != null &&

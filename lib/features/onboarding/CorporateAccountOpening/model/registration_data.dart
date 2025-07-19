@@ -202,11 +202,11 @@ class RegistrationData {
   final int? bankShare;
   final int? customerShare;
   final List<JointMemberInfo>? members;
-  final String? licenseFile;
-  final String? articleFile;
-  final String? letterOfRequestFile;
-  final String? tinNumberPhoto;
-  final String? tradeName;
+  final List<String>? licenseFiles;
+  final List<String>? articleFiles;
+  final List<String>? letterOfRequestFiles;
+  final List<String>? tinNumberPhotos;
+  final List<String>? tradeNameFiles;
   final List<String>? otherFiles;
   final String? companyName;
   final String? companyPhoneNumber;
@@ -254,11 +254,11 @@ class RegistrationData {
     this.bankShare,
     this.customerShare,
     this.members,
-    this.licenseFile,
-    this.articleFile,
-    this.letterOfRequestFile,
-    this.tinNumberPhoto,
-    this.tradeName,
+    this.licenseFiles,
+    this.articleFiles,
+    this.letterOfRequestFiles,
+    this.tinNumberPhotos,
+    this.tradeNameFiles,
     this.otherFiles,
     this.companyName,
     this.companyPhoneNumber,
@@ -311,11 +311,11 @@ class RegistrationData {
           ? List<JointMemberInfo>.from(
               (map['members'] as List).map((x) => JointMemberInfo.fromMap(x)))
           : null,
-      licenseFile: map['licenseFile'],
-      articleFile: map['articleFile'],
-      letterOfRequestFile: map['letterOfRequestFile'],
-      tinNumberPhoto: map['tinNumberPhoto'],
-      tradeName: map['tradeName'],
+      licenseFiles: map['licenseFiles'] != null ? List<String>.from(map['licenseFiles']) : null,
+      articleFiles: map['articleFiles'] != null ? List<String>.from(map['articleFiles']) : null,
+      letterOfRequestFiles: map['letterOfRequestFiles'] != null ? List<String>.from(map['letterOfRequestFiles']) : null,
+      tinNumberPhotos: map['tinNumberPhotos'] != null ? List<String>.from(map['tinNumberPhotos']) : null,
+      tradeNameFiles: map['tradeNameFiles'] != null ? List<String>.from(map['tradeNameFiles']) : null,
       otherFiles: map['otherFiles'] != null ? List<String>.from(map['otherFiles']) : null,
       companyName: map['companyName'],
       companyPhoneNumber: map['companyPhoneNumber'],
@@ -368,11 +368,11 @@ class RegistrationData {
       'bankShare': bankShare,
       'customerShare': customerShare,
       'members': members?.map((x) => x.toMap()).toList(),
-      'licenseFile': licenseFile,
-      'articleFile': articleFile,
-      'letterOfRequestFile': letterOfRequestFile,
-      'tinNumberPhoto': tinNumberPhoto,
-      'tradeName': tradeName,
+      'licenseFiles': licenseFiles,
+      'articleFiles': articleFiles,
+      'letterOfRequestFiles': letterOfRequestFiles,
+      'tinNumberPhotos': tinNumberPhotos,
+      'tradeNameFiles': tradeNameFiles,
       'otherFiles': otherFiles,
       'companyName': companyName,
       'companyPhoneNumber': companyPhoneNumber,

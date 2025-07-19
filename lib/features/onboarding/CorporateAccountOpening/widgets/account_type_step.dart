@@ -42,6 +42,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   final TextEditingController _customerShareController =
       TextEditingController();
   String? _shareError;
+  String? _lastProductType;
+  double? _lastInitialDeposit;
 
   @override
   void initState() {
@@ -58,7 +60,12 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   @override
   void didUpdateWidget(covariant AccountTypeStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _filterAccountTypes();
+    // Re-filter when widget updates (e.g., when initialDeposit changes)
+    if (oldWidget.initialDeposit != widget.initialDeposit ||
+        oldWidget.customerAge != widget.customerAge ||
+        oldWidget.customerGender != widget.customerGender) {
+      _filterAccountTypes();
+    }
   }
 
   @override
@@ -89,16 +96,32 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     final String? product_type = stepper_state.selectedProductType;
     final double? initial_deposit = widget.initialDeposit;
 
+    // Only filter if data has changed
+    if (_lastProductType == product_type && _lastInitialDeposit == initial_deposit) {
+      return;
+    }
+
+    // Update last values
+    _lastProductType = product_type;
+    _lastInitialDeposit = initial_deposit;
+
     // Filter: Only category == 'CURRENT', matches productType (bankingType), and minAmount <= initialDeposit
     List<AccountType> filtered = account_types
-        .where((account_type) =>
-            account_type.category.toUpperCase() == 'CURRENT' &&
-            (product_type == null ||
-                product_type.trim().isEmpty ||
-                account_type.bankingType.trim().toLowerCase() ==
-                    product_type.trim().toLowerCase()) &&
-            (initial_deposit == null ||
-                account_type.minAmount <= initial_deposit))
+        .where((account_type) {
+          final categoryMatch = account_type.category.toUpperCase() == 'CURRENT';
+          
+          // Product type must match exactly (no null/empty fallback)
+          final productTypeMatch = product_type != null &&
+              product_type.trim().isNotEmpty &&
+              account_type.bankingType.trim().toLowerCase() ==
+                  product_type.trim().toLowerCase();
+          
+          // Initial deposit must be provided and meet minimum requirement
+          final depositMatch = initial_deposit != null &&
+              account_type.minAmount <= initial_deposit;
+
+          return categoryMatch && productTypeMatch && depositMatch;
+        })
         .toList();
 
     setState(() {
@@ -110,6 +133,11 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   Widget build(BuildContext context) {
     if (_disposed) return const SizedBox.shrink();
     final accountTypeStepState = ref.watch(accountTypeStepProvider);
+    final stepperState = ref.watch(stepperProvider); // Watch stepper state for changes
+    
+    // Filter account types based on current state
+    _filterAccountTypes();
+    
     if (accountTypeStepState.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -125,9 +153,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       });
     }
 
-    final allAccountTypes = filteredAccountTypes.isNotEmpty
-        ? filteredAccountTypes
-        : accountTypeStepState.availableAccountTypes;
+    final allAccountTypes = filteredAccountTypes;
 
     AccountType? selectedType;
     try {
@@ -331,14 +357,33 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                 : Center(
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
-                      child: Text(
-                        "Sorry, no account types match your selection.",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.red,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.account_balance_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "No matching account types found",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Please check your:\n• Product type selection\n• Initial deposit amount\n• Account category requirements",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                   ),

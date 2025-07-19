@@ -25,11 +25,11 @@ class StepperState {
   final int? customerShare;
   final int numberOfMembers;
   final List<JointMemberInfo> members;
-  final String? licenseFile;
-  final String? articleFile;
-  final String? letterOfRequestFile;
-  final String? tinNumberPhoto;
-  final String? tradeName;
+  final List<String> licenseFiles;
+  final List<String> articleFiles;
+  final List<String> letterOfRequestFiles;
+  final List<String> tinNumberPhotos;
+  final List<String> tradeNameFiles;
   final List<String> otherFiles;
   final String? companyName;
   final String? companyPhoneNumber;
@@ -79,11 +79,11 @@ class StepperState {
     this.customerShare,
     this.numberOfMembers = 1, // changed from 2 to 1
     List<JointMemberInfo>? members,
-    this.licenseFile,
-    this.articleFile,
-    this.letterOfRequestFile,
-    this.tinNumberPhoto,
-    this.tradeName,
+    this.licenseFiles = const [],
+    this.articleFiles = const [],
+    this.letterOfRequestFiles = const [],
+    this.tinNumberPhotos = const [],
+    this.tradeNameFiles = const [],
     this.otherFiles = const [],
     this.companyName,
     this.companyPhoneNumber,
@@ -132,11 +132,11 @@ class StepperState {
     int? customerShare,
     int? numberOfMembers,
     List<JointMemberInfo>? members,
-    String? licenseFile,
-    String? articleFile,
-    String? letterOfRequestFile,
-    String? tinNumberPhoto,
-    String? tradeName,
+    List<String>? licenseFiles,
+    List<String>? articleFiles,
+    List<String>? letterOfRequestFiles,
+    List<String>? tinNumberPhotos,
+    List<String>? tradeNameFiles,
     List<String>? otherFiles,
     String? companyName,
     String? companyPhoneNumber,
@@ -185,11 +185,11 @@ class StepperState {
       customerShare: customerShare ?? this.customerShare,
       numberOfMembers: numberOfMembers ?? this.numberOfMembers,
       members: members ?? this.members,
-      licenseFile: licenseFile ?? this.licenseFile,
-      articleFile: articleFile ?? this.articleFile,
-      letterOfRequestFile: letterOfRequestFile ?? this.letterOfRequestFile,
-      tinNumberPhoto: tinNumberPhoto ?? this.tinNumberPhoto,
-      tradeName: tradeName ?? this.tradeName,
+      licenseFiles: licenseFiles ?? this.licenseFiles,
+      articleFiles: articleFiles ?? this.articleFiles,
+      letterOfRequestFiles: letterOfRequestFiles ?? this.letterOfRequestFiles,
+      tinNumberPhotos: tinNumberPhotos ?? this.tinNumberPhotos,
+      tradeNameFiles: tradeNameFiles ?? this.tradeNameFiles,
       otherFiles: otherFiles ?? this.otherFiles,
       companyName: companyName ?? this.companyName,
       companyPhoneNumber: companyPhoneNumber ?? this.companyPhoneNumber,
@@ -383,20 +383,74 @@ class StepperNotifier extends StateNotifier<StepperState> {
     }
   }
 
-  void updateLicenseFile(String? path) {
-    state = state.copyWith(licenseFile: path);
+  void updateLicenseFiles(List<String> files) {
+    state = state.copyWith(licenseFiles: files);
   }
-  void updateArticleFile(String? path) {
-    state = state.copyWith(articleFile: path);
+  
+  void addLicenseFile(String path) {
+    final updatedFiles = List<String>.from(state.licenseFiles)..add(path);
+    state = state.copyWith(licenseFiles: updatedFiles);
   }
-  void updateLetterOfRequestFile(String? path) {
-    state = state.copyWith(letterOfRequestFile: path);
+  
+  void removeLicenseFile(int index) {
+    final updatedFiles = List<String>.from(state.licenseFiles)..removeAt(index);
+    state = state.copyWith(licenseFiles: updatedFiles);
   }
-  void updateTinNumberPhoto(String? path) {
-    state = state.copyWith(tinNumberPhoto: path);
+  
+  void updateArticleFiles(List<String> files) {
+    state = state.copyWith(articleFiles: files);
   }
-  void updateTradeName(String? path) {
-    state = state.copyWith(tradeName: path);
+  
+  void addArticleFile(String path) {
+    final updatedFiles = List<String>.from(state.articleFiles)..add(path);
+    state = state.copyWith(articleFiles: updatedFiles);
+  }
+  
+  void removeArticleFile(int index) {
+    final updatedFiles = List<String>.from(state.articleFiles)..removeAt(index);
+    state = state.copyWith(articleFiles: updatedFiles);
+  }
+  
+  void updateLetterOfRequestFiles(List<String> files) {
+    state = state.copyWith(letterOfRequestFiles: files);
+  }
+  
+  void addLetterOfRequestFile(String path) {
+    final updatedFiles = List<String>.from(state.letterOfRequestFiles)..add(path);
+    state = state.copyWith(letterOfRequestFiles: updatedFiles);
+  }
+  
+  void removeLetterOfRequestFile(int index) {
+    final updatedFiles = List<String>.from(state.letterOfRequestFiles)..removeAt(index);
+    state = state.copyWith(letterOfRequestFiles: updatedFiles);
+  }
+  
+  void updateTinNumberPhotos(List<String> files) {
+    state = state.copyWith(tinNumberPhotos: files);
+  }
+  
+  void addTinNumberPhoto(String path) {
+    final updatedFiles = List<String>.from(state.tinNumberPhotos)..add(path);
+    state = state.copyWith(tinNumberPhotos: updatedFiles);
+  }
+  
+  void removeTinNumberPhoto(int index) {
+    final updatedFiles = List<String>.from(state.tinNumberPhotos)..removeAt(index);
+    state = state.copyWith(tinNumberPhotos: updatedFiles);
+  }
+  
+  void updateTradeNameFiles(List<String> files) {
+    state = state.copyWith(tradeNameFiles: files);
+  }
+  
+  void addTradeNameFile(String path) {
+    final updatedFiles = List<String>.from(state.tradeNameFiles)..add(path);
+    state = state.copyWith(tradeNameFiles: updatedFiles);
+  }
+  
+  void removeTradeNameFile(int index) {
+    final updatedFiles = List<String>.from(state.tradeNameFiles)..removeAt(index);
+    state = state.copyWith(tradeNameFiles: updatedFiles);
   }
   void updateOtherFiles(List<String> files) {
     state = state.copyWith(otherFiles: files);

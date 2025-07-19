@@ -36,9 +36,9 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
     required BuildContext context,
     required String label,
     required IconData icon,
-    required String? filePath,
+    required List<String> filePaths,
     required VoidCallback onUpload,
-    required VoidCallback onDelete,
+    required Function(int index) onDelete,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,21 +67,25 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
             ),
           ),
         ),
-        if (filePath != null)
-          Card(
-            margin: EdgeInsets.symmetric(vertical: 5),
-            child: ListTile(
-              leading: Icon(Icons.picture_as_pdf, color: Colors.red),
-              title: Text(
-                filePath.split('/').last,
-                overflow: TextOverflow.ellipsis,
+        if (filePaths.isNotEmpty)
+          ...filePaths.asMap().entries.map((entry) {
+            int index = entry.key;
+            String filePath = entry.value;
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 5),
+              child: ListTile(
+                leading: Icon(Icons.picture_as_pdf, color: Colors.red),
+                title: Text(
+                  filePath.split('/').last,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete, color: Colors.redAccent),
+                  onPressed: () => onDelete(index),
+                ),
               ),
-              trailing: IconButton(
-                icon: Icon(Icons.delete, color: Colors.redAccent),
-                onPressed: onDelete,
-              ),
-            ),
-          ),
+            );
+          }).toList(),
         SizedBox(height: 10),
       ],
     );
@@ -101,12 +105,21 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
       motherNameControllers.removeLast().dispose();
     }
 
-    final licenseFile = stepperState.licenseFile;
-    final articleFile = stepperState.articleFile;
-    final letterOfRequestFile = stepperState.letterOfRequestFile;
-    final tinNumberPhoto = stepperState.tinNumberPhoto;
-    final tradeName = stepperState.tradeName;
+    final licenseFiles = stepperState.licenseFiles;
+    final articleFiles = stepperState.articleFiles;
+    final letterOfRequestFiles = stepperState.letterOfRequestFiles;
+    final tinNumberPhotos = stepperState.tinNumberPhotos;
+    final tradeNameFiles = stepperState.tradeNameFiles;
     final otherFiles = stepperState.otherFiles;
+
+    // Debug: Print current file states
+    print('Current file states:');
+    print('License: $licenseFiles');
+    print('Article: $articleFiles');
+    print('Letter: $letterOfRequestFiles');
+    print('TIN: $tinNumberPhotos');
+    print('Trade: $tradeNameFiles');
+    print('Other: $otherFiles');
 
     return SingleChildScrollView(
       child: Padding(
@@ -119,66 +132,81 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
               context: context,
               label: "Upload License",
               icon: Icons.upload_file,
-              filePath: licenseFile,
+              filePaths: licenseFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
                 onFilePicked: (path) {
-                  notifier.updateLicenseFile(path);
+                  notifier.addLicenseFile(path);
                 },
               ),
-              onDelete: () => notifier.updateLicenseFile(null),
+              onDelete: (index) {
+                print('Deleting license file at index $index');
+                notifier.removeLicenseFile(index);
+              },
             ),
             _buildUploadSection(
               context: context,
               label: "Upload Articles of Association",
               icon: Icons.description_rounded,
-              filePath: articleFile,
+              filePaths: articleFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
                 onFilePicked: (path) {
-                  notifier.updateArticleFile(path);
+                  notifier.addArticleFile(path);
                 },
               ),
-              onDelete: () => notifier.updateArticleFile(null),
+              onDelete: (index) {
+                print('Deleting article file at index $index');
+                notifier.removeArticleFile(index);
+              },
             ),
             _buildUploadSection(
               context: context,
               label: "Letter Of Request",
               icon: Icons.description_rounded,
-              filePath: letterOfRequestFile,
+              filePaths: letterOfRequestFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
                 onFilePicked: (path) {
-                  notifier.updateLetterOfRequestFile(path);
+                  notifier.addLetterOfRequestFile(path);
                 },
               ),
-              onDelete: () => notifier.updateLetterOfRequestFile(null),
+              onDelete: (index) {
+                print('Deleting letter of request file at index $index');
+                notifier.removeLetterOfRequestFile(index);
+              },
             ),
             _buildUploadSection(
               context: context,
               label: "TIN Photo",
               icon: Icons.description_rounded,
-              filePath: tinNumberPhoto,
+              filePaths: tinNumberPhotos,
               onUpload: () => showFilePickerOptions(
                 context: context,
                 onFilePicked: (path) {
-                  notifier.updateTinNumberPhoto(path);
+                  notifier.addTinNumberPhoto(path);
                 },
               ),
-              onDelete: () => notifier.updateTinNumberPhoto(null),
+              onDelete: (index) {
+                print('Deleting TIN photo at index $index');
+                notifier.removeTinNumberPhoto(index);
+              },
             ),
             _buildUploadSection(
               context: context,
               label: "Trade Name Registration",
               icon: Icons.description_rounded,
-              filePath: tradeName,
+              filePaths: tradeNameFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
                 onFilePicked: (path) {
-                  notifier.updateTradeName(path);
+                  notifier.addTradeNameFile(path);
                 },
               ),
-              onDelete: () => notifier.updateTradeName(null),
+              onDelete: (index) {
+                print('Deleting trade name file at index $index');
+                notifier.removeTradeNameFile(index);
+              },
             ),
             SizedBox(
               width: double.infinity,
