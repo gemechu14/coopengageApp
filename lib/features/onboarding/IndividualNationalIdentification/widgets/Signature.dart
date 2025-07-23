@@ -1,446 +1,659 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:io';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
 import 'package:signature/signature.dart';
+import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
+import '../providers/stepper_provider.dart';
 
+/// Signature Step Widget
+/// 
+/// Handles signature collection through:
+/// - Digital signature pads (3 signatures combined)
+/// - Image upload from gallery or camera
+/// - Proper validation and error handling
 class SignatureStep extends ConsumerStatefulWidget {
   const SignatureStep({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SignatureStep> createState() => _SignatureStepStepState();
+  ConsumerState<SignatureStep> createState() => _SignatureStepState();
 }
 
-class _SignatureStepStepState extends ConsumerState<SignatureStep> {
+class _SignatureStepState extends ConsumerState<SignatureStep> {
+  // Signature controllers
+  late SignatureController _signatureController1;
+  late SignatureController _signatureController2;
+  late SignatureController _signatureController3;
+  
+  // Image picker
+  final ImagePicker _picker = ImagePicker();
+  
+  // Local state
+  Uint8List? _localSignatureData;
+  bool _isProcessing = false;
+
   @override
   void initState() {
     super.initState();
+    _initializeSignatureControllers();
+  }
+
+  @override
+  void dispose() {
+    _cleanupControllers();
+    super.dispose();
+  }
+
+  /// Initialize signature controllers
+  void _initializeSignatureControllers() {
     _signatureController1 = SignatureController(
-      penStrokeWidth: 5,
+      penStrokeWidth: 3,
+      penColor: Colors.black,
       exportBackgroundColor: Colors.white,
     );
     _signatureController2 = SignatureController(
-      penStrokeWidth: 5,
+      penStrokeWidth: 3,
+      penColor: Colors.black,
       exportBackgroundColor: Colors.white,
     );
     _signatureController3 = SignatureController(
-      penStrokeWidth: 5,
+      penStrokeWidth: 3,
+      penColor: Colors.black,
       exportBackgroundColor: Colors.white,
     );
   }
 
-  late SignatureController _signatureController1;
-  late SignatureController _signatureController2;
-  late SignatureController _signatureController3;
-  final ImagePicker _picker = ImagePicker();
-  Uint8List? _signatureData;
+  /// Clean up controllers
+  void _cleanupControllers() {
+    _signatureController1.dispose();
+    _signatureController2.dispose();
+    _signatureController3.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final stepperState = ref.watch(stepperProvider);
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    final currentSignature = stepperState.signature ?? _localSignatureData;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Signature',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          _buildSignatureCard(stepperState.signature ?? _signatureData),
-          _buildSignaturePadSelection(),
+          _buildHeader(),
+          const SizedBox(height: 24),
+          _buildSignatureDisplay(currentSignature),
+          const SizedBox(height: 24),
+          _buildActionButtons(),
+          if (_isProcessing) ...[
+            const SizedBox(height: 16),
+            _buildProcessingIndicator(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildSignatureCard(Uint8List? signature) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-        child: Container(
-          height: 150, // Reduced height
-          width: MediaQuery.of(context).size.width * 0.8,
+  /// Build header section
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8.0), // Smaller radius
-            border: Border.all(
-                color: Colors.grey.shade300, width: 1), // Minimized border
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 2, // Reduced spread
-                blurRadius: 4, // Reduced blur
+            color: Colors.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(Icons.edit, color: Colors.blue, size: 24),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Digital Signature',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                'Draw your signature or upload an image',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
               ),
             ],
           ),
-          child: signature != null
-              ? Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0), // Smaller radius
-                    child: Image.memory(
-                      signature,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0), // Smaller radius
-                  child: Image.asset(
-                    'assets/signature.png',
-                    height: 10.0,
-                    width: MediaQuery.of(context).size.width * 0.1,
-                    fit: BoxFit.contain,
-                  ),
-                ),
         ),
+      ],
+    );
+  }
+
+  /// Build signature display area
+  Widget _buildSignatureDisplay(Uint8List? signature) {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: signature != null
+            ? Image.memory(
+                signature,
+                fit: BoxFit.contain,
+              )
+            : _buildPlaceholder(),
       ),
     );
   }
 
-  Widget _buildSignaturePadSelection() {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Row(
+  /// Build placeholder when no signature
+  Widget _buildPlaceholder() {
+    return Center(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ElevatedButton(
-            onPressed: () => _showSignaturePadDialog(context),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.black,
-            ),
-            child: const Text("      Sign     "),
+          Icon(
+            Icons.edit_outlined,
+            size: 48,
+            color: Colors.grey[400],
           ),
-          const SizedBox(width: 20),
-          ElevatedButton(
-            onPressed: () => _showImagePicker(context),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.black,
+          const SizedBox(height: 8),
+          Text(
+            'No signature added yet',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[500],
+              fontWeight: FontWeight.w500,
             ),
-            child: const Text("Upload"),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Draw or upload your signature',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[400],
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showImagePicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (builder) {
-        return Card(
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height / 5.2,
-            margin: const EdgeInsets.only(top: 8.0),
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await _pickImage(ImageSource.gallery);
-                    },
-                    child: const Column(
-                      children: [
-                        Icon(Icons.image, size: 60.0),
-                        SizedBox(height: 12.0),
-                        Text(
-                          "Gallery",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.black),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await _pickImage(ImageSource.camera);
-                    },
-                    child: const Column(
-                      children: [
-                        Icon(Icons.camera_alt, size: 60.0),
-                        SizedBox(height: 12.0),
-                        Text(
-                          "Camera",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.black),
-                        )
-                      ],
-                    ),
-                  ),
-                )
-              ],
-            ),
+  /// Build action buttons
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildActionButton(
+            label: 'Draw Signature',
+            icon: Icons.edit,
+            color: Colors.blue,
+            onPressed: () => _showSignaturePadDialog(context),
           ),
-        );
-      },
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildActionButton(
+            label: 'Upload Image',
+            icon: Icons.upload,
+            color: Colors.green,
+            onPressed: () => _showImagePickerDialog(context),
+          ),
+        ),
+      ],
     );
   }
 
+  /// Build individual action button
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: _isProcessing ? null : onPressed,
+      icon: Icon(icon, size: 20),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 2,
+      ),
+    );
+  }
+
+  /// Build processing indicator
+  Widget _buildProcessingIndicator() {
+    return const Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 8),
+          Text(
+            'Processing signature...',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show image picker dialog
+  void _showImagePickerDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Select Image Source',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildImageSourceOption(
+                    icon: Icons.photo_library,
+                    label: 'Gallery',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.gallery);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildImageSourceOption(
+                    icon: Icons.camera_alt,
+                    label: 'Camera',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.camera);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build image source option
+  Widget _buildImageSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 40, color: Colors.blue),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show signature pad dialog
   void _showSignaturePadDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
                 children: [
-                  const Text(
-                    'Draw Signatures',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
+                  const Icon(Icons.edit, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Draw Your Signatures',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  SignaturePad(
-                    controller: _signatureController1,
-                    label: "Signature 1",
-                    onClear: () => _clearSignature(1),
-                  ),
-                  const SizedBox(height: 20),
-                  SignaturePad(
-                    controller: _signatureController2,
-                    label: "Signature 2",
-                    onClear: () => _clearSignature(2),
-                  ),
-                  const SizedBox(height: 20),
-                  SignaturePad(
-                    controller: _signatureController3,
-                    label: "Signature 3",
-                    onClear: () => _clearSignature(3),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_areAllSignaturesCompleted()) {
-                            _saveCombinedSignature();
-                            Navigator.pop(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please complete all signatures'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Save'),
-                      ),
-                    ],
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 20),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SignaturePad(
+                        controller: _signatureController1,
+                        label: "Primary Signature",
+                        onClear: () => _clearSignature(1),
+                      ),
+                      const SizedBox(height: 16),
+                      SignaturePad(
+                        controller: _signatureController2,
+                        label: "Secondary Signature",
+                        onClear: () => _clearSignature(2),
+                      ),
+                      const SizedBox(height: 16),
+                      SignaturePad(
+                        controller: _signatureController3,
+                        label: "Tertiary Signature",
+                        onClear: () => _clearSignature(3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_areAllSignaturesCompleted()) {
+                          _saveCombinedSignature();
+                          Navigator.pop(context);
+                        } else {
+                          _showErrorMessage('Please complete all three signatures');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Save Signatures'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
+  /// Pick image from source
   Future<void> _pickImage(ImageSource source) async {
     try {
-      // Check permissions first
-      bool hasPermission = await _checkPermission(source);
-      if (!hasPermission) {
-        _showErrorSnackBar('Permission required to continue');
+      setState(() => _isProcessing = true);
+
+      // Check permissions
+      if (!await _checkPermission(source)) {
+        _showErrorMessage('Permission required to access ${source == ImageSource.camera ? 'camera' : 'gallery'}');
         return;
       }
 
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
       final XFile? image = await _picker.pickImage(
         source: source,
-        imageQuality: 80,
+        imageQuality: 85,
         maxWidth: 1920,
         maxHeight: 1080,
       );
 
-      // Dismiss loading indicator
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
       if (image != null) {
-        await _cropAndProcessImage(File(image.path));
+        await _processImageFile(File(image.path));
       }
     } catch (e) {
-      // Dismiss loading indicator if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
+      _handleImagePickerError(e);
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
       }
-
-      String errorMessage = 'Failed to pick image';
-      if (e.toString().contains('permission')) {
-        errorMessage =
-            'Permission denied. Please grant camera permission in settings.';
-      } else if (e.toString().contains('camera')) {
-        errorMessage = 'Camera not available. Please try again or use gallery.';
-      } else if (e.toString().contains('cancel')) {
-        return; // User cancelled, no need to show error
-      } else {
-        errorMessage = 'Failed to pick image: ${e.toString()}';
-      }
-
-      _showErrorSnackBar(errorMessage);
     }
   }
 
+  /// Process image file
+  Future<void> _processImageFile(File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      
+      if (mounted) {
+        setState(() => _localSignatureData = bytes);
+        ref.read(stepperProvider.notifier).updateSignature(bytes);
+        _showSuccessMessage('Signature uploaded successfully');
+      }
+    } catch (e) {
+      _showErrorMessage('Failed to process image: ${e.toString()}');
+    }
+  }
+
+  /// Check permissions for image source
+  Future<bool> _checkPermission(ImageSource source) async {
+    final permission = source == ImageSource.camera 
+        ? Permission.camera 
+        : Permission.photos;
+    
+    final status = await permission.status;
+    if (status.isDenied) {
+      final result = await permission.request();
+      return result.isGranted;
+    }
+    return status.isGranted;
+  }
+
+  /// Handle image picker errors
+  void _handleImagePickerError(dynamic error) {
+    String message = 'Failed to pick image';
+    
+    if (error.toString().contains('permission')) {
+      message = 'Permission denied. Please grant access in settings.';
+    } else if (error.toString().contains('camera')) {
+      message = 'Camera not available. Please try gallery instead.';
+    } else if (error.toString().contains('cancel')) {
+      return; // User cancelled, no error needed
+    }
+    
+    _showErrorMessage(message);
+  }
+
+  /// Check if all signatures are completed
   bool _areAllSignaturesCompleted() {
     return _signatureController1.isNotEmpty &&
-        _signatureController2.isNotEmpty &&
-        _signatureController3.isNotEmpty;
+           _signatureController2.isNotEmpty &&
+           _signatureController3.isNotEmpty;
   }
 
+  /// Save combined signature
   Future<void> _saveCombinedSignature() async {
-    final combinedSignature = await _combineSignatures();
-    if (combinedSignature != null) {
-      setState(() {
-        _signatureData = combinedSignature;
-      });
-      // Update the stepper provider with signature data
-      ref.read(stepperProvider.notifier).updateSignature(combinedSignature);
-    }
-  }
-
-  Future<void> _cropAndProcessImage(File imageFile) async {
     try {
-      // Read the image file
-      final bytes = await imageFile.readAsBytes();
-      setState(() {
-        _signatureData = bytes;
-      });
-      // Update the stepper provider with signature data
-      ref.read(stepperProvider.notifier).updateSignature(bytes);
+      setState(() => _isProcessing = true);
+      
+      final combinedSignature = await _combineSignatures();
+      if (combinedSignature != null && mounted) {
+        setState(() => _localSignatureData = combinedSignature);
+        ref.read(stepperProvider.notifier).updateSignature(combinedSignature);
+        _showSuccessMessage('Signatures saved successfully');
+      }
     } catch (e) {
-      _showErrorSnackBar('Failed to process image: ${e.toString()}');
+      _showErrorMessage('Failed to save signatures: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
-  void _showErrorSnackBar(String message) {
+  /// Combine multiple signatures into one
+  Future<Uint8List?> _combineSignatures() async {
+    try {
+      final signature1 = await _signatureController1.toPngBytes();
+      final signature2 = await _signatureController2.toPngBytes();
+      final signature3 = await _signatureController3.toPngBytes();
+
+      if (signature1 == null || signature2 == null || signature3 == null) {
+        return null;
+      }
+
+      final image1 = await decodeImageFromList(signature1);
+      final image2 = await decodeImageFromList(signature2);
+      final image3 = await decodeImageFromList(signature3);
+
+      const spacing = 10;
+      final totalWidth = image1.width + image2.width + image3.width + (spacing * 2);
+      final maxHeight = [image1.height, image2.height, image3.height]
+          .reduce((a, b) => a > b ? a : b);
+
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(
+        recorder,
+        Rect.fromLTWH(0, 0, totalWidth.toDouble(), maxHeight.toDouble()),
+      );
+
+      // Draw white background
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, totalWidth.toDouble(), maxHeight.toDouble()),
+        Paint()..color = Colors.white,
+      );
+
+      // Draw signatures
+      double currentX = 0;
+      canvas.drawImage(image1, Offset(currentX, 0), Paint());
+      currentX += image1.width.toDouble() + spacing;
+      
+      canvas.drawImage(image2, Offset(currentX, 0), Paint());
+      currentX += image2.width.toDouble() + spacing;
+      
+      canvas.drawImage(image3, Offset(currentX, 0), Paint());
+
+      final picture = recorder.endRecording();
+      final combinedImage = await picture.toImage(totalWidth, maxHeight);
+      final byteData = await combinedImage.toByteData(format: ui.ImageByteFormat.png);
+      
+      return byteData?.buffer.asUint8List();
+    } catch (e) {
+      debugPrint('Error combining signatures: $e');
+      return null;
+    }
+  }
+
+  /// Clear specific signature
+  void _clearSignature(int index) {
+    switch (index) {
+      case 1:
+        _signatureController1.clear();
+        break;
+      case 2:
+        _signatureController2.clear();
+        break;
+      case 3:
+        _signatureController3.clear();
+        break;
+    }
+  }
+
+  /// Show error message
+  void _showErrorMessage(String message) {
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
 
-  Future<Uint8List?> _combineSignatures() async {
-    // Get individual signature bytes
-    final signature1 = await _signatureController1.toPngBytes();
-    final signature2 = await _signatureController2.toPngBytes();
-    final signature3 = await _signatureController3.toPngBytes();
-
-    if (signature1 == null || signature2 == null || signature3 == null) {
-      return null;
-    }
-
-    // Decode the individual images
-    final ui.Image image1 = await decodeImageFromList(signature1);
-    final ui.Image image2 = await decodeImageFromList(signature2);
-    final ui.Image image3 = await decodeImageFromList(signature3);
-
-    // Calculate the total width and height (maximum height of all signatures)
-    final int totalWidth =
-        image1.width + image2.width + image3.width + 20; // Add spacing
-    final int maxHeight = [image1.height, image2.height, image3.height]
-        .reduce((a, b) => a > b ? a : b);
-
-    // Draw the images onto a single canvas
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder,
-        Rect.fromLTWH(0, 0, totalWidth.toDouble(), maxHeight.toDouble()));
-
-    double currentX = 0;
-
-    // Draw signature 1
-    canvas.drawImage(image1, Offset(currentX, 0), Paint());
-    currentX += image1.width.toDouble() + 10; // Add spacing
-
-    // Draw signature 2
-    canvas.drawImage(image2, Offset(currentX, 0), Paint());
-    currentX += image2.width.toDouble() + 10;
-
-    // Draw signature 3
-    canvas.drawImage(image3, Offset(currentX, 0), Paint());
-
-    // End the recording
-    final picture = recorder.endRecording();
-    final combinedImage = await picture.toImage(totalWidth, maxHeight);
-
-    // Convert the combined image to bytes
-    final byteData =
-        await combinedImage.toByteData(format: ui.ImageByteFormat.png);
-    return byteData?.buffer.asUint8List();
-  }
-
-  void _clearSignature(int index) {
-    setState(() {
-      switch (index) {
-        case 1:
-          _signatureController1.clear();
-          break;
-        case 2:
-          _signatureController2.clear();
-          break;
-        case 3:
-          _signatureController3.clear();
-          break;
-      }
-    });
-  }
-
-  Future<bool> _checkPermission(ImageSource source) async {
-    if (source == ImageSource.camera) {
-      final status = await Permission.camera.status;
-      if (status.isDenied) {
-        final result = await Permission.camera.request();
-        return result.isGranted;
-      }
-      return status.isGranted;
-    } else {
-      final status = await Permission.photos.status;
-      if (status.isDenied) {
-        final result = await Permission.photos.request();
-        return result.isGranted;
-      }
-      return status.isGranted;
-    }
+  /// Show success message
+  void _showSuccessMessage(String message) {
+    if (!mounted) return;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
   }
 }

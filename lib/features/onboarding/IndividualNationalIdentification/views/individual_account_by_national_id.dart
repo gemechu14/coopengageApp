@@ -122,22 +122,22 @@ class _IndividualAccountByNationalIdState
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
-            'National ID Registration11',
+            'Individual Account',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: cyanblueColor,
             ),
           ),
-          centerTitle: true,
-          actions: [
-            if (stepperState.activeStep == 0 && nationalIdState.authUrl != null)
-              IconButton(
-                icon: const Icon(Icons.refresh, color: cyanblueColor),
-                onPressed: () =>
-                    ref.read(nationalIdProvider.notifier).callEsignetApi(),
-              ),
-          ],
+          // centerTitle: true,
+          // actions: [
+          //   if (stepperState.activeStep == 0 && nationalIdState.authUrl != null)
+          //     IconButton(
+          //       icon: const Icon(Icons.refresh, color: cyanblueColor),
+          //       onPressed: () =>
+          //           ref.read(nationalIdProvider.notifier).callEsignetApi(),
+          //     ),
+          // ],
         ),
         body: SafeArea(
           child: Column(
@@ -247,7 +247,7 @@ class _IndividualAccountByNationalIdState
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: stepperState.activeStep > 1
+                  onPressed: stepperState.activeStep > 0
                       ? () {
                           ref.read(stepperProvider.notifier).previousStep();
                         }
@@ -605,7 +605,7 @@ class _IndividualAccountByNationalIdState
         documentName: 'NATIONALID',
         customerInfoInitialDeposit: '100',
         signature: stepperState.signature,
-         title: stepperState.selectedTitle,
+        title: stepperState.selectedTitle,
       );
 
       // Close loading dialog

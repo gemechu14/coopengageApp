@@ -1,13 +1,30 @@
-import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:coopengageplus/constants/kconstant.dart';
+
+// Core imports
 import '../providers/national_id_provider.dart';
 import '../providers/stepper_provider.dart';
 
+// Component imports
+import 'components/auth_states.dart';
+
+// Service imports
+import '../services/webview_service.dart';
+import '../services/dialog_service.dart';
+import '../services/api_service.dart';
+import '../services/user_info_service.dart';
+
+// Widget imports
+import 'user_info_display_widget.dart';
+
+/// Improved National ID Authentication Widget
+///
+/// This widget handles the National ID authentication flow with:
+/// - Clean separation of concerns
+/// - Reusable components
+/// - Proper error handling
+/// - Better state management
 class NationalIdAuthWidget extends ConsumerStatefulWidget {
   const NationalIdAuthWidget({Key? key}) : super(key: key);
 
@@ -16,993 +33,434 @@ class NationalIdAuthWidget extends ConsumerStatefulWidget {
       _NationalIdAuthWidgetState();
 }
 
-class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
+class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget>
+    with AutomaticKeepAliveClientMixin {
+  // Private fields
   WebViewController? _webViewController;
-  bool _disposed = false;
-  bool _showingDialog = false;
-  bool _isWebViewLoading = true;
-  String? _expectedFinalUrl;
+  bool _isWebViewLoading = false;
+  bool _dialogInProgress = false;
+
+  // Constants
+  static const double _containerHeight = 0.65;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _isWebViewLoading = false;
+    _initializeAuthentication();
+  }
 
-    // Reset WebView state
-    _webViewController = null;
+  @override
+  void dispose() {
+    _cleanupWebView();
+    super.dispose();
+  }
 
-    // Always reset state when entering the page
+  /// Initialize the authentication process with smart refresh logic
+  void _initializeAuthentication() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_disposed) {
-        ref.read(nationalIdProvider.notifier).reset();
+      if (!mounted) return;
 
+      final nationalIdState = ref.read(nationalIdProvider);
+      final stepperState = ref.read(stepperProvider);
+
+      // Check if we already have completed authentication data
+      final hasCompletedAuth = nationalIdState.isAuthCompleted ||
+          (stepperState.authId != null && stepperState.fullName != null);
+
+      if (hasCompletedAuth) {
+        // If we have data, just mark as completed without refreshing
+        debugPrint('Authentication already completed, skipping refresh');
+        if (!nationalIdState.isAuthCompleted) {
+          ref.read(nationalIdProvider.notifier).markAuthCompleted();
+        }
+      } else {
+        // Only reset and call API if we don't have completed data
+        debugPrint('No authentication data found, initializing fresh');
+        ref.read(nationalIdProvider.notifier).reset();
         ref.read(nationalIdProvider.notifier).callEsignetApi();
       }
     });
   }
 
-  @override
-  void dispose() {
-    _disposed = true;
-    _webViewController?.clearCache();
-    _webViewController?.clearLocalStorage();
-    super.dispose();
+  /// Clean up WebView resources
+  Future<void> _cleanupWebView() async {
+    if (_webViewController != null) {
+      await WebViewService.clearWebViewData(_webViewController);
+      _webViewController = null;
+    }
   }
 
-  void _resetWebView() {
-    if (_disposed) return;
+  /// Reset the WebView and restart authentication
+  Future<void> _resetWebView() async {
+    if (!mounted) return;
 
     try {
-      _webViewController?.clearCache();
-      _webViewController?.clearLocalStorage();
-      _webViewController = null;
-
+      await _cleanupWebView();
       ref.read(nationalIdProvider.notifier).reset();
 
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (!_disposed) {
-          ref.read(nationalIdProvider.notifier).callEsignetApi();
-        }
-      });
+      // Small delay to ensure cleanup is complete
+      await Future.delayed(const Duration(milliseconds: 100));
 
-      print('WebView reset successfully');
+      if (mounted) {
+        ref.read(nationalIdProvider.notifier).callEsignetApi();
+      }
     } catch (e) {
-      print('Error resetting WebView: $e');
+      debugPrint('Error resetting WebView: $e');
+    }
+  }
+
+  /// Force refresh authentication (clears existing data)
+  Future<void> _forceRefresh() async {
+    if (!mounted) return;
+
+    debugPrint('Force refreshing authentication...');
+
+    try {
+      // Clear all existing data
+      await _cleanupWebView();
+      ref.read(nationalIdProvider.notifier).reset();
+
+      // Small delay to ensure cleanup is complete
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (mounted) {
+        ref.read(nationalIdProvider.notifier).callEsignetApi();
+      }
+    } catch (e) {
+      debugPrint('Error force refreshing: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_disposed) return const SizedBox.shrink();
+    super.build(context);
 
-    try {
-      final nationalIdState = ref.watch(nationalIdProvider);
+    if (!mounted) return const SizedBox.shrink();
 
-      return Container(
-        height: MediaQuery.of(context).size.height * 0.65,
-        child: _buildContent(nationalIdState),
-      );
-    } catch (e) {
-      return const Center(
-        child: Text(
-          'Error loading authentication widget',
-          style: TextStyle(color: Colors.red),
-        ),
-      );
-    }
+    return Consumer(
+      builder: (context, ref, child) {
+        final nationalIdState = ref.watch(nationalIdProvider);
+
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * _containerHeight,
+          child: _buildContent(nationalIdState),
+        );
+      },
+    );
   }
 
-  Widget _buildContent(NationalIdState nationalIdState) {
-    if (_disposed) return const SizedBox.shrink();
+  /// Build the main content based on current state
+  Widget _buildContent(NationalIdState state) {
+    final stepperState = ref.read(stepperProvider);
 
-    if (nationalIdState.isError) {
-      return _buildErrorState(nationalIdState);
+    // Check if we have completed authentication data (from either source)
+    final hasCompletedAuth = state.isAuthCompleted ||
+        (stepperState.authId != null && stepperState.fullName != null);
+
+    // Show success state if completed
+    if (hasCompletedAuth) {
+      return _buildSuccessStateWithInfo();
     }
 
-    // Show beautiful success state after verification
-    if (nationalIdState.isAuthCompleted) {
-      return Center(
+    // Show error state
+    if (state.isError) {
+      return AuthErrorState(
+        state: state,
+        onRetry: () => ref.read(nationalIdProvider.notifier).callEsignetApi(),
+        onReset: _forceRefresh,
+      );
+    }
+
+    // Show WebView if auth URL is available
+    if (state.authUrl != null && state.authUrl!.isNotEmpty) {
+      return _buildWebViewContainer(state.authUrl!);
+    }
+
+    // Show clean loading state only when actually loading
+    if (state.isLoading) {
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.verified, color: cyanblueColor, size: 80),
-            const SizedBox(height: 24),
-            Text(
-              'National ID Verified!',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: cyanblueColor,
-              ),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'You have successfully completed National ID authentication.',
+            SizedBox(height: 16),
+            Text(
+              'Connecting to National ID service...',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.black87,
+                color: Colors.grey,
               ),
-              textAlign: TextAlign.center,
             ),
-            // const SizedBox(height: 24),
-            // ElevatedButton.icon(
-            //   onPressed: () {
-            //     // Optionally, go to next step or close
-            //     Navigator.of(context).maybePop();
-            //   },
-            //   icon: const Icon(Icons.arrow_forward),
-            //   label: const Text('Continue'),
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: cyanblueColor,
-            //     foregroundColor: Colors.white,
-            //     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-            //     textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       );
     }
 
-    if (nationalIdState.authUrl != null &&
-        nationalIdState.authUrl!.isNotEmpty) {
-      print(
-          'NationalIdAuthWidget: Showing WebView with URL: ${nationalIdState.authUrl}');
-      return _buildWebView(nationalIdState.authUrl!);
-    }
-
-    if (nationalIdState.isLoading) {
-      print('NationalIdAuthWidget: Showing simple loading state');
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-        ),
-      );
-    }
-
-    // Fallback - show simple loading with retry button
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Initializing National ID Authentication...',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              if (!_disposed) {
-                print('Manual API call triggered');
-                ref.read(nationalIdProvider.notifier).callEsignetApi();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Retry API Call'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              if (!_disposed) {
-                print('Testing API endpoint');
-                _testApiEndpoint();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Test API'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              if (!_disposed) {}
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Test Verification'),
-          ),
-        ],
-      ),
+    // Minimal fallback with retry options (only show if no loading and no URL)
+    return AuthLoadingState(
+      onRetry: _forceRefresh,
+      onTestApi: _testApiEndpoint,
     );
   }
 
-  // Widget _buildWebViewLoadingState() {
-  //   return Center(
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: [
-  //         const CircularProgressIndicator(
-  //           valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-  //           strokeWidth: 3,
-  //         ),
-  //         const SizedBox(height: 24),
-  //         const Text(
-  //           'Loading Authentication Page',
-  //           style: TextStyle(
-  //             fontSize: 20,
-  //             fontWeight: FontWeight.bold,
-  //             color: Colors.black87,
-  //           ),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //         const SizedBox(height: 12),
-  //         const Text(
-  //           'Please wait while we load the National ID authentication service...',
-  //           style: TextStyle(
-  //             fontSize: 16,
-  //             color: Colors.grey,
-  //           ),
-  //           textAlign: TextAlign.center,
-  //         ),
-  //         const SizedBox(height: 32),
-  //         Container(
-  //           padding: const EdgeInsets.all(16),
-  //           decoration: BoxDecoration(
-  //             color: Colors.blue.shade50,
-  //             borderRadius: BorderRadius.circular(12),
-  //             border: Border.all(color: Colors.blue.shade200),
-  //           ),
-  //           child: const Column(
-  //             children: [
-  //               Icon(
-  //                 Icons.security,
-  //                 color: Colors.blue,
-  //                 size: 24,
-  //               ),
-  //               SizedBox(height: 8),
-  //               Text(
-  //                 'Connecting to official Ethiopian National ID service',
-  //                 style: TextStyle(
-  //                   fontSize: 14,
-  //                   color: Colors.blue,
-  //                 ),
-  //                 textAlign: TextAlign.center,
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  Widget _buildErrorState(NationalIdState nationalIdState) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading authentication',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              nationalIdState.errorMessage ?? 'Unknown error occurred',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    if (!_disposed) {
-                      ref.read(nationalIdProvider.notifier).callEsignetApi();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: cyanblueColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Retry'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (!_disposed) {
-                      _resetWebView();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Reset All'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+  /// Build WebView container with loading overlay
+  Widget _buildWebViewContainer(String url) {
+    return Stack(
+      children: [
+        _buildWebView(url),
+        if (_isWebViewLoading) const WebViewLoadingOverlay(),
+      ],
     );
   }
 
-  Widget _buildCompletionState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 80),
-          const SizedBox(height: 24),
-          const Text(
-            'Success!',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'National ID Authentication Complete',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'You can now proceed to the next step',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
+  /// Build the WebView widget
   Widget _buildWebView(String url) {
-    if (_disposed) return const SizedBox.shrink();
-
-    _expectedFinalUrl = url;
-
-    print('NationalIdAuthWidget: Building WebView with URL: $url');
-
-    try {
-      return Stack(
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height * 0.6,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: WebViewWidget(
-                controller: _createWebViewController(url),
-              ),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
-
-          // Loading overlay with text and spinner
-          if (_isWebViewLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.white.withOpacity(0.75),
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Loading National ID Authentication Page...',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
-      );
-    } catch (e) {
-      print('Error building WebView: $e');
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error, color: Colors.red, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading WebView: $e',
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                if (!_disposed) {
-                  setState(() {});
-                }
-              },
-              child: const Text('Retry'),
-            ),
-          ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: WebViewWidget(
+          controller: _createWebViewController(url),
         ),
-      );
-    }
+      ),
+    );
   }
 
-  //     return Container(
-  //       height: MediaQuery.of(context).size.height * 0.6,
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(8),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.grey.withOpacity(0.1),
-  //             spreadRadius: 1,
-  //             blurRadius: 3,
-  //             offset: const Offset(0, 1),
-  //           ),
-  //         ],
-  //       ),
-  //       child: ClipRRect(
-  //         borderRadius: BorderRadius.circular(8),
-  //         child: WebViewWidget(
-  //           controller: _createWebViewController(url),
-  //         ),
-  //       ),
-  //     );
-  //   } catch (e) {
-  //     print('Error building WebView: $e');
-  //     return Center(
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: [
-  //           const Icon(Icons.error, color: Colors.red, size: 48),
-  //           const SizedBox(height: 16),
-  //           Text(
-  //             'Error loading WebView: $e',
-  //             style: const TextStyle(color: Colors.red),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //           const SizedBox(height: 16),
-  //           ElevatedButton(
-  //             onPressed: () {
-  //               if (!_disposed) {
-  //                 //  print('Retrying WebView creation');
-  //                 setState(() {});
-  //               }
-  //             },
-  //             child: const Text('Retry'),
-  //           ),
-  //         ],
-  //       ),
-  //     );
-  //   }
-  // }
+  /// Create and configure the WebView controller
   WebViewController _createWebViewController(String url) {
-    print('NationalIdAuthWidget: Creating WebView controller for URL: $url');
-
-    if (_disposed) {
-      print(
-          'NationalIdAuthWidget: Widget disposed, returning dummy controller');
-      return WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..loadRequest(Uri.parse('about:blank'));
-    }
-
     if (_webViewController != null) {
-      print('NationalIdAuthWidget: Reusing existing WebView controller');
       return _webViewController!;
     }
 
-    print('NationalIdAuthWidget: Creating new WebView controller');
+    _webViewController = WebViewService.createController(
+      url: url,
+      onNavigationRequest: _handleNavigationRequest,
+      onPageStarted: () => _setWebViewLoading(true),
+      onPageFinished: () => _setWebViewLoading(false),
+      onWebResourceError: _handleWebResourceError,
+    );
 
-    _expectedFinalUrl = url;
-
-    _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white)
-      ..enableZoom(false)
-      ..setUserAgent(
-          'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36')
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onNavigationRequest: (NavigationRequest request) {
-            if (_disposed) return NavigationDecision.prevent;
-
-            print('Navigating to: ${request.url}');
-
-            final isCallback = request.url.contains('callback') ||
-                request.url.contains('code=') ||
-                request.url.contains('state=');
-
-            if (isCallback) {
-              print('Callback detected: ${request.url}');
-              _handleCallback(request.url);
-              return NavigationDecision.prevent;
-            }
-
-            return NavigationDecision.navigate;
-          },
-          onPageStarted: (String url) {
-            if (_disposed) return;
-            print('Page started loading: $url');
-            setState(() {
-              _isWebViewLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            if (_disposed) return;
-            print('Page finished loading: $url');
-
-            // Only hide loader if final URL is reached
-            if (_expectedFinalUrl != null &&
-                Uri.parse(url).host == Uri.parse(_expectedFinalUrl!).host) {
-              print('Final auth page loaded — hiding loader');
-              setState(() {
-                _isWebViewLoading = false;
-              });
-            } else {
-              print('Intermediate redirect — keep showing loader');
-            }
-
-            // Inject useful CSS/JS
-            _webViewController?.runJavaScript('''
-            var meta = document.createElement('meta');
-            meta.name = 'viewport';
-            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-            document.getElementsByTagName('head')[0].appendChild(meta);
-
-            // Prevent double-tap zoom
-            document.addEventListener('touchstart', function(event) {
-              if (event.touches.length > 1) {
-                event.preventDefault();
-              }
-            }, { passive: false });
-
-            // Prevent pinch zoom
-            document.addEventListener('gesturestart', function(event) {
-              event.preventDefault();
-            }, { passive: false });
-
-            // Improve input field experience
-            var inputs = document.querySelectorAll('input, textarea, select');
-            inputs.forEach(function(input) {
-              input.style.fontSize = '16px';
-              input.addEventListener('focus', function() {
-                setTimeout(function() {
-                  input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
-              });
-            });
-
-            // Optimize page performance
-            document.addEventListener('DOMContentLoaded', function() {
-              var elements = document.querySelectorAll('*');
-              elements.forEach(function(el) {
-                if (el.style.animation) {
-                  el.style.animation = 'none';
-                }
-                if (el.style.transition) {
-                  el.style.transition = 'none';
-                }
-              });
-            });
-          ''');
-          },
-          onWebResourceError: (WebResourceError error) {
-            if (_disposed) return;
-            print('Web resource error: ${error.description}');
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(url));
-
-    print('NationalIdAuthWidget: WebView controller created successfully');
     return _webViewController!;
   }
 
-  void _handleCallback(String callbackUrl) {
-    if (_disposed) return;
+  /// Handle navigation requests and detect callbacks
+  void _handleNavigationRequest(String url) {
+    debugPrint('Navigation request: $url');
 
-    print(
-        'NationalIdAuthWidget: _handleCallback called with URL: $callbackUrl');
-
-    try {
-      final uri = Uri.parse(callbackUrl);
-      final queryParameters = uri.queryParameters;
-
-      final hasCode = queryParameters.containsKey('code');
-      final hasState = queryParameters.containsKey('state');
-
-      print('NationalIdAuthWidget: Has code: $hasCode');
-      print('NationalIdAuthWidget: Has state: $hasState');
-
-      if (hasCode && hasState) {
-        final code = queryParameters['code']!;
-        final state = queryParameters['state']!;
-
-        // Call the verification API
-        _verifyAccount(code, state);
-      } else {}
-    } catch (e) {
-      _showErrorDialog('Error parsing callback URL: $e');
+    final callbackParams = WebViewService.extractCallbackParams(url);
+    if (callbackParams != null) {
+      _handleAuthCallback(
+        callbackParams['code']!,
+        callbackParams['state']!,
+      );
     }
   }
 
-  Future<void> _verifyAccount(String code, String state) async {
-    if (_disposed) return;
+  /// Handle authentication callback
+  Future<void> _handleAuthCallback(String code, String state) async {
+    if (!mounted || _dialogInProgress) return;
 
-    print('NationalIdAuthWidget: Starting account verification');
-    print('Code: $code, State: $state');
+    debugPrint('Processing auth callback - Code: $code, State: $state');
 
     try {
       final responseData = await ref
           .read(nationalIdProvider.notifier)
           .verifyAccount(code, state);
 
-      if (!_disposed) {
-        // Save authentication data to stepper state immediately
-        if (responseData != null) {
-          print(
-              'NationalIdAuthWidget: Saving authentication data to stepper state');
-          ref
-              .read(stepperProvider.notifier)
-              .saveAuthenticationData(responseData);
+      if (!mounted) return;
 
-          // Verify the save immediately
-          final stepperState = ref.read(stepperProvider);
-          print(
-              'NationalIdAuthWidget: Verification - Auth ID:  [32m${stepperState.authId} [0m');
-          print(
-              'NationalIdAuthWidget: Verification - Full Name: ${stepperState.fullName}');
-        }
+      if (responseData != null) {
+        // Save authentication data to stepper state
+        ref.read(stepperProvider.notifier).saveAuthenticationData(responseData);
 
-        // Mark as completed immediately
-        print('NationalIdAuthWidget: Marking auth as completed immediately');
+        // Mark authentication as completed
         ref.read(nationalIdProvider.notifier).markAuthCompleted();
 
-        // Hide loader and show success state
-        setState(() {
-          _isWebViewLoading = false;
-        });
+        _setWebViewLoading(false);
 
-        // Show success dialog after a short delay to ensure state is updated
-        // Future.delayed(const Duration(milliseconds: 200), () {
-        //   if (!_disposed) {
-        //     print('NationalIdAuthWidget: Showing verification success dialog');
-        //     // _showVerificationSuccessDialog(responseData);
-        //   }
-        // });
+        debugPrint('Authentication completed successfully');
       }
     } catch (e) {
-      print('NationalIdAuthWidget: Verification failed: $e');
+      debugPrint('Authentication failed: $e');
 
-      // Show error dialog when verification fails
-      if (!_disposed) {
-        print('NationalIdAuthWidget: Showing verification error dialog');
-        _showVerificationErrorDialog('Verification failed: $e');
+      if (mounted && !_dialogInProgress) {
+        _showVerificationErrorDialog(e.toString());
       }
     }
   }
 
-  void _showVerificationSuccessDialog(Map<String, dynamic>? responseData) {
-    if (_disposed || _showingDialog) return;
-
-    print('NationalIdAuthWidget: Showing verification success dialog');
-    print('Response data: $responseData');
-
-    _showingDialog = true;
-
-    // Add a small delay to ensure the dialog is properly displayed
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (_disposed) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          print('NationalIdAuthWidget: Dialog builder called');
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 60),
-                const SizedBox(height: 16),
-                const Text(
-                  'Success!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'National ID Authentication Complete',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green[200]!),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info, color: Colors.green[600], size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Your authentication data has been saved successfully.',
-                          style: TextStyle(
-                            color: Colors.green[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _showingDialog = false;
-                  if (!_disposed) {
-                    // Clear the WebView
-                    _webViewController?.clearCache();
-                    _webViewController?.clearLocalStorage();
-                    _webViewController = null;
-
-                    // Clear the auth URL to force showing completion state
-                    ref.read(nationalIdProvider.notifier).clearAuthUrl();
-
-                    // Force rebuild to show completion state
-                    setState(() {
-                      _isWebViewLoading = false;
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cyanblueColor,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Continue'),
-              ),
-            ],
-          );
-        },
-      );
-    });
+  /// Set WebView loading state
+  void _setWebViewLoading(bool loading) {
+    if (mounted && _isWebViewLoading != loading) {
+      setState(() {
+        _isWebViewLoading = loading;
+      });
+    }
   }
 
-  void _showErrorDialog(String errorMessage) {
-    if (_disposed || _showingDialog) return;
-
-    _showingDialog = true;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              const Icon(Icons.error, color: Colors.red, size: 24),
-              const SizedBox(width: 8),
-              const Text(
-                'Error',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
-            ],
-          ),
-          content: Text(errorMessage),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _showingDialog = false;
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+  /// Handle WebView resource errors
+  void _handleWebResourceError(String errorDescription) {
+    debugPrint('WebView resource error: $errorDescription');
   }
 
+  /// Test API endpoint connectivity
   Future<void> _testApiEndpoint() async {
-    if (_disposed) return;
+    if (!mounted) return;
 
     try {
-      print('Testing API endpoint...');
-      // final String baseUrl = 'http://10.8.100.111:9061';
-      final String baseUrl = AppConstants.baseUrl;
-      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url';
+      final result = await ApiService.testApiEndpoint();
 
-      print('Testing URL: $apiUrl');
-
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 400));
-
-      print('Test response status: ${response.statusCode}');
-      print('Test response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        _showErrorDialog(
-            'API Test Successful!\nStatus: ${response.statusCode}\nResponse: ${response.body}');
-      } else {
-        _showErrorDialog(
-            'API Test Failed!\nStatus: ${response.statusCode}\nResponse: ${response.body}');
+      if (mounted) {
+        await DialogService.showApiTestResultDialog(
+          context: context,
+          isSuccess: result.isSuccess,
+          statusCode: result.statusCode,
+          responseBody: result.responseBody,
+        );
       }
     } catch (e) {
-      print('API test error: $e');
-      _showErrorDialog('API Test Error: $e');
+      if (mounted) {
+        await DialogService.showErrorDialog(
+          context: context,
+          title: 'API Test Error',
+          message: e.toString(),
+        );
+      }
     }
   }
 
-  void _showVerificationErrorDialog(String errorMessage) {
-    if (_disposed || _showingDialog) return;
+  /// Show verification error dialog
+  Future<void> _showVerificationErrorDialog(String errorMessage) async {
+    if (!mounted || _dialogInProgress) return;
 
-    _showingDialog = true;
+    _dialogInProgress = true;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+    try {
+      await DialogService.showVerificationErrorDialog(
+        context: context,
+        errorMessage: errorMessage,
+        onRetry: () {
+          ref.read(nationalIdProvider.notifier).reset();
+          ref.read(nationalIdProvider.notifier).callEsignetApi();
+        },
+        onCancel: () {
+          // Handle cancellation if needed
+        },
+      );
+    } finally {
+      _dialogInProgress = false;
+    }
+  }
+
+  /// Build success state with user information viewing option
+  Widget _buildSuccessStateWithInfo() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final stepperState = ref.watch(stepperProvider);
+        final userInfo = UserInfoService.extractUserInfo(stepperState);
+        final hasInfo = UserInfoService.hasMinimumInfo(userInfo);
+
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error, color: Colors.red, size: 60),
-              const SizedBox(height: 16),
+              const Icon(Icons.verified, color: Colors.blue, size: 80),
+              const SizedBox(height: 24),
               const Text(
-                'Verification Failed',
+                'National ID Verified!',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.red,
+                  color: Colors.blue,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                errorMessage,
-                style: const TextStyle(
+              const SizedBox(height: 12),
+              const Text(
+                'You have successfully completed National ID authentication.',
+                style: TextStyle(
                   fontSize: 16,
                   color: Colors.black87,
                 ),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 32),
+              if (hasInfo) ...[
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showUserInformation(userInfo),
+                    icon: const Icon(Icons.info_outline),
+                    label: const Text('View My Information'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 3,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Tap to see the information we received from your National ID',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                //  const SizedBox(height: 20),
+                //  // Small refresh option
+                //  TextButton.icon(
+                //    onPressed: _forceRefresh,
+                //    icon: const Icon(Icons.refresh, size: 16),
+                //    label: const Text('Re-verify'),
+                //    style: TextButton.styleFrom(
+                //      foregroundColor: Colors.grey[600],
+                //      textStyle: const TextStyle(fontSize: 12),
+                //    ),
+                //  ),
+              ],
             ],
           ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                print(
-                    'NationalIdAuthWidget: User clicked Retry in error dialog');
-                Navigator.of(context).pop();
-                _showingDialog = false;
-                if (!_disposed) {
-                  print('NationalIdAuthWidget: Retrying verification');
-                  // Reset the state and try again
-                  ref.read(nationalIdProvider.notifier).reset();
-                  ref.read(nationalIdProvider.notifier).callEsignetApi();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Retry'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                print(
-                    'NationalIdAuthWidget: User clicked Cancel in error dialog');
-                Navigator.of(context).pop();
-                _showingDialog = false;
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Cancel'),
-            ),
-          ],
         );
       },
     );
+  }
+
+  /// Show user information in a bottom sheet
+  Future<void> _showUserInformation(userInfo) async {
+    if (!mounted) return;
+
+    try {
+      await UserInfoDisplayWidget.showUserInfo(context, userInfo);
+    } catch (e) {
+      debugPrint('Error showing user information: $e');
+    }
   }
 }

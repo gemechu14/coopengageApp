@@ -1,10 +1,16 @@
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
+import '../model/account_type.dart';
 import '../providers/account_type_provider.dart';
 import '../providers/stepper_provider.dart';
 
+/// Account Type Selection Step Widget
+/// 
+/// Features:
+/// - Smart filtering based on age, gender, and product type
+/// - Beautiful card-based selection UI
+/// - Share calculation for MUDARABAH accounts
+/// - Comprehensive validation and error handling
 class AccountTypeStep extends ConsumerStatefulWidget {
   final String? selectedAccountType;
   final Function(String?) onAccountTypeChanged;
@@ -36,22 +42,21 @@ class AccountTypeStep extends ConsumerStatefulWidget {
 }
 
 class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
-  bool _disposed = false;
-  List<AccountType> filteredAccountTypes = [];
+  // Controllers for share calculation
   final TextEditingController _bankShareController = TextEditingController();
   final TextEditingController _customerShareController = TextEditingController();
+  
+  // State management
+  bool _disposed = false;
+  List<AccountType> _filteredAccountTypes = [];
   String? _shareError;
+  int _calculatedAge = 0;
 
   @override
   void initState() {
-    print("gememkdhdihfd");
     super.initState();
-    // Schedule after build so provider is guaranteed to be alive
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _initializeStep();
-      }
-    });
+    _calculateAge();
+    _scheduleInitialization();
   }
 
   @override
@@ -63,395 +68,337 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   @override
   void dispose() {
     _disposed = true;
-    _bankShareController.dispose();
-    _customerShareController.dispose();
+    _cleanupControllers();
     super.dispose();
   }
 
-  Future<void> _initializeStep() async {
-    if (_disposed) return;
-    await ref.read(accountTypeStepProvider.notifier).initializeStep(
-          customerAge: widget.customerAge,
-          customerGender: widget.customerGender,
-          initialDeposit: widget.initialDeposit,
-          bankingType: widget.bankingType,
-        );
-    _filterAccountTypes();
+  /// Clean up controllers
+  void _cleanupControllers() {
+    _bankShareController.dispose();
+    _customerShareController.dispose();
   }
 
-  void _filterAccountTypes() {
-    final accountTypeStepState = ref.read(accountTypeStepProvider);
-    final account_types = accountTypeStepState.availableAccountTypes;
-    final stepper_state = ref.read(stepperProvider);
-
-    final String? product_type = stepper_state.selectedProductType;
-    final String? user_sex = stepper_state.sex;
-
-    List<AccountType> filtered = account_types;
-
-    // ✅ 1. Filter by age
+  /// Calculate user's age from date of birth
+  void _calculateAge() {
     if (widget.dateOfBirth != null) {
       final DateTime dob = widget.dateOfBirth!;
-      int age = DateTime.now().year - dob.year;
-      if (DateTime.now().month < dob.month ||
-          (DateTime.now().month == dob.month && DateTime.now().day < dob.day)) {
-        age--;
+      final DateTime now = DateTime.now();
+      
+      _calculatedAge = now.year - dob.year;
+      if (now.month < dob.month || 
+          (now.month == dob.month && now.day < dob.day)) {
+        _calculatedAge--;
       }
-
-      filtered = filtered
-          .where((account_type) =>
-              age >= account_type.minAge && age <= account_type.maxAge)
-          .toList();
     } else {
-      // ✅ If no DOB, exclude any account types that have a maxAge limit less than 100 (assuming 100+ is universal)
-      filtered =
-          filtered.where((account_type) => account_type.maxAge >= 100).toList();
+      _calculatedAge = widget.customerAge;
     }
+  }
 
-    // ✅ 2. Filter by bankingType (productType)
-    if (product_type != null && product_type.trim().isNotEmpty) {
-      final normalizedProductType = product_type.trim().toLowerCase();
-      filtered = filtered
-          .where((account_type) =>
-              account_type.bankingType.trim().toLowerCase() ==
-              normalizedProductType)
-          .toList();
-    }
-
-    // ✅ 3. Filter by sex
-    if (user_sex != null && user_sex.trim().isNotEmpty) {
-      final normalizedUserSex = user_sex.trim().toUpperCase();
-      filtered = filtered
-          .where((account_type) =>
-              account_type.sex == 'BOTH' || account_type.sex == normalizedUserSex)
-          .toList();
-    }
-
-    // ✅ Final result
-    setState(() {
-      filteredAccountTypes = filtered;
+  /// Schedule initialization after build
+  void _scheduleInitialization() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initializeStep();
+      }
     });
+  }
+
+  /// Initialize the step
+  Future<void> _initializeStep() async {
+    if (_disposed) return;
+    
+    try {
+      await ref.read(accountTypeStepProvider.notifier).initializeStep(
+        customerAge: _calculatedAge,
+        customerGender: widget.customerGender,
+        initialDeposit: widget.initialDeposit,
+        bankingType: widget.bankingType,
+      );
+      _filterAccountTypes();
+    } catch (e) {
+      debugPrint('Error initializing account type step: $e');
+    }
+  }
+
+  /// Filter account types based on user criteria
+  void _filterAccountTypes() {
+    if (_disposed) return;
+
+    final accountTypeStepState = ref.read(accountTypeStepProvider);
+    final stepperState = ref.read(stepperProvider);
+    
+    List<AccountType> filtered = List.from(accountTypeStepState.availableAccountTypes);
+
+    // Apply filters
+    filtered = _applyAgeFilter(filtered);
+    filtered = _applyProductTypeFilter(filtered, stepperState.selectedProductType);
+    filtered = _applyGenderFilter(filtered, stepperState.sex);
+
+    if (mounted) {
+      setState(() {
+        _filteredAccountTypes = filtered;
+      });
+    }
+  }
+
+  /// Apply age-based filtering
+  List<AccountType> _applyAgeFilter(List<AccountType> accountTypes) {
+    if (_calculatedAge <= 0) return accountTypes;
+
+    return accountTypes
+        .where((type) => _calculatedAge >= type.minAge && _calculatedAge <= type.maxAge)
+        .toList();
+  }
+
+  /// Apply product type filtering
+  List<AccountType> _applyProductTypeFilter(
+    List<AccountType> accountTypes, 
+    String? productType,
+  ) {
+    if (productType?.trim().isEmpty != false) return accountTypes;
+
+    final normalizedProductType = productType!.trim().toLowerCase();
+    return accountTypes
+        .where((type) => type.bankingType.trim().toLowerCase() == normalizedProductType)
+        .toList();
+  }
+
+  /// Apply gender-based filtering
+  List<AccountType> _applyGenderFilter(
+    List<AccountType> accountTypes, 
+    String? userSex,
+  ) {
+    if (userSex?.trim().isEmpty != false) return accountTypes;
+
+    final normalizedUserSex = userSex!.trim().toUpperCase();
+    return accountTypes
+        .where((type) => type.sex == 'BOTH' || type.sex == normalizedUserSex)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_disposed) return const SizedBox.shrink();
 
-    // Watch the account type step state
     final accountTypeStepState = ref.watch(accountTypeStepProvider);
-
-    // Show loading indicator while fetching account types
-    if (accountTypeStepState.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    // Helper to handle selection and notify parent
-    void _onAccountTypeTap(AccountType account_type) {
-      widget.onAccountTypeChanged(account_type.id.toString());
-      widget.onAccountTypeSelected(account_type);
-      // Reset share fields when changing selection
-      _bankShareController.text = '';
-      _customerShareController.text = '';
-      setState(() {
-        _shareError = null;
-      });
-    }
-
-    final allAccountTypes = filteredAccountTypes.isNotEmpty
-        ? filteredAccountTypes
-        : accountTypeStepState.availableAccountTypes;
-
-    // Find the selected account type object
-    AccountType? selectedType;
-    try {
-      selectedType = allAccountTypes.firstWhere(
-        (type) => widget.selectedAccountType == type.id.toString(),
-      );
-    } catch (_) {
-      selectedType = null;
-    }
-    final showShares = selectedType != null &&
-        selectedType.category == 'MUDARABAH' &&
-        selectedType.bankingType == 'ALHUDA';
 
     return Form(
       key: widget.formKey,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildLabel("Account Type"),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: allAccountTypes.isNotEmpty
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ...allAccountTypes.map<Widget>((account_type) {
-                        final bool isSelected = widget.selectedAccountType ==
-                            account_type.id.toString();
-                        return InkWell(
-                          onTap: () => _onAccountTypeTap(account_type),
-                          borderRadius: BorderRadius.circular(18),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            margin: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? const Color(0xFF1976D2)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFF1976D2)
-                                    : Colors.grey.shade300,
-                                width: isSelected ? 2.2 : 1.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: isSelected
-                                      ? const Color(0xFF1976D2).withOpacity(0.18)
-                                      : Colors.grey.withOpacity(0.10),
-                                  blurRadius: isSelected ? 16 : 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 18),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  isSelected
-                                      ? Icons.check_circle
-                                      : Icons.account_balance,
-                                  color:
-                                      isSelected ? Colors.white : Colors.blueGrey,
-                                  size: 28,
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        account_type.name,
-                                        style: TextStyle(
-                                          fontSize: 19,
-                                          fontWeight: FontWeight.bold,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : Colors.black87,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        account_type.bankingType,
-                                        style: TextStyle(
-                                          color: isSelected
-                                              ? Colors.white70
-                                              : Colors.blueGrey,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'Min Age: ${account_type.minAge}  |  Max Age: ${account_type.maxAge}',
-                                        style: TextStyle(
-                                          color: isSelected
-                                              ? Colors.white70
-                                              : Colors.grey[600],
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Min Deposit: ${account_type.minAmount}',
-                                        style: TextStyle(
-                                          color: isSelected
-                                              ? Colors.white70
-                                              : Colors.grey[600],
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      if (showShares) ...[
-                        const SizedBox(height: 24),
-                        Text('Bank Share (%)', style: TextStyle(fontWeight: FontWeight.bold)),
-                        TextFormField(
-                          controller: _bankShareController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            hintText: 'Enter bank share',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Bank share is required';
-                            }
-                            final bank = int.tryParse(value);
-                            final customer = int.tryParse(_customerShareController.text);
-                            if (bank == null || bank < 0 || bank > 100) {
-                              return 'Enter a valid percent (0-100)';
-                            }
-                            if (customer == null) {
-                              return 'Customer share is required';
-                            }
-                            if (bank + customer != 100) {
-                              return 'Sum must be 100';
-                            }
-                            return null;
-                          },
-                          onChanged: (value) {
-                            final bank = int.tryParse(value);
-                            if (bank != null && bank >= 0 && bank <= 100) {
-                              final customer = 100 - bank;
-                              _customerShareController.text = customer.toString();
-                              setState(() {
-                                _shareError = null;
-                              });
-                              ref.read(stepperProvider.notifier).updateBankShare(bank);
-                              ref.read(stepperProvider.notifier).updateCustomerShare(customer);
-                            } else {
-                              setState(() {
-                                _shareError = 'Enter a valid percent (0-100)';
-                              });
-                              ref.read(stepperProvider.notifier).updateBankShare(null);
-                              ref.read(stepperProvider.notifier).updateCustomerShare(null);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Text('Customer Share (%)', style: TextStyle(fontWeight: FontWeight.bold)),
-                        TextFormField(
-                          controller: _customerShareController,
-                          keyboardType: TextInputType.number,
-                          readOnly: true,
-                          decoration: const InputDecoration(
-                            hintText: 'Auto-calculated',
-                          ),
-                        ),
-                        if (_shareError != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(_shareError!, style: const TextStyle(color: Colors.red)),
-                          ),
-                      ],
-                    ],
-                  )
-                : Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text(
-                        "Sorry, no account types match your selection.",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.red,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-          )
-
-          // _buildAccountTypeContent(accountTypeState),
-          // _buildAccountTypeDetails(accountTypeState),
+          _buildHeader(),
+          const SizedBox(height: 16),
+          _buildContent(accountTypeStepState),
         ],
       ),
     );
   }
 
-  Widget _buildAccountTypeContent(AccountTypeStepState state) {
-    if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (state.errorMessage != null) {
-      return Center(
-        child: Text(
-          state.errorMessage!,
-          style: const TextStyle(color: Colors.red),
-        ),
-      );
-    }
-
-    if (state.availableAccountTypes.isEmpty) {
-      return const Center(
-        child: Text(
-          'No account types available for your profile',
-          style: TextStyle(color: Colors.orange),
-        ),
-      );
-    }
-
-    return ReusableDropdown(
-      hintText: "Select Account Type",
-      selectedValue: widget.selectedAccountType,
-      items: state.availableAccountTypes.map((type) => type.name).toList(),
-      onChanged: (value) {
-        if (!_disposed) {
-          // Update both the local state and the provider state
-          widget.onAccountTypeChanged(value);
-          ref
-              .read(accountTypeStepProvider.notifier)
-              .updateSelectedAccountType(value);
-
-          if (value != null) {
-            final selectedType = ref
-                .read(accountTypeStepProvider.notifier)
-                .getSelectedAccountType();
-            widget.onAccountTypeSelected(selectedType);
-          }
-        }
-      },
-      errorMessage: "Please select an account type",
-      isRequired: true,
+  /// Build header section
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.account_balance, color: Colors.blue, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Account Type Selection',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                Text(
+                  'Choose an account type that matches your profile (Age: $_calculatedAge)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildAccountTypeDetails(AccountTypeStepState state) {
-    // Only show details if we have account types and one is selected
-    if (state.availableAccountTypes.isEmpty ||
-        widget.selectedAccountType == null) {
-      return const SizedBox.shrink();
+  /// Build main content
+  Widget _buildContent(AccountTypeStepState state) {
+    if (state.isLoading) {
+      return _buildLoadingState();
     }
 
-    final selectedType =
-        ref.read(accountTypeStepProvider.notifier).getSelectedAccountType();
+    if (state.errorMessage != null) {
+      return _buildErrorState(state.errorMessage!);
+    }
 
-    if (selectedType == null) return const SizedBox.shrink();
+    if (_filteredAccountTypes.isEmpty) {
+      return _buildNoAccountTypesState();
+    }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Account Type Details',
-                style: Theme.of(context).textTheme.titleLarge,
+    return Column(
+      children: [
+        _buildAccountTypesList(),
+        _buildSharesSection(),
+      ],
+    );
+  }
+
+  /// Build loading state
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(40),
+        child: Column(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Loading account types...',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build error state
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading account types',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
               ),
-              const SizedBox(height: 8),
-              _buildDetailRow('Type', selectedType.type),
-              _buildDetailRow('Minimum Age', '${selectedType.minAge} years'),
-              _buildDetailRow('Maximum Age', '${selectedType.maxAge} years'),
-              _buildDetailRow(
-                  'Minimum Amount', '${selectedType.minAmount} ETB'),
-              _buildDetailRow('Gender', selectedType.sex),
-              _buildDetailRow('Banking Type', selectedType.bankingType),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _initializeStep,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build no account types state
+  Widget _buildNoAccountTypesState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Icon(Icons.info_outline, size: 48, color: Colors.orange[600]),
+            const SizedBox(height: 16),
+            const Text(
+              'No Matching Account Types',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No account types match your current profile. Please check your information and try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build account types list
+  Widget _buildAccountTypesList() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: _filteredAccountTypes.map((accountType) {
+          final bool isSelected = widget.selectedAccountType == accountType.id.toString();
+          return _buildAccountTypeCard(accountType, isSelected);
+        }).toList(),
+      ),
+    );
+  }
+
+  /// Build individual account type card
+  Widget _buildAccountTypeCard(AccountType accountType, bool isSelected) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => _handleAccountTypeSelection(accountType),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? Colors.blue : Colors.grey[300]!,
+              width: isSelected ? 2 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected 
+                    ? Colors.blue.withOpacity(0.2) 
+                    : Colors.grey.withOpacity(0.1),
+                blurRadius: isSelected ? 12 : 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              _buildCardIcon(accountType, isSelected),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildCardContent(accountType, isSelected),
+              ),
+              if (isSelected) 
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 24,
+                ),
             ],
           ),
         ),
@@ -459,40 +406,265 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  /// Build card icon
+  Widget _buildCardIcon(AccountType accountType, bool isSelected) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isSelected 
+            ? Colors.white.withOpacity(0.2) 
+            : Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        _getAccountTypeIcon(accountType.type),
+        color: isSelected ? Colors.white : Colors.blue,
+        size: 24,
+      ),
+    );
+  }
+
+  /// Build card content
+  Widget _buildCardContent(AccountType accountType, bool isSelected) {
+    final textColor = isSelected ? Colors.white : Colors.black87;
+    final subtitleColor = isSelected ? Colors.white70 : Colors.grey[600];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          accountType.name,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${accountType.bankingType} • ${accountType.type}',
+          style: TextStyle(
+            fontSize: 12,
+            color: subtitleColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildAccountDetails(accountType, subtitleColor),
+      ],
+    );
+  }
+
+  /// Build account details
+  Widget _buildAccountDetails(AccountType accountType, Color? textColor) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 4,
+      children: [
+        _buildDetailChip('Age: ${accountType.minAge}-${accountType.maxAge}', textColor),
+        _buildDetailChip('Min: ${accountType.minAmount} ETB', textColor),
+        if (accountType.sex != 'BOTH')
+          _buildDetailChip(accountType.sex, textColor),
+      ],
+    );
+  }
+
+  /// Build detail chip
+  Widget _buildDetailChip(String text, Color? textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: textColor?.withOpacity(0.1) ?? Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          color: textColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  /// Build shares section for MUDARABAH accounts
+  Widget _buildSharesSection() {
+    final selectedType = _getSelectedAccountType();
+    final showShares = selectedType?.category == 'MUDARABAH' && 
+                      selectedType?.bankingType == 'ALHUDA';
+
+    if (!showShares) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
+          Row(
+            children: [
+              Icon(Icons.pie_chart, color: Colors.orange[700], size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Profit Sharing Configuration',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange[700],
+                ),
+              ),
+            ],
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
+          const SizedBox(height: 16),
+          _buildShareField(
+            label: 'Bank Share (%)',
+            controller: _bankShareController,
+            onChanged: _handleBankShareChange,
           ),
+          const SizedBox(height: 12),
+          _buildShareField(
+            label: 'Customer Share (%)',
+            controller: _customerShareController,
+            readOnly: true,
+            hint: 'Auto-calculated',
+          ),
+          if (_shareError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _shareError!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
+  /// Build share input field
+  Widget _buildShareField({
+    required String label,
+    required TextEditingController controller,
+    Function(String)? onChanged,
+    bool readOnly = false,
+    String? hint,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-      ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          readOnly: readOnly,
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            hintText: hint ?? 'Enter percentage (0-100)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+          validator: readOnly ? null : _validateBankShare,
+        ),
+      ],
     );
+  }
+
+  /// Get account type icon
+  IconData _getAccountTypeIcon(String type) {
+    switch (type.toUpperCase()) {
+      case 'SAVING':
+        return Icons.savings;
+      case 'CURRENT':
+        return Icons.account_balance_wallet;
+      case 'FIXED':
+        return Icons.lock;
+      default:
+        return Icons.account_balance;
+    }
+  }
+
+  /// Handle account type selection
+  void _handleAccountTypeSelection(AccountType accountType) {
+    widget.onAccountTypeChanged(accountType.id.toString());
+    widget.onAccountTypeSelected(accountType);
+    _resetShareFields();
+  }
+
+  /// Reset share fields
+  void _resetShareFields() {
+    _bankShareController.clear();
+    _customerShareController.clear();
+    setState(() => _shareError = null);
+  }
+
+  /// Handle bank share change
+  void _handleBankShareChange(String value) {
+    final bankShare = int.tryParse(value);
+    
+    if (bankShare != null && bankShare >= 0 && bankShare <= 100) {
+      final customerShare = 100 - bankShare;
+      _customerShareController.text = customerShare.toString();
+      
+      setState(() => _shareError = null);
+      
+      // Update stepper state
+      ref.read(stepperProvider.notifier).updateBankShare(bankShare);
+      ref.read(stepperProvider.notifier).updateCustomerShare(customerShare);
+    } else {
+      setState(() => _shareError = 'Enter a valid percentage (0-100)');
+      
+      // Clear stepper state
+      ref.read(stepperProvider.notifier).updateBankShare(null);
+      ref.read(stepperProvider.notifier).updateCustomerShare(null);
+    }
+  }
+
+  /// Validate bank share
+  String? _validateBankShare(String? value) {
+    if (value?.trim().isEmpty == true) {
+      return 'Bank share is required';
+    }
+    
+    final bankShare = int.tryParse(value!);
+    if (bankShare == null || bankShare < 0 || bankShare > 100) {
+      return 'Enter a valid percentage (0-100)';
+    }
+    
+    final customerShare = int.tryParse(_customerShareController.text);
+    if (customerShare == null) {
+      return 'Customer share calculation failed';
+    }
+    
+    if (bankShare + customerShare != 100) {
+      return 'Total shares must equal 100%';
+    }
+    
+    return null;
+  }
+
+  /// Get selected account type
+  AccountType? _getSelectedAccountType() {
+    if (widget.selectedAccountType == null) return null;
+    
+    try {
+      return _filteredAccountTypes.firstWhere(
+        (type) => type.id.toString() == widget.selectedAccountType,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 }
