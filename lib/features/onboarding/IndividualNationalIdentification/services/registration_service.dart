@@ -17,7 +17,9 @@ class RegistrationService {
     required String motherName,
     required String state,
     required String documentName,
-     String? title,
+    String? bankShare,
+    String? customerShare,
+    String? title,
     required String customerInfoInitialDeposit,
     Uint8List? signature,
   }) async {
@@ -47,6 +49,8 @@ class RegistrationService {
       request.fields['initialdeposit'] = initialDeposit;
       request.fields['branch'] = branch;
       request.fields['title'] = title!;
+      request.fields['bankShare'] = bankShare!;
+      request.fields['customerShare'] = customerShare!;
 
       // Add signature file if available
       if (signature != null) {

@@ -580,13 +580,15 @@ class _IndividualAccountByNationalIdState
       // Prepare registration data
       final registrationData = {
         'authId': authId,
-        'accountType': stepperState.selectedAccountType ??
-            '1', // Default to "1" if not selected
+        'accountType': stepperState.selectedAccountType ?? '1',
+        'bankShare': stepperState.bankShare,
+        'customerShare':
+            stepperState.customerShare, // Default to "1" if not selected
         'initialDeposit': (stepperState.initialDeposit ?? 1000.0).toString(),
         'branch': stepperState.selectedBranch ?? 'FINIFINNE', // Default branch
         'motherName': stepperState.motherName ?? 'N/A',
         'state':
-            stepperState.state ?? 'Addus abeba', // Use saved state from step 1
+            stepperState.state ?? 'Addis abeba', // Use saved state from step 1
         'documentName': 'NATIONALID',
         // 'customerInfoInitialDeposit': '100', // Default value
         'signature': stepperState.signature,

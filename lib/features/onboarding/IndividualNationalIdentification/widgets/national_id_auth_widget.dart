@@ -381,7 +381,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.verified, color: Colors.blue, size: 80),
-              const SizedBox(height: 24),
+              const SizedBox(height: 2),
               const Text(
                 'National ID Verified!',
                 style: TextStyle(

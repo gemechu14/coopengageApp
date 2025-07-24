@@ -1,8 +1,11 @@
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
+import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/account_type_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/registration_data.dart';
 
-class RegistrationSummaryScreen extends StatelessWidget {
+class RegistrationSummaryScreen extends ConsumerWidget {
   final RegistrationData registrationData;
   final VoidCallback onConfirm;
 
@@ -13,7 +16,27 @@ class RegistrationSummaryScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accountTypes =
+        ref.watch(accountTypeStepProvider).availableAccountTypes;
+    String? getAccountTypeNameById(String? id) {
+      if (id == null) return null;
+      final found = accountTypes.firstWhere(
+        (type) => type.id.toString() == id,
+        orElse: () => AccountType(
+            id: 0,
+            name: '',
+            minAge: 0,
+            maxAge: 0,
+            minAmount: 0,
+            sex: '',
+            bankingType: '',
+            type: '',
+            category: ''),
+      );
+      return found.name.isNotEmpty ? found.name : null;
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
@@ -156,8 +179,13 @@ class RegistrationSummaryScreen extends StatelessWidget {
                       'Account Information',
                       Icons.account_balance,
                       [
-                        _buildSummaryItem('Account Type',
-                          registrationData.accountType ?? 'Not selected'),
+                        _buildSummaryItem(
+                            'Account Type',
+                            getAccountTypeNameById(
+                                    registrationData.accountType) ??
+                                'Not selected'),
+                        // _buildSummaryItem('Account Type',
+                        //   registrationData.accountType ?? 'Not selected'),
                         _buildSummaryItem(
                           'Bank Share',
                           registrationData.bankShare != null

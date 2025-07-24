@@ -109,13 +109,9 @@ class AccountOnboardingScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                // CorporateCustomerRegistration(),
-                                // CorporateAcc
+                           
                                 CorporateAccountOpening()
-                            // CorporateRegistrationScreen()
-                            // CorporateAccountRiverpodPage()
-                            // CorporateRegistrationScreen()
-                            // CorporateRegistration()
+             
                           ),
                           (route) => false,
                         );

@@ -5,7 +5,7 @@ import '../providers/account_type_provider.dart';
 import '../providers/stepper_provider.dart';
 
 /// Account Type Selection Step Widget
-/// 
+///
 /// Features:
 /// - Smart filtering based on age, gender, and product type
 /// - Beautiful card-based selection UI
@@ -44,8 +44,9 @@ class AccountTypeStep extends ConsumerStatefulWidget {
 class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   // Controllers for share calculation
   final TextEditingController _bankShareController = TextEditingController();
-  final TextEditingController _customerShareController = TextEditingController();
-  
+  final TextEditingController _customerShareController =
+      TextEditingController();
+
   // State management
   bool _disposed = false;
   List<AccountType> _filteredAccountTypes = [];
@@ -83,9 +84,9 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     if (widget.dateOfBirth != null) {
       final DateTime dob = widget.dateOfBirth!;
       final DateTime now = DateTime.now();
-      
+
       _calculatedAge = now.year - dob.year;
-      if (now.month < dob.month || 
+      if (now.month < dob.month ||
           (now.month == dob.month && now.day < dob.day)) {
         _calculatedAge--;
       }
@@ -106,14 +107,14 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   /// Initialize the step
   Future<void> _initializeStep() async {
     if (_disposed) return;
-    
+
     try {
       await ref.read(accountTypeStepProvider.notifier).initializeStep(
-        customerAge: _calculatedAge,
-        customerGender: widget.customerGender,
-        initialDeposit: widget.initialDeposit,
-        bankingType: widget.bankingType,
-      );
+            customerAge: _calculatedAge,
+            customerGender: widget.customerGender,
+            initialDeposit: widget.initialDeposit,
+            bankingType: widget.bankingType,
+          );
       _filterAccountTypes();
     } catch (e) {
       debugPrint('Error initializing account type step: $e');
@@ -126,12 +127,14 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
 
     final accountTypeStepState = ref.read(accountTypeStepProvider);
     final stepperState = ref.read(stepperProvider);
-    
-    List<AccountType> filtered = List.from(accountTypeStepState.availableAccountTypes);
+
+    List<AccountType> filtered =
+        List.from(accountTypeStepState.availableAccountTypes);
 
     // Apply filters
     filtered = _applyAgeFilter(filtered);
-    filtered = _applyProductTypeFilter(filtered, stepperState.selectedProductType);
+    filtered =
+        _applyProductTypeFilter(filtered, stepperState.selectedProductType);
     filtered = _applyGenderFilter(filtered, stepperState.sex);
 
     if (mounted) {
@@ -146,26 +149,28 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     if (_calculatedAge <= 0) return accountTypes;
 
     return accountTypes
-        .where((type) => _calculatedAge >= type.minAge && _calculatedAge <= type.maxAge)
+        .where((type) =>
+            _calculatedAge >= type.minAge && _calculatedAge <= type.maxAge)
         .toList();
   }
 
   /// Apply product type filtering
   List<AccountType> _applyProductTypeFilter(
-    List<AccountType> accountTypes, 
+    List<AccountType> accountTypes,
     String? productType,
   ) {
     if (productType?.trim().isEmpty != false) return accountTypes;
 
     final normalizedProductType = productType!.trim().toLowerCase();
     return accountTypes
-        .where((type) => type.bankingType.trim().toLowerCase() == normalizedProductType)
+        .where((type) =>
+            type.bankingType.trim().toLowerCase() == normalizedProductType)
         .toList();
   }
 
   /// Apply gender-based filtering
   List<AccountType> _applyGenderFilter(
-    List<AccountType> accountTypes, 
+    List<AccountType> accountTypes,
     String? userSex,
   ) {
     if (userSex?.trim().isEmpty != false) return accountTypes;
@@ -212,9 +217,10 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
               color: Colors.blue.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.account_balance, color: Colors.blue, size: 24),
+            child:
+                const Icon(Icons.account_balance, color: Colors.blue, size: 24),
           ),
-          const SizedBox(width: 12),
+          // const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,18 +228,18 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                 const Text(
                   'Account Type Selection',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue,
                   ),
                 ),
-                Text(
-                  'Choose an account type that matches your profile (Age: $_calculatedAge)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                // Text(
+                //   'Choose an account type that matches your profile (Age: $_calculatedAge)',
+                //   style: TextStyle(
+                //     fontSize: 14,
+                //     color: Colors.grey[600],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -352,7 +358,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: _filteredAccountTypes.map((accountType) {
-          final bool isSelected = widget.selectedAccountType == accountType.id.toString();
+          final bool isSelected =
+              widget.selectedAccountType == accountType.id.toString();
           return _buildAccountTypeCard(accountType, isSelected);
         }).toList(),
       ),
@@ -377,8 +384,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             ),
             boxShadow: [
               BoxShadow(
-                color: isSelected 
-                    ? Colors.blue.withOpacity(0.2) 
+                color: isSelected
+                    ? Colors.blue.withOpacity(0.2)
                     : Colors.grey.withOpacity(0.1),
                 blurRadius: isSelected ? 12 : 4,
                 offset: const Offset(0, 2),
@@ -393,7 +400,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
               Expanded(
                 child: _buildCardContent(accountType, isSelected),
               ),
-              if (isSelected) 
+              if (isSelected)
                 Icon(
                   Icons.check_circle,
                   color: Colors.white,
@@ -411,8 +418,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isSelected 
-            ? Colors.white.withOpacity(0.2) 
+        color: isSelected
+            ? Colors.white.withOpacity(0.2)
             : Colors.blue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -460,7 +467,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       spacing: 12,
       runSpacing: 4,
       children: [
-        _buildDetailChip('Age: ${accountType.minAge}-${accountType.maxAge}', textColor),
+        _buildDetailChip(
+            'Age: ${accountType.minAge}-${accountType.maxAge}', textColor),
         _buildDetailChip('Min: ${accountType.minAmount} ETB', textColor),
         if (accountType.sex != 'BOTH')
           _buildDetailChip(accountType.sex, textColor),
@@ -490,8 +498,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   /// Build shares section for MUDARABAH accounts
   Widget _buildSharesSection() {
     final selectedType = _getSelectedAccountType();
-    final showShares = selectedType?.category == 'MUDARABAH' && 
-                      selectedType?.bankingType == 'ALHUDA';
+    final showShares = selectedType?.category == 'MUDARABAH' &&
+        selectedType?.bankingType == 'ALHUDA';
 
     if (!showShares) return const SizedBox.shrink();
 
@@ -574,7 +582,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
           validator: readOnly ? null : _validateBankShare,
         ),
@@ -613,19 +622,19 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   /// Handle bank share change
   void _handleBankShareChange(String value) {
     final bankShare = int.tryParse(value);
-    
+
     if (bankShare != null && bankShare >= 0 && bankShare <= 100) {
       final customerShare = 100 - bankShare;
       _customerShareController.text = customerShare.toString();
-      
+
       setState(() => _shareError = null);
-      
+
       // Update stepper state
       ref.read(stepperProvider.notifier).updateBankShare(bankShare);
       ref.read(stepperProvider.notifier).updateCustomerShare(customerShare);
     } else {
       setState(() => _shareError = 'Enter a valid percentage (0-100)');
-      
+
       // Clear stepper state
       ref.read(stepperProvider.notifier).updateBankShare(null);
       ref.read(stepperProvider.notifier).updateCustomerShare(null);
@@ -637,28 +646,28 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     if (value?.trim().isEmpty == true) {
       return 'Bank share is required';
     }
-    
+
     final bankShare = int.tryParse(value!);
     if (bankShare == null || bankShare < 0 || bankShare > 100) {
       return 'Enter a valid percentage (0-100)';
     }
-    
+
     final customerShare = int.tryParse(_customerShareController.text);
     if (customerShare == null) {
       return 'Customer share calculation failed';
     }
-    
+
     if (bankShare + customerShare != 100) {
       return 'Total shares must equal 100%';
     }
-    
+
     return null;
   }
 
   /// Get selected account type
   AccountType? _getSelectedAccountType() {
     if (widget.selectedAccountType == null) return null;
-    
+
     try {
       return _filteredAccountTypes.firstWhere(
         (type) => type.id.toString() == widget.selectedAccountType,

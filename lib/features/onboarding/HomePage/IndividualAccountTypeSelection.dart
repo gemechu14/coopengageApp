@@ -63,14 +63,21 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                             255, 37, 113, 175), // darker cyanblue
                       ],
                       onTap: () {
-                        Navigator.pushReplacement(
+                        // Navigator.pushReplacement(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //       builder: (context) =>
+                        //           // const IndividualAccountNational()
+                        //           // const IndividualAccountByNationalId(),
+
+                        //           const NationalIdentification()),
+                        // );
+
+                        Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
-                              builder: (context) =>
-                                  // const IndividualAccountNational()
-                                  // const IndividualAccountByNationalId(),
-
-                                  const NationalIdentification()),
+                              builder: (context) => NationalIdentification()),
+                          (route) => false,
                         );
                       },
                     ),

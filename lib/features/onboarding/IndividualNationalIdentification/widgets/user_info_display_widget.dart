@@ -194,21 +194,21 @@ class UserInfoDisplayWidget extends StatelessWidget {
           value: userInfo.status ?? 'Not available',
           icon: Icons.check_circle_outline,
         ),
-        _InfoItem(
-          label: 'Profile Completion',
-          value: UserInfoService.formatPercentage(userInfo.percentageComplete),
-          icon: Icons.pie_chart,
-        ),
-        _InfoItem(
-          label: 'Created',
-          value: UserInfoService.formatDate(userInfo.createdAt),
-          icon: Icons.schedule,
-        ),
-        _InfoItem(
-          label: 'Last Updated',
-          value: UserInfoService.formatDate(userInfo.updatedAt),
-          icon: Icons.update,
-        ),
+        // _InfoItem(
+        //   label: 'Profile Completion',
+        //   value: UserInfoService.formatPercentage(userInfo.percentageComplete),
+        //   icon: Icons.pie_chart,
+        // ),
+        // _InfoItem(
+        //   label: 'Created',
+        //   value: UserInfoService.formatDate(userInfo.createdAt),
+        //   icon: Icons.schedule,
+        // ),
+        // _InfoItem(
+        //   label: 'Last Updated',
+        //   value: UserInfoService.formatDate(userInfo.updatedAt),
+        //   icon: Icons.update,
+        // ),
       ],
     );
   }
@@ -350,4 +350,4 @@ class _InfoItem {
     required this.icon,
     this.subtitle,
   });
-} 
+}

@@ -36,10 +36,23 @@ class _AccountTypeStepState extends State<AccountTypeStep> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  // Controllers for share calculation
+  final TextEditingController _bankShareController = TextEditingController();
+  final TextEditingController _customerShareController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _loadAccountTypes();
+    // Initialize customer share controller to be auto-calculated
+    _customerShareController.text = '';
+  }
+
+  @override
+  void dispose() {
+    _bankShareController.dispose();
+    _customerShareController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAccountTypes() async {
@@ -62,6 +75,37 @@ class _AccountTypeStepState extends State<AccountTypeStep> {
         _isLoading = false;
       });
     }
+  }
+
+  void _handleBankShareChange(String value) {
+    if (value.isNotEmpty) {
+      final bankShare = double.tryParse(value) ?? 0.0;
+      if (bankShare >= 0 && bankShare <= 100) {
+        final customerShare = 100 - bankShare;
+        setState(() {
+          _customerShareController.text = customerShare.toStringAsFixed(1);
+        });
+      } else {
+        setState(() {
+          _customerShareController.text = '';
+        });
+      }
+    } else {
+      setState(() {
+        _customerShareController.text = '';
+      });
+    }
+  }
+
+  bool _isMudarabahAccount() {
+    if (widget.selectedAccountType == null) return false;
+    
+    final selectedType = _accountTypeService.findAccountTypeByName(
+      _availableAccountTypes,
+      widget.selectedAccountType!,
+    );
+    
+    return selectedType?.type.toUpperCase() == 'MUDARABAH';
   }
 
   @override
@@ -103,16 +147,154 @@ class _AccountTypeStepState extends State<AccountTypeStep> {
                     value,
                   );
                   widget.onAccountTypeSelected(selectedType);
+                  
+                  // Clear share fields when account type changes
+                  _bankShareController.clear();
+                  _customerShareController.clear();
                 }
               },
               errorMessage: "Please select an account type",
               isRequired: true,
             ),
+          
+          // Show share fields for MUDARABAH accounts
+          if (_isMudarabahAccount()) ...[
+            const SizedBox(height: 20),
+            _buildShareSection(),
+          ],
+          
           if (_availableAccountTypes.isNotEmpty &&
               widget.selectedAccountType != null)
             _buildAccountTypeDetails(),
         ],
       ),
+    );
+  }
+
+  Widget _buildShareSection() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.pie_chart,
+                color: Colors.blue.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Profit Sharing Configuration',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Configure the profit sharing ratio for this Mudarabah account',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildShareField(
+            label: 'Bank Share (%)',
+            controller: _bankShareController,
+            onChanged: _handleBankShareChange,
+          ),
+          const SizedBox(height: 12),
+          _buildShareField(
+            label: 'Customer Share (%)',
+            controller: _customerShareController,
+            readOnly: true,
+            hint: 'Auto-calculated',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShareField({
+    required String label,
+    required TextEditingController controller,
+    Function(String)? onChanged,
+    bool readOnly = false,
+    String? hint,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          readOnly: readOnly,
+          onChanged: onChanged,
+          keyboardType: readOnly ? TextInputType.none : TextInputType.number,
+          decoration: InputDecoration(
+            hintText: hint ?? 'Enter percentage (0-100)',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 14,
+            ),
+            filled: true,
+            fillColor: readOnly ? Colors.grey[100] : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.blue, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
+            ),
+            suffixIcon: const Icon(
+              Icons.percent,
+              size: 18,
+              color: Colors.grey,
+            ),
+          ),
+          validator: readOnly ? null : (value) {
+            if (!readOnly && (value == null || value.isEmpty)) {
+              return 'Please enter bank share percentage';
+            }
+            if (!readOnly) {
+              final percentage = double.tryParse(value!);
+              if (percentage == null || percentage < 0 || percentage > 100) {
+                return 'Please enter a valid percentage (0-100)';
+              }
+            }
+            return null;
+          },
+        ),
+      ],
     );
   }
 

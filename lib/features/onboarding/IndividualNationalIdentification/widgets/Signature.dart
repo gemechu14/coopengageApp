@@ -10,7 +10,7 @@ import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/co
 import '../providers/stepper_provider.dart';
 
 /// Signature Step Widget
-/// 
+///
 /// Handles signature collection through:
 /// - Digital signature pads (3 signatures combined)
 /// - Image upload from gallery or camera
@@ -27,10 +27,10 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   late SignatureController _signatureController1;
   late SignatureController _signatureController2;
   late SignatureController _signatureController3;
-  
+
   // Image picker
   final ImagePicker _picker = ImagePicker();
-  
+
   // Local state
   Uint8List? _localSignatureData;
   bool _isProcessing = false;
@@ -114,14 +114,14 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Digital Signature',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+              // Text(
+              //   'Digital Signature',
+              //   style: TextStyle(
+              //     fontSize: 20,
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.black87,
+              //   ),
+              // ),
               Text(
                 'Draw your signature or upload an image',
                 style: TextStyle(
@@ -216,7 +216,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
           child: _buildActionButton(
             label: 'Upload Image',
             icon: Icons.upload,
-            color: Colors.green,
+            color: Colors.blue,
             onPressed: () => _showImagePickerDialog(context),
           ),
         ),
@@ -364,99 +364,186 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   }
 
   /// Show signature pad dialog
+  // void _showSignaturePadDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => Dialog(
+  //       insetPadding: const EdgeInsets.all(16),
+  //       child: Container(
+  //         constraints: BoxConstraints(
+  //           maxHeight: MediaQuery.of(context).size.height * 0.8,
+  //         ),
+  //         padding: const EdgeInsets.all(20),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             Row(
+  //               children: [
+  //                 const Icon(Icons.edit, color: Colors.blue),
+  //                 const SizedBox(width: 8),
+  //                 const Expanded(
+  //                   child: Text(
+  //                     'Draw Your Signatures',
+  //                     style: TextStyle(
+  //                       fontSize: 20,
+  //                       fontWeight: FontWeight.bold,
+  //                       color: Colors.blue,
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 IconButton(
+  //                   onPressed: () => Navigator.pop(context),
+  //                   icon: const Icon(Icons.close),
+  //                 ),
+  //               ],
+  //             ),
+  //             const SizedBox(height: 20),
+  //             Flexible(
+  //               child: SingleChildScrollView(
+  //                 child: Column(
+  //                   children: [
+  //                     SignaturePad(
+  //                       controller: _signatureController1,
+  //                       label: "Primary Signature",
+  //                       onClear: () => _clearSignature(1),
+  //                     ),
+  //                     const SizedBox(height: 16),
+  //                     SignaturePad(
+  //                       controller: _signatureController2,
+  //                       label: "Secondary Signature",
+  //                       onClear: () => _clearSignature(2),
+  //                     ),
+  //                     const SizedBox(height: 16),
+  //                     SignaturePad(
+  //                       controller: _signatureController3,
+  //                       label: "Tertiary Signature",
+  //                       onClear: () => _clearSignature(3),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //             const SizedBox(height: 20),
+  //             Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: TextButton(
+  //                     onPressed: () => Navigator.pop(context),
+  //                     child: const Text('Cancel'),
+  //                   ),
+  //                 ),
+  //                 const SizedBox(width: 16),
+  //                 Expanded(
+  //                   child: ElevatedButton(
+  //                     onPressed: () {
+  //                       if (_areAllSignaturesCompleted()) {
+  //                         _saveCombinedSignature();
+  //                         Navigator.pop(context);
+  //                       } else {
+  //                         _showErrorMessage(
+  //                             'Please complete all three signatures');
+  //                       }
+  //                     },
+  //                     style: ElevatedButton.styleFrom(
+  //                       backgroundColor: Colors.blue,
+  //                       foregroundColor: Colors.white,
+  //                     ),
+  //                     child: const Text('Save Signatures'),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
   void _showSignaturePadDialog(BuildContext context) {
-    showDialog(
+    showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        insetPadding: const EdgeInsets.all(16),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.8,
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.edit, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Draw Your Signatures',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      SignaturePad(
-                        controller: _signatureController1,
-                        label: "Primary Signature",
-                        onClear: () => _clearSignature(1),
-                      ),
-                      const SizedBox(height: 16),
-                      SignaturePad(
-                        controller: _signatureController2,
-                        label: "Secondary Signature",
-                        onClear: () => _clearSignature(2),
-                      ),
-                      const SizedBox(height: 16),
-                      SignaturePad(
-                        controller: _signatureController3,
-                        label: "Tertiary Signature",
-                        onClear: () => _clearSignature(3),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_areAllSignaturesCompleted()) {
-                          _saveCombinedSignature();
-                          Navigator.pop(context);
-                        } else {
-                          _showErrorMessage('Please complete all three signatures');
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Save Signatures'),
-                    ),
-                  ),
-                ],
+      barrierLabel: 'Signature Pad',
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Draw Your Signatures'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          SignaturePad(
+                            controller: _signatureController1,
+                            label: "Primary Signature",
+                            onClear: () => _clearSignature(1),
+                          ),
+                          const SizedBox(height: 16),
+                          SignaturePad(
+                            controller: _signatureController2,
+                            label: "Secondary Signature",
+                            onClear: () => _clearSignature(2),
+                          ),
+                          const SizedBox(height: 16),
+                          SignaturePad(
+                            controller: _signatureController3,
+                            label: "Tertiary Signature",
+                            onClear: () => _clearSignature(3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_areAllSignaturesCompleted()) {
+                              _saveCombinedSignature();
+                              Navigator.pop(context);
+                            } else {
+                              _showErrorMessage(
+                                  'Please complete all three signatures');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Save Signatures'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -467,7 +554,8 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
 
       // Check permissions
       if (!await _checkPermission(source)) {
-        _showErrorMessage('Permission required to access ${source == ImageSource.camera ? 'camera' : 'gallery'}');
+        _showErrorMessage(
+            'Permission required to access ${source == ImageSource.camera ? 'camera' : 'gallery'}');
         return;
       }
 
@@ -494,7 +582,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   Future<void> _processImageFile(File imageFile) async {
     try {
       final bytes = await imageFile.readAsBytes();
-      
+
       if (mounted) {
         setState(() => _localSignatureData = bytes);
         ref.read(stepperProvider.notifier).updateSignature(bytes);
@@ -507,10 +595,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
 
   /// Check permissions for image source
   Future<bool> _checkPermission(ImageSource source) async {
-    final permission = source == ImageSource.camera 
-        ? Permission.camera 
-        : Permission.photos;
-    
+    final permission =
+        source == ImageSource.camera ? Permission.camera : Permission.photos;
+
     final status = await permission.status;
     if (status.isDenied) {
       final result = await permission.request();
@@ -522,7 +609,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   /// Handle image picker errors
   void _handleImagePickerError(dynamic error) {
     String message = 'Failed to pick image';
-    
+
     if (error.toString().contains('permission')) {
       message = 'Permission denied. Please grant access in settings.';
     } else if (error.toString().contains('camera')) {
@@ -530,27 +617,27 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     } else if (error.toString().contains('cancel')) {
       return; // User cancelled, no error needed
     }
-    
+
     _showErrorMessage(message);
   }
 
   /// Check if all signatures are completed
   bool _areAllSignaturesCompleted() {
     return _signatureController1.isNotEmpty &&
-           _signatureController2.isNotEmpty &&
-           _signatureController3.isNotEmpty;
+        _signatureController2.isNotEmpty &&
+        _signatureController3.isNotEmpty;
   }
 
   /// Save combined signature
   Future<void> _saveCombinedSignature() async {
     try {
       setState(() => _isProcessing = true);
-      
+
       final combinedSignature = await _combineSignatures();
       if (combinedSignature != null && mounted) {
         setState(() => _localSignatureData = combinedSignature);
         ref.read(stepperProvider.notifier).updateSignature(combinedSignature);
-        _showSuccessMessage('Signatures saved successfully');
+        // _showSuccessMessage('Signatures saved successfully');
       }
     } catch (e) {
       _showErrorMessage('Failed to save signatures: ${e.toString()}');
@@ -577,7 +664,8 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
       final image3 = await decodeImageFromList(signature3);
 
       const spacing = 10;
-      final totalWidth = image1.width + image2.width + image3.width + (spacing * 2);
+      final totalWidth =
+          image1.width + image2.width + image3.width + (spacing * 2);
       final maxHeight = [image1.height, image2.height, image3.height]
           .reduce((a, b) => a > b ? a : b);
 
@@ -597,16 +685,17 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
       double currentX = 0;
       canvas.drawImage(image1, Offset(currentX, 0), Paint());
       currentX += image1.width.toDouble() + spacing;
-      
+
       canvas.drawImage(image2, Offset(currentX, 0), Paint());
       currentX += image2.width.toDouble() + spacing;
-      
+
       canvas.drawImage(image3, Offset(currentX, 0), Paint());
 
       final picture = recorder.endRecording();
       final combinedImage = await picture.toImage(totalWidth, maxHeight);
-      final byteData = await combinedImage.toByteData(format: ui.ImageByteFormat.png);
-      
+      final byteData =
+          await combinedImage.toByteData(format: ui.ImageByteFormat.png);
+
       return byteData?.buffer.asUint8List();
     } catch (e) {
       debugPrint('Error combining signatures: $e');
@@ -632,7 +721,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   /// Show error message
   void _showErrorMessage(String message) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -646,7 +735,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   /// Show success message
   void _showSuccessMessage(String message) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
