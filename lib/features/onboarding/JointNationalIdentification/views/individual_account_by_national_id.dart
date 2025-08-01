@@ -678,6 +678,7 @@ class _IndividualAccountByNationalIdState
           'employerName': v['employerName'] ?? '',
           'monthlyIncome': v['monthlyIncome'] ?? '',
           'sex': v['sex'] ?? m.sex ?? '',
+          // 'photo': v['photo'] ?? '',
         };
       }).toList();
 

@@ -1,15 +1,23 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/registration_data.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/national_id_provider.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/services/registration_service.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/Signature.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/account_type_step.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/additional_information.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/national_id_auth_widget.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/registration_summary_page.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/registration_data.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/national_id_provider.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/services/registration_service.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/Signature.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/account_type_step.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/additional_information.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/national_id_auth_widget.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/model/registration_data.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/national_id_provider.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/stepper_provider.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/services/registration_service.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/Signature.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/account_type_step.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/additional_information.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,16 +32,16 @@ class StepConfig {
   StepConfig({required this.title, required this.icon, required this.builder});
 }
 
-class NationalIdentification extends ConsumerStatefulWidget {
-  const NationalIdentification({Key? key}) : super(key: key);
+class NationalIdentificationWebSocket extends ConsumerStatefulWidget {
+  const NationalIdentificationWebSocket({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<NationalIdentification> createState() =>
+  ConsumerState<NationalIdentificationWebSocket> createState() =>
       _IndividualAccountByNationalIdState();
 }
 
 class _IndividualAccountByNationalIdState
-    extends ConsumerState<NationalIdentification> {
+    extends ConsumerState<NationalIdentificationWebSocket> {
   List<GlobalKey<FormState>> formKeys = [];
   bool _disposed = false;
 

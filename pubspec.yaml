@@ -317,7 +317,7 @@ dependencies:
   enhance_stepper: ^1.0.2
   expandable: ^5.0.1
   uuid: ^4.4.2
-
+  web_socket_channel: ^3.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

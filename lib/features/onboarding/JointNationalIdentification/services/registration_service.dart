@@ -112,6 +112,7 @@ class RegistrationService {
             request.fields['customers[$i].$key'] = value.toString();
           }
         });
+
         // Attach signature as file if available
         if (signatures.length > i && signatures[i] != null) {
           final tempDir = Directory.systemTemp;
@@ -135,7 +136,8 @@ class RegistrationService {
       request.fields.forEach((k, v) => print(' [32m$k: $v [0m'));
       print('==== Joint Registration Request Files ====');
       for (final f in request.files) {
-        print('\u001b[34m${f.field}: ${f.filename} (${f.length} bytes)\u001b[0m');
+        print(
+            '\u001b[34m${f.field}: ${f.filename} (${f.length} bytes)\u001b[0m');
       }
       print('===========================================');
 

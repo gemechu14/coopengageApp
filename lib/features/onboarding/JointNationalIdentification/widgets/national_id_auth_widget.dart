@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
@@ -118,7 +120,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             trailing: member.isVerified
                 ? ElevatedButton.icon(
                     onPressed: () {
-                      _showMemberDetailsDialog(member);
+                      _showMemberDetailsDialog(context, member);
                     },
                     icon: const Icon(Icons.info_outline),
                     label: const Text(
@@ -1002,7 +1004,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     stepperNotifier.updateMember(memberIndex, updatedMember);
   }
 
-  void _showMemberDetailsDialog(dynamic member) {
+  void _showMemberDetailsDialog(BuildContext context, dynamic member) 
+  
+  {
     final data = member.verifiedData as Map<String, dynamic>?;
 
     showDialog(
@@ -1015,57 +1019,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             child: data == null
                 ? const Text('No details available.')
                 : SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: data.entries.map((entry) {
-                        final key = entry.key;
-                        final value = entry.value;
-
-                        if (value is Map) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${key.replaceAll('_', ' ').toUpperCase()}:',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 16.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: (value as Map<String, dynamic>)
-                                        .entries
-                                        .map((subEntry) {
-                                      return Text(
-                                          '${subEntry.key}: ${subEntry.value}');
-                                    }).toList(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${key.replaceAll('_', ' ').toUpperCase()}: ',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Expanded(child: Text(value.toString())),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                    child: _buildKeyValueWidgets(_filterPreferredFields(data)),
                   ),
           ),
           actions: [
@@ -1076,6 +1030,125 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           ],
         );
       },
+    );
+  }
+
+   Map<String, dynamic> _filterPreferredFields(Map<String, dynamic> original) {
+    // Define conflicts: prefer the first key in each group
+    final preferenceGroups = [
+      ['full_name', 'name'],
+      ['phone_number', 'phone'],
+      ['gender', 'sex'],
+    ];
+
+    final filtered = <String, dynamic>{};
+    final lowerKeys = original.map((k, v) => MapEntry(k.toLowerCase(), k));
+
+    // Handle preferred fields
+    for (var group in preferenceGroups) {
+      for (var key in group) {
+        final match = lowerKeys[key];
+        if (match != null) {
+          filtered[group[0]] =
+              original[match]; // always assign under preferred key
+          break; // stop at the first found in the preference order
+        }
+      }
+    }
+
+    // Add all other keys that are NOT part of any preference group
+    final allExcludedKeys = preferenceGroups.expand((g) => g).toSet();
+
+    for (var entry in original.entries) {
+      final keyLower = entry.key.toLowerCase();
+      final alreadyAdded = filtered.containsValue(entry.value);
+
+      if (!allExcludedKeys.contains(keyLower) && !alreadyAdded) {
+        filtered[entry.key] = entry.value;
+      }
+    }
+
+    return filtered;
+  }
+
+  Widget _buildKeyValueWidgets(Map<String, dynamic> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: data.entries.map<Widget>((entry) {
+        final key = entry.key;
+        final value = entry.value;
+
+        if (value is String && value.startsWith('data:image')) {
+          try {
+            final base64String = value.split(',').last;
+            final imageBytes = base64Decode(base64String);
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${key.replaceAll('_', ' ').toUpperCase()}:',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(
+                      imageBytes,
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } catch (e) {
+            return Text(
+              '${key.toUpperCase()}: [Invalid image]',
+              style: const TextStyle(color: Colors.red),
+            );
+          }
+        }
+
+        if (value is Map<String, dynamic>) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${key.replaceAll('_', ' ').toUpperCase()}:',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: value.entries.map<Widget>((subEntry) {
+                      return Text('${subEntry.key}: ${subEntry.value}');
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${key.replaceAll('_', ' ').toUpperCase()}: ',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Expanded(child: Text(value.toString())),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
