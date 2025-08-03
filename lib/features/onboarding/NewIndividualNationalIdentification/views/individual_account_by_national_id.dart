@@ -320,18 +320,45 @@ class _IndividualAccountByNationalIdState
                     print('Current step: ${stepperState.activeStep}');
 
                     if (stepperState.activeStep == 0) {
-                      print("gemechuugdfdfdffd ");
-                      print(nationalIdState);
+                      // Check both old National ID system and new Fayda system
+                      final faydaState = ref.read(faydaProvider);
+                      bool isAuthenticated = false;
 
+                      // Check old National ID system first
                       if (nationalIdState.isAuthCompleted) {
                         if (nationalIdState.authResult != null) {
                           ref
                               .read(stepperProvider.notifier)
                               .saveAuthenticationData(
                                   nationalIdState.authResult!);
+                        }
+                        isAuthenticated = true;
+                      }
+                      // Check new Fayda system as fallback
+                      else if (faydaState.isCompleted && faydaState.userData != null) {
+                        print('🎯 [Stepper] Fayda authentication detected, proceeding...');
+                        
+                        // Convert Fayda data to expected format
+                        final faydaAuthData = {
+                          'id': faydaState.userData!.sub,
+                          'name': faydaState.userData!.name,
+                          'email': faydaState.userData!.email,
+                          'phone_number': faydaState.userData!.phoneNumber,
+                          'gender': faydaState.userData!.gender,
+                          'birthdate': faydaState.userData!.birthdate,
+                          'address': {
+                            'country': faydaState.userData!.address?.country ?? 'Unknown',
+                            'region': faydaState.userData!.address?.region ?? 'Unknown',
+                          },
+                        };
 
-                          final updatedState = ref.read(stepperProvider);
-                        } else {}
+                        ref
+                            .read(stepperProvider.notifier)
+                            .saveAuthenticationData(faydaAuthData);
+                        isAuthenticated = true;
+                      }
+
+                      if (isAuthenticated) {
                         ref.read(stepperProvider.notifier).nextStep();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(

@@ -16,6 +16,7 @@ class NationalIdAuthWidget extends ConsumerStatefulWidget {
 class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   bool _showWebView = false;
   bool _showUserData = false;
+  bool _isWebViewLoading = false; // Track WebView loading state
   WebViewController? _webViewController;
 
   @override
@@ -54,9 +55,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             return NavigationDecision.navigate;
           },
           onPageStarted: (String url) {
+            setState(() => _isWebViewLoading = true);
             if (_isCallbackUrl(url)) {
               _handleCallbackImmediately(url);
             }
+          },
+          onPageFinished: (String url) {
+            setState(() => _isWebViewLoading = false);
           },
           onUrlChange: (UrlChange change) {
             if (change.url != null && _isCallbackUrl(change.url!)) {
@@ -117,7 +122,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         !_showWebView) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          setState(() => _showWebView = true);
+          setState(() {
+            _showWebView = true;
+            _isWebViewLoading = true; // Start with loading state
+          });
           _webViewController?.loadRequest(Uri.parse(faydaState.authUrl!));
         }
       });
@@ -183,8 +191,54 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           // WebView content
           Expanded(
             child: _webViewController != null
-                ? WebViewWidget(controller: _webViewController!)
-                : const Center(child: CircularProgressIndicator()),
+                ? Stack(
+                    children: [
+                      WebViewWidget(controller: _webViewController!),
+                      // Loading overlay
+                      if (_isWebViewLoading)
+                        Container(
+                          color: Colors.white,
+                          child: const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  color: Colors.blue,
+                                  strokeWidth: 4,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Loading authentication page...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  )
+                : const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: Colors.blue,
+                          strokeWidth: 4,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Initializing WebView...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
