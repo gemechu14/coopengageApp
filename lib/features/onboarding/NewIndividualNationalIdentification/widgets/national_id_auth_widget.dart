@@ -9,7 +9,8 @@ class NationalIdAuthWidget extends ConsumerStatefulWidget {
   const NationalIdAuthWidget({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<NationalIdAuthWidget> createState() => _NationalIdAuthWidgetState();
+  ConsumerState<NationalIdAuthWidget> createState() =>
+      _NationalIdAuthWidgetState();
 }
 
 class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
@@ -21,11 +22,11 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   void initState() {
     super.initState();
     _initializeWebView();
-    
+
     // Only start fresh authentication if no previous successful data exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentState = ref.read(faydaProvider);
-      
+
       // If no completed authentication data exists, start fresh
       if (!currentState.isCompleted || currentState.userData == null) {
         ref.read(faydaProvider.notifier).reset();
@@ -67,27 +68,27 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   bool _isCallbackUrl(String url) {
-    return url.contains('/callback') || 
-           url.contains('code=') || 
-           url.contains('state=');
+    return url.contains('/callback') ||
+        url.contains('code=') ||
+        url.contains('state=');
   }
 
   void _handleCallbackImmediately(String url) {
     if (!mounted) return;
-    
+
     print('🎯 [Widget] CALLBACK DETECTED IMMEDIATELY!');
     print('🎯 [Widget] URL: $url');
-    
+
     final uri = Uri.parse(url);
     final code = uri.queryParameters['code'];
     final state = uri.queryParameters['state'];
-    
+
     if (code != null && state != null) {
       print('✅ [Widget] Code and state found - processing callback');
-      
+
       // IMMEDIATELY hide WebView
       setState(() => _showWebView = false);
-      
+
       // Process the callback API call
       const baseUrl = 'http://10.8.100.111:9062/';
       ref.read(faydaProvider.notifier).processCallback(baseUrl, code, state);
@@ -110,8 +111,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     }
 
     // Auto-show WebView when auth URL is available
-    if (faydaState.authUrl != null && 
-        !faydaState.isCompleted && 
+    if (faydaState.authUrl != null &&
+        !faydaState.isCompleted &&
         faydaState.error == null &&
         !_showWebView) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -123,20 +124,22 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(1.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'National ID Authentication',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          
+          // const Text(
+          //   'National ID Authentication',
+          //   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          //   textAlign: TextAlign.center,
+          // ),
+          // const SizedBox(height: 32),
+
           // Main content area
           Expanded(
-            child: _showWebView && faydaState.authUrl != null && !faydaState.isCompleted
+            child: _showWebView &&
+                    faydaState.authUrl != null &&
+                    !faydaState.isCompleted
                 ? _buildWebView()
                 : _buildMainContent(faydaState),
           ),
@@ -176,7 +179,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               ],
             ),
           ),
-          
+
           // WebView content
           Expanded(
             child: _webViewController != null
@@ -196,10 +199,11 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           // Loading state (auto-started)
-          if (faydaState.isLoading || (!faydaState.isCompleted && faydaState.error == null)) ...[
+          if (faydaState.isLoading ||
+              (!faydaState.isCompleted && faydaState.error == null)) ...[
             const CircularProgressIndicator(
               color: Colors.blue,
               strokeWidth: 4,
@@ -214,22 +218,107 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               textAlign: TextAlign.center,
             ),
           ],
-          
+
           // Success state - Verified
           if (faydaState.isCompleted && faydaState.userData != null) ...[
+            // Container(
+            //   padding: const EdgeInsets.all(32),
+            //   decoration: BoxDecoration(
+            //     color: Colors.green.shade50,
+            //     borderRadius: BorderRadius.circular(16),
+            //     border: Border.all(color: Colors.green.shade200, width: 2),
+            //   ),
+            //   child: Column(
+            //     children: [
+            //       Icon(
+            //         Icons.verified_user,
+            //         size: 80,
+            //         color: Colors.green.shade600,
+            //       ),
+            //       const SizedBox(height: 16),
+            //       const Text(
+            //         'VERIFIED',
+            //         style: TextStyle(
+            //           fontSize: 24,
+            //           fontWeight: FontWeight.bold,
+            //           color: Colors.green,
+            //         ),
+            //       ),
+            //       const SizedBox(height: 8),
+            //       Text(
+            //         'National ID authentication successful',
+            //         style: TextStyle(
+            //           fontSize: 16,
+            //           color: Colors.green.shade700,
+            //         ),
+            //         textAlign: TextAlign.center,
+            //       ),
+            //       const SizedBox(height: 24),
+
+            //       // Action buttons
+            //       Column(
+            //         children: [
+            //           Row(
+            //             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //             children: [
+            //               ElevatedButton.icon(
+            //                 onPressed: () =>
+            //                     setState(() => _showUserData = true),
+            //                 style: ElevatedButton.styleFrom(
+            //                   backgroundColor: Colors.blue,
+            //                   foregroundColor: Colors.white,
+            //                   padding: const EdgeInsets.symmetric(
+            //                       horizontal: 16, vertical: 12),
+            //                 ),
+            //                 icon: const Icon(Icons.person),
+            //                 label: const Text('View Data'),
+            //               ),
+            //               ElevatedButton.icon(
+            //                 onPressed: () =>
+            //                     ref.read(stepperProvider.notifier).nextStep(),
+            //                 style: ElevatedButton.styleFrom(
+            //                   backgroundColor: Colors.green,
+            //                   foregroundColor: Colors.white,
+            //                   padding: const EdgeInsets.symmetric(
+            //                       horizontal: 16, vertical: 12),
+            //                 ),
+            //                 icon: const Icon(Icons.arrow_forward),
+            //                 label: const Text('Continue'),
+            //               ),
+            //             ],
+            //           ),
+
+            //           const SizedBox(height: 12),
+
+            //           // Start over button
+            //           TextButton.icon(
+            //             onPressed: () => _retryAuthentication(),
+            //             style: TextButton.styleFrom(
+            //               foregroundColor: Colors.grey.shade600,
+            //             ),
+            //             icon: const Icon(Icons.refresh, size: 18),
+            //             label: const Text('Start Over'),
+            //           ),
+            //         ],
+            //       ),
+            //     ],
+            //   ),
+            // ),
+
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.shade200, width: 2),
+                color: Colors.white, // White background
+                borderRadius: BorderRadius.circular(16), // Rounded corners
+                // No border
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.verified_user,
                     size: 80,
-                    color: Colors.green.shade600,
+                    color: Colors.blue, // Icon in blue
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -237,68 +326,41 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: Colors.blue, // Text in blue
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'National ID authentication successful',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.green.shade700,
+                      color: Colors.blue, // Text in blue
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Action buttons
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: () => setState(() => _showUserData = true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            ),
-                            icon: const Icon(Icons.person),
-                            label: const Text('View Data'),
-                          ),
-                          
-                          ElevatedButton.icon(
-                            onPressed: () => ref.read(stepperProvider.notifier).nextStep(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            ),
-                            icon: const Icon(Icons.arrow_forward),
-                            label: const Text('Continue'),
-                          ),
-                        ],
+
+                  // View Data button
+                  ElevatedButton.icon(
+                    onPressed: () => setState(() => _showUserData = true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue, // Button blue
+                      foregroundColor: Colors.white, // Icon and text white
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Start over button
-                      TextButton.icon(
-                        onPressed: () => _retryAuthentication(),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.grey.shade600,
-                        ),
-                        icon: const Icon(Icons.refresh, size: 18),
-                        label: const Text('Start Over'),
-                      ),
-                    ],
+                      elevation: 2,
+                    ),
+                    icon: const Icon(Icons.person),
+                    label: const Text('View Data'),
                   ),
                 ],
               ),
-            ),
+            )
           ],
-          
+
           // Error state
           if (faydaState.error != null) ...[
             Container(
@@ -366,9 +428,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // User data cards
           _buildDataCard('Personal Information', [
             _buildDataRow('Full Name', userData.name),
@@ -380,7 +442,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             if (userData.gender != null)
               _buildDataRow('Gender', userData.gender!),
           ]),
-          
+
           if (userData.address != null) ...[
             const SizedBox(height: 16),
             _buildDataCard('Address Information', [
@@ -390,9 +452,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 _buildDataRow('Region', userData.address!.region!),
             ]),
           ],
-          
+
           const SizedBox(height: 24),
-          
+
           // Continue button
           SizedBox(
             width: double.infinity,

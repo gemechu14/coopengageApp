@@ -12,6 +12,7 @@ import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/model/registration_data.dart';
 import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/national_id_provider.dart';
 import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/stepper_provider.dart';
+import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
 import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/services/registration_service.dart';
 import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/Signature.dart';
 import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/account_type_step.dart';
@@ -319,6 +320,9 @@ class _IndividualAccountByNationalIdState
                     print('Current step: ${stepperState.activeStep}');
 
                     if (stepperState.activeStep == 0) {
+                      print("gemechuugdfdfdffd ");
+                      print(nationalIdState);
+
                       if (nationalIdState.isAuthCompleted) {
                         if (nationalIdState.authResult != null) {
                           ref
@@ -580,6 +584,37 @@ class _IndividualAccountByNationalIdState
           ref
               .read(stepperProvider.notifier)
               .saveAuthenticationData(nationalIdState.authResult!);
+        }
+      }
+
+      // If still null, try Fayda authentication data as fallback
+      if (authId == null) {
+        print(
+            'AuthId still null, trying Fayda authentication state as fallback');
+        final faydaState = ref.read(faydaProvider);
+        if (faydaState.isCompleted &&
+            faydaState.userData != null &&
+            faydaState.userData!.sub.isNotEmpty) {
+          print('Found authId in Fayda state: ${faydaState.userData!.sub}');
+          authId = faydaState.userData!.sub;
+
+          // Convert Fayda data to expected format for stepper
+          final faydaAuthData = {
+            'id': faydaState.userData!.sub,
+            'name': faydaState.userData!.name,
+            'email': faydaState.userData!.email,
+            'phone_number': faydaState.userData!.phoneNumber,
+            'gender': faydaState.userData!.gender,
+            'birthdate': faydaState.userData!.birthdate,
+            'address': {
+              'country': faydaState.userData!.address?.country ?? 'Unknown',
+              'region': faydaState.userData!.address?.region ?? 'Unknown',
+            },
+          };
+
+          ref
+              .read(stepperProvider.notifier)
+              .saveAuthenticationData(faydaAuthData);
         }
       }
 
