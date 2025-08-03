@@ -7,7 +7,7 @@ class ApiService {
   /// Tests the API endpoint to verify connectivity
   static Future<ApiTestResult> testApiEndpoint() async {
     try {
-      final String baseUrl = AppConstants.baseUrl;
+      final String baseUrl = AppConstants.baseURL;
       final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url';
 
       final response = await http.get(
@@ -15,7 +15,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(const Duration(seconds: 10));
+      );
 
       return ApiTestResult(
         isSuccess: response.statusCode == 200,
@@ -34,15 +34,15 @@ class ApiService {
   /// Tests the WebSocket-based authentication endpoint
   static Future<ApiTestResult> testWebSocketAuthEndpoint() async {
     try {
-      final String baseUrl = AppConstants.baseUrl;
-      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=test_client';
+      final String baseUrl = AppConstants.baseURL;
+      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=12344';
 
       final response = await http.get(
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(const Duration(seconds: 10));
+      );
 
       return ApiTestResult(
         isSuccess: response.statusCode == 200,

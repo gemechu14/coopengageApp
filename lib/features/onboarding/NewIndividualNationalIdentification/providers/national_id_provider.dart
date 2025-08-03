@@ -1,9 +1,9 @@
-import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:coopengageplus/constants/config/config.dart';
 import '../services/websocket_service.dart';
+import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 
 // State class for National ID authentication
 class NationalIdState {
@@ -13,7 +13,6 @@ class NationalIdState {
   final String? errorMessage;
   final bool isAuthCompleted;
   final Map<String, dynamic>? authResult;
-  final bool useWebSocket;
   final String? clientId;
   final bool isWebSocketConnected;
 
@@ -24,7 +23,6 @@ class NationalIdState {
     this.errorMessage,
     this.isAuthCompleted = false,
     this.authResult,
-    this.useWebSocket = true, // Default to WebSocket
     this.clientId,
     this.isWebSocketConnected = false,
   });
@@ -36,7 +34,6 @@ class NationalIdState {
     String? errorMessage,
     bool? isAuthCompleted,
     Map<String, dynamic>? authResult,
-    bool? useWebSocket,
     String? clientId,
     bool? isWebSocketConnected,
   }) {
@@ -47,7 +44,6 @@ class NationalIdState {
       errorMessage: errorMessage ?? this.errorMessage,
       isAuthCompleted: isAuthCompleted ?? this.isAuthCompleted,
       authResult: authResult ?? this.authResult,
-      useWebSocket: useWebSocket ?? this.useWebSocket,
       clientId: clientId ?? this.clientId,
       isWebSocketConnected: isWebSocketConnected ?? this.isWebSocketConnected,
     );
@@ -68,18 +64,10 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         errorMessage: null,
       );
 
-      if (state.useWebSocket) {
-        // Use WebSocket-based authentication
-        await _callWebSocketAuth();
-      } else {
-        // Use traditional API authentication
-        await _callTraditionalAuth();
-      }
+      // Use WebSocket-based authentication
+      await _callWebSocketAuth();
     } catch (e) {
       print('NationalIdProvider: Authentication error: $e');
-      if (e.toString().contains('SocketException')) {
-        // Handle socket exception specifically
-      }
       state = state.copyWith(
         isError: true,
         errorMessage: e.toString(),
@@ -93,54 +81,29 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
     try {
       print('NationalIdProvider: Starting WebSocket authentication');
       
-      // Generate client ID
-      final clientId = WebSocketService.generateClientId();
+      // Reset WebSocket state to start fresh
+      WebSocketService.resetAuthentication();
+      
+      // Use the same clientId as WebSocket service
+      final clientId = "12344"; // Use consistent clientId
       
       state = state.copyWith(
         clientId: clientId,
         isWebSocketConnected: false,
       );
 
-      // Start WebSocket authentication
-      final result = await WebSocketService.authenticate();
+      // Initialize WebSocket and get authentication URL
+      final authUrl = await WebSocketService.initializeAuthentication();
       
       state = state.copyWith(
-        isAuthCompleted: true,
-        authResult: result,
+        authUrl: authUrl,
         isLoading: false,
         isWebSocketConnected: true,
       );
-      print('NationalIdProvider: WebSocket authentication completed successfully');
+      print('NationalIdProvider: WebSocket authentication URL received: $authUrl');
     } catch (e) {
       print('NationalIdProvider: WebSocket authentication failed: $e');
       
-      // Check if it's a WebSocket connection error
-      if (e.toString().contains('WebSocket') || e.toString().contains('Connection')) {
-        print('NationalIdProvider: Primary connection failed, falling back to alternative method');
-        
-        // Automatically fallback to alternative API
-        state = state.copyWith(
-          useWebSocket: false,
-          isLoading: true,
-          isError: false,
-          errorMessage: null,
-        );
-        
-        try {
-          await _callTraditionalAuth();
-          return; // Exit early if alternative auth succeeds
-        } catch (alternativeError) {
-          print('NationalIdProvider: Alternative method also failed: $alternativeError');
-          state = state.copyWith(
-            isLoading: false,
-            isError: true,
-            errorMessage: 'Both primary and alternative methods failed. Primary: $e. Alternative: $alternativeError',
-          );
-          return;
-        }
-      }
-      
-      // For other errors, don't fallback
       state = state.copyWith(
         isLoading: false,
         isError: true,
@@ -150,42 +113,7 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
     }
   }
 
-  // Traditional API authentication
-  Future<void> _callTraditionalAuth() async {
-    try {
-      print('NationalIdProvider: Starting traditional API authentication');
-      
-      // Construct the API URL
-      final String baseUrl = AppConstants.baseURL;
-      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url';
 
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 400));
-     
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData.containsKey('url')) {
-          final authUrl = responseData['url'];          
-
-          state = state.copyWith(
-            authUrl: authUrl,
-            isLoading: false,
-          );
-        } else {
-          throw Exception('No URL found in response');
-        }
-      } else {
-        throw Exception('API call failed with status: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('NationalIdProvider: Traditional API authentication failed: $e');
-      rethrow;
-    }
-  }
 
   // Account verification
   Future<Map<String, dynamic>?> verifyAccount(
@@ -259,23 +187,12 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
     state = state.copyWith(authUrl: null);
   }
 
-  // Toggle between WebSocket and traditional authentication
-  void toggleWebSocketMode() {
-    state = state.copyWith(useWebSocket: !state.useWebSocket);
-  }
 
-  // Set WebSocket mode explicitly
-  void setWebSocketMode(bool useWebSocket) {
-    state = state.copyWith(useWebSocket: useWebSocket);
-  }
-
-  // Get current authentication mode
-  String getAuthenticationMode() {
-    return state.useWebSocket ? 'Primary' : 'Alternative';
-  }
 
   // Reset state
   void reset() {
+    // Reset WebSocket state
+    // WebSocketService.resetAuthentication();
     state = const NationalIdState();
   }
 }

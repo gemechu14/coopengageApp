@@ -136,7 +136,7 @@ class _IndividualAccountByNationalIdState
             ),
           ),
           title: const Text(
-            'Individual Account',
+            'Individual Account1',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
