@@ -1,84 +1,98 @@
-# ✅ Smart Data Persistence - Hold Data When Navigating Back
+# ✅ Smart Data Lifecycle - Perfect Balance Achieved
 
-## 🎯 New Behavior
+## 🎯 Enhanced Behavior (UPDATED)
 
-### **Smart Reset Logic:**
-- ✅ **First visit**: Resets and starts fresh authentication
-- ✅ **Navigate back**: Keeps/holds previous authentication data
+### **Smart Detection Logic:**
+- ✅ **Fresh page visit**: Clears data and starts fresh authentication  
+- ✅ **Step navigation**: Holds/persists authentication data
 - ✅ **Manual reset**: "Start Over" button to reset when needed
 
-## 🔧 **How It Works:**
+## 🔧 **How It Works (UPDATED):**
 
-### **First Time on Page:**
+### **Fresh Visit Detection:**
 ```dart
-// Check if authentication data exists
-if (!currentState.isCompleted || currentState.userData == null) {
-  // No data exists - start fresh authentication
+// Check stepper state to detect fresh vs navigation
+final stepperState = ref.read(stepperProvider);
+bool isFreshVisit = (stepperState.authId == null && 
+                    stepperState.fullName == null && 
+                    stepperState.email == null);
+```
+
+### **Smart Decision Logic:**
+```dart
+if (isFreshVisit) {
+  // 🔄 NEW SESSION: Clear everything and start fresh
+  reset() → startAuthentication()
+} else if (faydaState.isCompleted && faydaState.userData != null) {
+  // ✅ STEP NAVIGATION: Keep existing data
+  // Show VERIFIED state immediately
+} else {
+  // 🚀 STEP NAVIGATION BUT NO DATA: Start authentication
   reset() → startAuthentication()
 }
 ```
 
-### **Returning from Next Step:**
-```dart
-// Authentication data exists
-if (currentState.isCompleted && currentState.userData != null) {
-  // Keep existing data - show VERIFIED state
-  // No reset, no new authentication
-}
+## 🎯 **User Experience (UPDATED):**
+
+### **Scenario 1: Fresh Page Visit (New Session)**
+```
+1. User opens app → Enter Step 1 (fresh session)
+2. Detection: No stepper auth data → Fresh visit detected 🔄
+3. Action: Clear Fayda data → Start fresh authentication
+4. Flow: Loading → WebView → Authentication → VERIFIED ✅
 ```
 
-## 🎯 **User Experience:**
-
-### **Scenario 1: First Visit**
+### **Scenario 2: Step Navigation (Back from Next Step)**
 ```
-1. Enter Step 1 (first time)
-2. No previous data → Auto-resets → Starts authentication
-3. Complete authentication → Shows VERIFIED
-4. Click "Continue" → Go to Step 2
-```
-
-### **Scenario 2: Navigate Back**
-```
-1. On Step 2 → Click "Previous" → Back to Step 1
-2. Previous data exists → Shows VERIFIED immediately
-3. Can see authentication results
-4. Can click "Continue" to go forward again
+1. User completed authentication on Step 1 ✅
+2. User clicked "Continue" → Went to Step 2 ✅  
+3. User clicked "Previous" → Back to Step 1 ↩️
+4. Detection: Stepper has auth data → Step navigation detected ✅
+5. Action: Keep existing Fayda data → Show VERIFIED immediately ✅
+6. No re-authentication needed! 🎯
 ```
 
-### **Scenario 3: Manual Reset**
+### **Scenario 3: Manual Reset (Always Available)**
 ```
-1. On Step 1 with existing data → Shows VERIFIED
-2. Click "Start Over" → Resets data → Starts fresh authentication
+1. On Step 1 with any data → Shows current state
+2. Click "Start Over" → Resets all data → Starts fresh authentication
 3. Complete new authentication → Shows new VERIFIED results
 ```
 
-## ✅ **Benefits:**
+## ✅ **Enhanced Benefits:**
 
-### **Data Persistence**
-- ✅ **Keeps authentication data** when navigating between steps
-- ✅ **No re-authentication** needed when going back
-- ✅ **Smooth navigation** experience
+### **Smart Fresh Sessions**
+- ✅ **Always starts clean** on new app launches  
+- ✅ **No stale data** from previous sessions
+- ✅ **Consistent fresh experience** every time
+- ✅ **Intelligent detection** of new vs returning users
 
-### **Fresh Start When Needed**
-- ✅ **Auto-resets** only on genuine first visit
-- ✅ **Manual reset** option always available
-- ✅ **Clean slate** when starting new session
+### **Seamless Step Navigation**
+- ✅ **Preserves authentication** when navigating back
+- ✅ **No re-authentication** needed between steps
+- ✅ **Instant VERIFIED display** when returning
+- ✅ **Smooth multi-step flow** experience
 
-### **User Control**
-- ✅ **See previous results** when returning
-- ✅ **Continue where left off**
-- ✅ **Start over** when desired
+### **Perfect Balance**
+- ✅ **Fresh when needed** (new sessions)
+- ✅ **Persistent when useful** (step navigation) 
+- ✅ **Manual control** always available
+- ✅ **Intelligent behavior** based on context
 
 ## 🎮 **Available Actions:**
 
-### **When Returning with Data:**
-- **"View Data"** - See authentication details
+### **Fresh Visit (New Session):**
+- Shows loading → WebView → Authentication → VERIFIED state
+- **"View Data"** - See authentication details  
+- **"Continue"** - Go to next step
+- **"Start Over"** - Reset and authenticate again
+
+### **Step Navigation (Returning with Data):**
+- Shows VERIFIED state immediately (no loading/authentication)
+- **"View Data"** - See previous authentication details
 - **"Continue"** - Go to next step (keeping data)
 - **"Start Over"** - Reset and authenticate again
 
-### **When First Visiting:**
-- Shows loading → Authentication → VERIFIED state
-
 ---
 
-**Perfect! Now data persists when navigating back, but resets only on genuine first visits.** 🎯✅ 
+**Perfect! Now you get fresh authentication on new visits but keep your data during step navigation!** 🎯✅ 

@@ -4,6 +4,7 @@ import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/Indivudualaccount/ViewCustomerInfoPage.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/screens/registration_screen.dart';
 import 'package:coopengageplus/features/onboarding/pages/userInfoList/OrganizationDetailPage.dart';
+import 'package:coopengageplus/features/onboarding/pages/userInfoList/JointAccountDetailPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/verifyCustomerInfo.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/main.dart';
@@ -187,7 +188,9 @@ class _UserInfoPageState extends State<UserListPage> {
                     Expanded(
                       child: selectedCustomerType == 'ORGANIZATION'
                           ? _buildOrganizationList()
-                          : filteredUsers.isEmpty
+                          : selectedCustomerType == 'JOINT'
+                              ? _buildJointAccountList()
+                              : filteredUsers.isEmpty
                               ? const Padding(
                                   padding: EdgeInsets.only(top: 50),
                                   child: Column(
@@ -526,5 +529,192 @@ class _UserInfoPageState extends State<UserListPage> {
         );
       },
     );
+  }
+
+  Widget _buildJointAccountList() {
+    if (filteredUsers.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 50),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(height: 40),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.people, size: 64, color: Colors.blue),
+                  SizedBox(height: 5),
+                  Text(
+                    'No Joint Accounts Found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final List limitedJointAccounts = filteredUsers.take(10).toList();
+
+    return ListView.builder(
+      itemCount: limitedJointAccounts.length,
+      itemBuilder: (context, index) {
+        final jointAccount = limitedJointAccounts[index];
+        final String accountId = jointAccount['id']?.toString() ?? '';
+        final String accountType = jointAccount['accountType'] ?? '';
+        final String status = jointAccount['status'] ?? '';
+        final double initialDeposit = (jointAccount['initialDeposit'] ?? 0.0).toDouble();
+        final List customers = jointAccount['customersInfo'] ?? [];
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+          child: InkWell(
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                builder: (modalContext) =>
+                    JointAccountDetailPage(jointAccount: jointAccount, parentContext: context),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.people,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Joint Account #$accountId',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            accountType,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.attach_money, size: 14, color: Colors.green),
+                              const SizedBox(width: 4),
+                              Text(
+                                'ETB ${initialDeposit.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(status),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  status,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          '${customers.length}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        Text(
+                          'Holders',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'APPROVED':
+        return Colors.green;
+      case 'PENDING':
+        return Colors.orange;
+      case 'REJECTED':
+        return Colors.red;
+      case 'INITIAL':
+        return Colors.blue;
+      case 'REGISTERED':
+        return Colors.purple;
+      case 'UNAUTHORIZED':
+        return Colors.red[700]!;
+      case 'AUTHORIZED':
+        return Colors.blue[700]!;
+      case 'UNSETTLED':
+        return Colors.amber;
+      default:
+        return Colors.grey;
+    }
   }
 }

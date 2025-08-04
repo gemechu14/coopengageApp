@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:coopengageplus/Constant/SliderImage.dart';
+
 import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/common_widgets/chart/AchievementBarChart.dart';
-import 'package:coopengageplus/common_widgets/chart/SkeletonBarChart.dart';
+
 import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/features/onboarding/pages/userInfoList/userListView.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
@@ -13,7 +11,6 @@ import 'package:coopengageplus/service/UserService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class Dashboard extends StatefulWidget {
   final VoidCallback onSettingsTap;
@@ -30,7 +27,6 @@ class _DashboardState extends State<Dashboard> {
     _fetchToken();
     fetchUserCounts();
     fetchUsers();
-    fetchData1();
   }
 
   List<Map<String, dynamic>> currentMonthData1 = [
@@ -225,7 +221,14 @@ class _DashboardState extends State<Dashboard> {
                               Align(
                                 alignment: Alignment.bottomLeft,
                                 child: isLoadingCount[title]!
-                                    ? const CircularProgressIndicator()
+                                    ? Text(
+                                        "-",
+                                        style: TextStyle(
+                                          fontSize: valueFontSize,
+                                          fontWeight: FontWeight.bold,
+                                          color: iconColors[title],
+                                        ),
+                                      )
                                     : Text(
                                         getDisplayCount(title),
                                         style: TextStyle(
@@ -246,75 +249,124 @@ class _DashboardState extends State<Dashboard> {
               ),
               // Rest of your widgets...
 
-              const SizedBox(height: 10),
-
-              if (!isOnline)
-                Container(
-                  height: 205,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: CarouselSlider(
-                          items: SliderImages.items.map((item) {
-                            return Container(
-                              width: double.infinity,
-                              // height: 90,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.0),
-                                image: DecorationImage(
-                                  image: (item as Image).image,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          options: CarouselOptions(
-                            autoPlay: true,
-                            height: 190, // Fixed height
-                            autoPlayCurve: Curves.fastOutSlowIn,
-                            autoPlayAnimationDuration:
-                                const Duration(milliseconds: 1100),
-                            autoPlayInterval: const Duration(seconds: 4),
-                            enlargeCenterPage: true,
-                            onPageChanged: (index, reason) {
-                              setState(() {
-                                currentItem = index;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      AnimatedSmoothIndicator(
-                        activeIndex: currentItem,
-                        count: SliderImages.items.length,
-                        effect: const WormEffect(
-                          dotHeight: 13,
-                          dotWidth: 13,
-                          spacing: 5,
-                          activeDotColor: Colors.blue,
-                          paintStyle: PaintingStyle.fill,
-                        ),
+              const SizedBox(height: 20),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF1E40AF), // Deep blue
+                        Color(0xFF3B82F6), // Medium blue
+                        Color.fromARGB(255, 51, 56, 57), // Cyan accent
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
+                  child: Card(
+                    color: Colors.transparent,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Container(
+                      height: 120,
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          // Left: Content
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.account_balance,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Cooperative Bank of Oromia',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                // const Text(
+                                //   'Empowering Communities, Transforming Lives.',
+                                //   style: TextStyle(
+                                //     color: Colors.white,
+                                //     fontSize: 11,
+                                //     fontStyle: FontStyle.italic,
+                                //     fontWeight: FontWeight.w500,
+                                //   ),
+                                // ),
+                                const SizedBox(height: 1),
+                                // Text(
+                                //   'Welcome New Members to Our Banking Family',
+                                //   style: TextStyle(
+                                //     color: Colors.white.withOpacity(0.85),
+                                //     fontSize: 12,
+                                //     fontWeight: FontWeight.w500,
+                                //   ),
+                                // ),
+                                Text(
+                                  'Transforming Lives — One Customer Registration at a Time',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.85),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          // Right: Action area with icon
+                          Container(
+                            width: 60,
+                            alignment: Alignment.center,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.25),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.edit_note_rounded,
+                                color: Colors.white,
+                                size: 26,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
+              ),
 
-              // AnalyticsSection(),
-              if (isOnline)
-                Container(
-                    height: 235,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: currentMonthData != null
-                          ? AchievementBarChart(
-                              data: currentMonthData!,
-                              width: 10,
-                            )
-                          : Center(child: SkeletonBarChart()),
-                    )),
-
-              if (!isOnline) const SizedBox(height: 30),
               if (localCustomers > 0)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -343,8 +395,8 @@ class _DashboardState extends State<Dashboard> {
                             fetchUserCounts();
                           });
                         },
-                        child: const Text(
-                          'Sync Now',
+                        child: Text(
+                          'rSync Now',
                           style: TextStyle(color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -546,40 +598,4 @@ class _DashboardState extends State<Dashboard> {
       });
     }
   }
-
-  Future<void> fetchData1() async {
-    final storage = FlutterSecureStorage();
-    String? token = await storage.read(key: "token");
-
-    if (token != null && token.isNotEmpty) {
-      try {
-        var decodedToken = JwtDecoder.decode(token);
-        String userId = decodedToken['userId'].toString();
-
-        String url = '/api/v1/users/report';
-        var response = await networkHandler.fetchData(url);
-
-        print("response");
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          // Parse the response data
-          final data = jsonDecode(response.body);
-          print(data);
-          //  var data = response.data['currentMonth'];
-          var currentMonthData = data['currentMonthTargetAchievements'];
-
-          print("current month");
-          print(currentMonthData);
-          setState(() {
-            this.currentMonthData =
-                List<Map<String, dynamic>>.from(currentMonthData);
-            print(currentMonthData);
-          });
-        }
-      } catch (e) {
-        print("Error: $e");
-      }
-    }
-  }
-
 }

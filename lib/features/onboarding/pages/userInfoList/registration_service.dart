@@ -1,4 +1,3 @@
-import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;

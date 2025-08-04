@@ -1,3 +1,4 @@
+import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -24,12 +25,19 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     super.initState();
     _initializeWebView();
 
-    // Only start fresh authentication if no previous successful data exists
+    // Check if this is a fresh page visit vs step navigation
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentState = ref.read(faydaProvider);
+      final stepperState = ref.read(stepperProvider);
+      final currentFaydaState = ref.read(faydaProvider);
 
-      // If no completed authentication data exists, start fresh
-      if (!currentState.isCompleted || currentState.userData == null) {
+      // Fresh visit: No stepper auth data exists (new session)
+      bool isFreshVisit = (stepperState.authId == null &&
+          stepperState.fullName == null &&
+          stepperState.email == null);
+
+      if (isFreshVisit) {
+        print(
+            '🔄 [Widget] Fresh page visit detected - clearing data and starting fresh');
         ref.read(faydaProvider.notifier).reset();
         // Small delay to ensure reset is complete, then auto-start
         Future.delayed(const Duration(milliseconds: 500), () {
@@ -37,8 +45,22 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             _startAuthentication();
           }
         });
+      } else if (currentFaydaState.isCompleted &&
+          currentFaydaState.userData != null) {
+        print(
+            '✅ [Widget] Step navigation detected - keeping existing Fayda data');
+        // Keep existing data (user navigated back from next step)
+      } else {
+        print(
+            '🚀 [Widget] Step navigation but no Fayda data - starting authentication');
+        // In step flow but no Fayda data, start authentication
+        ref.read(faydaProvider.notifier).reset();
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            _startAuthentication();
+          }
+        });
       }
-      // If data exists, just keep it (user navigated back from next step)
     });
   }
 
@@ -592,6 +614,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   void _startAuthentication() {
     print('🚀 [Widget] Auto-starting authentication...');
     const baseUrl = 'http://10.8.100.111:9062/';
+    // const baseUrl = AppConstants.baseURL;
     ref.read(faydaProvider.notifier).startAuthentication(baseUrl);
   }
 
