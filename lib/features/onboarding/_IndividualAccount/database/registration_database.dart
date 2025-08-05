@@ -1,4 +1,4 @@
-import 'dart:io';
+// import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -68,10 +68,8 @@ class RegistrationDatabase {
     
     try {
       final id = await db.insert(_tableName, data);
-      print('✅ Customer inserted successfully with ID: $id');
       return id;
     } catch (e) {
-      print('❌ Error inserting customer: $e');
       throw Exception('Failed to insert customer: $e');
     }
   }
@@ -91,14 +89,12 @@ class RegistrationDatabase {
       );
       
       if (rowsAffected > 0) {
-        print('✅ Customer updated successfully. Rows affected: $rowsAffected');
       } else {
-        print('⚠️ No rows were updated for customer ID: $id');
+     
       }
       
       return rowsAffected;
     } catch (e) {
-      print('❌ Error updating customer: $e');
       throw Exception('Failed to update customer: $e');
     }
   }
@@ -118,7 +114,6 @@ class RegistrationDatabase {
       }
       return null;
     } catch (e) {
-      print('❌ Error getting customer: $e');
       throw Exception('Failed to get customer: $e');
     }
   }
@@ -138,7 +133,6 @@ class RegistrationDatabase {
       }
       return null;
     } catch (e) {
-      print('❌ Error getting customer by phone: $e');
       throw Exception('Failed to get customer by phone: $e');
     }
   }
@@ -149,7 +143,6 @@ class RegistrationDatabase {
     try {
       return await db.query(_tableName, orderBy: 'createdAt DESC');
     } catch (e) {
-      print('❌ Error getting all customers: $e');
       throw Exception('Failed to get customers: $e');
     }
   }
@@ -165,7 +158,6 @@ class RegistrationDatabase {
         orderBy: 'createdAt DESC',
       );
     } catch (e) {
-      print('❌ Error getting customers by status: $e');
       throw Exception('Failed to get customers by status: $e');
     }
   }
@@ -180,10 +172,8 @@ class RegistrationDatabase {
         whereArgs: [id],
       );
       
-      print('✅ Customer deleted successfully. Rows affected: $rowsAffected');
       return rowsAffected;
     } catch (e) {
-      print('❌ Error deleting customer: $e');
       throw Exception('Failed to delete customer: $e');
     }
   }
@@ -203,7 +193,6 @@ class RegistrationDatabase {
       final result = await db.rawQuery('SELECT COUNT(*) as count FROM $_tableName');
       return result.first['count'] as int;
     } catch (e) {
-      print('❌ Error getting customer count: $e');
       throw Exception('Failed to get customer count: $e');
     }
   }
@@ -219,7 +208,6 @@ class RegistrationDatabase {
         orderBy: 'createdAt DESC',
       );
     } catch (e) {
-      print('❌ Error searching customers: $e');
       throw Exception('Failed to search customers: $e');
     }
   }
@@ -229,9 +217,7 @@ class RegistrationDatabase {
     
     try {
       await db.delete(_tableName);
-      print('✅ All customer data cleared successfully');
     } catch (e) {
-      print('❌ Error clearing customer data: $e');
       throw Exception('Failed to clear customer data: $e');
     }
   }

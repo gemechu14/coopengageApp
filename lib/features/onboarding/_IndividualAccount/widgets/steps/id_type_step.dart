@@ -823,12 +823,7 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
       formCompleted: false, // Always false for this step
     );
 
-    print("✅ ID Type Step Data Updated:");
-    print("Branch: $_selectedBranch");
-    print("Document Type: $_selectedDocumentType");
-    print("Front Image: ${frontImageBytes != null ? 'Uploaded' : 'Not uploaded'}");
-    print("Back Image: ${backImageBytes != null ? 'Uploaded' : 'Not uploaded'}");
-    print("Is Online: $isOnline");
+  
   }
 
   void _showSuccessSnackBar(String message) {

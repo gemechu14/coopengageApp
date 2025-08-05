@@ -1,7 +1,8 @@
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/account_type_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/account_type.dart';
-import '../providers/account_type_provider.dart';
+// import '../providers/account_type_provider.dart';
 import '../providers/stepper_provider.dart';
 
 /// Account Type Selection Step Widget
@@ -467,8 +468,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       spacing: 12,
       runSpacing: 4,
       children: [
-        _buildDetailChip(
-            'Age: ${accountType.minAge}-${accountType.maxAge}', textColor),
+        // _buildDetailChip(
+        //     'Age: ${accountType.minAge}-${accountType.maxAge}', textColor),
         _buildDetailChip('Min: ${accountType.minAmount} ETB', textColor),
         if (accountType.sex != 'BOTH')
           _buildDetailChip(accountType.sex, textColor),

@@ -242,7 +242,8 @@ dependencies:
   signature: ^5.5.0
   http: ^1.2.0
   flutter_charts: ^0.5.2
-  flutter_secure_storage: ^9.0.0
+  # flutter_secure_storage: ^9.0.0
+  flutter_secure_storage: ^9.2.4
   country_list_pick: ^1.0.1+6
   logger: ^2.1.0
   image_picker: ^1.0.7
@@ -316,7 +317,8 @@ dependencies:
   crop_your_image: ^2.0.0
   enhance_stepper: ^1.0.2
   expandable: ^5.0.1
-  uuid: ^4.4.2
+  # uuid: ^4.4.2
+  uuid: ^4.5.1
   web_socket_channel: ^3.0.3
 dev_dependencies:
   flutter_test:

@@ -46,7 +46,7 @@ class RegistrationController {
 
       // Always use the latest customerId from state if userId is not provided
       final currentCustomerId = userId ?? _ref.read(registrationDataProvider).customerId;
-      print('[CONTROLLER] Using userId/customerId: $currentCustomerId');
+      // print('[CONTROLLER] Using userId/customerId: $currentCustomerId');
 
       // Submit to service
       final serviceResult = await _registrationService.submitBasicInfo(
@@ -57,7 +57,7 @@ class RegistrationController {
         userId: currentCustomerId,
       );
 
-      print('[CONTROLLER] ServiceResult.userId: ${serviceResult.userId}');
+
 
       if (serviceResult.isSuccess && serviceResult.userId != null) {
         // Store the userId if it's returned (new user created or updated)
@@ -69,14 +69,12 @@ class RegistrationController {
           productType: productType,
           customerId: serviceResult.userId!, // Store the new or updated customer ID
         );
-        print("=== Basic Info Step Debug ===");
-        print("New customer ID stored: ${serviceResult.userId}");
+   
       }
       // Store the existing user ID (the registering person) if available
       if (serviceResult.hasData) {
         final existingUserId = serviceResult.getData<String>('existingUserId');
         if (existingUserId != null) {
-          print('Registering person ID: $existingUserId');
         }
       }
 
@@ -127,10 +125,7 @@ class RegistrationController {
       final userToUse = userId ?? registrationData.customerId;
 
       // Debug prints
-      print("=== ID Type Step Debug ===");
-      print("Provided userId: $userId");
-      print("Registration data customerId: ${registrationData.customerId}");
-      print("Final userToUse: $userToUse");
+
       // print("Is online: $isOnline");
 
       // Submit to service
@@ -486,10 +481,7 @@ class RegistrationController {
     String? userId,
   }) async {
     try {
-      print("=== handleAccountTypeStep called ===");
-      print("accountType ID: $accountType");
-      print("isOnline: $isOnline");
-      print("userId: $userId");
+
 
       _formValidationNotifier.clearAllErrors();
 
@@ -916,11 +908,9 @@ class RegistrationController {
     }
   }
 
-  // Method to submit the entire registration
   Future<bool> submitRegistration(WidgetRef ref) async {
     try {
-      // This would typically submit all the collected data
-      // For now, we'll just mark all steps as complete
+
       for (int i = 0; i < 9; i++) {
         _stepCompletionNotifier.markStepComplete(i);
       }

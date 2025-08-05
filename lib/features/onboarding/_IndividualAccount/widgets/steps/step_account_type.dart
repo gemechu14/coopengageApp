@@ -108,9 +108,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
     final sex = registrationData.sex;
     final productType = registrationData.productType;
 
-    print(dateOfBirth);
-    print(initialDeposit);
-    print(productType);
+ 
     if (dateOfBirth == null || initialDeposit == null || productType == null) {
       setState(() {
         filteredAccountTypes = [];
@@ -151,9 +149,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
           // Check product type requirements (Conventional vs Alhuda)
           final meetsProductTypeRequirement =
               accountBankingType.toUpperCase() == productType.toUpperCase();
-          print(meetsProductTypeRequirement);
-          print(meetsGenderRequirement);
-          print(meetsDepositRequirement);
+         
           return meetsAgeRequirement &&
               meetsDepositRequirement &&
               meetsGenderRequirement &&
@@ -588,75 +584,4 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
     );
   }
 
-  // Method to validate and save data (called from parent)
-
-  // Method to handle registration (similar to your previous code)
-  // Future<bool> handleRegistration() async {
-  //   try {
-  //     print("dfjdnfdjfjdjddfnjdjjfd");
-  //     final registrationData = ref.read(registrationDataProvider);
-  //     final isOnline = ref.read(connectivityProvider);
-  //     final userId = ref.read(userIdProvider);
-
-  //     print(selectedAccountTypeId);
-  //     print("daaaaa");
-
-  //     var id;
-  //     var selectedAccountTypeName;
-
-  //     if (selectedAccountTypeId != null) {
-  //       var accountTypeDetails = getAccountTypeDetails(selectedAccountTypeId!);
-
-  //       id = accountTypeDetails != null ? accountTypeDetails['id'] : null;
-  //       selectedAccountTypeName = accountTypeDetails?['name'];
-  //     }
-
-  //     if (id == null) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text('Please select account type'),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //       return false; // Stop execution if invalid
-  //     }
-  //     print("kfdkfnjjfdndjfjdfjdfjdjfjdjfj");
-  //     print(id);
-  //     // Use the registration service to submit account type
-  //     final registrationService = ref.read(registrationServiceProvider);
-  //     final result = await registrationService.submitAccountType(
-  //       accountType: id.toString(),
-  //       isOnline: isOnline,
-  //       userId: userId,
-  //     );
-
-  //     if (result.isSuccess) {
-  //       // Update local registration data (save the ID, not the name)
-  //       ref
-  //           .read(registrationDataProvider.notifier)
-  //           .updateAccountType(id.toString());
-  //       ref.read(registrationDataProvider.notifier).updateProgress(87.5);
-
-  //       return true;
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content:
-  //               Text(result.errorMessage ?? 'Failed to update account type'),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     print('Error in handleRegistration: $e');
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text('An error occurred: $e'),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //     return false;
-  //   }
-  // }
 }

@@ -249,123 +249,152 @@ class _DashboardState extends State<Dashboard> {
               ),
               // Rest of your widgets...
 
-              const SizedBox(height: 20),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF1E40AF), // Deep blue
-                        Color(0xFF3B82F6), // Medium blue
-                        Color.fromARGB(255, 51, 56, 57), // Cyan accent
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Card(
-                    color: Colors.transparent,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Container(
-                      height: 120,
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // Left: Content
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.account_balance,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Cooperative Bank of Oromia',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                // const Text(
-                                //   'Empowering Communities, Transforming Lives.',
-                                //   style: TextStyle(
-                                //     color: Colors.white,
-                                //     fontSize: 11,
-                                //     fontStyle: FontStyle.italic,
-                                //     fontWeight: FontWeight.w500,
-                                //   ),
-                                // ),
-                                const SizedBox(height: 1),
-                                // Text(
-                                //   'Welcome New Members to Our Banking Family',
-                                //   style: TextStyle(
-                                //     color: Colors.white.withOpacity(0.85),
-                                //     fontSize: 12,
-                                //     fontWeight: FontWeight.w500,
-                                //   ),
-                                // ),
-                                Text(
-                                  'Transforming Lives — One Customer Registration at a Time',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.85),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                          // Right: Action area with icon
-                          Container(
-                            width: 60,
-                            alignment: Alignment.center,
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.25),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.edit_note_rounded,
-                                color: Colors.white,
-                                size: 26,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+              const SizedBox(height: 15),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white), // Optional border
+                  borderRadius:
+                      BorderRadius.circular(16), // Adjust the radius as needed
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                      16), // Same as container's borderRadius
+                  child: Image.asset(
+                    "assets/open_1.png",
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    height: 150,
+                    fit: BoxFit.fill,
                   ),
                 ),
               ),
+
+              // Container(
+              //   decoration: BoxDecoration(
+              //     border: Border.all(color: Colors.white), // Optional border
+              //     borderRadius:
+              //         BorderRadius.circular(16), // Adjust the radius as needed
+              //   ),
+              //   child: Image.asset(
+              //     "assets/alternet123.png",
+              //     width: MediaQuery.of(context).size.width * 0.9,
+              //     height: 150,
+              //     fit: BoxFit.fill,
+              //   ),
+              // ),
+              // Padding(
+              //   padding:
+              //       const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              //   child: Container(
+              //     decoration: BoxDecoration(
+              //       gradient: const LinearGradient(
+              //         begin: Alignment.topLeft,
+              //         end: Alignment.bottomRight,
+              //         colors: [
+              //           Color(0xFF0891B2), // Cyan
+              //           Color(0xFF0EA5E9), // Sky blue
+              //           Color(0xFF3B82F6), // Blue
+              //           Color(0xFF1E40AF), // Deep blue
+              //         ],
+              //       ),
+              //       borderRadius: BorderRadius.circular(17),
+              //       boxShadow: [
+              //         BoxShadow(
+              //           color: Colors.cyan.withOpacity(0.3),
+              //           blurRadius: 6,
+              //           offset: const Offset(0, 8),
+              //         ),
+              //       ],
+              //     ),
+              //     child: Container(
+              //       height: 120,
+              //       padding: const EdgeInsets.all(16),
+              //       child: Row(
+              //         children: [
+              //           // Left: Content
+              //           Expanded(
+              //             child: Column(
+              //               mainAxisAlignment: MainAxisAlignment.center,
+              //               crossAxisAlignment: CrossAxisAlignment.start,
+              //               children: [
+              //                 Row(
+              //                   children: [
+              //                     Container(
+              //                       width: 32,
+              //                       height: 32,
+              //                       decoration: BoxDecoration(
+              //                         color: Colors.white.withOpacity(0.2),
+              //                         borderRadius: BorderRadius.circular(8),
+              //                       ),
+              //                       child: const Icon(
+              //                         Icons.account_balance,
+              //                         color: Colors.white,
+              //                         size: 20,
+              //                       ),
+              //                     ),
+              //                     const SizedBox(width: 12),
+              //                     Expanded(
+              //                       child: Text(
+              //                         'Cooperative Bank of Oromia',
+              //                         style: TextStyle(
+              //                           color: Colors.white,
+              //                           fontSize: 14,
+              //                           fontWeight: FontWeight.bold,
+              //                         ),
+              //                       ),
+              //                     ),
+              //                   ],
+              //                 ),
+
+              //                 const SizedBox(height: 1),
+              //                 Text(
+              //                   "You're not just onboarding customers — you're transforming lives.",
+              //                   // "Bank Smarter. Live Better. Start with Cooperative Bank of Oromia.",
+              //                   style: TextStyle(
+              //                     color: Colors.white.withOpacity(0.9),
+              //                     fontSize: 12,
+              //                     fontWeight: FontWeight.w500,
+              //                     fontStyle: FontStyle.italic,
+              //                   ),
+              //                 ),
+              //                 const SizedBox(height: 4),
+              //                 // Text(
+              //                 //   "Your Trusted Banking Partner",
+              //                 //   style: TextStyle(
+              //                 //     color: Colors.white.withOpacity(0.8),
+              //                 //     fontSize: 11,
+              //                 //     fontWeight: FontWeight.w400,
+              //                 //   ),
+              //                 // ),
+              //               ],
+              //             ),
+              //           ),
+              //           // Right: Logo area
+              //           Container(
+              //             width: 60,
+              //             alignment: Alignment.center,
+              //             child: Container(
+              //               width: 50,
+              //               height: 50,
+              //               decoration: BoxDecoration(
+              //                 // color: Colors.white.withOpacity(0.2),
+              //                 borderRadius: BorderRadius.circular(1),
+              //                 // border: Border.all(
+              //                 //   color: Colors.white.withOpacity(0.3),
+              //                 //   width: 2,
+              //                 // ),
+              //               ),
+              //               child: const Icon(
+              //                 Icons.note_alt,
+              //                 color: Colors.white,
+              //                 size: 50,
+              //               ),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
 
               if (localCustomers > 0)
                 Padding(
@@ -396,7 +425,7 @@ class _DashboardState extends State<Dashboard> {
                           });
                         },
                         child: Text(
-                          'rSync Now',
+                          'Sync Now',
                           style: TextStyle(color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(

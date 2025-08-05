@@ -4,6 +4,7 @@ class AppConstants {
 ///TEST SERVER
   static const baseUrl = "http://10.8.100.111:9062/api/v1";
   static const baseURL = 'http://10.8.100.111:9062';
+  // static const BASEURL= 'http://10.8.100.111:9062';
   
   // WebSocket specific configuration
   static const webSocketUrl = 'ws://10.8.100.111:9062/ws/fayda';

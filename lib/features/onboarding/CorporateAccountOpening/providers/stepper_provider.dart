@@ -234,29 +234,23 @@ class StepperNotifier extends StateNotifier<StepperState> {
   // Navigate to next step with safety checks
   void nextStep() {
     if (state.activeStep < maxStep) {
-      print(
-          'Stepper: Moving from step ${state.activeStep} to step ${state.activeStep + 1}');
+  
       state = state.copyWith(activeStep: state.activeStep + 1);
-      print('Stepper: Successfully moved to step ${state.activeStep}');
     }
   }
 
   // Navigate to previous step with safety checks
   void previousStep() {
     if (state.activeStep > 0) {
-      print(
-          'Stepper: Moving from step ${state.activeStep} to step ${state.activeStep - 1}');
+
       state = state.copyWith(activeStep: state.activeStep - 1);
-      print('Stepper: Successfully moved to step ${state.activeStep}');
     }
   }
 
   // Navigate to specific step with safety checks
   void goToStep(int step) {
     if (step >= 0 && step <= maxStep) {
-      print('Stepper: Moving to specific step $step');
       state = state.copyWith(activeStep: step);
-      print('Stepper: Successfully moved to step ${state.activeStep}');
     }
   }
 
@@ -371,10 +365,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
   }
 
   void updateMemberFullName(int index, String fullName) {
-    print("dfdfdkfkdkfkdkdfkkdfk");
-
-    print(fullName);
-    print(index);
+  
     final updatedMembers = List<JointMemberInfo>.from(state.members);
     if (index >= 0 && index < updatedMembers.length) {
       updatedMembers[index] =
@@ -648,11 +639,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
 
     state = newState;
 
-    print('StepperProvider: Authentication data saved successfully');
-    print('StepperProvider: Auth ID: ${state.authId}');
-    print('StepperProvider: Full Name: ${state.fullName}');
-    print('StepperProvider: Email: ${state.email}');
-    print('StepperProvider: State: ${state.state}');
+
   }
 
   // Update individual authentication fields

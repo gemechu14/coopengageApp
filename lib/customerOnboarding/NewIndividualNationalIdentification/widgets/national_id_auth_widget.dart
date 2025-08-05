@@ -1,3 +1,4 @@
+// import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -158,15 +159,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // const Text(
-          //   'National ID Authentication',
-          //   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          //   textAlign: TextAlign.center,
-          // ),
-          // const SizedBox(height: 32),
-
-          // Main content area
-          Expanded(
+            Expanded(
             child: _showWebView &&
                     faydaState.authUrl != null &&
                     !faydaState.isCompleted
@@ -297,89 +290,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
           // Success state - Verified
           if (faydaState.isCompleted && faydaState.userData != null) ...[
-            // Container(
-            //   padding: const EdgeInsets.all(32),
-            //   decoration: BoxDecoration(
-            //     color: Colors.green.shade50,
-            //     borderRadius: BorderRadius.circular(16),
-            //     border: Border.all(color: Colors.green.shade200, width: 2),
-            //   ),
-            //   child: Column(
-            //     children: [
-            //       Icon(
-            //         Icons.verified_user,
-            //         size: 80,
-            //         color: Colors.green.shade600,
-            //       ),
-            //       const SizedBox(height: 16),
-            //       const Text(
-            //         'VERIFIED',
-            //         style: TextStyle(
-            //           fontSize: 24,
-            //           fontWeight: FontWeight.bold,
-            //           color: Colors.green,
-            //         ),
-            //       ),
-            //       const SizedBox(height: 8),
-            //       Text(
-            //         'National ID authentication successful',
-            //         style: TextStyle(
-            //           fontSize: 16,
-            //           color: Colors.green.shade700,
-            //         ),
-            //         textAlign: TextAlign.center,
-            //       ),
-            //       const SizedBox(height: 24),
-
-            //       // Action buttons
-            //       Column(
-            //         children: [
-            //           Row(
-            //             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //             children: [
-            //               ElevatedButton.icon(
-            //                 onPressed: () =>
-            //                     setState(() => _showUserData = true),
-            //                 style: ElevatedButton.styleFrom(
-            //                   backgroundColor: Colors.blue,
-            //                   foregroundColor: Colors.white,
-            //                   padding: const EdgeInsets.symmetric(
-            //                       horizontal: 16, vertical: 12),
-            //                 ),
-            //                 icon: const Icon(Icons.person),
-            //                 label: const Text('View Data'),
-            //               ),
-            //               ElevatedButton.icon(
-            //                 onPressed: () =>
-            //                     ref.read(stepperProvider.notifier).nextStep(),
-            //                 style: ElevatedButton.styleFrom(
-            //                   backgroundColor: Colors.green,
-            //                   foregroundColor: Colors.white,
-            //                   padding: const EdgeInsets.symmetric(
-            //                       horizontal: 16, vertical: 12),
-            //                 ),
-            //                 icon: const Icon(Icons.arrow_forward),
-            //                 label: const Text('Continue'),
-            //               ),
-            //             ],
-            //           ),
-
-            //           const SizedBox(height: 12),
-
-            //           // Start over button
-            //           TextButton.icon(
-            //             onPressed: () => _retryAuthentication(),
-            //             style: TextButton.styleFrom(
-            //               foregroundColor: Colors.grey.shade600,
-            //             ),
-            //             icon: const Icon(Icons.refresh, size: 18),
-            //             label: const Text('Start Over'),
-            //           ),
-            //         ],
-            //       ),
-            //     ],
-            //   ),
-            // ),
+    
 
             Container(
               padding: const EdgeInsets.all(32),
@@ -532,18 +443,18 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           const SizedBox(height: 24),
 
           // Continue button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => setState(() => _showUserData = false),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('Continue', style: TextStyle(fontSize: 16)),
-            ),
-          ),
+          // SizedBox(
+          //   width: double.infinity,
+          //   child: ElevatedButton(
+          //     onPressed: () => setState(() => _showUserData = false),
+          //     style: ElevatedButton.styleFrom(
+          //       backgroundColor: Colors.blue,
+          //       foregroundColor: Colors.white,
+          //       padding: const EdgeInsets.symmetric(vertical: 16),
+          //     ),
+          //     child: const Text('Continue', style: TextStyle(fontSize: 16)),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -613,8 +524,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
   void _startAuthentication() {
     print('🚀 [Widget] Auto-starting authentication...');
-    const baseUrl = 'http://10.8.100.111:9062/';
-    // const baseUrl = AppConstants.baseURL;
+    // const baseUrl = 'http://10.8.100.111:9062/';
+    const baseUrl = AppConstants.baseURL;
     ref.read(faydaProvider.notifier).startAuthentication(baseUrl);
   }
 

@@ -210,10 +210,7 @@ class RegistrationService {
     String? userId,
   }) async {
     try {
-      print("isondj");
-      print(isOnline);
-      print("dkfjdfndfdjdfjddjjfdjfjddffd");
-      print(userId);
+  
       if (userId != null) {
         // UPDATE existing user
         final response = await _networkHandler.put1(
@@ -427,13 +424,11 @@ class RegistrationService {
     String? userId,
   }) async {
     try {
-      print("object");
       if (!await _checkPermissions()) {
         return ServiceResult.error(
             'You don\'t have permission to create Account');
       }
 
-      print("[BASIC INFO OFFLINE] userId param: $userId");
       // Get the current user ID from token (the registering person)
       final existingUserId = await _getCurrentUserId();
 
@@ -445,18 +440,14 @@ class RegistrationService {
           'status': 'INITIAL',
           'userId': existingUserId,
         };
-        print('[BASIC INFO OFFLINE] Updating customer with ID: $userId');
-        print('[BASIC INFO OFFLINE] Update data: $updateData');
+    
         final rowsAffected =
             await _database.updateCustomer(int.parse(userId), updateData);
-        print('[BASIC INFO OFFLINE] rowsAffected: $rowsAffected');
         if (rowsAffected > 0) {
-          print(
-              '[BASIC INFO OFFLINE] Update success, returning userId: $userId');
+        
           return ServiceResult.success(
               userId: userId, data: {'existingUserId': existingUserId});
         } else {
-          print('[BASIC INFO OFFLINE] Update failed');
           return ServiceResult.error('Failed to update customer');
         }
       } else {
@@ -467,20 +458,15 @@ class RegistrationService {
           'status': 'INITIAL',
           'userId': existingUserId,
         };
-        print('[BASIC INFO OFFLINE] Inserting new customer');
-        print('[BASIC INFO OFFLINE] Insert data: $customerData');
+   
         final insertedId = await _database.insertCustomer(customerData);
-        print('[BASIC INFO OFFLINE] Inserted ID: $insertedId');
         final result = ServiceResult.success(
           userId: insertedId.toString(),
           data: {'existingUserId': existingUserId},
         );
-        print(
-            '[BASIC INFO OFFLINE] Returning ServiceResult with userId: ${result.userId}');
         return result;
       }
     } catch (e) {
-      print('[BASIC INFO OFFLINE] Exception: $e');
       return ServiceResult.error('Error inserting/updating customer data: $e');
     }
   }
@@ -488,19 +474,13 @@ class RegistrationService {
   Future<ServiceResult> _submitIdTypeOffline(String branch, String documentName,
       Uint8List? frontImage, Uint8List? backImage, String? userId) async {
     try {
-      print("=== _submitIdTypeOffline Debug ===");
-      print("Received userId: $userId");
-      print("Branch: $branch");
-      print("Document name: $documentName");
 
       // print(data);
       if (userId == null) {
-        print("❌ User ID is null - returning error");
         return ServiceResult.error(
             'User ID not found. Please complete step 1 first.');
       }
 
-      print("✅ User ID is valid: $userId");
 
       final updateData = {
         'branch': branch,
@@ -513,7 +493,6 @@ class RegistrationService {
         'formCompleted': 0,
         // 'id': currentUserId,
       };
-      print(updateData);
       final rowsAffected = await _database
           .updateCustomer(int.parse(userId), updateData)
           .timeout(const Duration(seconds: 10));
@@ -546,8 +525,7 @@ class RegistrationService {
         // 'id': userId,
       };
 
-      print("dshfhjdhfdhfhdjfjdj");
-      print(userId);
+
 
       final rowsAffected = await _database
           .updateCustomer(int.parse(userId), updateData)
@@ -568,9 +546,7 @@ class RegistrationService {
   Future<ServiceResult> _submitPersonalPhotoOnline(
       Uint8List? photo, String? userId) async {
     try {
-      print("djfdjfdfdkfhdfdkfdkjjjjjjjjjjj");
 
-      print(photo);
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -718,7 +694,7 @@ class RegistrationService {
       String? maritalStatus,
       String? userId) async {
     try {
-      print('kdfndfdkfkdnfdkssssfdfndnfd');
+
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -739,8 +715,8 @@ class RegistrationService {
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));
-      print('kdfndfdkfkdnfdkfdfndnfd');
-      print(response);
+
+ 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success(userId: userId);
       } else {
@@ -771,7 +747,6 @@ class RegistrationService {
             'User ID not found. Please complete previous steps first.');
       }
 
-      print("personal information ");
       final updateData = {
         'fullName': fullName,
         'surname': surname,
@@ -830,7 +805,6 @@ class RegistrationService {
         'status': 'INITIAL',
       };
 
-      print(requestData);
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));
@@ -899,8 +873,7 @@ class RegistrationService {
   Future<ServiceResult> _submitAccountTypeOnline(
       String accountType, String? userId) async {
     try {
-      print("dfksnfkdndnfdndnnddnfndf");
-      print(accountType);
+ 
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -915,10 +888,8 @@ class RegistrationService {
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));
-      print("ytytytyytyt");
-      print(response);
+   
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("ytytytyytyt");
         return ServiceResult.success();
       } else {
         final errorResponse = jsonDecode(response.body);
@@ -975,8 +946,7 @@ class RegistrationService {
     if (token != null && token.isNotEmpty) {
       var decodedToken = JwtDecoder.decode(token);
 
-      print("gememememem");
-      print(decodedToken['userId']);
+
       username = decodedToken['sub'] ?? "User";
       firstLetter = username!.isNotEmpty ? username![0].toUpperCase() : '';
 

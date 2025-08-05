@@ -1,24 +1,18 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/registration_data.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/national_id_provider.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/providers/stepper_provider.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/services/registration_service.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/Signature.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/account_type_step.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/additional_information.dart';
-// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/widgets/national_id_auth_widget.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/model/registration_data.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/national_id_provider.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/stepper_provider.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/services/registration_service.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/Signature.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/account_type_step.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/additional_information.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
-import 'package:coopengageplus/features/onboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/model/registration_data.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/national_id_provider.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/stepper_provider.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/services/registration_service.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/Signature.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/account_type_step.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/additional_information.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
+
+
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -144,15 +138,7 @@ class _IndividualAccountByNationalIdState
               color: cyanblueColor,
             ),
           ),
-          // centerTitle: true,
-          // actions: [
-          //   if (stepperState.activeStep == 0 && nationalIdState.authUrl != null)
-          //     IconButton(
-          //       icon: const Icon(Icons.refresh, color: cyanblueColor),
-          //       onPressed: () =>
-          //           ref.read(nationalIdProvider.notifier).callEsignetApi(),
-          //     ),
-          // ],
+        
         ),
         body: SafeArea(
           child: Column(
@@ -317,7 +303,7 @@ class _IndividualAccountByNationalIdState
                   onPressed: () async {
                     if (_disposed) return;
 
-                    print('Current step: ${stepperState.activeStep}');
+                    // print('Current step: ${stepperState.activeStep}');
 
                     if (stepperState.activeStep == 0) {
                       // Check both old National ID system and new Fayda system
@@ -646,9 +632,7 @@ class _IndividualAccountByNationalIdState
       }
 
       if (authId == null) {
-        print('ERROR: Authentication ID is null!');
-        print(
-            'This means the authentication data was not properly saved to stepper state.');
+    
         throw Exception(
             'Authentication ID not found. Please complete National ID authentication first.');
       }
@@ -684,6 +668,11 @@ class _IndividualAccountByNationalIdState
         customerInfoInitialDeposit: '100',
         signature: stepperState.signature,
         title: stepperState.selectedTitle,
+        fullName: stepperState.fullName ?? '',
+        Sex:  stepperState.sex?? '',
+        phone: stepperState.phoneNumber,
+
+
       );
 
       // Close loading dialog

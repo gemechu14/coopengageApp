@@ -295,13 +295,13 @@ class _LoginscreenState extends State<Loginscreen> {
           final accountTypesResponse =
               await networkHandler.get('/api/v1/account-types');
 
-      
           if (accountTypesResponse is List<dynamic>) {
             int localCount = await dbHelper.getAccountTypeCount();
             int incomingCount = accountTypesResponse.length;
 
-            // var localdata = await dbHelper.getAllAccountTypes();
-         
+            var localdata = await dbHelper.getAllAccountTypes();
+            print("local account types");
+            print(localdata);
 
             if (localCount < incomingCount) {
               await dbHelper.clearAccountTypesTable();
@@ -318,6 +318,7 @@ class _LoginscreenState extends State<Loginscreen> {
                   "minAmount": e["minAmount"]?.toString() ?? "",
                   "sex": e["sex"] ?? "",
                   "status": e["status"] ?? "",
+                  "code": e["code"].toString() ?? "",
                 };
               }).toList();
 

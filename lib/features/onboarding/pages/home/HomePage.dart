@@ -71,7 +71,7 @@ class _HomepageState extends State<Homepage> {
         title: const Text(""),
         centerTitle: true,
       ),
-      body: HomeBody(),
+      body: Container(),
       bottomNavigationBar: BottomAppBar(
         color: Colors.transparent,
         shape: const CircularNotchedRectangle(),
@@ -252,9 +252,7 @@ class _HomepageState extends State<Homepage> {
                         padding: const EdgeInsets.only(
                             left: 14.0, top: 8.0, bottom: 8.0),
                         child: GestureDetector(
-                          onTap: () {
-                         
-                          },
+                          onTap: () {},
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(

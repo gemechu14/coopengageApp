@@ -58,19 +58,7 @@ class DatabaseHelper {
           )
         ''');
 
-//         ///ACCOUNT TYPE
-//         await db.execute('''
-//   CREATE TABLE AccountTypes(
-//     id INTEGER PRIMARY KEY,
-//     name TEXT NOT NULL,
-//     type TEXT NOT NULL,
-//     minAge TEXT ,
-//     maxAge TEXT ,
-//     minAmount TEXT,
-//     sex TEXT ,
-//     bankingType TEXT NOT NULL
-//   )
-// ''');
+
 
         await db.execute('''
   CREATE TABLE AccountTypes(
@@ -84,7 +72,9 @@ class DatabaseHelper {
     maxAge TEXT,
     minAmount TEXT,
     sex TEXT,
-    status TEXT
+    status TEXT,
+    code TEXT
+
   )
 ''');
 
@@ -170,12 +160,7 @@ CREATE TABLE selected_language  (
               db); // ✅ Create Customers table on upgrade
         }
       },
-      // onUpgrade: (db, oldVersion, newVersion) async {
-      //   if (oldVersion < 2) {
-      //     // Add the 'sex' column in this upgrade
-      //     await db.execute('ALTER TABLE Customers ADD COLUMN sex TEXT');
-      //   }
-      // },
+    
     );
   }
 
@@ -185,34 +170,6 @@ CREATE TABLE selected_language  (
     final result = await db.query('AccountTypes');
     return result.isEmpty;
   }
-
-  // Future<void> insertAccountTypes(
-  //     List<Map<String, dynamic>> accountTypes) async {
-  //   final db = await database;
-
-  //   for (var accountType in accountTypes) {
-  //     // Ensure proper encoding or sanitization of the 'name' field
-  //     String name = accountType["name"];
-
-  //     // Handle any special characters or sanitize if necessary
-  //     name = sanitizeSpecialCharacters(name);
-
-  //     await db.insert(
-  //       'AccountTypes',
-  //       {
-  //         "id": accountType["id"],
-  //         "name": name,
-  //         "type": accountType["type"],
-  //         "minAge": accountType["minAge"] ?? "",
-  //         "maxAge": accountType["maxAge"] ?? "",
-  //         "minAmount": accountType["minAmount"] ?? "",
-  //         "sex": accountType["sex"] ?? "",
-  //         "bankingType": accountType["bankingType"],
-  //       },
-  //       conflictAlgorithm: ConflictAlgorithm.replace,
-  //     );
-  //   }
-  // }
 
   Future<void> insertAccountTypes(
       List<Map<String, dynamic>> accountTypes) async {
@@ -236,6 +193,7 @@ CREATE TABLE selected_language  (
           "minAmount": accountType["minAmount"]?.toString() ?? "",
           "sex": accountType["sex"] ?? "",
           "status": accountType["status"] ?? "",
+          "code": accountType["code"] ?? "",
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -256,107 +214,10 @@ CREATE TABLE selected_language  (
     return await db.query('AccountTypes');
   }
 
-  // Future<int?> insertCustomer(Map<String, dynamic> customer) async {
-  //   if (await isTableCreated('Customers')) {
-  //     final db = await database;
-  //     return await db.insert('Customers', customer);
-  //   } else {
-  //     print("Customers table does not exist.");
-  //     return null;
-  //   }
-  // }
-
-  // Future<int?> insertCustomer(Map<String, dynamic> customer) async {
-  //   try {
-  //     if (await isTableCreated('Customers')) {
-  //       final db = await database;
-  //       return await db.insert('Customers', customer);
-  //     } else {
-  //       print("Customers table does not exist.");
-  //       return null;
-  //     }
-  //   } catch (e) {
-  //     print("Error inserting customer: $e");
-  //     return null;
-  //   }
-  // }
-
-  // Future<int?> insertCustomer(Map<String, dynamic> customer) async {
-  //   final db = await database;
-
-  //   // Check if the Customers table exists
-  //   final tableExists = await _checkIfTableExists(db, 'Customers');
-
-  //   // If the table does not exist, create it
-  //   if (!tableExists) {
-  //     await db.execute('''
-  //     CREATE TABLE Customers(
-  //       id INTEGER PRIMARY KEY AUTOINCREMENT,
-  //       firstName TEXT,
-  //       fullName TEXT,
-  //       surName TEXT,
-  //       sex TEXT,
-  //       motherName TEXT,
-  //       phoneNumber TEXT,
-  //       email TEXT,
-  //       gender TEXT,
-  //       address TEXT,
-  //       streetAddress TEXT,
-  //       street TEXT,
-  //       state TEXT,
-  //       residenceAddress TEXT,
-  //       nationality TEXT,
-  //       country TEXT,
-  //       city TEXT,
-  //       zipCode TEXT,
-  //       accountCurrency TEXT,
-  //       currency TEXT,
-  //       status TEXT,
-  //       occupation TEXT,
-  //       initialDeposit REAL,
-  //       monthlyIncome REAL,
-  //       branch TEXT,
-  //       formCompleted INTEGER,
-  //       accountType TEXT,
-  //       dateOfBirth TEXT,
-  //       residenceCard BLOB,
-  //       residenceCardBack BLOB,
-  //       dateOfEstablishment TEXT,
-  //       percentageCompleted INTEGER,
-  //       passport BLOB,
-  //       photo BLOB,
-  //       legalId TEXT,
-  //       signature BLOB,
-  //       date TEXT,
-  //       phone TEXT,
-  //       customerType TEXT,
-  //       documentType TEXT,
-  //       documentName TEXT,
-  //       issueAuthority TEXT,
-  //       issueDate TEXT,
-  //       zoneSubCity TEXT,
-  //       title TEXT,
-  //       maritalStatus TEXT,
-  //       expirayDate TEXT,
-  //       userId TEXT
-  //     )
-  //   ''');
-  //     print('Table "Customers" created.');
-  //   }
-
-  //   // Insert the customer data
-  //   return await db.insert(
-  //     'Customers',
-  //     customer,
-  //     conflictAlgorithm:
-  //         ConflictAlgorithm.replace, // Optional: replace on conflict
-  //   );
-  // }
   Future<int?> insertCustomer(Map<String, dynamic> customer) async {
     //  final db = await _initDB();
     final db = await database;
 
-    // Check if the Customers table exists
     final tableExists = await _checkIfTableExists(db, 'Customers');
     print("kdjadfnajndndjdnafndn");
     print(tableExists);

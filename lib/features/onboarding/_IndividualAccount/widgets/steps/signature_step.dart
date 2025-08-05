@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -712,11 +714,8 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
       final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
       await tempFile.writeAsBytes(imageBytes);
 
-      print("✅ Saved temporary signature at: ${tempFile.path}");
-      print("📤 Signature Bytes Length: ${imageBytes.length}");
       return imageBytes; // Return the image bytes
     } catch (e) {
-      print("❌ Error saving signature: $e");
       return null;
     }
   }
@@ -739,14 +738,12 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     } else {
       // Try to combine drawn signatures
       signatureBytes = await _combineSignatures();
-      print("📤 Combined Signature Bytes: ${signatureBytes != null ? 'Available' : 'Not available'}");
     }
 
     // Get current user ID
     final userId = ref.read(userIdProvider);
 
-    print("👤 User ID: $userId");
-    print("🌐 Is Online: $isOnline");
+
 
     // Call controller method
     final success = await ref.read(registrationControllerProvider)
@@ -757,11 +754,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     );
 
     if (success) {
-      print("✅ Signature Step completed successfully!");
-      print("📊 Progress: 37.5%");
-      print("📋 Form Status: INITIAL");
+
     } else {
-      print("❌ Signature Step failed!");
+  
       // Error is already handled by the controller and shown via SnackBar
     }
   }
