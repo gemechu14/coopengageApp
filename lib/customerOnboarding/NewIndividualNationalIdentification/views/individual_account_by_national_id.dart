@@ -4,11 +4,13 @@ import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/model/registration_data.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/national_id_provider.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/simple_national_id_provider.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/stepper_provider.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/services/registration_service.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/Signature.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/account_type_step.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/additional_information.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/fayda_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/ultra_simple_national_id_widget.dart';
@@ -49,11 +51,13 @@ class _IndividualAccountByNationalIdState
     formKeys = List.generate(4, (index) => GlobalKey<FormState>());
     stepConfigs = [
       StepConfig(
-        title: 'National ID Authetication',
-        icon: Icon(Icons.fingerprint),
-        builder: (context, ref) =>   const UltraSimpleNationalIdWidget()
-        // const NationalIdAuthWidget(),
-      ),
+          title: 'National ID Authetication',
+          icon: Icon(Icons.fingerprint),
+          builder: (context, ref) =>
+              // const FaydaAuthWidget()
+              const UltraSimpleNationalIdWidget()
+          // const NationalIdAuthWidget(),
+          ),
       StepConfig(
         title: 'Additional Information',
         icon: Icon(Icons.info_outline),
@@ -307,7 +311,10 @@ class _IndividualAccountByNationalIdState
 
                     if (stepperState.activeStep == 0) {
                       // Check both old National ID system and new Fayda system
-                      final faydaState = ref.read(faydaProvider);
+
+                      final faydaState =
+                          ref.read(simpleNationalIdProvider);
+                      // final faydaState = ref.read(faydaProvider);
                       bool isAuthenticated = false;
 
                       // Check old National ID system first
@@ -351,6 +358,7 @@ class _IndividualAccountByNationalIdState
                       if (isAuthenticated) {
                         ref.read(stepperProvider.notifier).nextStep();
                       } else {
+                        //  print(faydaAuthData);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
@@ -396,7 +404,6 @@ class _IndividualAccountByNationalIdState
                       if (currentFormKey.currentState?.validate() ?? false) {
                         // Build RegistrationData from stepperState
                         final registrationData = RegistrationData(
-                            
                             fullName: stepperState.fullName,
                             email: stepperState.email,
                             phone: stepperState.authPhone,
@@ -525,7 +532,8 @@ class _IndividualAccountByNationalIdState
           '_buildContentArea - Step: ${stepperState.activeStep}, Auth completed: ${nationalIdState.isAuthCompleted}');
 
       if (stepperState.activeStep == 0) {
-        return const NationalIdAuthWidget();
+        return const UltraSimpleNationalIdWidget();
+        // const NationalIdAuthWidget();
       } else {
         return Container(
           padding: const EdgeInsets.all(16),

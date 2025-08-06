@@ -79,6 +79,19 @@ class SimpleNationalIdNotifier extends StateNotifier<NationalIdState> {
     _service = null;
     state = const NationalIdState();
   }
+
+  /// Restore user data from stepper provider
+  void restoreUserData(FaydaUserData userData) {
+    print('🔄 [Provider] Restoring user data: ${userData.name}');
+    state = state.copyWith(
+      userData: userData,
+      isCompleted: true,
+      isLoading: false,
+      error: null,
+      isConnected: false,
+    );
+    print('🔄 [Provider] User data restored successfully');
+  }
   
   @override
   void dispose() {

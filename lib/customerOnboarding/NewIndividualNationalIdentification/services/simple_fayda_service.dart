@@ -45,10 +45,14 @@ class SimpleFaydaService {
   Future<String> getAuthUrl(String baseUrl) async {
     print('🔗 Step 3: Getting auth URL...');
 
-    final response = await http.post(
-      Uri.parse('${baseUrl}api/v1/fayda/auth'),
+    print("kdfndklnkkkkkkkkdfdfdf");
+    print(_clientId);
+    print(baseUrl);
+    final response = await http.get(
+      Uri.parse(
+          '${baseUrl}/api/v1/fayda/authenticate-url-ws?clientId=$_clientId'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'clientId': _clientId}),
+      // body: jsonEncode({'clientId': _clientId}),
     );
 
     if (response.statusCode == 200) {
