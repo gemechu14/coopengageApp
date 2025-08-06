@@ -11,6 +11,7 @@ import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentific
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/additional_information.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/ultra_simple_national_id_widget.dart';
 
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
@@ -48,9 +49,10 @@ class _IndividualAccountByNationalIdState
     formKeys = List.generate(4, (index) => GlobalKey<FormState>());
     stepConfigs = [
       StepConfig(
-        title: 'National ID Auth',
+        title: 'National ID Authetication',
         icon: Icon(Icons.fingerprint),
-        builder: (context, ref) => const NationalIdAuthWidget(),
+        builder: (context, ref) =>   const UltraSimpleNationalIdWidget()
+        // const NationalIdAuthWidget(),
       ),
       StepConfig(
         title: 'Additional Information',

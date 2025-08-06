@@ -171,16 +171,20 @@ class FaydaService {
           
           // Ensure required fields exist, provide defaults if missing
           final userData = FaydaUserData(
-            sub: userDataJson['sub']?.toString() ?? 'unknown',
-            name: userDataJson['name']?.toString() ?? 'Unknown User',
-            email: userDataJson['email']?.toString() ?? 'no-email@example.com', // Default email
+            sub: userDataJson['sub']?.toString() ?? '',
+            name: userDataJson['name']?.toString() ?? '',
+            email: userDataJson['email']?.toString() ?? '', // Default email
             phoneNumber: userDataJson['phone_number']?.toString(),
             birthdate: userDataJson['birthdate']?.toString(),
             gender: userDataJson['gender']?.toString(),
             address: userDataJson['address'] != null 
+
                 ? FaydaAddress(
                     country: userDataJson['address']['country']?.toString(),
                     region: userDataJson['address']['region']?.toString(),
+                    woreda: userDataJson['address']['woreda']?.toString(),
+                    zone: userDataJson['address']['zone']?.toString(),
+
                   )
                 : null,
           );

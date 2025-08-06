@@ -1,4 +1,6 @@
 // import 'package:coopengageplus/constants/config/config.dart';
+import 'dart:io';
+
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,7 +59,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             '✅ [Widget] Step navigation detected - keeping existing Fayda data');
         // Keep existing data (user navigated back from next step)
         setState(() {
-          _callbackDetected = true; // Mark as completed to prevent WebView restart
+          _callbackDetected =
+              true; // Mark as completed to prevent WebView restart
         });
       } else {
         print(
@@ -108,8 +111,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
   bool _isCallbackUrl(String url) {
     // Simple callback detection - just look for callback URLs with code and state
-    return (url.contains('callback') && url.contains('code=') && url.contains('state=')) ||
-           (url.contains('code=') && url.contains('state='));
+    return (url.contains('callback') &&
+            url.contains('code=') &&
+            url.contains('state=')) ||
+        (url.contains('code=') && url.contains('state='));
   }
 
   void _handleCallbackImmediately(String url) {
@@ -123,14 +128,17 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     final state = uri.queryParameters['state'];
 
     if (code != null && state != null) {
-      print('✅ [Widget] Code and state found - closing WebView and waiting for WebSocket');
+      print(
+          '✅ [Widget] Code and state found - closing WebView and waiting for WebSocket');
       print('🔍 [Widget] Extracted code: $code');
       print('🔍 [Widget] Extracted state: $state');
 
       // Check WebSocket connection status
       final faydaState = ref.read(faydaProvider);
-      print('🔍 [Widget] Current Fayda provider state: isConnected=${faydaState.isConnected}, isCompleted=${faydaState.isCompleted}');
-      print('🔍 [Widget] WebSocket connection status: ${ref.read(faydaProvider.notifier).isWebSocketConnected}');
+      print(
+          '🔍 [Widget] Current Fayda provider state: isConnected=${faydaState.isConnected}, isCompleted=${faydaState.isCompleted}');
+      print(
+          '🔍 [Widget] WebSocket connection status: ${ref.read(faydaProvider.notifier).isWebSocketConnected}');
 
       // IMMEDIATELY hide WebView and mark callback as detected
       setState(() {
@@ -138,40 +146,47 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         _callbackDetected = true; // Prevent WebView from restarting
       });
 
-      print('⏳ [Widget] WebView closed, waiting for WebSocket authentication result...');
+      print(
+          '⏳ [Widget] WebView closed, waiting for WebSocket authentication result...');
       print('🚫 [Widget] WebView restart prevented - callback detected');
-      print('⏳ [Widget] Now waiting for server to process callback and send authentication_result via WebSocket...');
-      
+      print(
+          '⏳ [Widget] Now waiting for server to process callback and send authentication_result via WebSocket...');
+
       // Log a periodic check to see if we're still waiting
       _startWaitingTimer();
     }
   }
-  
+
   Timer? _waitingTimer;
-  
+
   void _startWaitingTimer() {
     _waitingTimer?.cancel();
     int waitingSeconds = 0;
-    
+
     _waitingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       waitingSeconds += 5;
       final faydaState = ref.read(faydaProvider);
-      
-      print('⏰ [Widget] Still waiting for WebSocket result... ${waitingSeconds}s elapsed');
-      print('🔍 [Widget] Current state: isCompleted=${faydaState.isCompleted}, error=${faydaState.error}');
-      print('🔍 [Widget] WebSocket connected: ${ref.read(faydaProvider.notifier).isWebSocketConnected}');
-      
+
+      print(
+          '⏰ [Widget] Still waiting for WebSocket result... ${waitingSeconds}s elapsed');
+      print(
+          '🔍 [Widget] Current state: isCompleted=${faydaState.isCompleted}, error=${faydaState.error}');
+      print(
+          '🔍 [Widget] WebSocket connected: ${ref.read(faydaProvider.notifier).isWebSocketConnected}');
+
       if (faydaState.isCompleted || faydaState.error != null) {
-        print('✅ [Widget] Authentication completed or error occurred, stopping timer');
+        print(
+            '✅ [Widget] Authentication completed or error occurred, stopping timer');
         timer.cancel();
       } else if (waitingSeconds >= 60) {
-        print('⚠️ [Widget] Waited 60 seconds for WebSocket result - this seems too long');
+        print(
+            '⚠️ [Widget] Waited 60 seconds for WebSocket result - this seems too long');
         print('⚠️ [Widget] Consider checking server-side callback processing');
         timer.cancel();
       }
     });
   }
-  
+
   @override
   void dispose() {
     _waitingTimer?.cancel();
@@ -198,7 +213,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         !faydaState.isCompleted &&
         faydaState.error == null &&
         !_showWebView &&
-        !_callbackDetected) { // Only show if not already shown and no callback detected
+        !_callbackDetected) {
+      // Only show if not already shown and no callback detected
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
@@ -452,6 +468,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   Widget _buildUserDataView(FaydaUserData userData) {
+    print("objectddddddd");
+    print(userData.picture);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,6 +490,21 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
           const SizedBox(height: 16),
 
+          if (userData.picture != null && userData.picture!.isNotEmpty) ...[
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(userData.picture!),
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // User data cards
           _buildDataCard('Personal Information', [
             _buildDataRow('Full Name', userData.name),
@@ -491,6 +524,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 _buildDataRow('Country', userData.address!.country!),
               if (userData.address!.region != null)
                 _buildDataRow('Region', userData.address!.region!),
+              if (userData.address!.woreda != null)
+                _buildDataRow('Woreda', userData.address!.woreda!),
+              if (userData.address!.zone != null)
+                _buildDataRow('Zone', userData.address!.zone!),
             ]),
           ],
 
