@@ -8,7 +8,12 @@ import 'package:http/http.dart' as http;
 class RegistrationService {
   // static const String _baseUrl =
   //     "http://10.2.125.41:9060/api/v1/accounts/organizational";
-  final storage = FlutterSecureStorage();
+  final storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+    ),
+  );
   static const String _baseUrl =
       "${AppConstants.baseUrl}/accounts/organizational";
 

@@ -17,7 +17,12 @@ class NetworkHandler {
   // String baseurl
   String baseurl = AppConstants.baseURL;
   var log = Logger();
-  FlutterSecureStorage storage = const FlutterSecureStorage();
+  FlutterSecureStorage storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding
+        ),
+  );
   Future get(String url) async {
     String? token = await storage.read(key: "token");
     url = formater(url);

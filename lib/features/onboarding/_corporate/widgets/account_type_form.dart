@@ -23,7 +23,11 @@ class _AccountTypeFormState extends ConsumerState<AccountTypeForm> {
   late final TextEditingController cityController;
   late final TextEditingController woredaController;
   late final TextEditingController residenceController;
-  final storage = const FlutterSecureStorage();
+  final storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
+  );
 
   @override
   void initState() {

@@ -198,7 +198,12 @@ class _VerifycustomerinfoState extends State<Verifycustomerinfo> {
   }
 
   Future<void> fetchAccountNumber() async {
-    final storage = FlutterSecureStorage();
+    final storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
     String? token = await storage.read(key: "token");
 
     if (token == null || token.isEmpty) {

@@ -368,7 +368,12 @@ class _UserInfoPageState extends State<UserListPage> {
       isLoading1 = true;
     });
 
-    const storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
       var decodedToken = JwtDecoder.decode(token);
@@ -429,7 +434,12 @@ class _UserInfoPageState extends State<UserListPage> {
   }
 
   Future<void> _fetchToken() async {
-    const storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
       var decodedToken = JwtDecoder.decode(token);

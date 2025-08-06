@@ -105,7 +105,12 @@ class _AgentPageState extends State<AgentPage> {
 
   Widget _loginUI(BuildContext context) {
     NetworkHandler networkHandler = NetworkHandler();
-    const storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
+          storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding
+          ),
+    );
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 

@@ -285,7 +285,12 @@ class _UserInfoPageState extends State<UserInfoPage> {
       isLoading1 = true;
     });
 
-    const storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
       // Decode the token to get user details
@@ -389,7 +394,12 @@ class _UserInfoPageState extends State<UserInfoPage> {
   }
 
   Future<void> _fetchToken() async {
-    const storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
       // Decode the token to get user details

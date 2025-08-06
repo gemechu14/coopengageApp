@@ -111,7 +111,12 @@ class UserListNotifier extends StateNotifier<UserListState> {
     setLoading(true);
     try {
       // Simulate token fetch
-      const storage = FlutterSecureStorage();
+      const storage = FlutterSecureStorage(
+        aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
+          storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+        ),
+      );
       String? token = await storage.read(key: "token");
       // Simulate userId from token
       int? fetchedUserId = userId;
@@ -137,7 +142,11 @@ class UserListNotifier extends StateNotifier<UserListState> {
             'phone': '123456789',
             'companyName': 'Acme Corp',
             'customersInfo': [
-              {'fullName': 'John Doe', 'phone': '123456789', 'email': 'john@example.com'}
+              {
+                'fullName': 'John Doe',
+                'phone': '123456789',
+                'email': 'john@example.com'
+              }
             ],
           },
           {
@@ -145,7 +154,11 @@ class UserListNotifier extends StateNotifier<UserListState> {
             'phone': '987654321',
             'companyName': 'Beta LLC',
             'customersInfo': [
-              {'fullName': 'Jane Smith', 'phone': '987654321', 'email': 'jane@example.com'}
+              {
+                'fullName': 'Jane Smith',
+                'phone': '987654321',
+                'email': 'jane@example.com'
+              }
             ],
           },
         ];
@@ -157,7 +170,11 @@ class UserListNotifier extends StateNotifier<UserListState> {
             'phone': '000000000',
             'companyName': 'Offline Inc',
             'personalInfo': [
-              {'fullName': 'Offline User', 'phone': '000000000', 'email': 'offline@example.com'}
+              {
+                'fullName': 'Offline User',
+                'phone': '000000000',
+                'email': 'offline@example.com'
+              }
             ],
           },
         ];
@@ -171,4 +188,4 @@ class UserListNotifier extends StateNotifier<UserListState> {
 }
 
 final userListProvider = StateNotifierProvider<UserListNotifier, UserListState>(
-    (ref) => UserListNotifier()); 
+    (ref) => UserListNotifier());

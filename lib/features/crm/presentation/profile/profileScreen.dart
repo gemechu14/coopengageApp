@@ -84,7 +84,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final storage = FlutterSecureStorage();
+  final storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
+  );
   String username = "";
   String firstLetter = "";
   String role = '';

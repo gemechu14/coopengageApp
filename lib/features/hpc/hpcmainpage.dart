@@ -17,7 +17,11 @@ class HPCMainPage extends StatefulWidget {
 
 class _MainPageState extends State<HPCMainPage> {
   int currentState = 0;
-  final storage = const FlutterSecureStorage();
+  final storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
+  );
 
   bool isLoading = true;
   String role = '';

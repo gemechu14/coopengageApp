@@ -54,7 +54,12 @@ class _RegistrationScreenState
         // Normalize branch value
         String? branchValue = userInfo['branch'];
         // Get available branches from token (same logic as BranchSelector)
-        final storage = const FlutterSecureStorage();
+        final storage = const FlutterSecureStorage(
+          aOptions: AndroidOptions(
+            encryptedSharedPreferences: true,
+            storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+          ),
+        );
         storage.read(key: "token").then((token) {
           if (token != null && token.isNotEmpty) {
             var decodedToken = JwtDecoder.decode(token);
@@ -67,7 +72,8 @@ class _RegistrationScreenState
               branches.add(decodedToken["mainBranch"]);
             }
             branches.addAll(regularBranches);
-            final branchNames = branches.map((b) => b['companyName'] ?? '').toList();
+            final branchNames =
+                branches.map((b) => b['companyName'] ?? '').toList();
             if (branchValue != null && !branchNames.contains(branchValue)) {
               branchValue = null;
             }

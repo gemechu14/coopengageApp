@@ -13,9 +13,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class Dashboard extends StatefulWidget {
-  final VoidCallback onSettingsTap; 
-  const Dashboard({Key? key, required this.onSettingsTap})
-      : super(key: key);
+  final VoidCallback onSettingsTap;
+  const Dashboard({Key? key, required this.onSettingsTap}) : super(key: key);
 
   @override
   _DashboardState createState() => _DashboardState();
@@ -26,12 +25,16 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     fetchUsers();
     _fetchToken();
-    fetchUserCounts(); 
+    fetchUserCounts();
   }
 
-  final storage = FlutterSecureStorage();
+  final storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
+  );
   int? UserID;
-  int localCustomers = 0; 
+  int localCustomers = 0;
   int databaseCustomers = 0;
   Map<String, int> data = {
     "Total": 0,
@@ -164,7 +167,6 @@ class _DashboardState extends State<Dashboard> {
                   width: 2), // Add some spacing between the icon and the text
             ],
           )
-    
         ],
       ),
       body: SingleChildScrollView(
@@ -175,15 +177,11 @@ class _DashboardState extends State<Dashboard> {
               Container(
                 height: isTablet ? 350 : 300,
                 child: GridView.builder(
-                  physics:
-                      const NeverScrollableScrollPhysics(), 
-                  shrinkWrap:
-                      true, 
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                        gridCrossAxisCount,
-                    childAspectRatio:
-                        cardAspectRatio,
+                    crossAxisCount: gridCrossAxisCount,
+                    childAspectRatio: cardAspectRatio,
                     mainAxisSpacing: 10.0,
                     crossAxisSpacing: 10.0,
                   ),
@@ -212,12 +210,9 @@ class _DashboardState extends State<Dashboard> {
 
                     return GestureDetector(
                       onTap: () {
-                 
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SizedBox()
-                          
-                              ),
+                          MaterialPageRoute(builder: (context) => SizedBox()),
                         );
                       },
                       child: Card(
@@ -288,18 +283,17 @@ class _DashboardState extends State<Dashboard> {
                   },
                 ),
               ),
-              const SizedBox(height: 1), 
+              const SizedBox(height: 1),
               CarouselSlider(
                 items: items.map((item) {
                   return Container(
                     width: double.infinity,
-                    height:
-                        carouselHeight, 
+                    height: carouselHeight,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8.0),
                       image: DecorationImage(
                         image: (item as Image).image,
-                        fit: BoxFit.cover, 
+                        fit: BoxFit.cover,
                       ),
                     ),
                   );
@@ -353,10 +347,7 @@ class _DashboardState extends State<Dashboard> {
                       ),
                       subtitle: const Text(
                         'Please sync to avoid data loss.',
-                        style: TextStyle(
-                           
-                            color: Colors.orange,
-                            fontSize: 14),
+                        style: TextStyle(color: Colors.orange, fontSize: 14),
                       ),
                       trailing: ElevatedButton(
                         onPressed: () async {
@@ -400,8 +391,6 @@ class _DashboardState extends State<Dashboard> {
       String? token = await storage.read(key: "token");
       if (token != null && token.isNotEmpty) {
         try {
-      
-
           // Decode the token to get userId
           var decodedToken = JwtDecoder.decode(token);
           String userId = decodedToken['userId'].toString();
@@ -436,7 +425,6 @@ class _DashboardState extends State<Dashboard> {
           });
         }
       } else {
-       
         setState(() {
           isLoadingCount = {
             "Total": true,
@@ -484,17 +472,12 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> fetchUsers() async {
- 
     try {
       // Fetch all users from backend
       List<Map<String, dynamic>> fetchedUsers =
           await userService.fetchAllUsers();
-  
 
-
-     
       setState(() {
-   
         localCustomers =
             fetchedUsers.length; // Set the count of database customers
       });
@@ -506,18 +489,16 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
-
       var decodedToken = JwtDecoder.decode(token);
-   
+
       setState(() {
-    
         UserID = decodedToken["userId"];
 
-        isLoading = false; 
+        isLoading = false;
       });
     } else {
       setState(() {
-        isLoading = false; 
+        isLoading = false;
       });
     }
   }

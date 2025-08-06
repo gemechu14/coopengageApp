@@ -11,11 +11,15 @@ class RegistrationService {
   // print("kjhgfghjkl");
 
   // "http://10.2.125.41:9060/api/v1/accounts/joint";
-  final storage = FlutterSecureStorage();
+  final storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+    ),
+  );
   Future<Map<String, dynamic>> registerCustomers(
       Map<String, dynamic> requestData) async {
     try {
-
       var uri = Uri.parse(_baseUrl);
       var request = http.MultipartRequest("POST", uri);
       String? token = await storage.read(key: "token");
@@ -88,7 +92,7 @@ class RegistrationService {
         if (customer["sex"] != null && customer["sex"] != '') {
           request.fields["customers[$i].sex"] = customer["sex"];
         }
-      
+
         if (customer["photo"] is Uint8List) {
           print("Gemechuuuddddu");
           print(customer['photo']);
@@ -100,7 +104,7 @@ class RegistrationService {
         }
         if (customer["signature"] is Uint8List) {
           request.files.add(http.MultipartFile.fromBytes(
-            "customers[$i].signature", 
+            "customers[$i].signature",
             customer["signature"],
             filename: "signature_$i.jpg",
           ));

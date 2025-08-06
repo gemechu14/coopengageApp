@@ -1,5 +1,3 @@
-
-
 // ignore_for_file: sized_box_for_whitespace, use_build_context_synchronously
 
 import 'dart:async';
@@ -60,7 +58,12 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _loginUI(BuildContext context) {
     NetworkHandler networkHandler = NetworkHandler();
-    const storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
     double width = MediaQuery.of(context).size.width;
 
     return SingleChildScrollView(
@@ -228,8 +231,7 @@ class _LoginPageState extends State<LoginPage> {
                             role: role,
                             branches: branches,
                           );
-                        } else {
-                        }
+                        } else {}
                         setState(() {
                           validate = true;
                           circular = false;
@@ -432,9 +434,7 @@ class _LoginPageState extends State<LoginPage> {
             child: GestureDetector(
               onTap: () {},
               child: Container(
-                width: width < 600
-                    ? double.infinity
-                    : width * 0.5, 
+                width: width < 600 ? double.infinity : width * 0.5,
                 height: 50,
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -473,9 +473,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-       
-       
-       
         ],
       ),
     );
@@ -489,7 +486,6 @@ class _LoginPageState extends State<LoginPage> {
     }
     return false;
   }
-
 
   Future<bool> isOnline() async {
     var connectivityResult = await (Connectivity().checkConnectivity());

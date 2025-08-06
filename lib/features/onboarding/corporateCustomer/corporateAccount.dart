@@ -87,7 +87,6 @@ class CorporateCustomerRegistration extends StatefulWidget {
 }
 
 class _Registration extends State<CorporateCustomerRegistration> {
-  // final storage = FlutterSecureStorage();
   String? userId;
   int? userID;
   bool termsAccepted = false;

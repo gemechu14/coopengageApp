@@ -28,7 +28,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateBasedOnRole() async {
     try {
-      const storage = FlutterSecureStorage();
+      const storage = FlutterSecureStorage(
+        aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
+          storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+        ),
+      );
       String? token = await storage.read(key: "token");
       var connectivityResult = await Connectivity().checkConnectivity();
       bool isOnline = connectivityResult != ConnectivityResult.none;

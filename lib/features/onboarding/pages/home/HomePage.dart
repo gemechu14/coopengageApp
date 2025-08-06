@@ -16,7 +16,12 @@ class Homepage extends StatefulWidget {
 }
 
 String dropdownValue = 'ALL';
-final storage = FlutterSecureStorage();
+final storage = FlutterSecureStorage(
+  aOptions: AndroidOptions(
+    encryptedSharedPreferences: true,
+    storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+  ),
+);
 bool isLoading = true; // Loading state
 String username = ""; // Default username
 String firstLetter = "";

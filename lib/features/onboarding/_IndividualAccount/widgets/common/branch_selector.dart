@@ -17,7 +17,11 @@ class BranchSelector extends StatefulWidget {
 }
 
 class _BranchSelectorState extends State<BranchSelector> {
-  final storage = const FlutterSecureStorage();
+  final storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
+  );
   List<Map<String, dynamic>> allBranches = [];
   String? selectedBranch;
   bool isLoading = true;
@@ -126,4 +130,4 @@ class _BranchSelectorState extends State<BranchSelector> {
       ),
     );
   }
-} 
+}

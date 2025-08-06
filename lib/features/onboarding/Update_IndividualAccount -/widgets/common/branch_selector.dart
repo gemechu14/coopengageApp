@@ -17,7 +17,12 @@ class BranchSelector extends StatefulWidget {
 }
 
 class _BranchSelectorState extends State<BranchSelector> {
-  final storage = const FlutterSecureStorage();
+  final storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+    ),
+  );
   List<Map<String, dynamic>> allBranches = [];
   String? selectedBranch;
   bool isLoading = true;
@@ -52,10 +57,13 @@ class _BranchSelectorState extends State<BranchSelector> {
         allBranches = branches;
 
         // Priority: initialValue > alreadySelected > mainBranch
-        String? candidate = widget.initialValue ?? selectedBranch ?? defaultBranchName;
+        String? candidate =
+            widget.initialValue ?? selectedBranch ?? defaultBranchName;
         // Ensure candidate is present exactly once in allBranches
-        final branchNames = allBranches.map((b) => b['companyName'] ?? '').toList();
-        if (candidate != null && branchNames.where((b) => b == candidate).length == 1) {
+        final branchNames =
+            allBranches.map((b) => b['companyName'] ?? '').toList();
+        if (candidate != null &&
+            branchNames.where((b) => b == candidate).length == 1) {
           selectedBranch = candidate;
         } else {
           selectedBranch = null;
@@ -132,4 +140,4 @@ class _BranchSelectorState extends State<BranchSelector> {
       ),
     );
   }
-} 
+}

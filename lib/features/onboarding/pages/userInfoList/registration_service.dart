@@ -5,7 +5,12 @@ import 'dart:convert';
 // import 'package:coopengageplus/constants/kconstant.dart';
 
 class RegistrationService {
-  final storage = const FlutterSecureStorage();
+  final storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+    ),
+  );
   // Use a getter for baseUrl to avoid const error
   static String get _baseUrl => AppConstants
       .baseURL; // fallback, replace with AppConstants.baseUrl if available

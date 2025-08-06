@@ -60,7 +60,6 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _Registration extends State<RegistrationScreen> {
-  // final storage = FlutterSecureStorage();
 
   int? idOne;
   int? userID;

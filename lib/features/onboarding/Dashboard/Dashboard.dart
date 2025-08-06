@@ -42,7 +42,12 @@ class _DashboardState extends State<Dashboard> {
   ];
 
   List<Map<String, dynamic>>? currentMonthData;
-  final storage = FlutterSecureStorage();
+  final storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+    ),
+  );
   int? UserID;
   int localCustomers = 0;
   int databaseCustomers = 0;

@@ -90,7 +90,6 @@ class CorporateRegistration extends StatefulWidget {
 }
 
 class _Registration extends State<CorporateRegistration> {
-  // final storage = FlutterSecureStorage();
   String? userId;
   int? userID;
   bool termsAccepted = false;

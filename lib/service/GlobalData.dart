@@ -5,14 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-
 class GlobalData with ChangeNotifier {
   static final GlobalData _instance = GlobalData._internal();
   factory GlobalData() => _instance;
 
   GlobalData._internal();
 
-  final FlutterSecureStorage storage = FlutterSecureStorage();
+  final FlutterSecureStorage storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+    ),
+  );
 
   String? username;
   String? firstLetter;
@@ -79,7 +83,12 @@ class GlobalData with ChangeNotifier {
 
   static Future<void> syncUnsyncedCustomers(BuildContext context) async {
     final dbHelper = DatabaseHelper();
-    const storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
     GlobalData globalData = GlobalData();
 
     // Call fetchToken to decode and fetch token-related data

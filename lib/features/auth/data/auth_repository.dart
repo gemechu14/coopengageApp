@@ -15,7 +15,11 @@ class AuthRepository {
   AuthRepository(this._ref);
 
   final Ref _ref;
-  final _secureStorage = const FlutterSecureStorage();
+  final _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
+  );
   final _dbHelper = DatabaseHelper();
   final _networkHandler = NetworkHandler();
 
@@ -54,7 +58,7 @@ class AuthRepository {
           branches: user.branches,
         );
       }
-      
+
       await _syncAccountTypes();
 
       return user;
@@ -64,31 +68,31 @@ class AuthRepository {
   }
 
   Future<void> _syncAccountTypes() async {
-     final accountTypesResponse =
-              await _networkHandler.get('/api/v1/account-types');
-          if (accountTypesResponse is List<dynamic>) {
-            int localCount = await _dbHelper.getAccountTypeCount();
-            int incomingCount = accountTypesResponse.length;
+    final accountTypesResponse =
+        await _networkHandler.get('/api/v1/account-types');
+    if (accountTypesResponse is List<dynamic>) {
+      int localCount = await _dbHelper.getAccountTypeCount();
+      int incomingCount = accountTypesResponse.length;
 
-            if (localCount < incomingCount) {
-              await _dbHelper.clearAccountTypesTable();
-              final typesToSave = accountTypesResponse.map((e) {
-                return {
-                  "id": e["id"].toString(),
-                  "name": e["name"] ?? "",
-                  "description": e["description"] ?? "",
-                  "category": e["category"] ?? "",
-                  "bankingType": e["bankingType"] ?? "",
-                  "origin": e["origin"] ?? "",
-                  "minAge": e["minAge"].toString(),
-                  "maxAge": e["maxAge"].toString(),
-                  "minBalance": e["minBalance"].toString(),
-                };
-              }).toList();
+      if (localCount < incomingCount) {
+        await _dbHelper.clearAccountTypesTable();
+        final typesToSave = accountTypesResponse.map((e) {
+          return {
+            "id": e["id"].toString(),
+            "name": e["name"] ?? "",
+            "description": e["description"] ?? "",
+            "category": e["category"] ?? "",
+            "bankingType": e["bankingType"] ?? "",
+            "origin": e["origin"] ?? "",
+            "minAge": e["minAge"].toString(),
+            "maxAge": e["maxAge"].toString(),
+            "minBalance": e["minBalance"].toString(),
+          };
+        }).toList();
 
-              await _dbHelper.insertAccountTypes(typesToSave);
-            }
-          }
+        await _dbHelper.insertAccountTypes(typesToSave);
+      }
+    }
   }
 
   Future<User?> get currentUser async {
@@ -106,4 +110,4 @@ class AuthRepository {
   Future<void> logout() async {
     await _secureStorage.delete(key: 'token');
   }
-} 
+}
