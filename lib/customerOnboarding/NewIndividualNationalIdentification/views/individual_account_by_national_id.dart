@@ -423,6 +423,7 @@ class _IndividualAccountByNationalIdState
                             bankShare: stepperState.bankShare,
                             customerShare: stepperState.customerShare,
                             title: stepperState.selectedTitle,
+                              photo: stepperState,
                             maritalStatus: stepperState.selectedMaritalStatus);
 
                         await Navigator.push(

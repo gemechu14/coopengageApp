@@ -92,28 +92,43 @@ class SimpleFaydaService {
             String? savedImagePath;
             final base64Picture = data['data']['picture']?.toString();
 
-            if (base64Picture != null && base64Picture.isNotEmpty) {
+            if (base64Picture != null &&
+                base64Picture.isNotEmpty &&
+                base64Picture != "data:image/jpeg;base64,/") {
               try {
-                final decodedBytes = base64Decode(base64Picture);
+                // Extract base64 data (remove data:image/jpeg;base64, prefix)
+                final base64Data = base64Picture.replaceFirst(
+                    RegExp(r'^data:image/[^;]+;base64,'), '');
 
-                final directory = await getApplicationDocumentsDirectory();
-                final fileName = '${const Uuid().v4()}.jpg';
-                final filePath = '${directory.path}/$fileName';
+                if (base64Data.isNotEmpty) {
+                  final decodedBytes = base64Decode(base64Data);
 
-                final imageFile = File(filePath);
-                await imageFile.writeAsBytes(decodedBytes);
+                  final directory = await getApplicationDocumentsDirectory();
+                  final fileName = '${const Uuid().v4()}.jpg';
+                  final filePath = '${directory.path}/$fileName';
 
-                savedImagePath = filePath;
-                print('🖼️ Picture saved at: $filePath');
+                  final imageFile = File(filePath);
+                  await imageFile.writeAsBytes(decodedBytes);
+
+                  savedImagePath = filePath;
+                  print('🖼️ Picture saved at: $filePath');
+                } else {
+                  print('⚠️ Empty base64 data after removing prefix');
+                }
               } catch (e) {
                 print('❌ Error saving picture: $e');
+                print(
+                    '❌ Picture data: ${base64Picture.substring(0, 100)}...'); // Log first 100 chars
               }
+            } else {
+              print('⚠️ No valid picture data received');
             }
             // Parse user data
             final userData = FaydaUserData(
               sub: data['data']['sub']?.toString() ?? '',
               name: data['data']['name']?.toString() ?? '',
-              email: 'no-email@example.com', // Default since not provided
+              // email: 'no-', // Default since not provided
+              email: data['data']['email']?.toString() ?? '',
               phoneNumber: data['data']['phone_number']?.toString(),
               birthdate: data['data']['birthdate']?.toString(),
               gender: data['data']['gender']?.toString(),

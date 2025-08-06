@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
+// import 'package:coopengageplus/constants/kconstant.dart';
+// import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,31 +29,6 @@ class _UltraSimpleNationalIdWidgetState
     super.initState();
     _initializeWebView();
 
-    // Check if this is a fresh page visit vs step navigation
-    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //     if (mounted) {
-    //       final currentState = ref.read(simpleNationalIdProvider);
-
-    //       // Fresh visit: No user data exists (new session)
-    //       bool isFreshVisit = currentState.userData == null &&
-    //                          !currentState.isCompleted &&
-    //                          !currentState.isConnected;
-
-    //       if (isFreshVisit) {
-    //         print('🔄 [Widget] Fresh page visit detected - starting fresh authentication');
-    //         _startAuthentication();
-    //       } else if (currentState.isCompleted && currentState.userData != null) {
-    //         print('✅ [Widget] Step navigation detected - keeping existing data');
-    //         // Keep existing data (user navigated back from next step)
-    //         // No need to start authentication
-    //       } else {
-    //         print('🚀 [Widget] Partial state detected - resetting and starting fresh');
-    //         ref.read(simpleNationalIdProvider.notifier).reset();
-    //         _startAuthentication();
-    //       }
-    //     }
-    //   });
-    // }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final stepperState = ref.read(stepperProvider);
@@ -71,10 +46,7 @@ class _UltraSimpleNationalIdWidgetState
           stepperState.fullName != null ||
           stepperState.email != null;
 
-      // Check if this is a fresh visit (no stepper data and no completed authentication)
-      // bool isFreshVisit = !hasStepperData && !hasCompletedData;
-
-      // Debug logging
+     
       print(
           '🔍 [Widget] Debug - Stepper data: authId=${stepperState.authId}, fullName=${stepperState.fullName}, email=${stepperState.email}');
       print(
