@@ -5,13 +5,7 @@ import '../model/account_type.dart';
 // import '../providers/account_type_provider.dart';
 import '../providers/stepper_provider.dart';
 
-/// Account Type Selection Step Widget
-///
-/// Features:
-/// - Smart filtering based on age, gender, and product type
-/// - Beautiful card-based selection UI
-/// - Share calculation for MUDARABAH accounts
-/// - Comprehensive validation and error handling
+
 class AccountTypeStep extends ConsumerStatefulWidget {
   final String? selectedAccountType;
   final Function(String?) onAccountTypeChanged;

@@ -312,8 +312,7 @@ class _IndividualAccountByNationalIdState
                     if (stepperState.activeStep == 0) {
                       // Check both old National ID system and new Fayda system
 
-                      final faydaState =
-                          ref.read(simpleNationalIdProvider);
+                      final faydaState = ref.read(simpleNationalIdProvider);
                       // final faydaState = ref.read(faydaProvider);
                       bool isAuthenticated = false;
 
@@ -402,28 +401,69 @@ class _IndividualAccountByNationalIdState
                     } else if (stepperState.activeStep == 3) {
                       final currentFormKey = formKeys[3];
                       if (currentFormKey.currentState?.validate() ?? false) {
-                        // Build RegistrationData from stepperState
+                        // Get National ID data from SimpleFaydaService
+                        final faydaState = ref.read(simpleNationalIdProvider);
+
+                        // Debug logging for National ID data
+                        print('🎯 [Registration] Using National ID data:');
+                        print(
+                            '🎯 [Registration] Name: ${faydaState.userData?.name}');
+                        print(
+                            '🎯 [Registration] Email: ${faydaState.userData?.email}');
+                        print(
+                            '🎯 [Registration] Phone: ${faydaState.userData?.phoneNumber}');
+                        print(
+                            '🎯 [Registration] Birthdate: ${faydaState.userData?.birthdate}');
+                        print(
+                            '🎯 [Registration] Gender: ${faydaState.userData?.gender}');
+                        print(
+                            '🎯 [Registration] Country: ${faydaState.userData?.address?.country}');
+                        print(
+                            '🎯 [Registration] Region: ${faydaState.userData?.address?.region}');
+                        print(
+                            '🎯 [Registration] Zone: ${faydaState.userData?.address?.zone}');
+                        print(
+                            '🎯 [Registration] Woreda: ${faydaState.userData?.address?.woreda}');
+                        print(
+                            '🎯 [Registration] Picture: ${faydaState.userData?.picture}');
+
+                        // Build RegistrationData with National ID data
                         final registrationData = RegistrationData(
-                            fullName: stepperState.fullName,
-                            email: stepperState.email,
-                            phone: stepperState.authPhone,
+                            fullName: faydaState.userData?.name ??
+                                stepperState.fullName ??
+                                '',
+                            email: faydaState.userData?.email ??
+                                stepperState.email ??
+                                '',
+                            phone: faydaState.userData?.phoneNumber ??
+                                stepperState.authPhone ??
+                                '',
                             accountType: stepperState.selectedAccountType,
                             branch: stepperState.selectedBranch,
                             motherName: stepperState.motherName,
                             initialDeposit:
                                 stepperState.initialDeposit?.toString(),
-                            dateOfBirth: stepperState.dateOfBirth,
+                            dateOfBirth: faydaState.userData?.birthdate ??
+                                stepperState.dateOfBirth,
                             productType: stepperState.selectedProductType,
                             documentName: 'NATIONALID',
                             signature: stepperState.signature,
-                            sex: stepperState.sex,
-                            country: stepperState.country,
-                            state: stepperState.state,
+                            sex:
+                                faydaState.userData?.gender ?? stepperState.sex,
+                            country: faydaState.userData?.address?.country ??
+                                stepperState.country,
+                            state: faydaState.userData?.address?.region ??
+                                stepperState.state,
+                            zoneSubCity: faydaState
+                                .userData?.address?.zone, // Add zone data
+                            streetAddress: faydaState
+                                .userData?.address?.woreda, // Add woreda data
                             legalId: stepperState.legalId,
                             bankShare: stepperState.bankShare,
                             customerShare: stepperState.customerShare,
                             title: stepperState.selectedTitle,
-                              photo: stepperState,
+                            photo: faydaState.userData
+                                ?.picture, // Use the saved picture path
                             maritalStatus: stepperState.selectedMaritalStatus);
 
                         await Navigator.push(
@@ -645,11 +685,6 @@ class _IndividualAccountByNationalIdState
         }
       }
 
-      if (authId == null) {
-        throw Exception(
-            'Authentication ID not found. Please complete National ID authentication first.');
-      }
-
       // Prepare registration data
       final registrationData = {
         'authId': authId,
@@ -669,21 +704,34 @@ class _IndividualAccountByNationalIdState
 
       print('Registration Data: $registrationData');
 
+      // Get National ID data for registration
+      final faydaState = ref.read(simpleNationalIdProvider);
+
       // Call the registration service
       final result = await registrationService.submitRegistration(
-        authId: authId,
         accountType: stepperState.selectedAccountType ?? '1',
         initialDeposit: (stepperState.initialDeposit ?? 1000.0).toString(),
         branch: stepperState.selectedBranch ?? 'FINFINNE',
         motherName: stepperState.motherName ?? 'N/A',
-        state: stepperState.state ?? 'Addis abeba',
+        state: faydaState.userData?.address?.region ??
+            stepperState.state ??
+            'Addis abeba',
         documentName: 'NATIONALID',
         customerInfoInitialDeposit: '100',
         signature: stepperState.signature,
         title: stepperState.selectedTitle,
-        fullName: stepperState.fullName ?? '',
-        Sex: stepperState.sex ?? '',
-        phone: stepperState.phoneNumber,
+        fullName: faydaState.userData?.name ?? stepperState.fullName ?? '',
+        Sex: faydaState.userData?.gender ?? stepperState.sex ?? '',
+        phone:
+            faydaState.userData?.phoneNumber ?? stepperState.phoneNumber ?? '',
+        email: faydaState.userData?.email ?? stepperState.email ?? '',
+        dateOfBirth:
+            faydaState.userData?.birthdate ?? stepperState.dateOfBirth ?? '',
+        country:
+            faydaState.userData?.address?.country ?? stepperState.country ?? '',
+        zoneSubCity: faydaState.userData?.address?.zone ?? '',
+        streetAddress: faydaState.userData?.address?.woreda ?? '',
+        photo: faydaState.userData?.picture ?? '',
       );
 
       // Close loading dialog
@@ -765,7 +813,8 @@ class _IndividualAccountByNationalIdState
       if (!_disposed && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
-
+      print("kdfdkfkdhkfkdfkdfkd");
+      print(e);
       if (!_disposed) {
         DialogHelper.showErrorDialog(
             context, "Registration Failed, please try later");

@@ -10,7 +10,6 @@ class RegistrationService {
   static const String baseUrl = AppConstants.baseURL;
 
   Future<Map<String, dynamic>> submitRegistration({
-    required String authId,
     required String accountType,
     required String initialDeposit,
     required String branch,
@@ -20,12 +19,18 @@ class RegistrationService {
     required String phone,
     required String fullName,
     required String Sex,
-    // String? bankShare,
-    // String? customerShare,
     String? title,
     required String customerInfoInitialDeposit,
     Uint8List? signature,
+    String? email,
+    String? dateOfBirth,
+    String? country,
+    String? zoneSubCity,
+    String? streetAddress,
+    String? photo,
   }) async {
+    print("dfkdfdkfhdhkfdkhkdfk");
+    print(photo);
     try {
       String? token = await storage.read(key: "token");
 
@@ -36,24 +41,29 @@ class RegistrationService {
       print(token);
       // Create multipart request
       final request = http.MultipartRequest(
-        'PUT',
-        Uri.parse('$baseUrl/api/v1/accounts/individual/$authId'),
+        'POST',
+        Uri.parse('$baseUrl/api/v1/accounts/individual'),
       );
 
       request.headers['Authorization'] = 'Bearer $token';
 
       // Add form fields
-      request.fields['customerInfo.state'] = state;
-      request.fields['customerInfo.initialdeposit'] =
-          customerInfoInitialDeposit;
-      // request.fields['customerInfo.documentName'] = "NATIONAILID";
-      request.fields['customerInfo.motherName'] = motherName;
       request.fields['accountType'] = accountType;
       request.fields['initialdeposit'] = initialDeposit;
       request.fields['branch'] = branch;
-      request.fields['title'] = title!;
-      // request.fields['bankShare'] = bankShare!;
-      // request.fields['customerShare'] = customerShare!;
+      request.fields['customerInfo.state'] = state;
+      request.fields['customerInfo.initialdeposit'] =
+          customerInfoInitialDeposit;
+      request.fields['customerInfo.motherName'] = motherName;
+      request.fields['customerInfo.phone'] = phone;
+      request.fields['customerInfo.fullName'] = fullName;
+      request.fields['customerInfo.sex'] = Sex;
+      request.fields['customerInfo.title'] = title ?? '';
+      request.fields['customerInfo.email'] = email ?? '';
+      request.fields['customerInfo.dateOfBirth'] = dateOfBirth ?? '';
+      request.fields['customerInfo.country'] = country ?? '';
+      request.fields['customerInfo.zoneSubCity'] = zoneSubCity ?? '';
+      request.fields['customerInfo.streetAddress'] = streetAddress ?? '';
 
       // Add signature file if available
       if (signature != null) {
@@ -68,6 +78,19 @@ class RegistrationService {
             tempFile.path,
           ),
         );
+      }
+
+      // Add photo file if available
+      if (photo != null && photo.isNotEmpty) {
+        final photoFile = File(photo);
+        if (await photoFile.exists()) {
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'customerInfo.photo',
+              photoFile.path,
+            ),
+          );
+        }
       }
 
       // Send the request
