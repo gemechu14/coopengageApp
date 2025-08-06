@@ -255,6 +255,8 @@ class _LoginscreenState extends State<Loginscreen> {
     try {
       if (await isOnline()) {
         NetworkHandler networkHandler = NetworkHandler();
+        print("BASE URL");
+        print(AppConstants.baseURL);
         // ONLINE LOGIN
         final response = await networkHandler
             .post('${AppConstants.baseURL}/login', data)
@@ -408,13 +410,19 @@ class _LoginscreenState extends State<Loginscreen> {
       );
     } catch (e) {
       print(e);
-
+      print("djdfdjjfdj");
       DialogHelper.show(
         context,
         title: "Coop Engage+",
-        message: "Unexpected error occurred.",
+        message: "Something went wrong. Please try again.",
         type: DialogType.error,
       );
+      // DialogHelper.show(
+      //   context,
+      //   title: "Coop Engage+",
+      //   message: "Unexpected error occurred.",
+      //   type: DialogType.error,
+      // );
     }
   }
 

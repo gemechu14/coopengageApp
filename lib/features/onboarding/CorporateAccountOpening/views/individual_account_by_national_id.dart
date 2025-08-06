@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, use_key_in_widget_constructors
+// ignore_for_file: use_build_context_synchronously, use_key_in_widget_constructors, curly_braces_in_flow_control_structures
 
 import 'dart:io';
 
@@ -448,7 +448,7 @@ class _IndividualAccountByNationalIdState
                           // stepperState.initialDeposit != null &&
                           stepperState.selectedBranch != null) {
                         ref.read(stepperProvider.notifier).nextStep();
-                        final newStep = ref.read(stepperProvider).activeStep;
+                        ref.read(stepperProvider).activeStep;
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -474,13 +474,10 @@ class _IndividualAccountByNationalIdState
                         return;
                       }
 
-                      print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 3) {
-                      print("step 4");
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 4) {
-                      print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 5) {
                       if (stepperState.selectedAccountType == null) {
@@ -561,8 +558,7 @@ class _IndividualAccountByNationalIdState
                         builder: (context) {
                           final buttonText =
                               stepperState.activeStep == 5 ? 'Submit' : 'Next';
-                          print(
-                              'Button text for step ${stepperState.activeStep}: $buttonText');
+                          
                           return Text(
                             buttonText,
                             style: const TextStyle(
@@ -674,7 +670,6 @@ class _IndividualAccountByNationalIdState
               child: CircularProgressIndicator(color: cyanblueColor)),
     );
     try {
-      print("indd3232242424");
 
       // Prepare co
       //mpany and members data for API
@@ -879,150 +874,5 @@ class _IndividualAccountByNationalIdState
       }
     }
   }
-  // Submit registration
-  // Future<void> _submitRegistration() async {
-  //   if (_disposed) return;
-  //   final stepperState = ref.read(stepperProvider);
-  //   final registrationService = RegistrationService();
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (context) => _disposed
-  //         ? const SizedBox.shrink()
-  //         : const Center(
-  //             child: CircularProgressIndicator(color: cyanblueColor)),
-  //   );
-  //   try {
-  //     // Prepare members data for API
-  //     final members = stepperState.members.map((m) {
-  //       final v = m.verifiedData ?? {};
-  //       return {
-  //         'fullName': v['fullName'] ?? m.fullName,
-  //         'surname': v['surname'] ?? v['lastName'] ?? '',
-  //         'motherName': v['motherName'] ?? m.motherName ?? '',
-  //         'email': v['email'] ?? '',
-  //         'phone': v['phone'] ?? '',
-  //         'dateOfBirth': normalizeDate(v['dateOfBirth'] ?? m.dateOfBirth ?? ''),
-  //         'country': v['country'] ?? '',
-  //         'state': v['state'] ?? '',
-  //         'city': v['city'] ?? '',
-  //         'streetAddress': v['streetAddress'] ?? '',
-  //         'zipCode': v['zipCode'] ?? '',
-  //         'occupation': v['occupation'] ?? '',
-  //         'title': v['title'] ?? m.title ?? '',
-  //         'maritalStatus': v['maritalStatus'] ?? m.maritalStatus ?? '',
-  //         'postCode': v['postCode'] ?? '',
-  //         'zoneSubCity': v['zoneSubCity'] ?? '',
-  //         'houseNo': v['houseNo'] ?? '',
-  //         'documentName': v['documentName'] ?? '',
-  //         'issueAuthority': v['issueAuthority'] ?? '',
-  //         'issueDate': v['issueDate'] ?? '',
-  //         'expiryDate': v['expiryDate'] ?? '',
-  //         'employeeStatus': v['employeeStatus'] ?? '',
-  //         'legalId': v['legalId'] ?? '',
-  //         'salary': v['salary'] ?? '',
-  //         'sector': v['sector'] ?? '',
-  //         'industry': v['industry'] ?? '',
-  //         'employerName': v['employerName'] ?? '',
-  //         'monthlyIncome': v['monthlyIncome'] ?? '',
-  //         'sex': v['sex'] ?? m.sex ?? '',
-  //       };
-  //     }).toList();
 
-  //     print("ddfjdfhdfhdfhdh");
-  //     print(members);
-  //     final signatures =
-  //         stepperState.members.map((m) => m.signature as Uint8List?).toList();
-  //     final otherFields = {
-  //       'branch': stepperState.selectedBranch ?? '',
-  //       'currency': 'ETB',
-  //       'accountType': stepperState.selectedAccountType ?? '1',
-  //       'initialDeposit': (stepperState.initialDeposit ?? 100).toString(),
-  //       // 'percentageCompleted':
-  //       //     (stepperState.percentageComplete ?? 10).toString(),
-  //       // 'jointAccountType': 'AND_OR'
-  //     };
-
-  //     print("submitted data");
-  //     print(members);
-  //     final result = await registrationService.submitJointRegistration(
-  //       members: members,
-  //       otherFields: otherFields,
-  //       signatures: signatures,
-  //     );
-  //     if (!_disposed && Navigator.canPop(context)) {
-  //       Navigator.pop(context);
-  //     }
-  //     if (!_disposed) {
-  //       showDialog(
-  //         context: context,
-  //         barrierDismissible: false,
-  //         builder: (context) => AlertDialog(
-  //           shape:
-  //               RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-  //           title: Row(children: const [
-  //             Icon(Icons.check_circle, color: cyanblueColor),
-  //             SizedBox(width: 5),
-  //             Text('Registration Complete',
-  //                 style: TextStyle(
-  //                     fontSize: 15,
-  //                     color: cyanblueColor,
-  //                     fontWeight: FontWeight.bold)),
-  //           ]),
-  //           content: const Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text('Your registration has been submitted successfully!',
-  //                   style: TextStyle(fontSize: 16)),
-  //               SizedBox(height: 10),
-  //               Text('Thank you!', style: TextStyle(fontSize: 16)),
-  //             ],
-  //           ),
-  //           actionsPadding:
-  //               const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () {
-  //                 if (!_disposed) {
-  //                   Navigator.pop(context);
-  //                   Navigator.pushAndRemoveUntil(
-  //                     context,
-  //                     MaterialPageRoute(builder: (_) => const MainPage()),
-  //                     (route) => false,
-  //                   );
-  //                 }
-  //               },
-  //               style: TextButton.styleFrom(
-  //                 foregroundColor: Colors.white,
-  //                 backgroundColor: cyanblueColor,
-  //                 padding:
-  //                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-  //                 shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(8)),
-  //               ),
-  //               child: const Text('OK'),
-  //             ),
-  //           ],
-  //         ),
-  //       ).then((_) {
-  //         if (!_disposed) {
-  //           Navigator.pushAndRemoveUntil(
-  //             context,
-  //             MaterialPageRoute(builder: (_) => const MainPage()),
-  //             (route) => false,
-  //           );
-  //         }
-  //       });
-  //     }
-  //   } catch (e) {
-  //     if (!_disposed && Navigator.canPop(context)) {
-  //       Navigator.pop(context);
-  //     }
-  //     if (!_disposed) {
-  //       DialogHelper.showErrorDialog(
-  //           context, "Registration Failed, please try later");
-  //     }
-  //   }
-  // }
 }

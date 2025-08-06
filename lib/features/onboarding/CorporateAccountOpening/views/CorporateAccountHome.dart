@@ -303,7 +303,6 @@ class _CorporateAccountOpeningState
                   onPressed: () async {
                     if (_disposed) return;
 
-                    print('Current step: ${stepperState.activeStep}');
 
                     if (stepperState.activeStep == 0) {
                       if (nationalIdState.isAuthCompleted) {
@@ -355,7 +354,6 @@ class _CorporateAccountOpeningState
                         );
                       }
                     } else if (stepperState.activeStep == 2) {
-                      print("step 2");
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 3) {
                       final currentFormKey = formKeys[3];
@@ -395,7 +393,6 @@ class _CorporateAccountOpeningState
                           ),
                         );
                       } else {
-                        print('Step 2 validation failed');
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Please select an account type'),
@@ -422,8 +419,7 @@ class _CorporateAccountOpeningState
                         builder: (context) {
                           final buttonText =
                               stepperState.activeStep == 3 ? 'Submit' : 'Next';
-                          print(
-                              'Button text for step ${stepperState.activeStep}: $buttonText');
+                   
                           return Text(
                             buttonText,
                             style: const TextStyle(
@@ -486,8 +482,7 @@ class _CorporateAccountOpeningState
     if (_disposed) return const SizedBox.shrink();
 
     try {
-      print(
-          '_buildContentArea - Step: ${stepperState.activeStep}, Auth completed: ${nationalIdState.isAuthCompleted}');
+   
 
       if (stepperState.activeStep == 0) {
         return const NationalIdAuthWidget();
@@ -555,13 +550,11 @@ class _CorporateAccountOpeningState
       var authId = stepperState.authId?.toString();
 
       if (authId == null) {
-        print(
-            'AuthId is null in stepper state, trying National ID state as fallback');
+
         final nationalIdState = ref.read(nationalIdProvider);
         if (nationalIdState.authResult != null &&
             nationalIdState.authResult!['id'] != null) {
-          print(
-              'Found authId in National ID state: ${nationalIdState.authResult!['id']}');
+       
           authId = nationalIdState.authResult!['id'].toString();
 
           ref
@@ -571,9 +564,7 @@ class _CorporateAccountOpeningState
       }
 
       if (authId == null) {
-        print('ERROR: Authentication ID is null!');
-        print(
-            'This means the authentication data was not properly saved to stepper state.');
+
         throw Exception(
             'Authentication ID not found. Please complete National ID authentication first.');
       }

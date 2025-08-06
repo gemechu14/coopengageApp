@@ -118,7 +118,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       setState(() => _showWebView = false);
 
       // Process the callback API call
-      const baseUrl = 'http://10.8.100.111:9062/';
+      // const baseUrl = 'http://10.8.100.111:9062/';
+      const baseUrl = AppConstants.baseURL;
       ref.read(faydaProvider.notifier).processCallback(baseUrl, code, state);
     }
   }
@@ -159,7 +160,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-            Expanded(
+          Expanded(
             child: _showWebView &&
                     faydaState.authUrl != null &&
                     !faydaState.isCompleted
@@ -290,8 +291,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
           // Success state - Verified
           if (faydaState.isCompleted && faydaState.userData != null) ...[
-    
-
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(

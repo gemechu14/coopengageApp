@@ -65,9 +65,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         }
       });
 
-      print('WebView reset successfully');
     } catch (e) {
-      print('Error resetting WebView: $e');
     }
   }
 
@@ -160,7 +158,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     }
 
     if (nationalIdState.isLoading) {
-      print('NationalIdAuthWidget: Showing simple loading state');
       return const Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
@@ -188,7 +185,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           ElevatedButton(
             onPressed: () {
               if (!_disposed) {
-                print('Manual API call triggered');
+            
                 ref.read(nationalIdProvider.notifier).callEsignetApi();
               }
             },

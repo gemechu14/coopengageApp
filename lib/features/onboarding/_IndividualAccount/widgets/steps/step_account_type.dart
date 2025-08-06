@@ -76,8 +76,7 @@ class _StepAccountTypeState extends ConsumerState<StepAccountType> {
       print("Account types loaded: ${accountTypes.length}");
 
       if (accountTypes.isNotEmpty) {
-        print("Incoming account types");
-        print(accountTypes);
+   
         setState(() {
           allAccountTypes = accountTypes;
           filteredAccountTypes = allAccountTypes;

@@ -260,7 +260,7 @@ class _DashboardState extends State<Dashboard> {
                   borderRadius: BorderRadius.circular(
                       16), // Same as container's borderRadius
                   child: Image.asset(
-                    "assets/open_1.png",
+                    "assets/step3.png",
                     width: MediaQuery.of(context).size.width * 0.9,
                     height: 150,
                     fit: BoxFit.fill,

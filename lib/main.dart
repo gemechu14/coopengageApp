@@ -1,5 +1,8 @@
 // ignore_for_file: avoid_print, non_constant_identifier_names
 
+import 'dart:io';
+
+import 'package:coopengageplus/HttpOverrides.dart';
 import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/Screen/SplashScreen.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
@@ -21,6 +24,8 @@ int? TOTALINITIAL;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   DatabaseHelper dbHelper = DatabaseHelper();
+
+  HttpOverrides.global = MyHttpOverrides();
   String initialLanguage = 'en';
   try {
     await dbHelper.database;
@@ -42,9 +47,9 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Customer Engage +',
       debugShowCheckedModeBanner: false,
-  
+
       home: const SplashScreen(),
-  
+
       routes: {
         '/home': (context) => const MainPage(),
         '/login': (context) => const Loginscreen(),

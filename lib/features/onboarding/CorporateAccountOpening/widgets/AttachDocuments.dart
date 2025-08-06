@@ -1,11 +1,11 @@
 // ignore_for_file: non_constant_identifier_names
 
-import 'dart:io';
+// import 'dart:io';
 import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/widget/ReusableTextFormField.dart';
+// import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -112,14 +112,7 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
     final tradeNameFiles = stepperState.tradeNameFiles;
     final otherFiles = stepperState.otherFiles;
 
-    // Debug: Print current file states
-    print('Current file states:');
-    print('License: $licenseFiles');
-    print('Article: $articleFiles');
-    print('Letter: $letterOfRequestFiles');
-    print('TIN: $tinNumberPhotos');
-    print('Trade: $tradeNameFiles');
-    print('Other: $otherFiles');
+ 
 
     return SingleChildScrollView(
       child: Padding(
@@ -140,7 +133,6 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
                 },
               ),
               onDelete: (index) {
-                print('Deleting license file at index $index');
                 notifier.removeLicenseFile(index);
               },
             ),

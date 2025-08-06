@@ -96,7 +96,8 @@ class NetworkHandler {
     // String? token = await storage.read(key: "token");
     var uri = Uri.parse(url); // The complete URL is passed directly
     log.d(body);
-
+    print("base urlre");
+    print(uri);
     var response = await http.post(
       uri,
       headers: {
@@ -253,6 +254,7 @@ class NetworkHandler {
     url = formater(url);
     var uri = Uri.parse(url);
 
+    print(url);
     var request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token';
 

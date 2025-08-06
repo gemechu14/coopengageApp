@@ -1,20 +1,33 @@
 class AppConstants {
   // static const baseUrl = "http://10.2.125.41:9061/api/v1";
   // static const baseURL = 'http://10.2.125.41:9061';
-///TEST SERVER
-  static const baseUrl = "http://10.8.100.111:9062/api/v1";
-  static const baseURL = 'http://10.8.100.111:9062';
+  /// ==============================TEST SERVER============================
+  // static const baseUrl = "http://10.8.100.111:9062/api/v1";
+  // static const baseURL = 'http://10.8.100.111:9062';
   // static const BASEURL= 'http://10.8.100.111:9062';
-  
+
+  ///=======================PRODUCTION SERVER=============================
+  // static const baseUrl = "https://10.16.0.25/api/v1";
+  // static const baseURL = 'https://10.16.0.25';
+
+
+
+
+///======= MOOTII SERV3ER ============
+
   // WebSocket specific configuration
-  static const webSocketUrl = 'ws://10.8.100.111:9062/ws/fayda';
+  // static const webSocketUrl = 'ws://10.8.100.111:9062/ws/fayda';
+  static const baseUrl = "http://10.12.53.33:9062/api/v1";
+  static const baseURL = 'http://10.12.53.33:9062';
+
+  static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
+
+
+  // static const websocketURL= 'ws://10.12.53.33:9062'
 
   //PRODUCTION SERVER
   // static const baseUrl = "http://10.12.53.33:9061/api/v1";
   // static const baseURL = 'http://10.12.53.33:9061';
-  
-
-
 
   static const cacheDays = 60;
   static const soupBaseURL = 'https://souqpass.coopbankoromiasc.com/api';

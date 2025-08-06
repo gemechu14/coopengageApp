@@ -58,7 +58,7 @@ class FaydaService {
     print('🌐 [FaydaService] Client ID: $_clientId');
     print('🌐 [FaydaService] WebSocket status before API call: ${isConnected}');
     
-    final url = '${baseUrl}api/v1/fayda/authenticate-url-ws?clientId=$_clientId';
+    final url = '${baseUrl}/api/v1/fayda/authenticate-url-ws?clientId=$_clientId';
     print('🌐 [FaydaService] Full API URL: $url');
     
     try {
@@ -93,7 +93,7 @@ class FaydaService {
     print('📞 [FaydaService] WebSocket status BEFORE callback API: ${isConnected}');
     print('📞 [FaydaService] WebSocket channel exists: ${_channel != null}');
     
-    final url = '${baseUrl}api/v1/fayda/callback?code=$code&state=$state';
+    final url = '${baseUrl}/api/v1/fayda/callback?code=$code&state=$state';
     print('📞 [FaydaService] Callback API URL: $url');
     print('📞 [FaydaService] ✅ USING GET REQUEST (not POST)');
     

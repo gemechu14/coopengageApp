@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -587,11 +589,8 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
       final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
       await tempFile.writeAsBytes(bytes);
 
-      print("✅ Saved temporary photo at: ${tempFile.path}");
-      print("📤 Photo Bytes Length: ${bytes.length}");
       return bytes; // Return the image bytes
     } else {
-      print("❌ File does not exist at: $path");
       return null;
     }
   }
@@ -614,14 +613,10 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
       profileBytes = await _getImageBytes(profilePath, "profile.png");
     }
 
-    print(
-        "📤 Profile Bytes: ${profileBytes != null ? 'Available' : 'Not available'}");
 
     // Get current user ID
     final userId = ref.read(userIdProvider);
 
-    print("👤 User ID: $userId");
-    print("🌐 Is Online: $isOnline");
 
     // Call controller method
     final success =
@@ -632,11 +627,8 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
             );
 
     if (success) {
-      print("✅ Personal Photo Step completed successfully!");
-      print("📊 Progress: 50%");
-      print("📋 Form Status: INITIAL");
+    
     } else {
-      print("❌ Personal Photo Step failed!");
       // Error is already handled by the controller and shown via SnackBar
     }
   }

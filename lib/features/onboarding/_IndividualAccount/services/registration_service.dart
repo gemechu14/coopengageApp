@@ -247,8 +247,7 @@ class RegistrationService {
             'customerInfo.formCompleted': 0,
           },
         );
-        print('Create status code: \\${response.statusCode}');
-        print('Create response body: \\${response.body}');
+
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body);
           final newUserId = data['id'].toString();
@@ -265,8 +264,7 @@ class RegistrationService {
   Future<ServiceResult> _submitIdTypeOnline(String branch, String documentName,
       Uint8List? frontImage, Uint8List? backImage, String? userId) async {
     try {
-      print(branch);
-      print(frontImage);
+
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete step 1 first.');
@@ -299,7 +297,6 @@ class RegistrationService {
     } on TimeoutException {
       return ServiceResult.error('Request timed out. Please try again.');
     } catch (e) {
-      print(e);
       return ServiceResult.error('An error occurred: $e');
     }
   }
@@ -381,7 +378,6 @@ class RegistrationService {
       String sector,
       String? userId) async {
     try {
-      print("jfkdfkdfdfkdjfdkkkkkkkkkkkkkkkkk");
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -396,8 +392,7 @@ class RegistrationService {
         'status': 'INITIAL',
       };
 
-      print("jfkdfkdfdfkdjfdkkkkkkkkkkkkkkkkk");
-      print(requestData);
+
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));

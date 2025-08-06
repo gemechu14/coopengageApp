@@ -12,7 +12,6 @@ import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentific
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
 
-
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,14 +130,13 @@ class _IndividualAccountByNationalIdState
             ),
           ),
           title: const Text(
-            'Individual Account1',
+            'Individual Account',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: cyanblueColor,
             ),
           ),
-        
         ),
         body: SafeArea(
           child: Column(
@@ -321,9 +319,11 @@ class _IndividualAccountByNationalIdState
                         isAuthenticated = true;
                       }
                       // Check new Fayda system as fallback
-                      else if (faydaState.isCompleted && faydaState.userData != null) {
-                        print('🎯 [Stepper] Fayda authentication detected, proceeding...');
-                        
+                      else if (faydaState.isCompleted &&
+                          faydaState.userData != null) {
+                        print(
+                            '🎯 [Stepper] Fayda authentication detected, proceeding...');
+
                         // Convert Fayda data to expected format
                         final faydaAuthData = {
                           'id': faydaState.userData!.sub,
@@ -333,8 +333,10 @@ class _IndividualAccountByNationalIdState
                           'gender': faydaState.userData!.gender,
                           'birthdate': faydaState.userData!.birthdate,
                           'address': {
-                            'country': faydaState.userData!.address?.country ?? 'Unknown',
-                            'region': faydaState.userData!.address?.region ?? 'Unknown',
+                            'country': faydaState.userData!.address?.country ??
+                                'Unknown',
+                            'region': faydaState.userData!.address?.region ??
+                                'Unknown',
                           },
                         };
 
@@ -392,6 +394,7 @@ class _IndividualAccountByNationalIdState
                       if (currentFormKey.currentState?.validate() ?? false) {
                         // Build RegistrationData from stepperState
                         final registrationData = RegistrationData(
+                            
                             fullName: stepperState.fullName,
                             email: stepperState.email,
                             phone: stepperState.authPhone,
@@ -632,7 +635,6 @@ class _IndividualAccountByNationalIdState
       }
 
       if (authId == null) {
-    
         throw Exception(
             'Authentication ID not found. Please complete National ID authentication first.');
       }
@@ -669,10 +671,8 @@ class _IndividualAccountByNationalIdState
         signature: stepperState.signature,
         title: stepperState.selectedTitle,
         fullName: stepperState.fullName ?? '',
-        Sex:  stepperState.sex?? '',
+        Sex: stepperState.sex ?? '',
         phone: stepperState.phoneNumber,
-
-
       );
 
       // Close loading dialog

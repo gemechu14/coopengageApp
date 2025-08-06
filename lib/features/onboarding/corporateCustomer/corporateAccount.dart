@@ -115,7 +115,7 @@ class _Registration extends State<CorporateCustomerRegistration> {
       _signatureController3;
   final ImagePicker _picker = ImagePicker();
   List<XFile>? _signatureImages = [];
-  bool _isSigning = false;
+  // bool _isSigning = false;
   Uint8List? _combinedSignature;
 
   Future<void> _initializeGlobalData() async {

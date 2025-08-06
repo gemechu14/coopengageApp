@@ -1,5 +1,7 @@
 
 
+// ignore_for_file: sized_box_for_whitespace, use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:coopengageplus/helper/databaseHelper.dart';
@@ -92,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
           // Username Field
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-            child: Container(
+            child: SizedBox(
               width: width < 600
                   ? double.infinity
                   : width * 0.5, // Adjust width for tablet

@@ -450,7 +450,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
         ),
         const SizedBox(height: 4),
         Text(
-          '${accountType.bankingType} • ${accountType.type}',
+          '${accountType.bankingType} ',
           style: TextStyle(
             fontSize: 12,
             color: subtitleColor,
