@@ -60,23 +60,31 @@ class _UltraSimpleNationalIdWidgetState
       final currentState = ref.read(simpleNationalIdProvider);
 
       // Check if we have completed data from previous session
-      bool hasCompletedData = currentState.isCompleted && currentState.userData != null;
-      
+      bool hasCompletedData =
+          currentState.isCompleted && currentState.userData != null;
+
+      bool isFreshVisit = (stepperState.authId == null &&
+          stepperState.fullName == null &&
+          stepperState.email == null);
       // Check if we have stepper data (user has completed authentication before)
-      bool hasStepperData = stepperState.authId != null || 
-                           stepperState.fullName != null || 
-                           stepperState.email != null;
-      
+      bool hasStepperData = stepperState.authId != null ||
+          stepperState.fullName != null ||
+          stepperState.email != null;
+
       // Check if this is a fresh visit (no stepper data and no completed authentication)
-      bool isFreshVisit = !hasStepperData && !hasCompletedData;
+      // bool isFreshVisit = !hasStepperData && !hasCompletedData;
 
       // Debug logging
-      print('🔍 [Widget] Debug - Stepper data: authId=${stepperState.authId}, fullName=${stepperState.fullName}, email=${stepperState.email}');
-      print('🔍 [Widget] Debug - Current state: isCompleted=${currentState.isCompleted}, hasUserData=${currentState.userData != null}');
-      print('🔍 [Widget] Debug - Flags: hasStepperData=$hasStepperData, hasCompletedData=$hasCompletedData, isFreshVisit=$isFreshVisit');
+      print(
+          '🔍 [Widget] Debug - Stepper data: authId=${stepperState.authId}, fullName=${stepperState.fullName}, email=${stepperState.email}');
+      print(
+          '🔍 [Widget] Debug - Current state: isCompleted=${currentState.isCompleted}, hasUserData=${currentState.userData != null}');
+      print(
+          '🔍 [Widget] Debug - Flags: hasStepperData=$hasStepperData, hasCompletedData=$hasCompletedData, isFreshVisit=$isFreshVisit');
 
       if (isFreshVisit) {
-        print('🔄 [Widget] Fresh page visit detected - starting fresh authentication');
+        print(
+            '🔄 [Widget] Fresh page visit detected - starting fresh authentication');
         ref.read(simpleNationalIdProvider.notifier).reset();
         setState(() {
           _callbackDetected = false;
@@ -88,20 +96,25 @@ class _UltraSimpleNationalIdWidgetState
           }
         });
       } else if (hasCompletedData) {
-        print('✅ [Widget] Step navigation with completed data - keeping existing data');
+        print(
+            '✅ [Widget] Step navigation with completed data - keeping existing data');
         // Keep existing data (user navigated back from next step)
         setState(() {
-          _callbackDetected = true; // Mark as completed to prevent WebView restart
+          _callbackDetected =
+              true; // Mark as completed to prevent WebView restart
         });
       } else if (hasStepperData && !hasCompletedData) {
-        print('🔄 [Widget] Returning with stepper data but no current data - restoring from stepper');
+        print(
+            '🔄 [Widget] Returning with stepper data but no current data - restoring from stepper');
         // User has stepper data but no current authentication data, restore from stepper
         _restoreFromStepper(stepperState);
         setState(() {
-          _callbackDetected = true; // Mark as completed to prevent WebView restart
+          _callbackDetected =
+              true; // Mark as completed to prevent WebView restart
         });
       } else {
-        print('🚀 [Widget] Partial state detected - resetting and starting fresh');
+        print(
+            '🚀 [Widget] Partial state detected - resetting and starting fresh');
         // In step flow but no completed data, start fresh
         ref.read(simpleNationalIdProvider.notifier).reset();
         setState(() {
@@ -131,26 +144,26 @@ class _UltraSimpleNationalIdWidgetState
     });
   }
 
-    void _checkWebSocketStatus() {
+  void _checkWebSocketStatus() {
     final state = ref.read(simpleNationalIdProvider);
-    
+
     // If WebSocket is not connected, close WebView
     if (!state.isConnected && _showWebView) {
       print('🔌 WebSocket closed - closing WebView');
       setState(() => _showWebView = false);
       _checkTimer?.cancel();
     }
-    
+
     // If authentication completed, close WebView and save to stepper
     if (state.isCompleted && state.userData != null && _showWebView) {
       print('✅ Authentication completed - closing WebView');
       setState(() => _showWebView = false);
       _checkTimer?.cancel();
-      
+
       // Save authentication data to stepper provider
       _saveToStepper(state.userData!);
     }
-    
+
     // If error occurred, close WebView
     if (state.error != null && _showWebView) {
       print('❌ Error occurred - closing WebView');
@@ -162,7 +175,7 @@ class _UltraSimpleNationalIdWidgetState
   void _saveToStepper(FaydaUserData userData) {
     print('💾 [Widget] Saving authentication data to stepper provider');
     final stepperNotifier = ref.read(stepperProvider.notifier);
-    
+
     // Convert sub to int if possible, otherwise use null
     int? authId;
     try {
@@ -170,18 +183,19 @@ class _UltraSimpleNationalIdWidgetState
     } catch (e) {
       print('⚠️ [Widget] Could not parse auth ID: ${userData.sub}');
     }
-    
+
     stepperNotifier.updateAuthId(authId);
     stepperNotifier.updateFullName(userData.name);
     stepperNotifier.updateEmail(userData.email);
-    
+
     print('💾 [Widget] Authentication data saved to stepper');
-    print('💾 [Widget] Auth ID: $authId, Name: ${userData.name}, Email: ${userData.email}');
+    print(
+        '💾 [Widget] Auth ID: $authId, Name: ${userData.name}, Email: ${userData.email}');
   }
 
   void _restoreFromStepper(StepperState stepperState) {
     print('🔄 [Widget] Restoring authentication data from stepper provider');
-    
+
     // Create a mock user data from stepper state
     final userData = FaydaUserData(
       sub: stepperState.authId?.toString() ?? '',
@@ -193,12 +207,13 @@ class _UltraSimpleNationalIdWidgetState
       address: null, // Address not stored in stepper
       picture: null, // Picture not stored in stepper
     );
-    
+
     // Update the simple national ID provider with the restored data
     ref.read(simpleNationalIdProvider.notifier).restoreUserData(userData);
-    
+
     print('🔄 [Widget] Authentication data restored from stepper');
-    print('🔄 [Widget] Auth ID: ${stepperState.authId}, Name: ${stepperState.fullName}, Email: ${stepperState.email}');
+    print(
+        '🔄 [Widget] Auth ID: ${stepperState.authId}, Name: ${stepperState.fullName}, Email: ${stepperState.email}');
   }
 
   @override
@@ -255,14 +270,16 @@ class _UltraSimpleNationalIdWidgetState
     if (_showUserData && faydaState.userData != null) {
       return _buildUserDataView(faydaState.userData!);
     }
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           // Loading state (only show if not completed and no error)
           if (faydaState.isLoading ||
-              (!faydaState.isCompleted && faydaState.error == null && !faydaState.isConnected)) ...[
+              (!faydaState.isCompleted &&
+                  faydaState.error == null &&
+                  !faydaState.isConnected)) ...[
             const CircularProgressIndicator(
               color: Colors.blue,
               strokeWidth: 4,
