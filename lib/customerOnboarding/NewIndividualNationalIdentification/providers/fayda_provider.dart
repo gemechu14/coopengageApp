@@ -63,54 +63,6 @@ class FaydaNotifier extends StateNotifier<NationalIdState> {
     }
   }
   
-  // Step 4: Process callback after user completes authentication
-  Future<void> processCallback(String baseUrl, String code, String stateParam) async {
-    print('📞 [FaydaProvider] STEP 4: Processing callback...');
-    print('📞 [FaydaProvider] Base URL: $baseUrl');
-    print('📞 [FaydaProvider] Code: $code');
-    print('📞 [FaydaProvider] State param: $stateParam');
-    print('📞 [FaydaProvider] Service exists: ${_service != null}');
-    print('📞 [FaydaProvider] WebSocket connected: ${_service?.isConnected}');
-    print('📞 [FaydaProvider] Current provider state: isLoading=${state.isLoading}, error=${state.error}');
-    
-    try {
-      if (_service == null) {
-        print('❌ [FaydaProvider] Service is null - cannot process callback');
-        throw Exception('Service not initialized');
-      }
-      
-      print('📞 [FaydaProvider] WebSocket status BEFORE processing callback: ${_service!.isConnected}');
-      state = state.copyWith(isLoading: true, error: null);
-      print('📞 [FaydaProvider] State set to loading');
-      
-      // Call the callback API - WebSocket must stay open for this
-      print('📞 [FaydaProvider] Calling service.processCallback...');
-      await _service!.processCallback(baseUrl, code, stateParam);
-      print('📞 [FaydaProvider] Service.processCallback completed successfully');
-      print('📞 [FaydaProvider] WebSocket status AFTER callback API: ${_service!.isConnected}');
-      
-      // Update state to show callback processing is complete
-      state = state.copyWith(isLoading: false);
-      print('📞 [FaydaProvider] Callback processing complete, loading=false');
-      print('📞 [FaydaProvider] WebSocket status after state update: ${_service!.isConnected}');
-      
-      // WebSocket stays open to receive authentication_result
-      print('📞 [FaydaProvider] WebSocket kept open for authentication_result');
-      print('📞 [FaydaProvider] Service NOT disposed - waiting for authentication_result');
-      
-    } catch (e) {
-      print('❌ [FaydaProvider] Error in processCallback: $e');
-      print('❌ [FaydaProvider] WebSocket status during callback error: ${_service?.isConnected}');
-      // If callback API fails (like 400 error), keep WebSocket open for retry
-      state = state.copyWith(
-        isLoading: false, 
-        error: 'Callback API failed: ${e.toString()}. WebSocket kept open for retry.',
-      );
-      print('❌ [FaydaProvider] Error state set, WebSocket kept open');
-      print('❌ [FaydaProvider] Service NOT disposed - allowing retry');
-    }
-  }
-  
   // Wait for authentication result from WebSocket
   void _waitForAuthResult() async {
     print('⏳ [FaydaProvider] Background: Waiting for authentication result...');
@@ -148,23 +100,6 @@ class FaydaNotifier extends StateNotifier<NationalIdState> {
       print('❌ [FaydaProvider] Error state set for auth result failure');
       // Keep service alive on WebSocket error for potential retry
       print('⚠️ [FaydaProvider] Service kept alive for potential retry');
-    }
-  }
-  
-  // Manual retry method for when callback API fails
-  Future<void> retryCallback(String baseUrl, String code, String stateParam) async {
-    print('🔄 [FaydaProvider] Retrying callback...');
-    print('🔄 [FaydaProvider] Service exists: ${_service != null}');
-    print('🔄 [FaydaProvider] WebSocket connected: ${_service?.isConnected}');
-    
-    if (_service != null && _service!.isConnected) {
-      print('🔄 [FaydaProvider] WebSocket still connected, retrying callback');
-      await processCallback(baseUrl, code, stateParam);
-    } else {
-      print('❌ [FaydaProvider] WebSocket connection lost, cannot retry');
-      state = state.copyWith(
-        error: 'WebSocket connection lost. Please restart authentication.',
-      );
     }
   }
   

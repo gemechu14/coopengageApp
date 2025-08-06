@@ -5,12 +5,30 @@ import 'package:http/http.dart' as http;
 import '../model/national_id_models.dart';
 
 class FaydaService {
-  static const String _clientId = "12344";
-  static const String _wsUrl = "ws://10.8.100.111:9062/ws/fayda";
+  static const String _wsUrl = "ws://10.12.53.33:9062/ws/fayda";
+  
+  // Generate unique client ID for each service instance
+  late final String _clientId;
   
   WebSocketChannel? _channel;
   final _registrationCompleter = Completer<bool>();
   final _authCompleter = Completer<FaydaUserData>();
+  
+  // Constructor generates unique client ID
+  FaydaService() {
+    _clientId = _generateClientId();
+    print('🆔 [FaydaService] Generated unique client ID: $_clientId');
+  }
+  
+  /// Generate a unique client ID based on timestamp and random component
+  String _generateClientId() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random = (timestamp * 7) % 999999;
+    return 'client_${timestamp}_${random}';
+  }
+  
+  /// Get the current client ID for this service instance
+  String get clientId => _clientId;
   
   // Step 1: Connect to WebSocket and register client
   Future<void> connectAndRegister() async {
@@ -20,7 +38,7 @@ class FaydaService {
     
     _channel = WebSocketChannel.connect(Uri.parse(_wsUrl));
     print('🔌 [FaydaService] WebSocket channel created');
-    print('🔌 [FaydaService] WebSocket connected: ${_channel != null}');
+    print('🔌 [FaydaService] WebSocket connected: ${isConnected}');
     
     // Listen for messages
     _channel!.stream.listen(_handleMessage);
@@ -84,49 +102,29 @@ class FaydaService {
     }
   }
   
-  // Step 4: Call callback API with code and state
-  Future<void> processCallback(String baseUrl, String code, String state) async {
-    print('📞 [FaydaService] STEP 4: Processing callback...');
-    print('📞 [FaydaService] Base URL: $baseUrl');
-    print('📞 [FaydaService] Code: $code');
-    print('📞 [FaydaService] State: $state');
-    print('📞 [FaydaService] WebSocket status BEFORE callback API: ${isConnected}');
-    print('📞 [FaydaService] WebSocket channel exists: ${_channel != null}');
-    
-    final url = '${baseUrl}/api/v1/fayda/callback?code=$code&state=$state';
-    print('📞 [FaydaService] Callback API URL: $url');
-    print('📞 [FaydaService] ✅ USING GET REQUEST (not POST)');
-    
-    try {
-      print('📞 [FaydaService] Making HTTP GET request...');
-      final response = await http.get(Uri.parse(url)); // ✅ CHANGED TO GET
-      
-      print('📞 [FaydaService] Callback API Response status: ${response.statusCode}');
-      print('📞 [FaydaService] Callback API Response body: ${response.body}');
-      print('📞 [FaydaService] WebSocket status AFTER callback API: ${isConnected}');
-      print('📞 [FaydaService] WebSocket channel still exists: ${_channel != null}');
-      
-      if (response.statusCode != 200) {
-        print('❌ [FaydaService] Callback API failed with status: ${response.statusCode}');
-        print('❌ [FaydaService] Response body: ${response.body}');
-        print('📞 [FaydaService] WebSocket status during error: ${isConnected}');
-        throw Exception('Callback failed: ${response.statusCode} - ${response.body}');
-      }
-      
-      print('✅ [FaydaService] Callback API successful with GET request');
-      print('📞 [FaydaService] WebSocket status after successful callback: ${isConnected}');
-    } catch (e) {
-      print('❌ [FaydaService] Exception in callback API: $e');
-      print('📞 [FaydaService] WebSocket status during exception: ${isConnected}');
-      throw e;
-    }
-  }
-  
   // Step 5: Wait for authentication result
   Future<FaydaUserData> waitForAuthResult() async {
     print('⏳ [FaydaService] STEP 5: Waiting for authentication result...');
     print('⏳ [FaydaService] WebSocket status before waiting: ${isConnected}');
-    return await _authCompleter.future;
+    print('⏳ [FaydaService] Client ID: $_clientId');
+    print('⏳ [FaydaService] WebSocket channel exists: ${_channel != null}');
+    
+    if (!isConnected) {
+      print('❌ [FaydaService] WebSocket is not connected! Cannot wait for auth result');
+      throw Exception('WebSocket is not connected');
+    }
+    
+    print('⏳ [FaydaService] Starting to wait for authentication_result message...');
+    print('⏳ [FaydaService] Expected client ID in response: $_clientId');
+    
+    try {
+      final result = await _authCompleter.future;
+      print('🎉 [FaydaService] Authentication result received successfully!');
+      return result;
+    } catch (e) {
+      print('❌ [FaydaService] Error waiting for auth result: $e');
+      rethrow;
+    }
   }
   
   // Helper method to extract callback parameters from URL
@@ -153,69 +151,110 @@ class FaydaService {
   }
   
   void _handleMessage(dynamic message) {
-    print('📨 [FaydaService] WebSocket message received: $message');
+    print('📨 [FaydaService] ===== WebSocket message received =====');
+    print('📨 [FaydaService] Raw message: $message');
     print('📨 [FaydaService] WebSocket status on message: ${isConnected}');
+    print('📨 [FaydaService] Current client ID: $_clientId');
     
     try {
       final data = jsonDecode(message.toString());
       print('📨 [FaydaService] Parsed message data: $data');
       
-      switch (data['type']) {
-        case 'registration_success':
-          print('✅ [FaydaService] Registration success message received');
-          if (data['clientId'] == _clientId) {
-            print('✅ [FaydaService] Client ID matches: ${data['clientId']}');
-            if (!_registrationCompleter.isCompleted) {
-              print('✅ [FaydaService] Completing registration completer');
-              _registrationCompleter.complete(true);
-            } else {
-              print('⚠️ [FaydaService] Registration completer already completed');
-            }
-          } else {
-            print('⚠️ [FaydaService] Client ID mismatch: expected $_clientId, got ${data['clientId']}');
-          }
-          break;
+      // Check if this is an authentication result message (no 'type' field, just 'data')
+      if (data.containsKey('data') && data['data'] != null) {
+        print('🎉 [FaydaService] ===== AUTHENTICATION RESULT MESSAGE RECEIVED =====');
+        print('🎉 [FaydaService] User data received: ${data['data']}');
+        
+        try {
+          // Create user data with required fields, handling missing ones
+          final userDataJson = data['data'] as Map<String, dynamic>;
           
-        case 'authentication_result':
-          print('🎉 [FaydaService] Authentication result received');
-          print('🎉 [FaydaService] WebSocket status when auth result received: ${isConnected}');
-          if (data['clientId'] == _clientId) {
-            print('🎉 [FaydaService] Client ID matches for auth result: ${data['clientId']}');
-            print('🎉 [FaydaService] User data: ${data['data']}');
-            final userData = FaydaUserData.fromJson(data['data']);
-            if (!_authCompleter.isCompleted) {
-              print('🎉 [FaydaService] Completing auth completer');
-              _authCompleter.complete(userData);
-            } else {
-              print('⚠️ [FaydaService] Auth completer already completed');
-            }
-            print('🔌 [FaydaService] NOT closing WebSocket here - keeping open for provider');
-            print('🔌 [FaydaService] WebSocket status after auth result: ${isConnected}');
-          } else {
-            print('⚠️ [FaydaService] Client ID mismatch for auth result: expected $_clientId, got ${data['clientId']}');
-          }
-          break;
+          // Ensure required fields exist, provide defaults if missing
+          final userData = FaydaUserData(
+            sub: userDataJson['sub']?.toString() ?? 'unknown',
+            name: userDataJson['name']?.toString() ?? 'Unknown User',
+            email: userDataJson['email']?.toString() ?? 'no-email@example.com', // Default email
+            phoneNumber: userDataJson['phone_number']?.toString(),
+            birthdate: userDataJson['birthdate']?.toString(),
+            gender: userDataJson['gender']?.toString(),
+            address: userDataJson['address'] != null 
+                ? FaydaAddress(
+                    country: userDataJson['address']['country']?.toString(),
+                    region: userDataJson['address']['region']?.toString(),
+                  )
+                : null,
+          );
           
-        default:
-          print('❓ [FaydaService] Unknown message type: ${data['type']}');
-          // Handle errors or unknown types
-          if (data['type']?.contains('error') == true) {
-            print('❌ [FaydaService] Error message received: ${data['message']}');
-            if (!_registrationCompleter.isCompleted) {
-              print('❌ [FaydaService] Completing registration with error');
-              _registrationCompleter.complete(false);
-            }
-            if (!_authCompleter.isCompleted) {
-              print('❌ [FaydaService] Completing auth with error');
-              _authCompleter.completeError(Exception(data['message'] ?? 'Authentication error'));
-            }
+          if (!_authCompleter.isCompleted) {
+            print('🎉 [FaydaService] Completing auth completer with user data');
+            print('🎉 [FaydaService] User: ${userData.name}, Sub: ${userData.sub}');
+            _authCompleter.complete(userData);
+            
+            // Close WebSocket after successful authentication
+            print('🔌 [FaydaService] Authentication successful - closing WebSocket');
+            dispose();
+          } else {
+            print('⚠️ [FaydaService] Auth completer already completed');
           }
+        } catch (parseError) {
+          print('❌ [FaydaService] Error parsing user data: $parseError');
+          print('❌ [FaydaService] Raw user data: ${data['data']}');
+          if (!_authCompleter.isCompleted) {
+            _authCompleter.completeError(Exception('Failed to parse user data: $parseError'));
+          }
+        }
+        return;
+      }
+      
+      // Handle other message types if they have a 'type' field
+      if (data.containsKey('type')) {
+        final messageType = data['type']?.toString();
+        print('📨 [FaydaService] Message type: $messageType');
+        print('📨 [FaydaService] Message client ID: ${data['clientId']}');
+        
+        switch (messageType) {
+          case 'registration_success':
+            print('✅ [FaydaService] Registration success message received');
+            if (data['clientId'] == _clientId) {
+              print('✅ [FaydaService] Client ID matches: ${data['clientId']}');
+              if (!_registrationCompleter.isCompleted) {
+                print('✅ [FaydaService] Completing registration completer');
+                _registrationCompleter.complete(true);
+              } else {
+                print('⚠️ [FaydaService] Registration completer already completed');
+              }
+            } else {
+              print('⚠️ [FaydaService] Client ID mismatch: expected $_clientId, got ${data['clientId']}');
+            }
+            break;
+            
+          default:
+            print('❓ [FaydaService] Unknown message type: $messageType');
+            print('❓ [FaydaService] Full message data: $data');
+            // Handle errors or unknown types
+            if (messageType?.contains('error') == true) {
+              print('❌ [FaydaService] Error message received: ${data['message']}');
+              if (!_registrationCompleter.isCompleted) {
+                print('❌ [FaydaService] Completing registration with error');
+                _registrationCompleter.complete(false);
+              }
+              if (!_authCompleter.isCompleted) {
+                print('❌ [FaydaService] Completing auth with error');
+                _authCompleter.completeError(Exception(data['message'] ?? 'Authentication error'));
+              }
+            }
+        }
+      } else {
+        print('❓ [FaydaService] Message has no type field and no data field');
+        print('❓ [FaydaService] Full message data: $data');
       }
     } catch (e) {
       print('❌ [FaydaService] Error parsing WebSocket message: $e');
+      print('❌ [FaydaService] Raw message that failed to parse: $message');
     }
     
     print('📨 [FaydaService] WebSocket status after handling message: ${isConnected}');
+    print('📨 [FaydaService] ===== End of message handling =====');
   }
   
   // Explicitly close the WebSocket when the service is disposed
@@ -233,7 +272,4 @@ class FaydaService {
     // print('🔍 [FaydaService] WebSocket connection check: $connected');
     return connected;
   }
-  
-  // Get current client ID
-  String get clientId => _clientId;
 } 

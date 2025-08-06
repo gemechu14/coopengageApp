@@ -84,16 +84,9 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
       // Reset WebSocket state to start fresh
       WebSocketService.resetAuthentication();
       
-      // Use the same clientId as WebSocket service
-      final clientId = "12344"; // Use consistent clientId
-      
-      state = state.copyWith(
-        clientId: clientId,
-        isWebSocketConnected: false,
-      );
-
-      // Initialize WebSocket and get authentication URL
+      // Initialize WebSocket and get authentication URL (client ID is generated internally)
       final authUrl = await WebSocketService.initializeAuthentication();
+      print('NationalIdProvider: WebSocket authentication initialized');
       
       state = state.copyWith(
         authUrl: authUrl,

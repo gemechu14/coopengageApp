@@ -37,7 +37,10 @@ class WebSocketService {
     _resetAuthenticationState();
     
     _isConnecting = true;
-    _clientId = "12344"; // Use specific clientId as per requirements
+    
+    // Generate a unique client ID for this session
+    _clientId = generateClientId();
+    debugPrint('🆔 [WebSocketService] Generated unique client ID for this session: $_clientId');
 
     try {
       debugPrint('Initializing Fayda authentication with clientId: $_clientId');
@@ -343,7 +346,7 @@ class WebSocketService {
         
         // Reinitialize clientId if needed
         if (_clientId == null) {
-          _clientId = "12344";
+          _clientId = generateClientId();
           debugPrint('Restored clientId: $_clientId');
         }
         

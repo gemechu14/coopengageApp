@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../providers/fayda_provider.dart';
 import '../providers/stepper_provider.dart';
 import '../model/national_id_models.dart';
+import 'dart:async'; // Added for Timer
 
 class NationalIdAuthWidget extends ConsumerStatefulWidget {
   const NationalIdAuthWidget({Key? key}) : super(key: key);
@@ -19,6 +20,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   bool _showWebView = false;
   bool _showUserData = false;
   bool _isWebViewLoading = false; // Track WebView loading state
+  bool _callbackDetected = false; // Track if callback was already detected
   WebViewController? _webViewController;
 
   @override
@@ -40,6 +42,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         print(
             '🔄 [Widget] Fresh page visit detected - clearing data and starting fresh');
         ref.read(faydaProvider.notifier).reset();
+        setState(() {
+          _callbackDetected = false; // Reset callback flag for fresh start
+        });
         // Small delay to ensure reset is complete, then auto-start
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
@@ -51,11 +56,17 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         print(
             '✅ [Widget] Step navigation detected - keeping existing Fayda data');
         // Keep existing data (user navigated back from next step)
+        setState(() {
+          _callbackDetected = true; // Mark as completed to prevent WebView restart
+        });
       } else {
         print(
             '🚀 [Widget] Step navigation but no Fayda data - starting authentication');
         // In step flow but no Fayda data, start authentication
         ref.read(faydaProvider.notifier).reset();
+        setState(() {
+          _callbackDetected = false; // Reset callback flag
+        });
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
             _startAuthentication();
@@ -96,9 +107,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   bool _isCallbackUrl(String url) {
-    return url.contains('/callback') ||
-        url.contains('code=') ||
-        url.contains('state=');
+    // Simple callback detection - just look for callback URLs with code and state
+    return (url.contains('callback') && url.contains('code=') && url.contains('state=')) ||
+           (url.contains('code=') && url.contains('state='));
   }
 
   void _handleCallbackImmediately(String url) {
@@ -112,16 +123,59 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     final state = uri.queryParameters['state'];
 
     if (code != null && state != null) {
-      print('✅ [Widget] Code and state found - processing callback');
+      print('✅ [Widget] Code and state found - closing WebView and waiting for WebSocket');
+      print('🔍 [Widget] Extracted code: $code');
+      print('🔍 [Widget] Extracted state: $state');
 
-      // IMMEDIATELY hide WebView
-      setState(() => _showWebView = false);
+      // Check WebSocket connection status
+      final faydaState = ref.read(faydaProvider);
+      print('🔍 [Widget] Current Fayda provider state: isConnected=${faydaState.isConnected}, isCompleted=${faydaState.isCompleted}');
+      print('🔍 [Widget] WebSocket connection status: ${ref.read(faydaProvider.notifier).isWebSocketConnected}');
 
-      // Process the callback API call
-      // const baseUrl = 'http://10.8.100.111:9062/';
-      const baseUrl = AppConstants.baseURL;
-      ref.read(faydaProvider.notifier).processCallback(baseUrl, code, state);
+      // IMMEDIATELY hide WebView and mark callback as detected
+      setState(() {
+        _showWebView = false;
+        _callbackDetected = true; // Prevent WebView from restarting
+      });
+
+      print('⏳ [Widget] WebView closed, waiting for WebSocket authentication result...');
+      print('🚫 [Widget] WebView restart prevented - callback detected');
+      print('⏳ [Widget] Now waiting for server to process callback and send authentication_result via WebSocket...');
+      
+      // Log a periodic check to see if we're still waiting
+      _startWaitingTimer();
     }
+  }
+  
+  Timer? _waitingTimer;
+  
+  void _startWaitingTimer() {
+    _waitingTimer?.cancel();
+    int waitingSeconds = 0;
+    
+    _waitingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      waitingSeconds += 5;
+      final faydaState = ref.read(faydaProvider);
+      
+      print('⏰ [Widget] Still waiting for WebSocket result... ${waitingSeconds}s elapsed');
+      print('🔍 [Widget] Current state: isCompleted=${faydaState.isCompleted}, error=${faydaState.error}');
+      print('🔍 [Widget] WebSocket connected: ${ref.read(faydaProvider.notifier).isWebSocketConnected}');
+      
+      if (faydaState.isCompleted || faydaState.error != null) {
+        print('✅ [Widget] Authentication completed or error occurred, stopping timer');
+        timer.cancel();
+      } else if (waitingSeconds >= 60) {
+        print('⚠️ [Widget] Waited 60 seconds for WebSocket result - this seems too long');
+        print('⚠️ [Widget] Consider checking server-side callback processing');
+        timer.cancel();
+      }
+    });
+  }
+  
+  @override
+  void dispose() {
+    _waitingTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -143,7 +197,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     if (faydaState.authUrl != null &&
         !faydaState.isCompleted &&
         faydaState.error == null &&
-        !_showWebView) {
+        !_showWebView &&
+        !_callbackDetected) { // Only show if not already shown and no callback detected
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
@@ -529,7 +584,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   void _retryAuthentication() {
-    setState(() => _showUserData = false);
+    setState(() {
+      _showUserData = false;
+      _callbackDetected = false; // Reset callback detection flag
+    });
     ref.read(faydaProvider.notifier).reset();
     // Auto-start again after reset
     WidgetsBinding.instance.addPostFrameCallback((_) {
