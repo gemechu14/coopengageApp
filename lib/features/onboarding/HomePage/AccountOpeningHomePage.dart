@@ -1,7 +1,7 @@
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/features/onboarding/CorporateAccountOpening/views/individual_account_by_national_id.dart';
-import 'package:coopengageplus/features/onboarding/JointNationalIdentification/views/individual_account_by_national_id.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/views/individual_account_by_national_id.dart';
+import 'package:coopengageplus/customerOnboarding/JointNationalIdentification/views/individual_account_by_national_id.dart';
+import 'package:coopengageplus/customerOnboarding/_IndividualAccount/screens/registration_screen.dart';
 import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
 import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
 // import 'package:coopengageplus/features/onboarding/_corporate/screens/registration_screen.dart';

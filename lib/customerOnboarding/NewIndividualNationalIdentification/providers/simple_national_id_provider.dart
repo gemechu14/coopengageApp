@@ -60,17 +60,35 @@ class SimpleNationalIdNotifier extends StateNotifier<NationalIdState> {
       
     } catch (e) {
       print('❌ Error waiting for result: $e');
-      state = state.copyWith(
-        error: e.toString(),
-        isLoading: false,
-        isConnected: false, // WebSocket closed on error
-      );
+      
+      // Don't immediately close WebSocket on error - let reconnection handle it
+      // Only close if it's a final error (not a connection issue)
+      if (e.toString().contains('timeout') || e.toString().contains('authentication')) {
+        state = state.copyWith(
+          error: e.toString(),
+          isLoading: false,
+          isConnected: false, // WebSocket closed on final error
+        );
+      } else {
+        // Keep WebSocket alive for reconnection attempts
+        state = state.copyWith(
+          error: e.toString(),
+          isLoading: false,
+          // Keep isConnected as true to allow reconnection
+        );
+      }
     }
   }
   
   /// Check if WebSocket is connected
   bool get isWebSocketConnected {
     return _service?.isConnected ?? false;
+  }
+  
+  /// Close WebSocket connection
+  void closeWebSocket() {
+    print('🔌 [Provider] Closing WebSocket connection');
+    _service?.close();
   }
   
   /// Reset state

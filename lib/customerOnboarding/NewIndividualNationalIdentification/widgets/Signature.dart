@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:signature/signature.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
+import 'package:coopengageplus/customerOnboarding/_IndividualAccount/widgets/common/signature_pad.dart';
 import '../providers/stepper_provider.dart';
 
 /// Signature Step Widget

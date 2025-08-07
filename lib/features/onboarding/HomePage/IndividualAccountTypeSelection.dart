@@ -5,7 +5,7 @@ import 'package:coopengageplus/features/onboarding/IndividualNationalIdentificat
 // import 'package:coopengageplus/features/onboarding/IndividualAccountByNationalId/IndividualAccountNational.dart';
 // import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/IndividualAccountByNationalId.dart';
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
+import 'package:coopengageplus/customerOnboarding/_IndividualAccount/screens/registration_screen.dart';
 
 class IndividualAccountTypeSelection extends StatelessWidget {
   const IndividualAccountTypeSelection({Key? key}) : super(key: key);

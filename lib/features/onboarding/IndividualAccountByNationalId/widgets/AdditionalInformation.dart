@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/common_widgets/dropDown/branch_selector.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
+import 'package:coopengageplus/customerOnboarding/_IndividualAccount/widgets/common/signature_pad.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

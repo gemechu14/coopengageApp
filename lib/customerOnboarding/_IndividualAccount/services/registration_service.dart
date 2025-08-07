@@ -36,7 +36,7 @@ class RegistrationService {
         return await _submitBasicInfoOffline(
           phoneNumber: phoneNumber,
           email: email,
-          // productType: productType,
+          productType: productType,
           userId: userId,
         );
       }
@@ -48,12 +48,11 @@ class RegistrationService {
   Future<ServiceResult> submitIdType({
     required String branch,
     required String documentName,
-    required dynamic? frontImage,
-    required dynamic? backImage,
+    required Uint8List? frontImage,
+    required Uint8List? backImage,
     // required bool isOnline,
     String? userId,
   }) async {
-    print("fdhfdhfdhfdfhdjfdjjfhdfddjjdf");
     try {
       if (isOnline) {
         return await _submitIdTypeOnline(
@@ -68,7 +67,7 @@ class RegistrationService {
   }
 
   Future<ServiceResult> submitSignature({
-    required dynamic signature,
+    required Uint8List signature,
     // required bool isOnline,
     required String motherName,
     String? userId,
@@ -77,7 +76,7 @@ class RegistrationService {
       if (isOnline) {
         return await _submitSignatureOnline(signature, motherName, userId);
       } else {
-        return await _submitSignatureOffline(signature, motherName, userId);
+        return await _submitSignatureOffline(signature, userId);
       }
     } catch (e) {
       return ServiceResult.error('Failed to submit signature: $e');
@@ -171,7 +170,7 @@ class RegistrationService {
   }
 
   Future<ServiceResult> submitPersonalPhoto({
-    required dynamic? photo,
+    required Uint8List? photo,
     // required bool isOnline,
     String? userId,
   }) async {
@@ -210,11 +209,8 @@ class RegistrationService {
     required String productType,
     String? userId,
   }) async {
+    print("dfmdsklfkdfdlkfdl");
     try {
-      print("isondj");
-      print(isOnline);
-      print("dkfjdfndfdjdfjddjjfdjfjddffd");
-      print(userId);
       if (userId != null) {
         // UPDATE existing user
         final response = await _networkHandler.put1(
@@ -235,50 +231,60 @@ class RegistrationService {
           return ServiceResult.error('Failed to update user');
         }
       } else {
-        // (Optional) If you never want to create, you can return an error here:
-        return ServiceResult.error('No userId provided for update');
+        // CREATE new user
+
+        print("dfmdsklfkdfdlkfdl");
+        final response = await _networkHandler.post1(
+          '/api/v1/accounts/individual',
+          {
+            // 'phone': '0$phoneNumber',
+            // 'email': email,
+            // 'customerType': "INDIVIDUAL",
+            // 'accountId':'1',
+            // 'status': 'INITIAL',
+            'customerInfo.phone': '0$phoneNumber',
+            'customerInfo.email': email,
+            'customerInfo.percentageCompleted': 12.5,
+            'customerInfo.status': 'INITIAL',
+            'customerInfo.formCompleted': 0,
+          },
+        );
+
+        print("responseeeee");
+        print(response.statusCode);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final data = jsonDecode(response.body);
+          final newUserId = data['id'].toString();
+          return ServiceResult.success(userId: newUserId);
+        } else {
+          return ServiceResult.error('Failed to create user');
+        }
       }
     } catch (e) {
       return ServiceResult.error('Error in registration: $e');
     }
   }
 
-  Future<ServiceResult> _submitIdTypeOnline(
-    String branch,
-    String documentName,
-    dynamic? frontImage,
-    dynamic? backImage,
-    String? userId,
-  ) async {
+  Future<ServiceResult> _submitIdTypeOnline(String branch, String documentName,
+      Uint8List? frontImage, Uint8List? backImage, String? userId) async {
     try {
-      print('Branch: $branch');
-      print('Front Image: $frontImage');
-      print('Back Image: $backImage');
-
       if (userId == null) {
         return ServiceResult.error(
-          'User ID not found. Please complete step 1 first.',
-        );
+            'User ID not found. Please complete step 1 first.');
       }
 
-      // Build request map dynamically
-      final Map<String, dynamic> requestData = {
+      final requestData = {
         'branch': branch,
+        'residenceCard': frontImage,
         'customerInfo.documentName': documentName,
+        'customerInfo.residenceCard': frontImage,
+        'customerInfo.residenceCardBack': backImage,
         'accountType': '1',
         'percentageCompleted': 25,
         'status': 'INITIAL',
         'formCompleted': false,
       };
-
-      // Only include images if they are Uint8List (not String paths)
-      if (frontImage != null && frontImage is Uint8List) {
-        requestData['customerInfo.residenceCard'] = frontImage;
-      }
-
-      if (backImage != null && backImage is Uint8List) {
-        requestData['customerInfo.residenceCardBack'] = backImage;
-      }
 
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
@@ -295,79 +301,27 @@ class RegistrationService {
     } on TimeoutException {
       return ServiceResult.error('Request timed out. Please try again.');
     } catch (e) {
-      print(e);
       return ServiceResult.error('An error occurred: $e');
     }
   }
 
-  // Future<ServiceResult> _submitIdTypeOnline(String branch, String documentName,
-  //     dynamic? frontImage, Uint8List? backImage, String? userId) async {
-  //   try {
-  //     print(branch);
-  //     print(frontImage);
-  //     if (userId == null) {
-  //       return ServiceResult.error(
-  //           'User ID not found. Please complete step 1 first.');
-  //     }
-
-  //     final requestData = {
-  //       'branch': branch,
-  //       'residenceCard': frontImage,
-  //       'customerInfo.documentName': documentName,
-  //       // 'customerInfo.residenceCard': frontImage,
-  //       // 'customerInfo.residenceCardBack': backImage,
-  //       'accountType': '1',
-  //       'percentageCompleted': 25,
-  //       'status': 'INITIAL',
-  //       'formCompleted': false,
-  //     };
-
-  //     final response = await _networkHandler
-  //         .put1('/api/v1/accounts/individual/$userId', requestData)
-  //         .timeout(const Duration(seconds: 15));
-
-  //     if (response.statusCode == 200 || response.statusCode == 201) {
-  //       return ServiceResult.success();
-  //     } else {
-  //       final errorResponse = jsonDecode(response.body);
-  //       final errorMessage =
-  //           errorResponse['message'] ?? 'Failed to update user data';
-  //       return ServiceResult.error(errorMessage);
-  //     }
-  //   } on TimeoutException {
-  //     return ServiceResult.error('Request timed out. Please try again.');
-  //   } catch (e) {
-  //     print(e);
-  //     return ServiceResult.error('An error occurred: $e');
-  //   }
-  // }
-
   Future<ServiceResult> _submitSignatureOnline(
-      dynamic signature, String? motherName, String? userId) async {
+      Uint8List signature, String? motherName, String? userId) async {
     try {
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
       }
-      print("dfdfhdjjfhdjfhdhjfjdhdfhdfjd");
+
       // Validate userId format
       if (userId.isEmpty || !RegExp(r'^\d+$').hasMatch(userId)) {
         return ServiceResult.error(
             'Invalid user ID format. Please complete previous steps first.');
       }
 
-      // final requestData = {
-      //   'customerInfo.signature': signature,
-      //   'customerInfo.motherName': motherName,
-      //   'percentageCompleted': 37.5,
-      //   'status': 'INITIAL',
-      // };
-
       final requestData = {
-        if (signature != null && signature is Uint8List)
-          'customerInfo.signature': signature,
-        if (motherName != null && motherName.isNotEmpty)
-          'customerInfo.motherName': motherName,
+        'customerInfo.signature': signature,
+        'customerInfo.motherName': motherName,
         'percentageCompleted': 37.5,
         'status': 'INITIAL',
       };
@@ -428,7 +382,6 @@ class RegistrationService {
       String sector,
       String? userId) async {
     try {
-      print("jfkdfkdfdfkdjfdkkkkkkkkkkkkkkkkk");
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -443,8 +396,6 @@ class RegistrationService {
         'status': 'INITIAL',
       };
 
-      print("jfkdfkdfdfkdjfdkkkkkkkkkkkkkkkkk");
-      print(requestData);
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));
@@ -467,21 +418,18 @@ class RegistrationService {
   Future<ServiceResult> _submitBasicInfoOffline({
     required String phoneNumber,
     required String email,
+    required String productType,
     String? userId,
   }) async {
     try {
-      print("object32323232322dfdfdddfd");
       if (!await _checkPermissions()) {
         return ServiceResult.error(
             'You don\'t have permission to create Account');
       }
 
-      print("[BASIC INFO OFFLINE] userId param: $userId");
       // Get the current user ID from token (the registering person)
       final existingUserId = await _getCurrentUserId();
 
-      print("phonenumberndfbdhfbdhf ");
-      print(phoneNumber);
       if (userId != null) {
         // UPDATE existing customer
         final updateData = {
@@ -490,18 +438,13 @@ class RegistrationService {
           'status': 'INITIAL',
           'userId': existingUserId,
         };
-        print('[BASIC INFO OFFLINE] Updating customer with ID: $userId');
-        print('[BASIC INFO OFFLINE] Update data: $updateData');
+
         final rowsAffected =
             await _database.updateCustomer(int.parse(userId), updateData);
-        print('[BASIC INFO OFFLINE] rowsAffected: $rowsAffected');
         if (rowsAffected > 0) {
-          print(
-              '[BASIC INFO OFFLINE] Update success, returning userId: $userId');
           return ServiceResult.success(
               userId: userId, data: {'existingUserId': existingUserId});
         } else {
-          print('[BASIC INFO OFFLINE] Update failed');
           return ServiceResult.error('Failed to update customer');
         }
       } else {
@@ -512,20 +455,15 @@ class RegistrationService {
           'status': 'INITIAL',
           'userId': existingUserId,
         };
-        print('[BASIC INFO OFFLINE] Inserting new customer');
-        print('[BASIC INFO OFFLINE] Insert data: $customerData');
+
         final insertedId = await _database.insertCustomer(customerData);
-        print('[BASIC INFO OFFLINE] Inserted ID: $insertedId');
         final result = ServiceResult.success(
           userId: insertedId.toString(),
           data: {'existingUserId': existingUserId},
         );
-        print(
-            '[BASIC INFO OFFLINE] Returning ServiceResult with userId: ${result.userId}');
         return result;
       }
     } catch (e) {
-      print('[BASIC INFO OFFLINE] Exception: $e');
       return ServiceResult.error('Error inserting/updating customer data: $e');
     }
   }
@@ -533,19 +471,11 @@ class RegistrationService {
   Future<ServiceResult> _submitIdTypeOffline(String branch, String documentName,
       Uint8List? frontImage, Uint8List? backImage, String? userId) async {
     try {
-      print("=== _submitIdTypeOffline Debug ===");
-      print("Received userId: $userId");
-      print("Branch: $branch");
-      print("Document name: $documentName");
-
       // print(data);
       if (userId == null) {
-        print("❌ User ID is null - returning error");
         return ServiceResult.error(
             'User ID not found. Please complete step 1 first.');
       }
-
-      print("✅ User ID is valid: $userId");
 
       final updateData = {
         'branch': branch,
@@ -558,7 +488,6 @@ class RegistrationService {
         'formCompleted': 0,
         // 'id': currentUserId,
       };
-      print(updateData);
       final rowsAffected = await _database
           .updateCustomer(int.parse(userId), updateData)
           .timeout(const Duration(seconds: 10));
@@ -576,7 +505,7 @@ class RegistrationService {
   }
 
   Future<ServiceResult> _submitSignatureOffline(
-      Uint8List signature, String motherName, String? userId) async {
+      Uint8List signature, String? userId) async {
     try {
       if (userId == null) {
         return ServiceResult.error(
@@ -585,15 +514,11 @@ class RegistrationService {
 
       // var currentUserId = await _getCurrentUserId();
       final updateData = {
-        "motherName": motherName,
         'signature': signature,
         'percentageCompleted': 37.5,
         'status': 'INITIAL',
         // 'id': userId,
       };
-
-      print("dshfhjdhfdhfhdjfjdjmotherName");
-      print(motherName);
 
       final rowsAffected = await _database
           .updateCustomer(int.parse(userId), updateData)
@@ -612,11 +537,8 @@ class RegistrationService {
   }
 
   Future<ServiceResult> _submitPersonalPhotoOnline(
-      dynamic? photo, String? userId) async {
+      Uint8List? photo, String? userId) async {
     try {
-      print("djfdjfdfdkfhdfdkfdkjjfhdhfdjjjjjjjjjj");
-
-      print(photo);
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -629,13 +551,8 @@ class RegistrationService {
       }
 
       final requestData = {
-
-
-        if (photo != null && photo is Uint8List)
-        'customerInfo.signature': photo,
-        // 'customerInfo.photo':
-        //     photo, // Photo will be handled separately if needed
-
+        'customerInfo.photo':
+            photo, // Photo will be handled separately if needed
         'percentageCompleted': 50,
         'status': 'INITIAL',
       };
@@ -769,7 +686,6 @@ class RegistrationService {
       String? maritalStatus,
       String? userId) async {
     try {
-      print('kdfndfdkfkdnfdkssssfdfndnfd');
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -790,8 +706,7 @@ class RegistrationService {
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));
-      print('kdfndfdkfkdnfdkfdfndnfd');
-      print(response);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success(userId: userId);
       } else {
@@ -822,7 +737,6 @@ class RegistrationService {
             'User ID not found. Please complete previous steps first.');
       }
 
-      print("personal information ");
       final updateData = {
         'fullName': fullName,
         'surname': surname,
@@ -949,8 +863,6 @@ class RegistrationService {
   Future<ServiceResult> _submitAccountTypeOnline(
       String accountType, String? userId) async {
     try {
-      print("dfksnfkdndnfdndnnddnfndf");
-      print(accountType);
       if (userId == null) {
         return ServiceResult.error(
             'User ID not found. Please complete previous steps first.');
@@ -965,10 +877,8 @@ class RegistrationService {
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
           .timeout(const Duration(seconds: 15));
-      print("ytytytyytyt");
-      print(response);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("ytytytyytyt");
         return ServiceResult.success();
       } else {
         final errorResponse = jsonDecode(response.body);
@@ -1025,8 +935,6 @@ class RegistrationService {
     if (token != null && token.isNotEmpty) {
       var decodedToken = JwtDecoder.decode(token);
 
-      print("gememememem");
-      print(decodedToken['userId']);
       username = decodedToken['sub'] ?? "User";
       firstLetter = username!.isNotEmpty ? username![0].toUpperCase() : '';
 

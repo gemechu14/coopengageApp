@@ -1,5 +1,6 @@
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
 import 'dart:typed_data';
-// import 'package:coopengageplus/features/onboarding/corporate/corporateAccount.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/registration_service.dart';
 import '../providers/registration_providers.dart';
@@ -46,7 +47,7 @@ class RegistrationController {
       // Always use the latest customerId from state if userId is not provided
       final currentCustomerId =
           userId ?? _ref.read(registrationDataProvider).customerId;
-      print('[CONTROLLER] Using userId/customerId: $currentCustomerId');
+      // print('[CONTROLLER] Using userId/customerId: $currentCustomerId');
 
       // Submit to service
       final serviceResult = await _registrationService.submitBasicInfo(
@@ -56,8 +57,6 @@ class RegistrationController {
         // isOnline: isOnline,
         userId: currentCustomerId,
       );
-
-      print('[CONTROLLER] ServiceResult.userId: ${serviceResult.userId}');
 
       if (serviceResult.isSuccess && serviceResult.userId != null) {
         // Store the userId if it's returned (new user created or updated)
@@ -70,15 +69,11 @@ class RegistrationController {
           customerId:
               serviceResult.userId!, // Store the new or updated customer ID
         );
-        print("=== Basic Info Step Debug ===");
-        print("New customer ID stored: ${serviceResult.userId}");
       }
       // Store the existing user ID (the registering person) if available
       if (serviceResult.hasData) {
         final existingUserId = serviceResult.getData<String>('existingUserId');
-        if (existingUserId != null) {
-          print('Registering person ID: $existingUserId');
-        }
+        if (existingUserId != null) {}
       }
 
       // Mark step as complete
@@ -99,15 +94,14 @@ class RegistrationController {
   Future<bool> handleIdTypeStep({
     required String? branch,
     required String? documentName,
-    required dynamic? frontImage,
-    required dynamic? backImage,
+    required Uint8List? frontImage,
+    required Uint8List? backImage,
     String? userId,
   }) async {
-    print("dkfdjfjdhfhdjdjfjdjfhdjfhdjdkfdjfjdhfhdjdjfjdjfhdjfhdj");
     try {
       // Clear previous errors
       _formValidationNotifier.clearAllErrors();
-      print("dkfdjfjdhfhdjdjfjdjfhdjfhdjdkfdjfjdhfhdjdjfjdjfhdjfhdj");
+
       // Validate inputs
       final validationResult =
           _validateIdType(branch, documentName, frontImage, backImage);
@@ -128,10 +122,7 @@ class RegistrationController {
       final userToUse = userId ?? registrationData.customerId;
 
       // Debug prints
-      print("=== ID Type Step Debug ===");
-      print("Provided userId: $userId");
-      print("Registration data customerId: ${registrationData.customerId}");
-      print("Final userToUse: $userToUse");
+
       // print("Is online: $isOnline");
 
       // Submit to service
@@ -167,7 +158,7 @@ class RegistrationController {
 
   // Step 3: Signature Controller
   Future<bool> handleSignatureStep({
-    required dynamic? signature,
+    required Uint8List? signature,
     required bool isOnline,
     String? userId,
   }) async {
@@ -240,14 +231,13 @@ class RegistrationController {
 
   // Step 4: Personal Photo Controller
   Future<bool> handlePersonalPhotoStep({
-    required dynamic? photo,
+    required Uint8List? photo,
     required bool isOnline,
     String? userId,
   }) async {
     try {
-      print("dfdhdjfhdfhdjjfjdjfjueue73737377");
       _formValidationNotifier.clearAllErrors();
-print("data123");
+
       // Update registration data
       _registrationDataNotifier.updatePhoto(photo: photo);
 
@@ -488,11 +478,6 @@ print("data123");
     String? userId,
   }) async {
     try {
-      print("=== handleAccountTypeStep called ===");
-      print("accountType ID: $accountType");
-      print("isOnline: $isOnline");
-      print("userId: $userId");
-
       _formValidationNotifier.clearAllErrors();
 
       // Validate account type selection
@@ -558,26 +543,19 @@ print("data123");
   }
 
   // Validation methods
-  String formatPhoneNumber(String phone) {
-    if (phone.startsWith('0')) {
-      return phone.substring(1);
-    } else if (phone.startsWith('+251')) {
-      return phone.substring(4);
-    }
-    return phone;
-  }
-
   ValidationResult _validateBasicInfo(
       String phoneNumber, String email, String? productType) {
     final errors = <String, String>{};
 
-    // Format and validate phone number
-    String formattedPhone = formatPhoneNumber(phoneNumber.trim());
-    print("qwqwqwqqwqwobject1111");
-    print(formattedPhone);
-    if (formattedPhone.isEmpty) {
+    // Validate product type
+    if (productType == null || productType.isEmpty) {
+      errors['productType'] = 'Product Type is required';
+    }
+
+    // Validate phone number
+    if (phoneNumber.trim().isEmpty) {
       errors['phone'] = 'Phone Number is required';
-    } else if (formattedPhone.length != 9) {
+    } else if (phoneNumber.trim().length != 9) {
       errors['phone'] = 'Phone Number must be 9 digits';
     }
 
@@ -598,7 +576,7 @@ print("data123");
   }
 
   ValidationResult _validateIdType(String? branch, String? documentName,
-      dynamic? frontImage, dynamic? backImage) {
+      Uint8List? frontImage, Uint8List? backImage) {
     final errors = <String, String>{};
 
     // Validate branch
@@ -829,13 +807,17 @@ print("data123");
 
   // Method called by the registration screen
   Future<bool> validateAndSaveStep(int step, WidgetRef ref) async {
+    print("kfkdfdkfkjdkjdkj");
     switch (step) {
       case 0: // Basic Info
+        final phoneController = ref.read(phoneControllerProvider);
+        final emailController = ref.read(emailControllerProvider);
         final data = ref.read(registrationDataProvider);
         return await handleBasicInfoStep(
-          phoneNumber: data.phone ?? '',
-          email: data.email ?? '',
+          phoneNumber: phoneController.text.trim(),
+          email: emailController.text.trim(),
           productType: data.productType,
+          // isOnline: ref.read(connectivityProvider),
         );
       case 1: // ID Type
         final data = ref.read(registrationDataProvider);
@@ -845,6 +827,7 @@ print("data123");
           documentName: data.documentName,
           frontImage: data.residenceCard,
           backImage: data.residenceCardBack,
+          // isOnline: ref.read(connectivityProvider),
           userId: userId,
         );
       case 2: // Signature
@@ -921,48 +904,12 @@ print("data123");
     }
   }
 
-  // Method to submit the entire registration
   Future<bool> submitRegistration(WidgetRef ref) async {
     try {
-      // Mark all steps as complete
       for (int i = 0; i < 9; i++) {
         _stepCompletionNotifier.markStepComplete(i);
       }
       _registrationDataNotifier.updateProgress(100.0);
-
-      // Update status to UNSETTLED for offline mode
-      final registrationData = _ref.read(registrationDataProvider);
-      final userId = ref.read(userIdProvider);
-      final isOnline = ref.read(connectivityProvider);
-
-      if (!isOnline && userId != null) {
-        // Update status to UNSETTLED in offline database
-        final updateData = {
-          'status': 'UNSETTLED',
-          'percentageCompleted': 100.0,
-          'formCompleted': 1,
-        };
-
-        try {
-          final databaseHelper = _ref.read(databaseProvider);
-          final rowsAffected = await databaseHelper.updateCustomer(
-            int.parse(userId),
-            updateData,
-          );
-
-          if (rowsAffected > 0) {
-            print(
-                '[SUBMIT REGISTRATION] Status updated to UNSETTLED successfully');
-            // Update the registration data with new status
-            _registrationDataNotifier.updateStatus('UNSETTLED');
-          } else {
-            print('[SUBMIT REGISTRATION] Failed to update status to UNSETTLED');
-          }
-        } catch (e) {
-          print('[SUBMIT REGISTRATION] Error updating status: $e');
-        }
-      }
-
       return true;
     } catch (e) {
       _formValidationNotifier.setError(

@@ -24,6 +24,9 @@ class _UltraSimpleNationalIdWidgetState
   Timer? _checkTimer;
   bool _showUserData = false;
   bool _callbackDetected = false;
+  bool _isWebViewLoading = true; // Add loading state for WebView
+  String? _webViewError; // Add error state for WebView
+  DateTime? _webViewStartTime; // Track when WebView was opened
   @override
   void initState() {
     super.initState();
@@ -103,7 +106,31 @@ class _UltraSimpleNationalIdWidgetState
 
   void _initializeWebView() {
     _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (String url) {
+            print('🌐 [WebView] Page loading started: $url');
+            setState(() {
+              _isWebViewLoading = true;
+              _webViewError = null;
+            });
+          },
+          onPageFinished: (String url) {
+            print('✅ [WebView] Page loading finished: $url');
+            setState(() {
+              _isWebViewLoading = false;
+            });
+          },
+          onWebResourceError: (WebResourceError error) {
+            print('❌ [WebView] Error loading page: ${error.description}');
+            setState(() {
+              _isWebViewLoading = false;
+              _webViewError = 'Unable to load authentication page. Please check your internet connection and try again.';
+            });
+          },
+        ),
+      );
   }
 
   void _startAuthentication() {
@@ -118,28 +145,101 @@ class _UltraSimpleNationalIdWidgetState
 
   void _checkWebSocketStatus() {
     final state = ref.read(simpleNationalIdProvider);
+    
+    // Add comprehensive WebSocket status logging
+    print('🔍 [WebSocket Check] Current state:');
+    print('   - isConnected: ${state.isConnected}');
+    print('   - isRegistered: ${state.isRegistered}');
+    print('   - isLoading: ${state.isLoading}');
+    print('   - isCompleted: ${state.isCompleted}');
+    print('   - hasAuthUrl: ${state.authUrl != null}');
+    print('   - hasError: ${state.error != null}');
+    print('   - error: ${state.error}');
+    print('   - showWebView: $_showWebView');
+    print('   - webViewStartTime: $_webViewStartTime');
+    
+    // Check actual WebSocket connection from provider
+    final isWebSocketConnected = ref.read(simpleNationalIdProvider.notifier).isWebSocketConnected;
+    print('🔍 [WebSocket Check] Provider WebSocket status: $isWebSocketConnected');
 
-    // If WebSocket is not connected, close WebView
+    // Check if WebView should be closed due to timeout (3 minutes)
+    if (_webViewStartTime != null && _showWebView) {
+      final elapsedTime = DateTime.now().difference(_webViewStartTime!);
+      print('⏱️ [WebSocket Check] WebView has been open for: ${elapsedTime.inSeconds} seconds');
+      
+      if (elapsedTime.inMinutes >= 3) {
+        print('⏰ [WebSocket Check] WebView timeout reached - closing WebView but keeping WebSocket alive');
+        setState(() => _showWebView = false);
+        
+        // Show message to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Authentication page closed. Please wait for the result...'),
+              backgroundColor: Colors.blue,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+
+    // If WebSocket is not connected, close WebView and stop checking
     if (!state.isConnected && _showWebView) {
-      print('🔌 WebSocket closed - closing WebView');
+      print('🔌 [WebSocket Check] WebSocket closed - closing WebView');
       setState(() => _showWebView = false);
       _checkTimer?.cancel();
     }
 
     // If authentication completed, close WebView and save to stepper
-    if (state.isCompleted && state.userData != null && _showWebView) {
-      print('✅ Authentication completed - closing WebView');
-      setState(() => _showWebView = false);
+    if (state.isCompleted && state.userData != null) {
+      print('✅ [WebSocket Check] Authentication completed - saving data and closing WebSocket');
+      
+      // Close WebView if it's still showing
+      if (_showWebView) {
+        setState(() => _showWebView = false);
+      }
+      
       _checkTimer?.cancel();
 
       // Save authentication data to stepper provider
       _saveToStepper(state.userData!);
+      
+      // Close WebSocket after saving data
+      ref.read(simpleNationalIdProvider.notifier).closeWebSocket();
     }
 
-    // If error occurred, close WebView
-    if (state.error != null && _showWebView) {
-      print('❌ Error occurred - closing WebView');
-      setState(() => _showWebView = false);
+    // If error occurred, close WebView and stop checking
+    if (state.error != null) {
+      print('❌ [WebSocket Check] Error occurred: ${state.error}');
+      
+      // Check if this is a connection error that might be resolved by reconnection
+      final isConnectionError = state.error!.contains('WebSocket connection closed') ||
+                               state.error!.contains('connection') ||
+                               state.error!.contains('network');
+      
+      if (isConnectionError && state.isConnected) {
+        print('🔄 [WebSocket Check] Connection error detected but WebSocket still connected - allowing reconnection');
+        // Don't close WebView or stop checking - let reconnection handle it
+        return;
+      }
+      
+      print('❌ [WebSocket Check] Final error - closing WebView');
+      
+      if (_showWebView) {
+        setState(() => _showWebView = false);
+      }
+      
+      _checkTimer?.cancel();
+      
+      // Close WebSocket on final error
+      ref.read(simpleNationalIdProvider.notifier).closeWebSocket();
+    }
+    
+    // Keep WebSocket alive if authentication is in progress (even if WebView is closed)
+    // Only stop checking if authentication is completed or there's an error
+    if (state.isCompleted || state.error != null) {
+      print('🛑 [WebSocket Check] Stopping WebSocket monitoring - authentication finished or error occurred');
       _checkTimer?.cancel();
     }
   }
@@ -198,8 +298,21 @@ class _UltraSimpleNationalIdWidgetState
         !state.isCompleted &&
         state.error == null &&
         !_showWebView) {
+      print('🌐 [Widget] Showing WebView - conditions met:');
+      print('   - hasAuthUrl: ${state.authUrl != null}');
+      print('   - isConnected: ${state.isConnected}');
+      print('   - notCompleted: ${!state.isCompleted}');
+      print('   - noError: ${state.error == null}');
+      print('   - notShowingWebView: ${!_showWebView}');
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() => _showWebView = true);
+        setState(() {
+          _showWebView = true;
+          _isWebViewLoading = true; // Reset loading state
+          _webViewError = null; // Reset error state
+          _webViewStartTime = DateTime.now(); // Record WebView start time
+        });
+        print('🌐 [Widget] Loading WebView with URL: ${state.authUrl}');
         _webViewController?.loadRequest(Uri.parse(state.authUrl!));
       });
     }
@@ -221,16 +334,127 @@ class _UltraSimpleNationalIdWidgetState
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             color: Colors.blue.shade50,
-            child: const Text(
-              'Complete your National ID authentication',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+            child: Row(
+              children: [
+                Expanded(
+                  child: const Text(
+                    'Complete your National ID authentication',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                  ),
+                ),
+                // Add retry button
+                IconButton(
+                  onPressed: () {
+                    print('🔄 [Widget] Manual retry requested');
+                    setState(() {
+                      _showWebView = false;
+                      _webViewError = null;
+                      _isWebViewLoading = true;
+                    });
+                    _checkTimer?.cancel();
+                    
+                    // Restart authentication after a short delay
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (mounted) {
+                        _startAuthentication();
+                      }
+                    });
+                  },
+                  icon: const Icon(Icons.refresh, color: Colors.blue),
+                  tooltip: 'Retry Authentication',
+                ),
+              ],
             ),
           ),
           // WebView
           Expanded(
-            child: _webViewController != null
-                ? WebViewWidget(controller: _webViewController!)
-                : const Center(child: CircularProgressIndicator()),
+            child: Stack(
+              children: [
+                // WebView
+                _webViewController != null
+                    ? WebViewWidget(controller: _webViewController!)
+                    : const Center(child: CircularProgressIndicator()),
+                
+                // Loading overlay
+                if (_isWebViewLoading)
+                  Container(
+                    color: Colors.white,
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: Colors.blue,
+                            strokeWidth: 4,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Loading authentication page...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                
+                // Error overlay
+                if (_webViewError != null)
+                  Container(
+                    color: Colors.white,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 60,
+                              color: Colors.red.shade600,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Connection Error',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _webViewError!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _webViewError = null;
+                                  _isWebViewLoading = true;
+                                });
+                                _webViewController?.reload();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
@@ -264,6 +488,59 @@ class _UltraSimpleNationalIdWidgetState
                 color: Colors.grey,
               ),
               textAlign: TextAlign.center,
+            ),
+          ],
+
+          // WebSocket waiting state - when WebView is closed but WebSocket is still waiting
+          if (!_showWebView && 
+              faydaState.isConnected && 
+              !faydaState.isCompleted && 
+              faydaState.error == null &&
+              faydaState.authUrl != null) ...[
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.blue.shade200, width: 2),
+              ),
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(
+                    color: Colors.blue,
+                    strokeWidth: 4,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Waiting for Authentication Result',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'The authentication page has been closed, but we are still waiting for the result from the server. Please wait...',
+                    style: TextStyle(color: Colors.blue),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Restart the process
+                      _checkTimer?.cancel();
+                      ref.read(simpleNationalIdProvider.notifier).reset();
+                      _startAuthentication();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Restart Authentication'),
+                  ),
+                ],
+              ),
             ),
           ],
 
