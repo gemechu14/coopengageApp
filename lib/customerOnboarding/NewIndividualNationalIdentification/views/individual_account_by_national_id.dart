@@ -10,16 +10,19 @@ import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentific
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/Signature.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/account_type_step.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/additional_information.dart';
-import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/fayda_auth_widget.dart';
-import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
+// import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/fayda_auth_widget.dart';
+// import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/ultra_simple_national_id_widget.dart';
+import 'package:coopengageplus/features/auth/login/login_screen.dart';
 
 import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/utils/checkToken.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_stepper/easy_stepper.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // 1. Add StepConfig class at the top
 class StepConfig {
@@ -136,7 +139,7 @@ class _IndividualAccountByNationalIdState
             ),
           ),
           title: const Text(
-            'Individual Account',
+            'Individual Accountddd',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -429,42 +432,43 @@ class _IndividualAccountByNationalIdState
 
                         // Build RegistrationData with National ID data
                         final registrationData = RegistrationData(
-                            fullName: faydaState.userData?.name ??
-                                stepperState.fullName ??
-                                '',
-                            email: faydaState.userData?.email ??
-                                stepperState.email ??
-                                '',
-                            phone: faydaState.userData?.phoneNumber ??
-                                stepperState.authPhone ??
-                                '',
-                            accountType: stepperState.selectedAccountType,
-                            branch: stepperState.selectedBranch,
-                            motherName: stepperState.motherName,
-                            initialDeposit:
-                                stepperState.initialDeposit?.toString(),
-                            dateOfBirth: faydaState.userData?.birthdate ??
-                                stepperState.dateOfBirth,
-                            productType: stepperState.selectedProductType,
-                            documentName: 'NATIONALID',
-                            signature: stepperState.signature,
-                            sex:
-                                faydaState.userData?.gender ?? stepperState.sex,
-                            country: faydaState.userData?.address?.country ??
-                                stepperState.country,
-                            state: faydaState.userData?.address?.region ??
-                                stepperState.state,
-                            zoneSubCity: faydaState
-                                .userData?.address?.zone, // Add zone data
-                            streetAddress: faydaState
-                                .userData?.address?.woreda, // Add woreda data
-                            legalId: stepperState.legalId,
-                            bankShare: stepperState.bankShare,
-                            customerShare: stepperState.customerShare,
-                            title: stepperState.selectedTitle,
-                            photo: faydaState.userData
-                                ?.picture, // Use the saved picture path
-                            maritalStatus: stepperState.selectedMaritalStatus);
+                          fullName: faydaState.userData?.name ??
+                              stepperState.fullName ??
+                              '',
+                          email: faydaState.userData?.email ??
+                              stepperState.email ??
+                              '',
+                          phone: faydaState.userData?.phoneNumber ??
+                              stepperState.authPhone ??
+                              '',
+                          accountType: stepperState.selectedAccountType,
+                          branch: stepperState.selectedBranch,
+                          motherName: stepperState.motherName,
+                          initialDeposit:
+                              stepperState.initialDeposit?.toString(),
+                          dateOfBirth: faydaState.userData?.birthdate ??
+                              stepperState.dateOfBirth,
+                          productType: stepperState.selectedProductType,
+                          documentName: 'NATIONALID',
+                          signature: stepperState.signature,
+                          sex: faydaState.userData?.gender ?? stepperState.sex,
+                          country: faydaState.userData?.address?.country ??
+                              stepperState.country,
+                          state: faydaState.userData?.address?.region ??
+                              stepperState.state,
+                          zoneSubCity: faydaState
+                              .userData?.address?.zone, // Add zone data
+                          streetAddress: faydaState
+                              .userData?.address?.woreda, // Add woreda data
+                          // legalId: stepperState.legalId,
+                          bankShare: stepperState.bankShare,
+                          customerShare: stepperState.customerShare,
+                          title: stepperState.selectedTitle,
+                          photo: faydaState.userData?.picture,
+                          // Use the saved picture path
+                          maritalStatus: stepperState.selectedMaritalStatus,
+                          legalId: faydaState.userData?.sub ?? '',
+                        );
 
                         await Navigator.push(
                           context,
@@ -618,6 +622,35 @@ class _IndividualAccountByNationalIdState
   Future<void> _submitRegistration() async {
     if (_disposed) return;
 
+///////
+
+    final storage = const FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+      ),
+    );
+
+    final token = await storage.read(key: 'token');
+
+    if (token == null || isTokenExpired(token)) {
+      if (context.mounted) {
+        DialogHelper.showErrorDialog(
+          context,
+          "Session expired. Please login again.",
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+          (route) => false,
+        );
+      }
+      return; // Stop further execution
+    }
+
+    ///
+
     final stepperState = ref.read(stepperProvider);
     final nationalIdState = ref.read(nationalIdProvider);
     final registrationService = RegistrationService();
@@ -732,6 +765,7 @@ class _IndividualAccountByNationalIdState
         zoneSubCity: faydaState.userData?.address?.zone ?? '',
         streetAddress: faydaState.userData?.address?.woreda ?? '',
         photo: faydaState.userData?.picture ?? '',
+        legalId: faydaState.userData?.sub ?? '',
       );
 
       // Close loading dialog
@@ -821,4 +855,6 @@ class _IndividualAccountByNationalIdState
       }
     }
   }
+
+
 }

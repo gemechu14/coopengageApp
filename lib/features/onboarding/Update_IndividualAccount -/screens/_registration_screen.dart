@@ -20,7 +20,6 @@ import 'package:intl/intl.dart';
 import 'package:intl_phone_field/countries.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -1522,43 +1521,11 @@ By accepting these terms, you agree to comply with all banking regulations and p
     await picker
         .pickImage(source: ImageSource.gallery, imageQuality: 50)
         .then((value) {
-      if (value != null) {
-        _cropImage(File(value.path), imageTypes);
-      }
+  
     });
   }
 
-  // _imgFromCamera(String imageTypes) async {
-  //   // Unfocus any text fields or inputs
-  //   FocusScope.of(context).unfocus();
-  //   await picker
-  //       .pickImage(source: ImageSource.camera, imageQuality: 50)
-  //       .then((value) {
-  //     if (value != null) {
-  //       _cropImage(File(value.path), imageTypes);
 
-  //       // _cropImage(File(value.path));
-  //     }
-  //   });
-  // }
-
-  // _imgFromCamera(String imageTypes) async {
-  //   try {
-  //     FocusScope.of(context).unfocus();
-  //     final permissionStatus = await Permission.camera.request();
-  //     if (permissionStatus.isGranted) {
-  //       final pickedFile = await picker.pickImage(
-  //           source: ImageSource.camera, imageQuality: 50);
-  //       if (pickedFile != null) {
-  //         await _cropImage(File(pickedFile.path), imageTypes);
-  //       }
-  //     } else {
-  //       debugPrint("Camera permission denied");
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error in _imgFromCamera: $e");
-  //   }
-  // }
 
   Future<void> _imgFromCamera(String imageTypes) async {
     try {
@@ -1580,10 +1547,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
       final pickedFile =
           await picker.pickImage(source: ImageSource.camera, imageQuality: 50);
 
-      if (pickedFile != null) {
-        await _cropImage(File(pickedFile.path), imageTypes);
-      }
-
+ 
       // Dismiss loader
       Navigator.of(context, rootNavigator: true).pop();
     } catch (e) {
@@ -1592,106 +1556,7 @@ By accepting these terms, you agree to comply with all banking regulations and p
     }
   }
 
-  Future<void> _cropImage(File imgFile, String imageTypes) async {
-    FocusScope.of(context).unfocus();
 
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: imgFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: "Image Cropper",
-          toolbarColor: Colors.deepOrange,
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
-        ),
-        IOSUiSettings(title: "Image Cropper"),
-      ],
-    );
-
-    if (croppedFile != null) {
-      final file = File(croppedFile.path);
-
-      if (imageTypes == 'signature') {
-        final bytes = await file.readAsBytes();
-        setState(() {
-          _signatureController1.clear();
-          _signatureController2.clear();
-          _signatureController3.clear();
-          savedSignature = null;
-          signatureImagePath = croppedFile.path;
-          _combinedSignature = bytes;
-        });
-      } else {
-        setState(() {
-          if (imageTypes == 'passport') passportPath = croppedFile.path;
-          if (imageTypes == 'profile') profilePath = croppedFile.path;
-          if (imageTypes == 'resident') residentPath = croppedFile.path;
-          if (imageTypes == 'residentCardBack')
-            residentCardBackPath = croppedFile.path;
-          if (imageTypes == 'form') formPath = croppedFile.path;
-        });
-      }
-    }
-
-    // Dismiss loading
-    Navigator.of(context, rootNavigator: true).pop();
-  }
-
-  // _cropImage(File imgFile, String imageTypes) async {
-  //   FocusScope.of(context).unfocus();
-  //   final croppedFile =
-  //       await ImageCropper().cropImage(sourcePath: imgFile.path, uiSettings: [
-  //     AndroidUiSettings(
-  //         toolbarTitle: "Image Cropper",
-  //         toolbarColor: Colors.deepOrange,
-  //         toolbarWidgetColor: Colors.white,
-  //         initAspectRatio: CropAspectRatioPreset.original,
-  //         lockAspectRatio: false),
-  //     IOSUiSettings(
-  //       title: "Image Cropper",
-  //     )
-  //   ]);
-  //   if (croppedFile != null) {
-  //     // imageCache.clear();
-  //     setState(() {
-  //       // imageFile = File(croppedFile.path);
-
-  //       if (imageTypes == 'passport') {
-  //         passportPath = croppedFile.path;
-  //       } else if (imageTypes == 'profile') {
-  //         profilePath = croppedFile.path;
-  //       } else if (imageTypes == 'resident') {
-  //         residentPath = croppedFile.path;
-  //       } else if (imageTypes == 'residentCardBack') {
-  //         residentCardBackPath = croppedFile.path;
-  //       } else if (imageTypes == 'signature') {
-  //         // signatureImagePath = croppedFile.path;
-  //         // savedSignature = null;
-  //         // _signatureController.clear();
-
-  //         // Clear drawn signature
-  //         _signatureController1.clear();
-  //         _signatureController2.clear();
-  //         _signatureController3.clear();
-  //         savedSignature = null;
-
-  //         // Set the uploaded image as the combined signature
-  //         signatureImagePath = croppedFile.path;
-  //         _combinedSignature = File(croppedFile.path).readAsBytesSync();
-  //       } else if (imageTypes == 'form') {
-  //         formPath = croppedFile.path;
-  //       }
-  //     });
-  //   }
-  // }
 
   Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
     final imageFile = File(path);

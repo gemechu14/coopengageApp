@@ -7,7 +7,7 @@ import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/AlertDialog/dialog_helper.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
-import 'package:coopengageplus/features/onboarding/agent/agentRegistration.dart';
+import 'package:coopengageplus/customerOnboarding/agent/agentRegistration.dart';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
@@ -325,7 +325,7 @@ class _LoginscreenState extends State<Loginscreen> {
                   "minAmount": e["minAmount"]?.toString() ?? "",
                   "sex": e["sex"] ?? "",
                   "status": e["status"] ?? "",
-                  "code": e["code"].toString() ?? "",
+                  "code": e["code"].toString() 
                 };
               }).toList();
 

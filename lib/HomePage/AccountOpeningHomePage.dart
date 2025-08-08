@@ -1,14 +1,13 @@
 import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/customerOnboarding/JointNationalIdentification/views/individual_account_by_national_id.dart';
-import 'package:coopengageplus/customerOnboarding/_IndividualAccount/screens/registration_screen.dart';
-import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
-import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
+// import 'package:coopengageplus/customerOnboarding/_IndividualAccount/screens/registration_screen.dart';
+// import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
+// import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
 // import 'package:coopengageplus/features/onboarding/_corporate/screens/registration_screen.dart';
 
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/features/onboarding/jointaccount/jointAccount.dart';
-import 'package:coopengageplus/features/onboarding/HomePage/IndividualAccountTypeSelection.dart';
+import 'package:coopengageplus/HomePage/IndividualAccountTypeSelection.dart';
 // import 'package:coopengageplus/features/onboarding/Indivudualaccount/CustomerRegistrationScreen.dart';
 
 class AccountOnboardingScreen extends StatelessWidget {

@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signature/signature.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
@@ -417,9 +416,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
         Navigator.pop(context);
       }
 
-      if (image != null) {
-        await _cropAndProcessImage(File(image.path));
-      }
+      
     } catch (e) {
       // Dismiss loading indicator if still showing
       if (Navigator.canPop(context)) {
@@ -459,89 +456,6 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     }
   }
 
-  Future<void> _cropAndProcessImage(File imageFile) async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
-      // Crop the image
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imageFile.path,
-        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Signature',
-            toolbarColor: Colors.blue,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false,
-            hideBottomControls: false,
-            showCropGrid: true,
-            cropGridColor: Colors.blue,
-            cropFrameColor: Colors.blue,
-            backgroundColor: Colors.white,
-            statusBarColor: Colors.blue,
-            activeControlsWidgetColor: Colors.blue,
-            cropGridColumnCount: 3,
-            cropGridRowCount: 3,
-          ),
-          IOSUiSettings(
-            title: 'Crop Signature',
-            aspectRatioLockEnabled: false,
-            rotateButtonsHidden: false,
-            rotateClockwiseButtonHidden: false,
-          ),
-        ],
-      );
-
-      // Dismiss loading dialog
-      if (Navigator.canPop(context)) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-
-      if (croppedFile != null) {
-        // Read the file bytes directly
-        final bytes = await croppedFile.readAsBytes();
-        
-        if (bytes.isNotEmpty) {
-          // For uploaded signatures, we'll just store the bytes directly
-          // since we can't import into signature controllers easily
-          
-          // Update registration data
-          ref.read(registrationDataProvider.notifier).updateSignature(signature: bytes);
-          
-          // Clear validation error
-          ref.read(formValidationProvider.notifier).clearError('signature');
-          
-          _showSuccessSnackBar('Signature uploaded successfully!');
-        } else {
-          _showErrorSnackBar('Failed to process signature');
-        }
-      }
-    } catch (e) {
-      // Dismiss loading dialog if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-      
-      String errorMessage = 'Failed to process signature';
-      if (e.toString().contains('crop')) {
-        errorMessage = 'Signature cropping was cancelled';
-      } else if (e.toString().contains('permission')) {
-        errorMessage = 'Permission denied for signature processing';
-      } else {
-        errorMessage = 'Failed to process signature: ${e.toString()}';
-      }
-      
-      _showErrorSnackBar(errorMessage);
-    }
-  }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

@@ -1,18 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Internet and Network Permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    
+    <!-- Camera Permission -->
     <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    
+    <!-- Storage Permissions - Modern Security Approach -->
+    <!-- For Android < 13: Limited to READ_EXTERNAL_STORAGE with maxSdkVersion for security -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    
+    <!-- For Android 13+: Modern granular media permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    
+    <!-- Feature declarations -->
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-
-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
-                 android:maxSdkVersion="32"/> -->
-
-<!-- For Android 13+ -->
-    <!-- <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/> -->
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
 
     <application
     
@@ -20,9 +25,8 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
-        android:networkSecurityConfig="@xml/network_security_config"
         
-        android:requestLegacyExternalStorage="true"
+
 
         android:hardwareAccelerated="true"
         android:largeHeap="true"
@@ -83,13 +87,7 @@
         </activity>  
     </application>
 
-        <!-- <uses-permission android:name="android.permission.INTERNET"/>
-        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />  -->
 
-
-        <!-- <uses-permission android:name="android.permission.CAMERA"/> -->
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

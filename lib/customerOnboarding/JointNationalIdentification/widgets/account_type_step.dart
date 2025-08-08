@@ -1,4 +1,5 @@
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/model/account_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';

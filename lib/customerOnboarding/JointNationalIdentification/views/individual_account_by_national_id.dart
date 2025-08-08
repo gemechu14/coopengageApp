@@ -14,7 +14,7 @@ import 'package:coopengageplus/customerOnboarding/JointNationalIdentification/wi
 import 'package:coopengageplus/customerOnboarding/JointNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/customerOnboarding/JointNationalIdentification/widgets/branch_and_deposit_step.dart';
 import 'package:coopengageplus/customerOnboarding/JointNationalIdentification/widgets/member_additional_info_step.dart';
-import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
+// import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
 
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';

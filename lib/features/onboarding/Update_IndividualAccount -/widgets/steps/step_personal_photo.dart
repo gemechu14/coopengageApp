@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import '../common/image_selection_dialog.dart';
@@ -418,9 +417,7 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
         Navigator.pop(context);
       }
 
-      if (image != null) {
-        await _cropAndProcessImage(File(image.path));
-      }
+   
     } catch (e) {
       // Dismiss loading indicator if still showing
       if (Navigator.canPop(context)) {
@@ -465,95 +462,6 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
       }
 
       return status.isGranted;
-    }
-  }
-
-  Future<void> _cropAndProcessImage(File imageFile) async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
-      // Crop image with better error handling
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imageFile.path,
-        compressQuality: 80,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: "Crop Personal Photo",
-            toolbarColor: cyanblueColor,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false,
-            hideBottomControls: false,
-            showCropGrid: true,
-            cropGridColor: Colors.white,
-            cropFrameColor: cyanblueColor,
-            cropFrameStrokeWidth: 2,
-            cropGridColumnCount: 3,
-            cropGridRowCount: 3,
-          ),
-          IOSUiSettings(
-            title: "Crop Personal Photo",
-            doneButtonTitle: "Done",
-            cancelButtonTitle: "Cancel",
-            aspectRatioLockEnabled: false,
-            resetAspectRatioEnabled: true,
-            aspectRatioPickerButtonHidden: false,
-            rotateButtonsHidden: false,
-            rotateClockwiseButtonHidden: false,
-          ),
-        ],
-      );
-
-      // Dismiss loading dialog
-      if (Navigator.canPop(context)) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-
-      if (croppedFile != null) {
-        // Convert to bytes using the same method as IdTypeStep
-        final bytes =
-            await _getImageBytes(croppedFile.path, "personal_photo.png");
-
-        if (bytes != null) {
-          setState(() {
-            profilePath = croppedFile.path;
-            _photoBytes = bytes;
-          });
-
-          // Update registration data
-          ref.read(registrationDataProvider.notifier).updatePhoto(photo: bytes);
-
-          // Clear validation error
-          ref.read(formValidationProvider.notifier).clearError('photo');
-
-          // _showSuccessSnackBar('Photo captured successfully!');
-        } else {
-          _showErrorSnackBar('Failed to process photo bytes');
-        }
-      }
-    } catch (e) {
-      // Dismiss loading dialog if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-
-      String errorMessage = 'Failed to process photo';
-      if (e.toString().contains('crop')) {
-        errorMessage = 'Photo cropping was cancelled';
-      } else if (e.toString().contains('permission')) {
-        errorMessage = 'Permission denied for photo processing';
-      } else {
-        errorMessage = 'Failed to process photo: ${e.toString()}';
-      }
-
-      _showErrorSnackBar(errorMessage);
     }
   }
 

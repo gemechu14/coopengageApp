@@ -5,7 +5,6 @@ import '../model/account_type.dart';
 // import '../providers/account_type_provider.dart';
 import '../providers/stepper_provider.dart';
 
-
 class AccountTypeStep extends ConsumerStatefulWidget {
   final String? selectedAccountType;
   final Function(String?) onAccountTypeChanged;
@@ -244,19 +243,24 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   }
 
   /// Build main content
+
   Widget _buildContent(AccountTypeStepState state) {
-    if (state.isLoading) {
+    // 1. Show loading first
+    if (state.isLoading || _filteredAccountTypes.isEmpty && !_disposed) {
       return _buildLoadingState();
     }
 
+    // 2. Show error if any
     if (state.errorMessage != null) {
       return _buildErrorState(state.errorMessage!);
     }
 
+    // 3. Show empty state *only* if loading is false and no results
     if (_filteredAccountTypes.isEmpty) {
       return _buildNoAccountTypesState();
     }
 
+    // 4. Show data
     return Column(
       children: [
         _buildAccountTypesList(),
@@ -264,6 +268,27 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       ],
     );
   }
+
+  // Widget _buildContent(AccountTypeStepState state) {
+  //   if (state.isLoading) {
+  //     return _buildLoadingState();
+  //   }
+
+  //   if (state.errorMessage != null) {
+  //     return _buildErrorState(state.errorMessage!);
+  //   }
+
+  //   if (_filteredAccountTypes.isEmpty) {
+  //     return _buildNoAccountTypesState();
+  //   }
+
+  //   return Column(
+  //     children: [
+  //       _buildAccountTypesList(),
+  //       _buildSharesSection(),
+  //     ],
+  //   );
+  // }
 
   /// Build loading state
   Widget _buildLoadingState() {

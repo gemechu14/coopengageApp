@@ -1,16 +1,16 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'dart:io';
+// import 'dart:ui' as ui;
+// import 'dart:io';
 
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/common_widgets/dropDown/branch_selector.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/customerOnboarding/_IndividualAccount/widgets/common/signature_pad.dart';
+// import 'package:coopengageplus/customerOnboarding/_IndividualAccount/widgets/common/signature_pad.dart';
 import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:permission_handler/permission_handler.dart';
 import 'package:signature/signature.dart';
 import '../providers/stepper_provider.dart';
 

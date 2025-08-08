@@ -1,9 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:coopengageplus/constants/kconstant.dart';
+// import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/features/onboarding/pages/userInfoList/registration_service.dart';
-import 'package:coopengageplus/common_widgets/AlertDialog/dialog_helper.dart';
+// import 'package:coopengageplus/features/onboarding/pages/userInfoList/registration_service.dart';
+// import 'package:coopengageplus/common_widgets/AlertDialog/dialog_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class JointAccountDetailPage extends StatelessWidget {

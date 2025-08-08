@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/constants/listConstants.dart';
@@ -595,9 +594,6 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         Navigator.pop(context);
       }
 
-      if (image != null) {
-        await _cropAndProcessImage(File(image.path), imageType, onImageSelected);
-      }
     } catch (e) {
       // Dismiss loading indicator if still showing
       if (Navigator.canPop(context)) {
@@ -641,88 +637,6 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
       }
       
       return status.isGranted;
-    }
-  }
-
-  Future<void> _cropAndProcessImage(
-    File imageFile,
-    String imageType,
-    Function(String path, Uint8List bytes) onImageSelected,
-  ) async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
-      // Crop image with better error handling
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imageFile.path,
-        compressQuality: 80,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: "Crop ID Card",
-            toolbarColor: cyanblueColor,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false,
-            hideBottomControls: false,
-            showCropGrid: true,
-            cropGridColor: Colors.white,
-            cropFrameColor: cyanblueColor,
-            cropFrameStrokeWidth: 2,
-            cropGridColumnCount: 3,
-            cropGridRowCount: 3,
-          ),
-          IOSUiSettings(
-            title: "Crop ID Card",
-            doneButtonTitle: "Done",
-            cancelButtonTitle: "Cancel",
-            aspectRatioLockEnabled: false,
-            resetAspectRatioEnabled: true,
-            aspectRatioPickerButtonHidden: false,
-            rotateButtonsHidden: false,
-            rotateClockwiseButtonHidden: false,
-          ),
-        ],
-      );
-
-      // Dismiss loading dialog
-      if (Navigator.canPop(context)) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-
-      if (croppedFile != null) {
-        // Convert to bytes using the same method as your previous implementation
-        final bytes = await _getImageBytes(croppedFile.path, "${imageType}_${_selectedDocumentType ?? 'id'}.png");
-        
-        if (bytes != null) {
-          onImageSelected(croppedFile.path, bytes);
-          // _showSuccessSnackBar('Image captured successfully!');
-        } else {
-          _showErrorSnackBar('Failed to process image bytes');
-        }
-      }
-    } catch (e) {
-      // Dismiss loading dialog if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-      
-      String errorMessage = 'Failed to process image';
-      if (e.toString().contains('crop')) {
-        errorMessage = 'Image cropping was cancelled';
-      } else if (e.toString().contains('permission')) {
-        errorMessage = 'Permission denied for image processing';
-      } else {
-        errorMessage = 'Failed to process image: ${e.toString()}';
-      }
-      
-      _showErrorSnackBar(errorMessage);
     }
   }
 

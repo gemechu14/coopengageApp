@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/features/onboarding/Indivudualaccount/ViewCustomerInfoPage.dart';
+import 'package:coopengageplus/features/onboarding/pages/userInfoList/ViewCustomerInfoPage.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/screens/registration_screen.dart';
 import 'package:coopengageplus/features/onboarding/pages/userInfoList/OrganizationDetailPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/userInfoList/JointAccountDetailPage.dart';

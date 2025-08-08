@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/model/account_type.dart';
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import '../model/registration_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/account_type_provider.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
 import 'dart:io';
 
 class RegistrationSummaryScreen extends ConsumerWidget {

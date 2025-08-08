@@ -1,5 +1,6 @@
 import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/model/account_type.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
 
 
 class AccountTypeService {

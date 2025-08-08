@@ -1,13 +1,19 @@
+
+
+
+
 // ignore_for_file: non_constant_identifier_names
 
-// import 'dart:io';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/providers/stepper_provider.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:coopengageplus/widget/ReusableTextFormField.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/providers/stepper_provider.dart';
 
 class AttachDocumentsStep extends ConsumerStatefulWidget {
   const AttachDocumentsStep({Key? key}) : super(key: key);
@@ -17,7 +23,8 @@ class AttachDocumentsStep extends ConsumerStatefulWidget {
       _AttachDocumentsStepStepState();
 }
 
-class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
+class _AttachDocumentsStepStepState
+    extends ConsumerState<AttachDocumentsStep> {
   int expandedIndex = 0;
   final List<TextEditingController> motherNameControllers = [];
   final TextEditingController initialDepositController =
@@ -30,6 +37,15 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
     }
     initialDepositController.dispose();
     super.dispose();
+  }
+
+  Future<String> saveFileToInternalStorage(String originalPath) async {
+    final file = File(originalPath);
+    final appDir = await getApplicationDocumentsDirectory();
+    final fileName =
+        "${DateTime.now().millisecondsSinceEpoch}_${p.basename(originalPath)}";
+    final savedFile = await file.copy('${appDir.path}/$fileName');
+    return savedFile.path;
   }
 
   Widget _buildUploadSection({
@@ -97,7 +113,6 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
     final notifier = ref.read(stepperProvider.notifier);
     final memberCount = stepperState.numberOfMembers;
 
-    // Ensure controllers are up to date
     while (motherNameControllers.length < memberCount) {
       motherNameControllers.add(TextEditingController());
     }
@@ -112,13 +127,10 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
     final tradeNameFiles = stepperState.tradeNameFiles;
     final otherFiles = stepperState.otherFiles;
 
- 
-
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildUploadSection(
@@ -128,13 +140,9 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
               filePaths: licenseFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
-                onFilePicked: (path) {
-                  notifier.addLicenseFile(path);
-                },
+                onFilePicked: (path) => notifier.addLicenseFile(path),
               ),
-              onDelete: (index) {
-                notifier.removeLicenseFile(index);
-              },
+              onDelete: (index) => notifier.removeLicenseFile(index),
             ),
             _buildUploadSection(
               context: context,
@@ -143,14 +151,9 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
               filePaths: articleFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
-                onFilePicked: (path) {
-                  notifier.addArticleFile(path);
-                },
+                onFilePicked: (path) => notifier.addArticleFile(path),
               ),
-              onDelete: (index) {
-                print('Deleting article file at index $index');
-                notifier.removeArticleFile(index);
-              },
+              onDelete: (index) => notifier.removeArticleFile(index),
             ),
             _buildUploadSection(
               context: context,
@@ -159,14 +162,9 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
               filePaths: letterOfRequestFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
-                onFilePicked: (path) {
-                  notifier.addLetterOfRequestFile(path);
-                },
+                onFilePicked: (path) => notifier.addLetterOfRequestFile(path),
               ),
-              onDelete: (index) {
-                print('Deleting letter of request file at index $index');
-                notifier.removeLetterOfRequestFile(index);
-              },
+              onDelete: (index) => notifier.removeLetterOfRequestFile(index),
             ),
             _buildUploadSection(
               context: context,
@@ -175,14 +173,9 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
               filePaths: tinNumberPhotos,
               onUpload: () => showFilePickerOptions(
                 context: context,
-                onFilePicked: (path) {
-                  notifier.addTinNumberPhoto(path);
-                },
+                onFilePicked: (path) => notifier.addTinNumberPhoto(path),
               ),
-              onDelete: (index) {
-                print('Deleting TIN photo at index $index');
-                notifier.removeTinNumberPhoto(index);
-              },
+              onDelete: (index) => notifier.removeTinNumberPhoto(index),
             ),
             _buildUploadSection(
               context: context,
@@ -191,14 +184,9 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
               filePaths: tradeNameFiles,
               onUpload: () => showFilePickerOptions(
                 context: context,
-                onFilePicked: (path) {
-                  notifier.addTradeNameFile(path);
-                },
+                onFilePicked: (path) => notifier.addTradeNameFile(path),
               ),
-              onDelete: (index) {
-                print('Deleting trade name file at index $index');
-                notifier.removeTradeNameFile(index);
-              },
+              onDelete: (index) => notifier.removeTradeNameFile(index),
             ),
             SizedBox(
               width: double.infinity,
@@ -275,7 +263,9 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
                   allowedExtensions: ['pdf'],
                 );
                 if (result != null && result.files.single.path != null) {
-                  onFilePicked(result.files.single.path!);
+                  final securePath =
+                      await saveFileToInternalStorage(result.files.single.path!);
+                  onFilePicked(securePath);
                 }
               },
             ),
@@ -287,7 +277,8 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
                 final XFile? image =
                     await ImagePicker().pickImage(source: ImageSource.camera);
                 if (image != null) {
-                  onFilePicked(image.path);
+                  final securePath = await saveFileToInternalStorage(image.path);
+                  onFilePicked(securePath);
                 }
               },
             ),
@@ -299,7 +290,8 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
                 final XFile? image =
                     await ImagePicker().pickImage(source: ImageSource.gallery);
                 if (image != null) {
-                  onFilePicked(image.path);
+                  final securePath = await saveFileToInternalStorage(image.path);
+                  onFilePicked(securePath);
                 }
               },
             ),
@@ -309,8 +301,10 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
     );
   }
 
-  Future<void> pickFiles(BuildContext context,
-      void Function(List<String> files) onFilesPicked) async {
+  Future<void> pickFiles(
+    BuildContext context,
+    void Function(List<String> files) onFilesPicked,
+  ) async {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -330,9 +324,12 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
                   allowMultiple: true,
                 );
                 if (result != null) {
-                  onFilesPicked(
-                    result.paths.whereType<String>().toList(),
-                  );
+                  List<String> securePaths = [];
+                  for (final path in result.paths.whereType<String>()) {
+                    final securePath = await saveFileToInternalStorage(path);
+                    securePaths.add(securePath);
+                  }
+                  onFilesPicked(securePaths);
                 }
               },
             ),
@@ -343,7 +340,12 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
                 Navigator.pop(context);
                 List<XFile>? images = await ImagePicker().pickMultiImage();
                 if (images != null) {
-                  onFilesPicked(images.map((img) => img.path).toList());
+                  List<String> securePaths = [];
+                  for (final img in images) {
+                    final securePath = await saveFileToInternalStorage(img.path);
+                    securePaths.add(securePath);
+                  }
+                  onFilesPicked(securePaths);
                 }
               },
             ),
@@ -355,7 +357,8 @@ class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
                 final XFile? image =
                     await ImagePicker().pickImage(source: ImageSource.camera);
                 if (image != null) {
-                  onFilesPicked([image.path]);
+                  final securePath = await saveFileToInternalStorage(image.path);
+                  onFilesPicked([securePath]);
                 }
               },
             ),

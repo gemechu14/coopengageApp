@@ -1,5 +1,7 @@
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
-import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/services/account_type_service.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/model/account_type.dart';
+// import 'package:coopengageplus/features/onboarding/IndividualNationalIdentification/services/account_type_service.dart';
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/model/account_type.dart';
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/services/account_type_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 

@@ -2,14 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/customerOnboarding/_IndividualAccount/providers/registration_providers.dart';
+// import 'package:coopengageplus/customerOnboarding/_IndividualAccount/providers/registration_providers.dart';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 // import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../models/service_result.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RegistrationService {
   final NetworkHandler _networkHandler;

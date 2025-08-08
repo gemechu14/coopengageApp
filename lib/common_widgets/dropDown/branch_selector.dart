@@ -68,38 +68,56 @@ class _BranchSelectorState extends State<BranchSelector> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const CircularProgressIndicator(); // or SizedBox.shrink()
-    }
-
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DropdownButtonFormField<String>(
-            value: selectedBranch,
-            hint: const Text('Choose a branch'),
-            onChanged: (String? newValue) {
-              setState(() {
-                selectedBranch = newValue;
-              });
-              widget.onChanged(newValue);
-            },
+            value: isLoading ? null : selectedBranch,
+            hint: isLoading
+                ? const Text('Loading branches...')
+                : const Text('Choose a branch'),
+            onChanged: isLoading
+                ? null
+                : (String? newValue) {
+                    setState(() {
+                      selectedBranch = newValue;
+                    });
+                    widget.onChanged(newValue);
+                  },
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Branch is required';
               }
               return null;
             },
-            items: allBranches.map<DropdownMenuItem<String>>((branch) {
-              final companyName = branch['companyName'] ?? '';
-              return DropdownMenuItem<String>(
-                value: companyName,
-                child: Text(companyName),
-              );
-            }).toList(),
+            items: isLoading
+                ? [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 10),
+                          Text('Loading...')
+                        ],
+                      ),
+                    )
+                  ]
+                : allBranches.map<DropdownMenuItem<String>>((branch) {
+                    final companyName = branch['companyName'] ?? '';
+                    return DropdownMenuItem<String>(
+                      value: companyName,
+                      child: Text(companyName),
+                    );
+                  }).toList(),
             decoration: const InputDecoration(
               isDense: true,
               contentPadding:
@@ -130,4 +148,67 @@ class _BranchSelectorState extends State<BranchSelector> {
       ),
     );
   }
+
+  // Widget build(BuildContext context) {
+  //   if (isLoading) {
+  //     return const CircularProgressIndicator(); // or SizedBox.shrink()
+  //   }
+
+  //   return Padding(
+  //     padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         DropdownButtonFormField<String>(
+  //           value: selectedBranch,
+  //           hint: const Text('Choose a branch'),
+  //           onChanged: (String? newValue) {
+  //             setState(() {
+  //               selectedBranch = newValue;
+  //             });
+  //             widget.onChanged(newValue);
+  //           },
+  //           validator: (value) {
+  //             if (value == null || value.isEmpty) {
+  //               return 'Branch is required';
+  //             }
+  //             return null;
+  //           },
+  //           items: allBranches.map<DropdownMenuItem<String>>((branch) {
+  //             final companyName = branch['companyName'] ?? '';
+  //             return DropdownMenuItem<String>(
+  //               value: companyName,
+  //               child: Text(companyName),
+  //             );
+  //           }).toList(),
+  //           decoration: const InputDecoration(
+  //             isDense: true,
+  //             contentPadding:
+  //                 EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+  //             border: OutlineInputBorder(
+  //               borderRadius: BorderRadius.all(Radius.circular(10)),
+  //             ),
+  //             enabledBorder: OutlineInputBorder(
+  //               borderRadius: BorderRadius.all(Radius.circular(10)),
+  //               borderSide: BorderSide(color: Colors.black),
+  //             ),
+  //             focusedBorder: OutlineInputBorder(
+  //               borderRadius: BorderRadius.all(Radius.circular(10)),
+  //               borderSide: BorderSide(color: Colors.blue),
+  //             ),
+  //             errorBorder: OutlineInputBorder(
+  //               borderRadius: BorderRadius.all(Radius.circular(10)),
+  //               borderSide: BorderSide(color: Colors.red),
+  //             ),
+  //             focusedErrorBorder: OutlineInputBorder(
+  //               borderRadius: BorderRadius.all(Radius.circular(10)),
+  //               borderSide: BorderSide(color: Colors.red),
+  //             ),
+  //             prefixIcon: Icon(Icons.location_city),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

@@ -1,4 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, unrelated_type_equality_checks
 
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-import '../features/auth/login/login_screen.dart';
+// import '../features/auth/login/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
       var connectivityResult = await Connectivity().checkConnectivity();
       bool isOnline = connectivityResult != ConnectivityResult.none;
       if (token != null) {
-        if (isOnline && JwtDecoder.isExpired(token)) {
+        if (isOnline && !JwtDecoder.isExpired(token)) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const Loginscreen()),
           );
