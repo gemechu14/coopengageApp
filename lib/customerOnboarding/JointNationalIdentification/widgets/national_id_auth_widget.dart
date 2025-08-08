@@ -1,14 +1,18 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as ws_status;
 import 'package:http/http.dart' as http;
 import 'package:coopengageplus/constants/kconstant.dart';
-import '../providers/national_id_provider.dart';
+
 import '../providers/stepper_provider.dart';
+import '../providers/national_id_provider.dart';
 
 class NationalIdAuthWidget extends ConsumerStatefulWidget {
   const NationalIdAuthWidget({Key? key}) : super(key: key);
@@ -26,19 +30,20 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   String? _expectedFinalUrl;
   int? _selectedMemberIndex; // <-- Add this line
 
+  // WebSocket auth state
+  static const String _wsUrl = "ws://10.12.53.33:9062/ws/fayda";
+  WebSocketChannel? _channel;
+  StreamSubscription? _wsSub;
+  String? _clientId;
+  String? _authUrl; // URL to load in WebView once received
+  String? _errorMessage;
+  bool _wsConnecting = false;
+
   @override
   void initState() {
     super.initState();
     _isWebViewLoading = false;
-
     _webViewController = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_disposed) {
-        ref.read(nationalIdProvider.notifier).reset();
-
-        ref.read(nationalIdProvider.notifier).callEsignetApi();
-      }
-    });
   }
 
   @override
@@ -46,6 +51,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     _disposed = true;
     _webViewController?.clearCache();
     _webViewController?.clearLocalStorage();
+    _closeWebSocket();
     super.dispose();
   }
 
@@ -56,14 +62,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       _webViewController?.clearCache();
       _webViewController?.clearLocalStorage();
       _webViewController = null;
-
-      ref.read(nationalIdProvider.notifier).reset();
-
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (!_disposed) {
-          ref.read(nationalIdProvider.notifier).callEsignetApi();
-        }
-      });
+      _authUrl = null;
+      _errorMessage = null;
+      _closeWebSocket();
+      if (_selectedMemberIndex != null) {
+        // Restart WS auth for current member
+        _startWsAuth();
+      }
 
     } catch (e) {
     }
@@ -72,27 +77,18 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   @override
   Widget build(BuildContext context) {
     if (_disposed) return const SizedBox.shrink();
-
-    try {
-      final nationalIdState = ref.watch(nationalIdProvider);
-
-      return SingleChildScrollView(
-        child: Container(
-          // height: MediaQuery.of(context).size.height * 0.65,
-          child: _buildContent(nationalIdState),
-        ),
-      );
-    } catch (e) {
-      return const Center(
-        child: Text(
-          'Error loading authentication widget',
-          style: TextStyle(color: Colors.red),
-        ),
-      );
-    }
+    
+    // Watch the national ID provider state for changes
+    final nationalIdState = ref.watch(nationalIdProvider);
+    
+    return SingleChildScrollView(
+      child: Container(
+        child: _buildContent(),
+      ),
+    );
   }
 
-  Widget _buildContent(NationalIdState nationalIdState) {
+  Widget _buildContent() {
     if (_disposed) return const SizedBox.shrink();
 
     // Show member list first if no member is selected
@@ -113,8 +109,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               member.isVerified ? Icons.verified : Icons.person,
               color: member.isVerified ? cyanblueColor : null,
             ),
-            title: Text('Authorize Member ${index + 1}'),
-            // subtitle: Text(member.fullName ?? 'No Name'),
+            title: Text('Authorize Member ${index + 1}')
+,
             trailing: member.isVerified
                 ? ElevatedButton.icon(
                     onPressed: () {
@@ -134,12 +130,11 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                       setState(() {
                         _selectedMemberIndex = index;
                         _webViewController = null; // Reset WebView
-                        _isWebViewLoading =
-                            true; // Show loading spinner if needed
+                        _isWebViewLoading = true; // Show loading spinner if needed
+                        _errorMessage = null;
+                        _authUrl = null;
                       });
-                      // Reset the provider state and get a new auth URL
-                      ref.read(nationalIdProvider.notifier).reset();
-                      ref.read(nationalIdProvider.notifier).callEsignetApi();
+                      _startWsAuth();
                     },
                     child: const Text('Authorize'),
                   ),
@@ -147,24 +142,16 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         },
       );
     }
-
-    if (nationalIdState.isError) {
-      return _buildErrorState(nationalIdState);
+    if (_errorMessage != null) {
+      return _buildWsError(_errorMessage!);
     }
 
-    if (nationalIdState.authUrl != null &&
-        nationalIdState.authUrl!.isNotEmpty) {
-      return _buildWebView(nationalIdState.authUrl!);
+    if (_authUrl != null && _authUrl!.isNotEmpty) {
+      return _buildWebView(_authUrl!);
     }
 
-    if (nationalIdState.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-        ),
-      );
-    }
-    return SingleChildScrollView(
+    // Loading state
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -181,14 +168,12 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 16),
+          if (_wsConnecting)
+            const Text('Connecting to server...', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () {
-              if (!_disposed) {
-            
-                ref.read(nationalIdProvider.notifier).callEsignetApi();
-              }
-            },
+            onPressed: _startWsAuth,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -197,77 +182,14 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Retry API Call'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              if (!_disposed) {
-                print('Testing API endpoint');
-                _testApiEndpoint();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Test API'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              if (!_disposed) {}
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Test Verification'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              _showMembersDialog();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Show Members'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              _fetchDataForAllMembers();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Fetch Data for All Members'),
+            child: const Text('Retry'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildErrorState(NationalIdState nationalIdState) {
+  Widget _buildWsError(String message) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -290,7 +212,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             ),
             const SizedBox(height: 8),
             Text(
-              nationalIdState.errorMessage ?? 'Unknown error occurred',
+              message,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -303,9 +225,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    if (!_disposed) {
-                      ref.read(nationalIdProvider.notifier).callEsignetApi();
-                    }
+                    if (!_disposed) _startWsAuth();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: cyanblueColor,
@@ -509,8 +429,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
             if (isCallback) {
               print('Callback detected: ${request.url}');
-              _handleCallback(request.url);
-              return NavigationDecision.prevent;
+              print('Callback parameters received - keeping WebSocket alive for result');
+              // Don't close WebSocket here - wait for the server to send the result
+              // The WebSocket should receive the authentication_result message
             }
 
             return NavigationDecision.navigate;
@@ -584,6 +505,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           onWebResourceError: (WebResourceError error) {
             if (_disposed) return;
             print('Web resource error: ${error.description}');
+            setState(() {
+              _errorMessage = 'WebView error: ${error.description}';
+            });
           },
         ),
       )
@@ -610,49 +534,15 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       print('NationalIdAuthWidget: Has state: $hasState');
 
       if (hasCode && hasState) {
-        final code = queryParameters['code']!;
-        final state = queryParameters['state']!;
-
-        // Call the verification API
-        _verifyAccount(code, state);
-      } else {}
+        // WebSocket flow handles verification; ignore this callback
+        print('Callback parameters received (ignored in WS flow)');
+      }
     } catch (e) {
       _showErrorDialog('Error parsing callback URL: $e');
     }
   }
 
-  Future<void> _verifyAccount(String code, String state) async {
-    if (_disposed) return;
-
-    print('NationalIdAuthWidget: Starting account verification');
-    print('Code: $code, State: $state');
-
-    try {
-      final responseData = await ref
-          .read(nationalIdProvider.notifier)
-          .verifyAccount(code, state);
-
-      if (!_disposed) {
-        if (responseData != null) {
-          // Save authentication data to stepper state immediately
-          _onMemberVerified(_selectedMemberIndex!, responseData);
-          setState(() {
-            _selectedMemberIndex = null; // Return to member list
-          });
-        }
-        // No longer mark as completed or show success screen
-        setState(() {
-          _isWebViewLoading = false;
-        });
-      }
-    } catch (e) {
-      print('NationalIdAuthWidget: Verification failed: $e');
-      if (!_disposed) {
-        print('NationalIdAuthWidget: Showing verification error dialog');
-        _showVerificationErrorDialog('Verification failed: $e');
-      }
-    }
-  }
+  // Note: WebSocket-based flow handles verification; the old HTTP code is removed.
 
   void _showVerificationSuccessDialog(Map<String, dynamic>? responseData) {
     if (_disposed || _showingDialog) return;
@@ -733,8 +623,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                     _webViewController?.clearLocalStorage();
                     _webViewController = null;
 
-                    // Clear the auth URL to force showing completion state
-                    ref.read(nationalIdProvider.notifier).clearAuthUrl();
+                    // Clear any state to force showing completion state
+                    setState(() {
+                      _authUrl = null;
+                    });
 
                     // Force rebuild to show completion state
                     setState(() {
@@ -802,7 +694,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       print('Testing API endpoint...');
       // final String baseUrl = 'http://10.8.100.111:9061';
       final String baseUrl = AppConstants.baseUrl;
-      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url';
+      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=test';
 
       print('Testing URL: $apiUrl');
 
@@ -875,9 +767,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 _showingDialog = false;
                 if (!_disposed) {
                   print('NationalIdAuthWidget: Retrying verification');
-                  // Reset the state and try again
-                  ref.read(nationalIdProvider.notifier).reset();
-                  ref.read(nationalIdProvider.notifier).callEsignetApi();
+                  // Reset the state and try again via WebSocket
+                  _resetWebView();
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -1146,6 +1037,318 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  // ===== WebSocket-based flow =====
+  void _startWsAuth() async {
+    if (_disposed) return;
+    setState(() {
+      _wsConnecting = true;
+      _errorMessage = null;
+      _authUrl = null;
+      _clientId = null;
+    });
+    await _connectWebSocket();
+  }
+
+  Future<void> _connectWebSocket() async {
+    try {
+      print('NationalIdAuthWidget: Connecting to WebSocket at $_wsUrl');
+      _closeWebSocket();
+      _channel = WebSocketChannel.connect(Uri.parse(_wsUrl));
+      _wsSub = _channel!.stream.listen(
+        (event) => _handleWsMessage(event),
+        onError: (err) {
+          print('NationalIdAuthWidget: WebSocket error: $err');
+          if (_disposed) return;
+          setState(() {
+            _errorMessage = 'WebSocket error: $err';
+            _wsConnecting = false;
+          });
+        },
+        onDone: () {
+          print('NationalIdAuthWidget: WebSocket connection done');
+          if (_disposed) return;
+          // Only mark disconnected if not in normal completion
+          if (_authUrl == null && _selectedMemberIndex != null) {
+            setState(() {
+              _errorMessage ??= 'WebSocket disconnected unexpectedly';
+              _wsConnecting = false;
+            });
+          }
+        },
+      );
+
+      // Register client once connection is open
+      print('NationalIdAuthWidget: WebSocket connected, registering client...');
+      _registerClient();
+    } catch (e) {
+      print('NationalIdAuthWidget: Failed to connect to WebSocket: $e');
+      if (_disposed) return;
+      setState(() {
+        _errorMessage = 'Failed to connect to WebSocket: $e';
+        _wsConnecting = false;
+      });
+    }
+  }
+
+  void _registerClient() {
+    // Generate a temporary client id; server may confirm/override in response
+    _clientId = _generateClientId();
+    final payload = {
+      'type': 'register_client',
+      'clientId': _clientId,
+    };
+    print('NationalIdAuthWidget: Registering client with payload: $payload');
+    _channel?.sink.add(jsonEncode(payload));
+  }
+
+  Future<void> _fetchAuthUrl() async {
+    try {
+      print('NationalIdAuthWidget: Fetching auth URL with clientId: $_clientId');
+      
+      // Use the provider to fetch the auth URL with the correct clientId
+      await ref.read(nationalIdProvider.notifier).callEsignetApi(_clientId);
+      
+      if (!mounted) return;
+      
+      // Get the state from the provider
+      final nationalIdState = ref.read(nationalIdProvider);
+      
+      if (nationalIdState.isError) {
+        setState(() {
+          _errorMessage = nationalIdState.errorMessage ?? 'Failed to get auth URL';
+          _wsConnecting = false;
+        });
+        return;
+      }
+      
+      if (nationalIdState.authUrl != null && nationalIdState.authUrl!.isNotEmpty) {
+        print('NationalIdAuthWidget: Received auth URL: ${nationalIdState.authUrl}');
+        setState(() {
+          _authUrl = nationalIdState.authUrl;
+          _wsConnecting = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Empty auth URL received from provider';
+          _wsConnecting = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      print('NationalIdAuthWidget: Error in _fetchAuthUrl: $e');
+      setState(() {
+        _errorMessage = 'Error fetching auth URL: $e';
+        _wsConnecting = false;
+      });
+    }
+  }
+
+  void _handleWsMessage(dynamic event) {
+    if (_disposed) return;
+    try {
+      print('NationalIdAuthWidget: Received WebSocket message: $event');
+      final data = event is String ? jsonDecode(event) : event;
+      if (data is! Map) {
+        print('NationalIdAuthWidget: Message is not a Map: $data');
+        return;
+      }
+      final type = data['type'];
+      print('NationalIdAuthWidget: Message type: $type');
+      
+      switch (type) {
+        case 'registration_success':
+          // Server confirms/assigns clientId
+          final serverClientId = data['clientId'];
+          print('NationalIdAuthWidget: Registration success, server clientId: $serverClientId');
+          if (serverClientId is String && serverClientId.isNotEmpty) {
+            _clientId = serverClientId;
+            print('NationalIdAuthWidget: Updated clientId to: $_clientId');
+          }
+          // Now fetch the auth URL
+          print('NationalIdAuthWidget: Fetching auth URL...');
+          _fetchAuthUrl();
+          break;
+        case 'authentication_result':
+          print('NationalIdAuthWidget: Authentication result received');
+          print('NationalIdAuthWidget: Result data: ${data['data']}');
+          // Parse and persist result, then close everything
+          _handleAuthenticationResult(data);
+          break;
+        case 'authentication_complete':
+          print('NationalIdAuthWidget: Authentication complete message received');
+          // This might be a different message type from the server
+          _handleAuthenticationResult(data);
+          break;
+        case 'error':
+          print('NationalIdAuthWidget: Server error: ${data['message']}');
+          setState(() {
+            _errorMessage = data['message']?.toString() ?? 'Server error';
+          });
+          break;
+        default:
+          print('NationalIdAuthWidget: Unknown message type: $type');
+          print('NationalIdAuthWidget: Full message data: $data');
+          // Check if this might be an authentication result with different structure
+          if (data.containsKey('clientId') && (data.containsKey('data') || data.containsKey('result'))) {
+            print('NationalIdAuthWidget: Treating as authentication result with different structure');
+            _handleAuthenticationResult(data);
+          }
+          break;
+      }
+    } catch (e) {
+      print('NationalIdAuthWidget: Error handling WebSocket message: $e');
+      setState(() {
+        _errorMessage = 'Invalid message from server: $e';
+      });
+    }
+  }
+
+  void _closeWebSocket() {
+    try {
+      print('NationalIdAuthWidget: Closing WebSocket connection');
+      _wsSub?.cancel();
+      _wsSub = null;
+      _channel?.sink.close(ws_status.normalClosure);
+      _channel = null;
+      print('NationalIdAuthWidget: WebSocket closed successfully');
+    } catch (e) {
+      print('NationalIdAuthWidget: Error closing WebSocket: $e');
+    }
+  }
+
+  String _generateClientId() {
+    // Simple unique id without external dependency
+    return DateTime.now().microsecondsSinceEpoch.toString();
+  }
+
+  Future<void> _handleAuthenticationResult(Map result) async {
+    print('NationalIdAuthWidget: Processing authentication result');
+    try {
+      final clientId = result['clientId'];
+      print('NationalIdAuthWidget: Client ID from result: $clientId');
+      
+      // Handle different possible data structures
+      dynamic payload;
+      if (result.containsKey('data')) {
+        payload = result['data'];
+      } else if (result.containsKey('result')) {
+        payload = result['result'];
+      } else {
+        payload = result; // Use the entire result if no specific data field
+      }
+      
+      print('NationalIdAuthWidget: Payload to process: $payload');
+      
+      if (payload is Map<String, dynamic>) {
+        final mapped = _mapAuthenticationData(payload);
+        print('NationalIdAuthWidget: Mapped data: $mapped');
+        
+        if (_selectedMemberIndex != null) {
+          _onMemberVerified(_selectedMemberIndex!, mapped);
+          print('NationalIdAuthWidget: Member verified successfully');
+        }
+      } else {
+        print('NationalIdAuthWidget: Payload is not a Map: $payload');
+      }
+    } catch (e) {
+      print('NationalIdAuthWidget: Error processing authentication result: $e');
+    } finally {
+      // Close WebSocket first
+      _closeWebSocket();
+      
+      if (!_disposed) {
+        // Show success message before closing
+        _showAuthenticationSuccessDialog();
+        
+        // Close WebView and return to member list
+        setState(() {
+          _authUrl = null;
+          _webViewController?.clearCache();
+          _webViewController?.clearLocalStorage();
+          _webViewController = null;
+          _selectedMemberIndex = null;
+          _isWebViewLoading = false;
+        });
+      }
+    }
+  }
+
+  Map<String, dynamic> _mapAuthenticationData(Map<String, dynamic> data) {
+    // Extract base64 image if provided under 'picture'
+    String? base64Picture;
+    final picture = data['picture'];
+    if (picture is String && picture.isNotEmpty) {
+      base64Picture = picture; // expected to be base64 data URL or raw b64
+    }
+
+    // Map common fields
+    final mapped = <String, dynamic>{
+      'fullName': data['name'] ?? data['full_name'] ?? data['fullName'],
+      'email': data['email'],
+      'sub': data['sub'],
+      'sex': data['sex'] ?? data['gender'],
+      'dateOfBirth': data['dateOfBirth'] ?? data['dob'],
+      'picture': base64Picture,
+      // Preserve original as well
+      'raw': data,
+    };
+    return mapped;
+  }
+
+  void _showAuthenticationSuccessDialog() {
+    if (_disposed || _showingDialog) return;
+
+    _showingDialog = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 60),
+              const SizedBox(height: 16),
+              const Text(
+                'Authentication Complete!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'National ID verification was successful.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showingDialog = false;
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Continue'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

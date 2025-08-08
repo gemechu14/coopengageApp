@@ -46,8 +46,8 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
   NationalIdNotifier() : super(const NationalIdState());
 
   // API call for National ID authentication
-  Future<void> callEsignetApi() async {
-    print('NationalIdProvider: callEsignetApi called');
+  Future<void> callEsignetApi([String? clientId]) async {
+    print('NationalIdProvider: callEsignetApi called with clientId: $clientId');
     try {
       state = state.copyWith(
         isLoading: true,
@@ -57,8 +57,11 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
 
       // Construct the API URL
       final String baseUrl = AppConstants.baseURL;
+      final String actualClientId = clientId ?? '12344'; // fallback to default if not provided
 
-      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url';
+      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=$actualClientId';
+
+      print('NationalIdProvider: Calling API URL: $apiUrl');
 
       final response = await http.get(
         Uri.parse(apiUrl),
@@ -67,22 +70,29 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         },
       ).timeout(const Duration(seconds: 400));
 
+      print('NationalIdProvider: Response status: ${response.statusCode}');
+      print('NationalIdProvider: Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData.containsKey('url')) {
           final authUrl = responseData['url'];
+          print('NationalIdProvider: Extracted auth URL: $authUrl');
 
           state = state.copyWith(
             authUrl: authUrl,
             isLoading: false,
           );
         } else {
+          print('NationalIdProvider: No URL found in response data: $responseData');
           throw Exception('No URL found in response');
         }
       } else {
+        print('NationalIdProvider: API call failed with status: ${response.statusCode}');
         throw Exception('API call failed with status: ${response.statusCode}');
       }
     } catch (e) {
+      print('NationalIdProvider: Error in callEsignetApi: $e');
       if (e.toString().contains('SocketException')) {}
       state = state.copyWith(
         isError: true,
@@ -92,97 +102,97 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
     }
   }
 
-  // Account verification
-  Future<Map<String, dynamic>?> verifyAccount(
-      String code, String stateParam) async {
-    try {
-      state = state.copyWith(isLoading: true);
-      String? token = await storage.read(key: "token");
+  // // Account verification
+  // Future<Map<String, dynamic>?> verifyAccount(
+  //     String code, String stateParam) async {
+  //   try {
+  //     state = state.copyWith(isLoading: true);
+  //     String? token = await storage.read(key: "token");
 
-      if (token == null) {
-        throw Exception("Token not found");
-      }
+  //     if (token == null) {
+  //       throw Exception("Token not found");
+  //     }
 
-      // Construct the verification URL
-      final String baseUrl = AppConstants.baseURL;
-      final String verifyUrl =
-          // '$baseUrl/api/v1/fayda/verify-account?code=$code&state=$stateParam';
-          '$baseUrl/api/v1/fayda/get-verify-account-info?code=$code&state=$stateParam';
+  //     // Construct the verification URL
+  //     final String baseUrl = AppConstants.baseURL;
+  //     final String verifyUrl =
+  //         // '$baseUrl/api/v1/fayda/verify-account?code=$code&state=$stateParam';
+  //         '$baseUrl/api/v1/fayda/get-verify-account-info?code=$code&state=$stateParam';
 
-      // Make the verification API call
-      final response = await http.post(
-        Uri.parse(verifyUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token'
-        },
-      );
+  //     // Make the verification API call
+  //     final response = await http.post(
+  //       Uri.parse(verifyUrl),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'Bearer $token'
+  //       },
+  //     );
 
-      state = state.copyWith(isLoading: false);
+  //     state = state.copyWith(isLoading: false);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        // Map new response fields to old expected fields
-        final Map<String, dynamic> mappedData =
-            Map<String, dynamic>.from(responseData);
-        if (responseData.containsKey('phone_number')) {
-          mappedData['phone'] = responseData['phone_number'];
-        }
-        if (responseData.containsKey('gender')) {
-          mappedData['sex'] = responseData['gender'];
-        }
-        if (responseData.containsKey('birthdate')) {
-          mappedData['dateOfBirth'] = responseData['birthdate'];
-        }
-        if (responseData.containsKey('name')) {
-          mappedData['fullName'] = responseData['name'];
-        }
-        if (responseData.containsKey('sub')) {
-          mappedData['legalId'] = responseData['sub'];
-        }
+  //     if (response.statusCode == 200) {
+  //       final Map<String, dynamic> responseData = json.decode(response.body);
+  //       // Map new response fields to old expected fields
+  //       final Map<String, dynamic> mappedData =
+  //           Map<String, dynamic>.from(responseData);
+  //       if (responseData.containsKey('phone_number')) {
+  //         mappedData['phone'] = responseData['phone_number'];
+  //       }
+  //       if (responseData.containsKey('gender')) {
+  //         mappedData['sex'] = responseData['gender'];
+  //       }
+  //       if (responseData.containsKey('birthdate')) {
+  //         mappedData['dateOfBirth'] = responseData['birthdate'];
+  //       }
+  //       if (responseData.containsKey('name')) {
+  //         mappedData['fullName'] = responseData['name'];
+  //       }
+  //       if (responseData.containsKey('sub')) {
+  //         mappedData['legalId'] = responseData['sub'];
+  //       }
 
-        ///
+  //       ///
 
-        // ✅ Map nested address fields
-        if (responseData.containsKey('address') &&
-            responseData['address'] is Map) {
-          final address = responseData['address'] as Map<String, dynamic>;
+  //       // ✅ Map nested address fields
+  //       if (responseData.containsKey('address') &&
+  //           responseData['address'] is Map) {
+  //         final address = responseData['address'] as Map<String, dynamic>;
 
-          if (address.containsKey('country')) {
-            mappedData['country'] = address['country'];
-          }
-          if (address.containsKey('region')) {
-            mappedData['state'] = address[
-                'region']; // Assuming "region" maps to your "state" field
-          }
-        }
+  //         if (address.containsKey('country')) {
+  //           mappedData['country'] = address['country'];
+  //         }
+  //         if (address.containsKey('region')) {
+  //           mappedData['state'] = address[
+  //               'region']; // Assuming "region" maps to your "state" field
+  //         }
+  //       }
 
-        ///
+  //       ///
 
-        if (mappedData.containsKey('id') ||
-            mappedData.containsKey('fullName')) {
-          state = state.copyWith(
-            isAuthCompleted: true,
-            authResult: mappedData,
-          );
-          return mappedData;
-        } else {
-          throw Exception(
-              'Verification response missing required fields (id or fullName)');
-        }
-      } else {
-        throw Exception(
-            'Verification failed with status: ${response.statusCode}');
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        isError: true,
-        errorMessage: e.toString(),
-      );
-      rethrow;
-    }
-  }
+  //       if (mappedData.containsKey('id') ||
+  //           mappedData.containsKey('fullName')) {
+  //         state = state.copyWith(
+  //           isAuthCompleted: true,
+  //           authResult: mappedData,
+  //         );
+  //         return mappedData;
+  //       } else {
+  //         throw Exception(
+  //             'Verification response missing required fields (id or fullName)');
+  //       }
+  //     } else {
+  //       throw Exception(
+  //           'Verification failed with status: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     state = state.copyWith(
+  //       isLoading: false,
+  //       isError: true,
+  //       errorMessage: e.toString(),
+  //     );
+  //     rethrow;
+  //   }
+  // }
 
   void markAuthCompleted() {
     state = state.copyWith(isAuthCompleted: true);
