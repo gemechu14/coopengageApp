@@ -2,11 +2,14 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/AlertDialog/dialog_helper.dart';
 import 'package:coopengageplus/constants/config/config.dart';
-import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
+// import 'package:coopengageplus/constants/config/environment_config.dart';
+import 'package:coopengageplus/service/certificate_service.dart';
+// import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/customerOnboarding/agent/agentRegistration.dart';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
@@ -14,6 +17,7 @@ import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:http/http.dart' as http;
 
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
@@ -257,31 +261,105 @@ class _LoginscreenState extends State<Loginscreen> {
     final data = {"username": username, "password": password};
     final dbHelper = DatabaseHelper();
 
+    // Test certificate loading before making the request
+    try {
+      print('=== Testing Certificate Loading ===');
+      String currentEnv = await CertificateService.getCurrentEnvironment();
+      print('Current environment: $currentEnv');
+
+      // Test if we can create a secure client
+      HttpClient testClient = await CertificateService.createSecureHttpClient(
+          environment: currentEnv);
+      print('✅ Certificate loaded successfully for $currentEnv environment');
+    } catch (e) {
+      print('❌ Certificate loading failed: $e');
+      print('Falling back to development mode...');
+    }
+
     try {
       if (await isOnline()) {
         NetworkHandler networkHandler = NetworkHandler();
-        print("BASE URL");
+        print("BASE URLddddsddsdsdsdsdsdsdsdssds");
         print(AppConstants.baseURL);
         // ONLINE LOGIN
         final response = await networkHandler
             .post('${AppConstants.baseURL}/login', data)
-            .timeout(const Duration(seconds: 19));
-
+            .timeout(const Duration(seconds: 30));
+        print(
+            "statusCodestatusCodestatusCodestatusCodestatusCodestdddatusCode");
+        print(response.statusCode);
         if (response.statusCode == 200 || response.statusCode == 201) {
           final output = json.decode(response.body);
           final token = output["access_token"];
-
+          print("output tokent t ");
+          print(token);
           await storage.write(key: "token", value: token);
 
-          final decodedToken = json.decode(utf8.decode(
-            base64Url.decode(base64Url.normalize(token.split(".")[1])),
-          ));
+          // Call /api/v1/users/me to get user data
+          final userResponse = await networkHandler
+              .get('/api/v1/users/me')
+              .timeout(const Duration(seconds: 30));
+          print("dkfkdfhdkdkkfkdkdkdjkjdjkdjkdfjkkjfjkdfkjd");
+          print(userResponse);
 
-          final clientId = decodedToken["clientId"]?.toString();
-          final role = decodedToken["role"]?[0] ?? '';
-          final userId = decodedToken["userId"];
+          // Check if response is a Response object or direct data
+          Map<String, dynamic> userData;
+          if (userResponse is http.Response) {
+            // It's a Response object
+            if (userResponse.statusCode == 200) {
+              userData = json.decode(userResponse.body);
+            } else {
+              DialogHelper.show(
+                context,
+                title: "Coop Engage+",
+                message:
+                    "Failed to fetch user data. Status: ${userResponse.statusCode}",
+                type: DialogType.error,
+              );
+              return;
+            }
+          } else if (userResponse is Map<String, dynamic>) {
+            // It's direct data (already parsed)
+            userData = userResponse;
+          } else {
+            // Try to handle as string and parse
+            try {
+              userData = json.decode(userResponse.toString());
+            } catch (e) {
+              DialogHelper.show(
+                context,
+                title: "Coop Engage+",
+                message: "Invalid user data format received.",
+                type: DialogType.error,
+              );
+              return;
+            }
+          }
+
+          final userId = userData["userId"];
+          final role = userData["role"] ?? '';
+          final clientId = userData["client"]["id"]?.toString();
+          final fullName = userData["fullName"] ?? '';
+          final email = userData["email"] ?? '';
+          final status = userData["status"] ?? '';
+          final lastLoggedIn = userData["lastLoggedIn"] ?? '';
+          final registeredAt = userData["registeredAt"] ?? '';
+          final updatedAt = userData["updatedAt"] ?? '';
+
+          // Extract client data
+          final clientData = userData["client"] ?? {};
+          final clientName = clientData["name"] ?? '';
+          final clientDescription = clientData["description"] ?? '';
+
+          // Extract branches data
           final branches =
-              List<Map<String, dynamic>>.from(decodedToken["branch"]);
+              List<Map<String, dynamic>>.from(userData["branches"] ?? []);
+
+          // Extract main branch data
+          final mainBranch = userData["mainBranch"] ?? {};
+          final mainBranchId = mainBranch["id"];
+          final mainBranchName = mainBranch["name"] ?? '';
+          final mainBranchCode = mainBranch["branchCode"] ?? '';
 
           bool userExists = await dbHelper.userExists(username);
           await dbHelper.insertToken(token);
@@ -292,10 +370,42 @@ class _LoginscreenState extends State<Loginscreen> {
               password: password,
               userId: userId,
               clientId: clientId,
+              token: token,
               role: role,
               branches: branches,
+              fullName: fullName,
+              email: email,
+              status: status,
+              lastLoggedIn: lastLoggedIn,
+              registeredAt: registeredAt,
+              updatedAt: updatedAt,
+              clientName: clientName,
+              clientDescription: clientDescription,
+              mainBranchId: mainBranchId,
+              mainBranchName: mainBranchName,
+              mainBranchCode: mainBranchCode,
             );
-            // print("User registered locally.");
+          } else {
+            // Update existing user with new data
+            await dbHelper.updateUser(
+              username: username,
+              userId: userId,
+              clientId: clientId,
+              token: token,
+              role: role,
+              branches: branches,
+              fullName: fullName,
+              email: email,
+              status: status,
+              lastLoggedIn: lastLoggedIn,
+              registeredAt: registeredAt,
+              updatedAt: updatedAt,
+              clientName: clientName,
+              clientDescription: clientDescription,
+              mainBranchId: mainBranchId,
+              mainBranchName: mainBranchName,
+              mainBranchCode: mainBranchCode,
+            );
           }
 
           // SYNC ACCOUNT TYPES
@@ -325,7 +435,7 @@ class _LoginscreenState extends State<Loginscreen> {
                   "minAmount": e["minAmount"]?.toString() ?? "",
                   "sex": e["sex"] ?? "",
                   "status": e["status"] ?? "",
-                  "code": e["code"].toString() 
+                  "code": e["code"].toString()
                 };
               }).toList();
 
@@ -333,23 +443,20 @@ class _LoginscreenState extends State<Loginscreen> {
             }
           }
 
-          //  var  account= await dbhelper.getAccountTypeCount();
-
           // NAVIGATION BASED ON ROLE
-          List<dynamic> roles = decodedToken['role'] ?? [];
-          if (roles.contains("CRM")) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const CRMMainScreen()),
-              (route) => false,
-            );
-          } else {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const MainPage()),
-              (route) => false,
-            );
-          }
+          // if (role == "CRM") {
+          //   Navigator.pushAndRemoveUntil(
+          //     context,
+          //     MaterialPageRoute(builder: (_) => const CRMMainScreen()),
+          //     (route) => false,
+          //   );
+          // } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MainPage()),
+            (route) => false,
+          );
+          // }
         } else {
           DialogHelper.show(
             context,
@@ -414,6 +521,7 @@ class _LoginscreenState extends State<Loginscreen> {
         type: DialogType.error,
       );
     } catch (e) {
+      print("dkjfdkfkdkkfjdjkfkjdkjfk");
       print(e);
       print("djdfdjjfdj");
       DialogHelper.show(
@@ -422,12 +530,6 @@ class _LoginscreenState extends State<Loginscreen> {
         message: "Something went wrong. Please try again.",
         type: DialogType.error,
       );
-      // DialogHelper.show(
-      //   context,
-      //   title: "Coop Engage+",
-      //   message: "Unexpected error occurred.",
-      //   type: DialogType.error,
-      // );
     }
   }
 

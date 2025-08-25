@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/model/registration_data.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
@@ -14,7 +15,7 @@ import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentific
 // import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/ultra_simple_national_id_widget.dart';
-import 'package:coopengageplus/features/auth/login/login_screen.dart';
+// import 'package:coopengageplus/features/auth/login/login_screen.dart';
 
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:coopengageplus/utils/checkToken.dart';
@@ -139,7 +140,7 @@ class _IndividualAccountByNationalIdState
             ),
           ),
           title: const Text(
-            'Individual Accountddd',
+            'Individual Account',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -642,7 +643,7 @@ class _IndividualAccountByNationalIdState
 
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => LoginScreen()),
+          MaterialPageRoute(builder: (_) => Loginscreen()),
           (route) => false,
         );
       }
@@ -855,6 +856,4 @@ class _IndividualAccountByNationalIdState
       }
     }
   }
-
-
 }

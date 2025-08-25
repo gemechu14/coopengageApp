@@ -154,6 +154,7 @@ class RegistrationService {
       }
 
       print(token);
+      print("dfhkdfhdkfdkdkfhkdkhdkhdkhfkhdhkfkd");
       // Create multipart request
       final request = http.MultipartRequest(
         'POST',

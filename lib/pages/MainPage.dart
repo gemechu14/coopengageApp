@@ -10,6 +10,7 @@ import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:coopengageplus/helper/databaseHelper.dart';
 
 import 'package:google_nav_bar/google_nav_bar.dart';
 
@@ -42,17 +43,67 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
+    print("MainPage: Token found: ${token != null ? 'Yes' : 'No'}");
+    
     if (token != null && token.isNotEmpty) {
-      var decodedToken = JwtDecoder.decode(token);
-      setState(() {
-        role = decodedToken['role'][0];
-        isLoading = false;
-      });
+      try {
+        var decodedToken = JwtDecoder.decode(token);
+        print("MainPage: JWT decoded successfully, role: ${decodedToken['role']}");
+        setState(() {
+          role = decodedToken['role'][0];
+          isLoading = false;
+        });
+      } catch (e) {
+        print("MainPage: JWT decoding failed: $e");
+        // If JWT decoding fails, try to get user data from local database
+        final dbHelper = DatabaseHelper();
+        final user = await dbHelper.getUserByToken(token);
+        print("MainPage: User found by token: ${user != null ? 'Yes' : 'No'}");
+        
+        if (user != null && user['role'] != null) {
+          print("MainPage: Role from database: ${user['role']}");
+          setState(() {
+            role = user['role'];
+            isLoading = false;
+          });
+        } else {
+          // If no user found by token, try to get the first user from database
+          final users = await dbHelper.getUsers();
+          print("MainPage: Total users in database: ${users.length}");
+          
+          if (users.isNotEmpty && users.first['role'] != null) {
+            print("MainPage: Role from first user: ${users.first['role']}");
+            setState(() {
+              role = users.first['role'];
+              isLoading = false;
+            });
+          } else {
+            print("MainPage: No role found in database");
+            setState(() {
+              isLoading = false;
+            });
+          }
+        }
+      }
     } else {
-      setState(() {
-        isLoading = false;
-      });
+      print("MainPage: No token found, checking database for any user");
+      // If no token, try to get any user from database
+      final dbHelper = DatabaseHelper();
+      final users = await dbHelper.getUsers();
+      if (users.isNotEmpty && users.first['role'] != null) {
+        print("MainPage: Using role from first user in database: ${users.first['role']}");
+        setState(() {
+          role = users.first['role'];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
+    
+    print("MainPage: Final role set to: $role");
   }
 
   Widget _getCurrentWidget(int index) {

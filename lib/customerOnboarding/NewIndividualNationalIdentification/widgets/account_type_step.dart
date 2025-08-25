@@ -125,8 +125,12 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     List<AccountType> filtered =
         List.from(accountTypeStepState.availableAccountTypes);
 
+    print("dkfjdkfdkfdjfjkjdkfjkdkjfdjkkj");
+    print(filtered.length);
+
     // Apply filters
     filtered = _applyAgeFilter(filtered);
+
     filtered =
         _applyProductTypeFilter(filtered, stepperState.selectedProductType);
     filtered = _applyGenderFilter(filtered, stepperState.sex);

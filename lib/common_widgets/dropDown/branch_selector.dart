@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:coopengageplus/helper/databaseHelper.dart';
 
 class BranchSelector extends StatefulWidget {
   final Function(String?) onChanged;
@@ -33,37 +34,95 @@ class _BranchSelectorState extends State<BranchSelector> {
   }
 
   void initializeBranches() async {
-    String? token = await storage.read(key: "token");
-    if (token != null && token.isNotEmpty) {
-      var decodedToken = JwtDecoder.decode(token);
-
-      List<Map<String, dynamic>> regularBranches =
-          decodedToken.containsKey("branch")
-              ? List<Map<String, dynamic>>.from(decodedToken["branch"])
-              : [];
-
-      List<Map<String, dynamic>> branches = [];
-      String? defaultBranchName;
-
-      if (decodedToken.containsKey("mainBranch")) {
-        branches.add(decodedToken["mainBranch"]);
-        defaultBranchName = decodedToken["mainBranch"]["companyName"];
+    try {
+      print("BranchSelector: Initializing branches from database...");
+      
+      // Get branches from local database
+      final dbHelper = DatabaseHelper();
+      final db = await dbHelper.database;
+      
+      // Get all branches from Branches table
+      final List<Map<String, dynamic>> branchResults = await db.query('Branches');
+      print("BranchSelector: Raw branches from database: $branchResults");
+      
+      if (branchResults.isNotEmpty) {
+        // Convert database results to the expected format
+        final List<Map<String, dynamic>> formattedBranches = branchResults.map((branch) {
+          return {
+            'id': branch['id'],
+            'name': branch['branchName'] ?? 'Unnamed Branch',
+            'branchCode': branch['branchCode'] ?? '',
+            'companyName': branch['companyName'] ?? branch['branchName'] ?? 'Unnamed Branch',
+          };
+        }).toList();
+        
+        print("BranchSelector: Formatted branches: $formattedBranches");
+        
+        // Get main branch from Users table if available
+        String? defaultBranchName;
+        Map<String, dynamic>? mainBranchData;
+        try {
+          final users = await dbHelper.getUsers();
+          if (users.isNotEmpty) {
+            final user = users.first;
+            if (user['mainBranchName'] != null) {
+              defaultBranchName = user['mainBranchName'];
+              mainBranchData = {
+                'id': user['mainBranchId'] ?? 0,
+                'name': user['mainBranchName'] ?? 'Main Branch',
+                'branchCode': user['mainBranchCode'] ?? '',
+                'companyName': user['mainBranchName'] ?? 'Main Branch',
+              };
+              print("BranchSelector: Main branch from user: $defaultBranchName");
+            }
+          }
+        } catch (e) {
+          print("BranchSelector: Error getting main branch: $e");
+        }
+        
+        // Create final branches list including main branch
+        final List<Map<String, dynamic>> allBranchesList = [];
+        
+        // Add main branch first if it exists
+        if (mainBranchData != null) {
+          allBranchesList.add(mainBranchData);
+          print("BranchSelector: Added main branch to list: $mainBranchData");
+        }
+        
+        // Add other branches
+        allBranchesList.addAll(formattedBranches);
+        print("BranchSelector: Final all branches list: $allBranchesList");
+        
+        setState(() {
+          allBranches = allBranchesList;
+          
+          // Priority: initialValue > mainBranch > first branch
+          selectedBranch = widget.initialValue ?? 
+                          defaultBranchName ?? 
+                          (allBranchesList.isNotEmpty ? allBranchesList.first['companyName'] : null);
+          
+          isLoading = false;
+        });
+        
+        // Notify parent of initial value
+        widget.onChanged(selectedBranch);
+        
+      } else {
+        print("BranchSelector: No branches found in database");
+        setState(() {
+          allBranches = [];
+          selectedBranch = null;
+          isLoading = false;
+        });
       }
-
-      branches.addAll(regularBranches);
-
+      
+    } catch (e) {
+      print("BranchSelector: Error initializing branches: $e");
       setState(() {
-        allBranches = branches;
-
-        // Priority: initialValue > alreadySelected > mainBranch
-        selectedBranch =
-            widget.initialValue ?? selectedBranch ?? defaultBranchName;
-
+        allBranches = [];
+        selectedBranch = null;
         isLoading = false;
       });
-
-      // Notify parent of initial value
-      widget.onChanged(selectedBranch);
     }
   }
 

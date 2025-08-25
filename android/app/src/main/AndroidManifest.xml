@@ -13,7 +13,6 @@
     
     <!-- For Android 13+: Modern granular media permissions -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
     
     <!-- Feature declarations -->
     <uses-feature android:name="android.hardware.camera" android:required="false"/>

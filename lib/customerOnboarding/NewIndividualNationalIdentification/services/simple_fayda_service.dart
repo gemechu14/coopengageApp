@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +10,8 @@ import '../model/national_id_models.dart';
 import 'package:uuid/uuid.dart';
 
 class SimpleFaydaService {
-  static const String _wsUrl = "ws://10.12.53.33:9062/ws/fayda";
+  // static const String _wsUrl = "ws://10.12.53.33:9062/ws/fayda";
+  static const String _wsUrl = AppConstants.webSocketUrl;
 
   WebSocketChannel? _channel;
   String? _clientId;
@@ -27,7 +30,7 @@ class SimpleFaydaService {
       print('⚠️ Already connecting to WebSocket...');
       return;
     }
-    
+
     if (_channel != null) {
       print('⚠️ WebSocket already connected');
       return;
@@ -36,9 +39,9 @@ class SimpleFaydaService {
     try {
       print('🔌 Step 1: Connecting to WebSocket...');
       _isConnecting = true;
-      
+
       _channel = WebSocketChannel.connect(Uri.parse(_wsUrl));
-      
+
       // Add error handling for the WebSocket connection
       _channel!.stream.listen(
         _handleMessage,
@@ -51,7 +54,7 @@ class SimpleFaydaService {
           _handleWebSocketClosed();
         },
       );
-      
+
       print('✅ WebSocket connected');
       _isConnecting = false;
     } catch (e) {
@@ -77,13 +80,14 @@ class SimpleFaydaService {
     try {
       // Send registration message
       _registrationCompleter = Completer<bool>();
-      
+
       // Validate WebSocket connection before sending
       if (_channel == null || _isClosing) {
         throw Exception('WebSocket connection lost during registration');
       }
-      
-      _channel!.sink.add(jsonEncode({"type": "register_client", "clientId": _clientId}));
+
+      _channel!.sink
+          .add(jsonEncode({"type": "register_client", "clientId": _clientId}));
 
       // Wait for registration success with timeout
       await _registrationCompleter!.future.timeout(
@@ -92,7 +96,7 @@ class SimpleFaydaService {
           throw Exception('Registration timeout. Server did not respond.');
         },
       );
-      
+
       print('✅ Client registered successfully');
     } catch (e) {
       print('❌ Registration failed: $e');
@@ -104,16 +108,28 @@ class SimpleFaydaService {
   /// Step 3: Get auth URL (keep open)
   Future<String> getAuthUrl(String baseUrl) async {
     print('🔗 Step 3: Getting auth URL...');
-
+    final token = await storage.read(key: "token");
     print("kdfndklnkkkkkkkkdfdfdf");
+
+    print(token);
     print(_clientId);
     print(baseUrl);
     final response = await http.get(
       Uri.parse(
-          '${baseUrl}/api/v1/fayda/authenticate-url-ws?clientId=$_clientId'),
-      headers: {'Content-Type': 'application/json'},
-      // body: jsonEncode({'clientId': _clientId}),
+        '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=$_clientId',
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Add your token here
+      },
     );
+
+    // final response = await http.get(
+    //   Uri.parse(
+    //       '${baseUrl}/api/v1/fayda/authenticate-url-ws?clientId=$_clientId'),
+    //   headers: {'Content-Type': 'application/json'},
+    //   // body: jsonEncode({'clientId': _clientId}),
+    // );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -128,20 +144,22 @@ class SimpleFaydaService {
   /// Step 4: Wait for authentication result after callback
   Future<FaydaUserData> waitForAuthResult() async {
     print('⏳ Step 4: Waiting for authentication result...');
-    
+
     // Check if WebSocket is connected
     if (_channel == null) {
-      throw Exception('WebSocket not connected. Cannot wait for authentication result.');
+      throw Exception(
+          'WebSocket not connected. Cannot wait for authentication result.');
     }
-    
+
     try {
       _authCompleter = Completer<FaydaUserData>();
-      
+
       // Wait for authentication result with timeout (5 minutes)
       return await _authCompleter!.future.timeout(
         const Duration(minutes: 5),
         onTimeout: () {
-          throw Exception('Authentication timeout. No result received from server.');
+          throw Exception(
+              'Authentication timeout. No result received from server.');
         },
       );
     } catch (e) {
@@ -155,28 +173,29 @@ class SimpleFaydaService {
   void _handleMessage(dynamic message) async {
     try {
       print('📨 Raw WebSocket message: $message');
-      
+
       final data = jsonDecode(message.toString());
       print('📨 Parsed WebSocket message: ${data['type']}');
 
       switch (data['type']) {
         case 'registration_success':
-          print('✅ Registration success received for client: ${data['clientId']}');
+          print(
+              '✅ Registration success received for client: ${data['clientId']}');
           if (data['clientId'] == _clientId &&
               _registrationCompleter != null &&
               !_registrationCompleter!.isCompleted) {
             _registrationCompleter!.complete(true);
           } else {
-            print('⚠️ Registration success received but client ID mismatch or completer already completed');
+            print(
+                '⚠️ Registration success received but client ID mismatch or completer already completed');
           }
           break;
 
         case 'authentication_result':
           print('🎉 Authentication result received!');
-          if (data['clientId'] == _clientId && 
+          if (data['clientId'] == _clientId &&
               _authCompleter != null &&
               !_authCompleter!.isCompleted) {
-            
             String? savedImagePath;
             final base64Picture = data['data']['picture']?.toString();
 
@@ -211,7 +230,7 @@ class SimpleFaydaService {
             } else {
               print('⚠️ No valid picture data received');
             }
-            
+
             // Parse user data
             final userData = FaydaUserData(
               sub: data['data']['sub']?.toString() ?? '',
@@ -238,10 +257,11 @@ class SimpleFaydaService {
             print('🔌 Closing WebSocket - operation finished');
             close();
           } else {
-            print('⚠️ Authentication result received but client ID mismatch or completer already completed');
+            print(
+                '⚠️ Authentication result received but client ID mismatch or completer already completed');
           }
           break;
-          
+
         default:
           print('⚠️ Unknown message type: ${data['type']}');
           break;
@@ -255,23 +275,24 @@ class SimpleFaydaService {
   /// Handle WebSocket errors
   void _handleWebSocketError(dynamic error) {
     print('❌ WebSocket error occurred: $error');
-    
+
     // Don't immediately close if we're in the middle of authentication
     if (_authCompleter != null && !_authCompleter!.isCompleted) {
       print('🔄 Authentication in progress - attempting reconnection...');
       _attemptReconnection();
       return;
     }
-    
+
     // Complete any pending operations with error
-    if (_registrationCompleter != null && !_registrationCompleter!.isCompleted) {
+    if (_registrationCompleter != null &&
+        !_registrationCompleter!.isCompleted) {
       _registrationCompleter!.completeError('WebSocket error: $error');
     }
-    
+
     if (_authCompleter != null && !_authCompleter!.isCompleted) {
       _authCompleter!.completeError('WebSocket error: $error');
     }
-    
+
     // Clean up the connection
     _cleanupConnection();
   }
@@ -279,27 +300,28 @@ class SimpleFaydaService {
   /// Handle WebSocket closed
   void _handleWebSocketClosed() {
     print('🔌 WebSocket connection closed unexpectedly');
-    
+
     // Don't immediately close if we're in the middle of authentication
     if (_authCompleter != null && !_authCompleter!.isCompleted) {
       print('🔄 Authentication in progress - attempting reconnection...');
       _attemptReconnection();
       return;
     }
-    
+
     // Complete any pending operations with error
-    if (_registrationCompleter != null && !_registrationCompleter!.isCompleted) {
+    if (_registrationCompleter != null &&
+        !_registrationCompleter!.isCompleted) {
       _registrationCompleter!.completeError('WebSocket connection closed');
     }
-    
+
     if (_authCompleter != null && !_authCompleter!.isCompleted) {
       _authCompleter!.completeError('WebSocket connection closed');
     }
-    
+
     // Clean up the connection
     _cleanupConnection();
   }
-  
+
   /// Attempt to reconnect WebSocket
   void _attemptReconnection() async {
     if (_isReconnecting || _reconnectAttempts >= _maxReconnectAttempts) {
@@ -307,32 +329,32 @@ class SimpleFaydaService {
       _cleanupConnection();
       return;
     }
-    
+
     _reconnectAttempts++;
     _isReconnecting = true;
-    
-    print('🔄 Attempting WebSocket reconnection (attempt $_reconnectAttempts/$_maxReconnectAttempts)');
-    
+
+    print(
+        '🔄 Attempting WebSocket reconnection (attempt $_reconnectAttempts/$_maxReconnectAttempts)');
+
     try {
       // Wait a bit before reconnecting
       await Future.delayed(Duration(seconds: _reconnectAttempts * 2));
-      
+
       // Reconnect
       await connectWebSocket();
-      
+
       // Re-register if we have a client ID
       if (_clientId != null) {
         await registerClient();
         print('✅ WebSocket reconnected and re-registered successfully');
       }
-      
+
       _isReconnecting = false;
       _reconnectAttempts = 0;
-      
     } catch (e) {
       print('❌ Reconnection attempt $_reconnectAttempts failed: $e');
       _isReconnecting = false;
-      
+
       if (_reconnectAttempts < _maxReconnectAttempts) {
         // Try again
         _reconnectTimer = Timer(Duration(seconds: _reconnectAttempts * 3), () {
@@ -360,7 +382,7 @@ class SimpleFaydaService {
       print('⚠️ WebSocket already closed or closing');
       return;
     }
-    
+
     try {
       print('🔌 Closing WebSocket connection...');
       _isClosing = true;

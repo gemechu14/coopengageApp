@@ -10,18 +10,24 @@ class AppConstants {
   // static const baseUrl = "https://10.16.0.25/api/v1";
   // static const baseURL = 'https://10.16.0.25';
 
-
-
-
-///======= MOOTII SERV3ER ============
+  ///======= MOOTII SERV3ER ============
 
   // WebSocket specific configuration
   // static const webSocketUrl = 'ws://10.8.100.111:9062/ws/fayda';
-  static const baseUrl = "http://10.12.53.33:9062/api/v1";
-  static const baseURL = 'http://10.12.53.33:9062';
+  // static const baseUrl = "http://10.12.53.33:9062/api/v1";
+  // static const baseURL = 'http://10.12.53.33:9062';
+  // static const baseURL = 'https://10.12.53.56:9062';
+  // static const baseUrl = "https://10.12.53.56:9062/api/v1";
+  // // static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
+  // static const webSocketUrl = 'https://10.12.53.56:9062/ws/fayda';
 
-  static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
+///////PUBLIC SERVER
+  ///
 
+  static const baseURL = 'https://coopengage.coopbankoromiasc.com';
+  static const baseUrl = "https://coopengage.coopbankoromiasc.com/api/v1";
+  // static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
+  static const webSocketUrl = 'wss://coopengage.coopbankoromiasc.com/ws/fayda';
 
   // static const websocketURL= 'ws://10.12.53.33:9062'
 

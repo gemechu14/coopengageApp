@@ -1,15 +1,21 @@
 // ignore_for_file: unused_local_variable, avoid_print
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/main.dart';
+import 'package:http/io_client.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:http/http.dart' as http;
+// import 'package:http/io_client.dart';
+import 'package:http/io_client.dart';
+import 'package:coopengageplus/service/certificate_service.dart';
 
 class NetworkHandler {
   // String baseurl = "http://10.2.125.41:9061";
@@ -20,26 +26,69 @@ class NetworkHandler {
   FlutterSecureStorage storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(
         encryptedSharedPreferences: true,
-        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding
-        ),
+        storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
   );
+
   Future get(String url) async {
     String? token = await storage.read(key: "token");
     url = formater(url);
     var uri = Uri.parse(url);
-    // /user/register
-    var response = await http.get(
-      uri,
-      // headers: {"Authorization": "Bearer $token"},
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      // log.i(response.body);
 
-      return json.decode(response.body);
+    print(" ");
+    print(uri);
+
+    // Create an HttpClient with SSL certificate support
+    HttpClient httpClient;
+    try {
+      // Get current environment and create secure client
+      String environment = await CertificateService.getCurrentEnvironment();
+      httpClient = await CertificateService.createSecureHttpClient(
+          environment: environment);
+    } catch (e) {
+      print(
+          'Error creating secure client, falling back to development mode: $e');
+      // Fallback to development mode if certificate loading fails
+      httpClient = CertificateService.createDevelopmentHttpClient();
     }
-    // log.i(response.body);
-    log.i(response.statusCode);
+
+    // Wrap it in an IOClient
+    IOClient ioClient = IOClient(httpClient);
+
+    var response = await ioClient.get(
+      uri,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json"
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      print("Status code: ${response.statusCode}");
+      return null;
+    }
   }
+  // Future get(String url) async {
+  //   String? token = await storage.read(key: "token");
+  //   url = formater(url);
+  //   var uri = Uri.parse(url);
+
+  //   print("dfjkdjfdjfdkkjfjdjkfjdkjfkjdjkkjdfjkfdjk");
+  //   print(uri);
+  //   // /user/register
+  //   var response = await http.get(
+  //     uri,
+  //     // headers: {"Authorization": "Bearer $token"},
+  //   );
+  //   if (response.statusCode == 200 || response.statusCode == 201) {
+  //     // log.i(response.body);
+
+  //     return json.decode(response.body);
+  //   }
+  //   // log.i(response.body);
+  //   log.i(response.statusCode);
+  // }
 
   Future getData(String url, String token) async {
     // url = formater(url);
@@ -98,23 +147,61 @@ class NetworkHandler {
     String url,
     Map<String, dynamic> body,
   ) async {
-    // String? token = await storage.read(key: "token");
-    var uri = Uri.parse(url); // The complete URL is passed directly
+    // Create an HttpClient with SSL certificate support
+    HttpClient client;
+    try {
+      // Get current environment and create secure client
+      String environment = await CertificateService.getCurrentEnvironment();
+      client = await CertificateService.createSecureHttpClient(
+          environment: environment);
+    } catch (e) {
+      print(
+          'Error creating secure client for POST, falling back to development mode: $e');
+      // Fallback to development mode if certificate loading fails
+      client = CertificateService.createDevelopmentHttpClient();
+    }
+
+    // Wrap it in IOClient
+    IOClient ioClient = IOClient(client);
+
+    var uri = Uri.parse(url);
     log.d(body);
-    print("base urlre");
+    print("Request URL:");
     print(uri);
-    var response = await http.post(
+
+    var response = await ioClient.post(
       uri,
       headers: {
-        "Content-type": "application/json",
-        // Uncomment the Authorization header if you need to pass the token
-        // "Authorization": "Bearer $token"
+        "Content-Type": "application/json",
+        // "Authorization": "Bearer $token" // Uncomment if using token
       },
       body: json.encode(body),
     );
 
+    ioClient.close(); // Close the client after request
     return response;
   }
+  // Future<http.Response> post(
+  //   String url,
+  //   Map<String, dynamic> body,
+  // ) async {
+  //   // String? token = await storage.read(key: "token");
+  //   var uri = Uri.parse(url); // The complete URL is passed directly
+  //   log.d(body);
+  //   print("base urlre");
+  //   print(uri);
+  //   var response = await http.post(
+  //     uri,
+  //     headers: {
+  //       "Content-type": "application/json",
+  //       // Uncomment the Authorization header if you need to pass the token
+  //       // "Authorization": "Bearer $token"
+  //     },
+  //     body: json.encode(body),
+  //   );
+
+  //   return response;
+  // }
 
   Future<http.Response> postData(
       String url, Map<String, dynamic> body, String token) async {
@@ -526,7 +613,8 @@ class NetworkHandler {
       // Fetch all account types from the local database
       List<Map<String, dynamic>> accountTypes =
           await dbHelper.getAllAccountTypes();
-
+      print("All accountTYPE infrormatino");
+      print(accountTypes);
       return accountTypes; // Return the list of account types
     } catch (error) {
       print("Error fetching account types: $error");

@@ -54,12 +54,18 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         isError: false,
         errorMessage: null,
       );
+// Get token from storage
+      final token = await storage.read(key: "token");
 
+      print("dkfkdfdkfkjdkjfkdjdkfjdkj");
+      print(token);
       // Construct the API URL
       final String baseUrl = AppConstants.baseURL;
-      final String actualClientId = clientId ?? '12344'; // fallback to default if not provided
+      final String actualClientId =
+          clientId ?? '12344'; // fallback to default if not provided
 
-      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=$actualClientId';
+      final apiUrl =
+          '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=$actualClientId';
 
       print('NationalIdProvider: Calling API URL: $apiUrl');
 
@@ -67,6 +73,7 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // Add token here
         },
       ).timeout(const Duration(seconds: 400));
 
@@ -84,11 +91,13 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
             isLoading: false,
           );
         } else {
-          print('NationalIdProvider: No URL found in response data: $responseData');
+          print(
+              'NationalIdProvider: No URL found in response data: $responseData');
           throw Exception('No URL found in response');
         }
       } else {
-        print('NationalIdProvider: API call failed with status: ${response.statusCode}');
+        print(
+            'NationalIdProvider: API call failed with status: ${response.statusCode}');
         throw Exception('API call failed with status: ${response.statusCode}');
       }
     } catch (e) {

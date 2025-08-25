@@ -201,8 +201,9 @@ class _LoginPageState extends State<LoginPage> {
                           response.statusCode == 201) {
                         Map<String, dynamic> output =
                             json.decode(response.body);
-                        await storage.write(
+                        var data = await storage.write(
                             key: "token", value: output["access_token"]);
+                        
                         // Decode token to extract user data
                         Map<String, dynamic> decodedToken = json.decode(
                             utf8.decode(base64Url.decode(base64Url.normalize(

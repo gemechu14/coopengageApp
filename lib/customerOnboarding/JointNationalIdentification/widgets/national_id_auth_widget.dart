@@ -31,13 +31,16 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   int? _selectedMemberIndex; // <-- Add this line
 
   // WebSocket auth state
-  static const String _wsUrl = "ws://10.12.53.33:9062/ws/fayda";
+  static const String _wsUrl = AppConstants.webSocketUrl;
+
+  //"ws://10.12.53.33:9062/ws/fayda";
   WebSocketChannel? _channel;
   StreamSubscription? _wsSub;
   String? _clientId;
   String? _authUrl; // URL to load in WebView once received
   String? _errorMessage;
   bool _wsConnecting = false;
+  bool _dialogShown = false; // Flag to prevent showing dialog multiple times
 
   @override
   void initState() {
@@ -59,28 +62,25 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     if (_disposed) return;
 
     try {
-      _webViewController?.clearCache();
-      _webViewController?.clearLocalStorage();
-      _webViewController = null;
       _authUrl = null;
       _errorMessage = null;
+      _dialogShown = false;
+      _wsConnecting = false;
       _closeWebSocket();
       if (_selectedMemberIndex != null) {
         // Restart WS auth for current member
         _startWsAuth();
       }
-
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   @override
   Widget build(BuildContext context) {
     if (_disposed) return const SizedBox.shrink();
-    
+
     // Watch the national ID provider state for changes
     final nationalIdState = ref.watch(nationalIdProvider);
-    
+
     return SingleChildScrollView(
       child: Container(
         child: _buildContent(),
@@ -109,8 +109,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               member.isVerified ? Icons.verified : Icons.person,
               color: member.isVerified ? cyanblueColor : null,
             ),
-            title: Text('Authorize Member ${index + 1}')
-,
+            title: Text('Authorize Member ${index + 1}'),
             trailing: member.isVerified
                 ? ElevatedButton.icon(
                     onPressed: () {
@@ -129,10 +128,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                     onPressed: () {
                       setState(() {
                         _selectedMemberIndex = index;
-                        _webViewController = null; // Reset WebView
-                        _isWebViewLoading = true; // Show loading spinner if needed
                         _errorMessage = null;
                         _authUrl = null;
+                        _dialogShown = false;
                       });
                       _startWsAuth();
                     },
@@ -142,49 +140,52 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         },
       );
     }
+
+    // Show error if any
     if (_errorMessage != null) {
       return _buildWsError(_errorMessage!);
     }
 
-    if (_authUrl != null && _authUrl!.isNotEmpty) {
-      return _buildWebView(_authUrl!);
-    }
-
-    // Loading state
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Initializing National ID Authentication...',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
+    // Show loading while connecting
+    if (_wsConnecting) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          if (_wsConnecting)
-            const Text('Connecting to server...', style: TextStyle(color: Colors.grey)),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _startWsAuth,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            SizedBox(height: 16),
+            Text(
+              'Connecting to server...',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
               ),
             ),
-            child: const Text('Retry'),
-          ),
-        ],
+          ],
+        ),
+      );
+    }
+
+    // Show auth URL in dialog if available
+    if (_authUrl != null && _authUrl!.isNotEmpty && !_dialogShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed && !_dialogShown) {
+          _dialogShown = true;
+          _showWebViewDialog(_authUrl!);
+        }
+      });
+    }
+
+    // Return to member list
+    return const Center(
+      child: Text(
+        'Ready to authenticate',
+        style: TextStyle(
+          fontSize: 16,
+          color: Colors.grey,
+        ),
       ),
     );
   }
@@ -302,92 +303,120 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     );
   }
 
-  Widget _buildWebView(String url) {
-    if (_disposed) return const SizedBox.shrink();
+  void _showWebViewDialog(String url) {
+    if (_disposed) return;
 
     _expectedFinalUrl = url;
+    print('NationalIdAuthWidget: Showing WebView dialog with URL: $url');
 
-    print('NationalIdAuthWidget: Building WebView with URL: $url');
-
-    try {
-      return Stack(
-        children: [
-          Container(
-            height:
-                MediaQuery.of(context).size.height * 0.85, // Increase height
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: Container(
+            width: double.maxFinite,
+            height: MediaQuery.of(context).size.height * 0.9,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.security,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'National ID Authentication',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _closeWebSocket();
+                          setState(() {
+                            _selectedMemberIndex = null;
+                            _authUrl = null;
+                          });
+                        },
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // WebView Container
+                Expanded(
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(12),
+                          bottomRight: Radius.circular(12),
+                        ),
+                        child: WebViewWidget(
+                          controller: _createWebViewController(url),
+                        ),
+                      ),
+                      // Loading overlay
+                      if (_isWebViewLoading)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.white.withOpacity(0.9),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      cyanblueColor),
+                                ),
+                                SizedBox(height: 20),
+                                Text(
+                                  'Loading Authentication Page...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black87,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: WebViewWidget(
-                controller: _createWebViewController(url),
-              ),
-            ),
           ),
-
-          // Loading overlay with text and spinner
-          if (_isWebViewLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.white.withOpacity(0.75),
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Loading National ID Authentication Page...',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      );
-    } catch (e) {
-      print('Error building WebView: $e');
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error, color: Colors.red, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading WebView: $e',
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                if (!_disposed) {
-                  setState(() {});
-                }
-              },
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
+        );
+      },
+    );
   }
 
   WebViewController _createWebViewController(String url) {
@@ -429,7 +458,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
             if (isCallback) {
               print('Callback detected: ${request.url}');
-              print('Callback parameters received - keeping WebSocket alive for result');
+              print(
+                  'Callback parameters received - keeping WebSocket alive for result');
               // Don't close WebSocket here - wait for the server to send the result
               // The WebSocket should receive the authentication_result message
             }
@@ -892,9 +922,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     stepperNotifier.updateMember(memberIndex, updatedMember);
   }
 
-  void _showMemberDetailsDialog(BuildContext context, dynamic member) 
-  
-  {
+  void _showMemberDetailsDialog(BuildContext context, dynamic member) {
     final data = member.verifiedData as Map<String, dynamic>?;
 
     showDialog(
@@ -921,7 +949,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     );
   }
 
-   Map<String, dynamic> _filterPreferredFields(Map<String, dynamic> original) {
+  Map<String, dynamic> _filterPreferredFields(Map<String, dynamic> original) {
     // Define conflicts: prefer the first key in each group
     final preferenceGroups = [
       ['full_name', 'name'],
@@ -958,6 +986,29 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
     return filtered;
   }
+
+//  Map<String, dynamic> _filterPreferredFields(Map<String, dynamic> original) {
+//   final filtered = <String, dynamic>{};
+
+//   // Set mandatory preferred fields with fallback logic
+//   filtered['email'] = original['email'];
+//   filtered['sub'] = original['sub'];
+//   filtered['sex'] = original['sex'] ?? original['gender'];
+//   filtered['dateOfBirth'] = original['dateOfBirth'] ?? original['dob'];
+//   // filtered['picture'] = base64Picture;
+
+//   // Optional: add any other fields not already included
+//   final excludedKeys = {'email', 'sub', 'sex', 'gender', 'dateOfBirth', 'dob', 'picture'};
+
+//   for (var entry in original.entries) {
+//     final keyLower = entry.key.toLowerCase();
+//     if (!excludedKeys.contains(keyLower) && !filtered.containsKey(entry.key)) {
+//       filtered[entry.key] = entry.value;
+//     }
+//   }
+
+//   return filtered;
+// }
 
   Widget _buildKeyValueWidgets(Map<String, dynamic> data) {
     return Column(
@@ -1048,6 +1099,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       _errorMessage = null;
       _authUrl = null;
       _clientId = null;
+      _dialogShown = false;
     });
     await _connectWebSocket();
   }
@@ -1094,6 +1146,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   void _registerClient() {
+    print("dfjkdjdkjjkfdkdkjkdjf");
     // Generate a temporary client id; server may confirm/override in response
     _clientId = _generateClientId();
     final payload = {
@@ -1106,26 +1159,30 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
   Future<void> _fetchAuthUrl() async {
     try {
-      print('NationalIdAuthWidget: Fetching auth URL with clientId: $_clientId');
-      
+      print(
+          'NationalIdAuthWidget: Fetching auth URL with clientId: $_clientId');
+
       // Use the provider to fetch the auth URL with the correct clientId
       await ref.read(nationalIdProvider.notifier).callEsignetApi(_clientId);
-      
+
       if (!mounted) return;
-      
+
       // Get the state from the provider
       final nationalIdState = ref.read(nationalIdProvider);
-      
+
       if (nationalIdState.isError) {
         setState(() {
-          _errorMessage = nationalIdState.errorMessage ?? 'Failed to get auth URL';
+          _errorMessage =
+              nationalIdState.errorMessage ?? 'Failed to get auth URL';
           _wsConnecting = false;
         });
         return;
       }
-      
-      if (nationalIdState.authUrl != null && nationalIdState.authUrl!.isNotEmpty) {
-        print('NationalIdAuthWidget: Received auth URL: ${nationalIdState.authUrl}');
+
+      if (nationalIdState.authUrl != null &&
+          nationalIdState.authUrl!.isNotEmpty) {
+        print(
+            'NationalIdAuthWidget: Received auth URL: ${nationalIdState.authUrl}');
         setState(() {
           _authUrl = nationalIdState.authUrl;
           _wsConnecting = false;
@@ -1157,12 +1214,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       }
       final type = data['type'];
       print('NationalIdAuthWidget: Message type: $type');
-      
+
       switch (type) {
         case 'registration_success':
           // Server confirms/assigns clientId
           final serverClientId = data['clientId'];
-          print('NationalIdAuthWidget: Registration success, server clientId: $serverClientId');
+          print(
+              'NationalIdAuthWidget: Registration success, server clientId: $serverClientId');
           if (serverClientId is String && serverClientId.isNotEmpty) {
             _clientId = serverClientId;
             print('NationalIdAuthWidget: Updated clientId to: $_clientId');
@@ -1178,7 +1236,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           _handleAuthenticationResult(data);
           break;
         case 'authentication_complete':
-          print('NationalIdAuthWidget: Authentication complete message received');
+          print(
+              'NationalIdAuthWidget: Authentication complete message received');
           // This might be a different message type from the server
           _handleAuthenticationResult(data);
           break;
@@ -1192,8 +1251,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           print('NationalIdAuthWidget: Unknown message type: $type');
           print('NationalIdAuthWidget: Full message data: $data');
           // Check if this might be an authentication result with different structure
-          if (data.containsKey('clientId') && (data.containsKey('data') || data.containsKey('result'))) {
-            print('NationalIdAuthWidget: Treating as authentication result with different structure');
+          if (data.containsKey('clientId') &&
+              (data.containsKey('data') || data.containsKey('result'))) {
+            print(
+                'NationalIdAuthWidget: Treating as authentication result with different structure');
             _handleAuthenticationResult(data);
           }
           break;
@@ -1229,7 +1290,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     try {
       final clientId = result['clientId'];
       print('NationalIdAuthWidget: Client ID from result: $clientId');
-      
+
       // Handle different possible data structures
       dynamic payload;
       if (result.containsKey('data')) {
@@ -1239,13 +1300,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       } else {
         payload = result; // Use the entire result if no specific data field
       }
-      
+
       print('NationalIdAuthWidget: Payload to process: $payload');
-      
+
       if (payload is Map<String, dynamic>) {
         final mapped = _mapAuthenticationData(payload);
         print('NationalIdAuthWidget: Mapped data: $mapped');
-        
+
         if (_selectedMemberIndex != null) {
           _onMemberVerified(_selectedMemberIndex!, mapped);
           print('NationalIdAuthWidget: Member verified successfully');
@@ -1258,14 +1319,18 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     } finally {
       // Close WebSocket first
       _closeWebSocket();
-      
+
       if (!_disposed) {
-        // Show success message before closing
+        // Close any open dialogs first
+        Navigator.of(context).popUntil((route) => route.isFirst);
+
+        // Show success message
         _showAuthenticationSuccessDialog();
-        
+
         // Close WebView and return to member list
         setState(() {
           _authUrl = null;
+          _dialogShown = false;
           _webViewController?.clearCache();
           _webViewController?.clearLocalStorage();
           _webViewController = null;
@@ -1292,8 +1357,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       'sex': data['sex'] ?? data['gender'],
       'dateOfBirth': data['dateOfBirth'] ?? data['dob'],
       'picture': base64Picture,
+      "country": data['address'],
       // Preserve original as well
-      'raw': data,
+      // 'raw': data,
     };
     return mapped;
   }

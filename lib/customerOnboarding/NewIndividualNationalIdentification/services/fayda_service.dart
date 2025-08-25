@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:coopengageplus/constants/config/config.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
 import '../model/national_id_models.dart';
 
 class FaydaService {
-  static const String _wsUrl = "ws://10.12.53.33:9062/ws/fayda";
+  // static const String _wsUrl = "ws://10.12.53.33:9062/ws/fayda";
 
+static const String _wsUrl = AppConstants.webSocketUrl;
   // Generate unique client ID for each service instance
   late final String _clientId;
 

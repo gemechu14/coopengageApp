@@ -23,7 +23,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'my_database.db');
     return await openDatabase(
       path,
-      version: 2, // Incremented version for schema changes
+      version: 3, // Incremented version for schema changes
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE Users(
@@ -33,7 +33,18 @@ class DatabaseHelper {
             clientId TEXT,
             userId INTEGER UNIQUE,
             token  TEXT,
-            role TEXT
+            role TEXT,
+            fullName TEXT,
+            email TEXT,
+            status TEXT,
+            lastLoggedIn TEXT,
+            registeredAt TEXT,
+            updatedAt TEXT,
+            clientName TEXT,
+            clientDescription TEXT,
+            mainBranchId INTEGER,
+            mainBranchName TEXT,
+            mainBranchCode TEXT
           )
         ''');
 
@@ -154,12 +165,26 @@ CREATE TABLE selected_language  (
             userId TEXT
           )''');
       },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await _createCustomersTable(
-              db); // ✅ Create Customers table on upgrade
-        }
-      },
+       onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+           await _createCustomersTable(
+               db); // ✅ Create Customers table on upgrade
+         }
+         if (oldVersion < 3) {
+           // Add new columns to Users table
+           await db.execute('ALTER TABLE Users ADD COLUMN fullName TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN email TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN status TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN lastLoggedIn TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN registeredAt TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN updatedAt TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN clientName TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN clientDescription TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN mainBranchId INTEGER');
+           await db.execute('ALTER TABLE Users ADD COLUMN mainBranchName TEXT');
+           await db.execute('ALTER TABLE Users ADD COLUMN mainBranchCode TEXT');
+         }
+       },
     
     );
   }
@@ -720,6 +745,17 @@ CREATE TABLE selected_language  (
     return await db.query('Users');
   }
 
+  Future<Map<String, dynamic>?> getUserByToken(String token) async {
+    final db = await _initDB();
+    final List<Map<String, dynamic>> result = await db.query(
+      'Users',
+      where: 'token = ?',
+      whereArgs: [token],
+      limit: 1,
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
 ///////////////////////////////////////////////////////////
   Future<void> insertUser1({
     required String username,
@@ -728,11 +764,22 @@ CREATE TABLE selected_language  (
     String? clientId,
     String? token,
     required String role,
+    String? fullName,
+    String? email,
+    String? status,
+    String? lastLoggedIn,
+    String? registeredAt,
+    String? updatedAt,
+    String? clientName,
+    String? clientDescription,
+    int? mainBranchId,
+    String? mainBranchName,
+    String? mainBranchCode,
     List<Map<String, dynamic>>? branches,
   }) async {
     final db = await database;
 
-    // Insert or update the user with userId, clientId, and role
+    // Insert or update the user with all the new fields
     await db.insert(
       'Users',
       {
@@ -742,6 +789,17 @@ CREATE TABLE selected_language  (
         'clientId': clientId,
         "token": token,
         'role': role,
+        'fullName': fullName,
+        'email': email,
+        'status': status,
+        'lastLoggedIn': lastLoggedIn,
+        'registeredAt': registeredAt,
+        'updatedAt': updatedAt,
+        'clientName': clientName,
+        'clientDescription': clientDescription,
+        'mainBranchId': mainBranchId,
+        'mainBranchName': mainBranchName,
+        'mainBranchCode': mainBranchCode,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -759,6 +817,90 @@ CREATE TABLE selected_language  (
           },
           conflictAlgorithm:
               ConflictAlgorithm.ignore, // Prevent duplicate branches
+        );
+
+        // Link user with branch in UserBranches table
+        await db.insert(
+          'UserBranches',
+          {
+            'userId': userId,
+            'branchId': branchId,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    }
+  }
+
+  Future<void> updateUser({
+    required int userId,
+    String? username,
+    String? password,
+    String? clientId,
+    String? token,
+    String? role,
+    String? fullName,
+    String? email,
+    String? status,
+    String? lastLoggedIn,
+    String? registeredAt,
+    String? updatedAt,
+    String? clientName,
+    String? clientDescription,
+    int? mainBranchId,
+    String? mainBranchName,
+    String? mainBranchCode,
+    List<Map<String, dynamic>>? branches,
+  }) async {
+    final db = await database;
+
+    // Prepare the update data, only including non-null values
+    Map<String, dynamic> updateData = {};
+    if (username != null) updateData['username'] = username;
+    if (password != null) updateData['password'] = password;
+    if (clientId != null) updateData['clientId'] = clientId;
+    if (token != null) updateData['token'] = token;
+    if (role != null) updateData['role'] = role;
+    if (fullName != null) updateData['fullName'] = fullName;
+    if (email != null) updateData['email'] = email;
+    if (status != null) updateData['status'] = status;
+    if (lastLoggedIn != null) updateData['lastLoggedIn'] = lastLoggedIn;
+    if (registeredAt != null) updateData['registeredAt'] = registeredAt;
+    if (updatedAt != null) updateData['updatedAt'] = updatedAt;
+    if (clientName != null) updateData['clientName'] = clientName;
+    if (clientDescription != null) updateData['clientDescription'] = clientDescription;
+    if (mainBranchId != null) updateData['mainBranchId'] = mainBranchId;
+    if (mainBranchName != null) updateData['mainBranchName'] = mainBranchName;
+    if (mainBranchCode != null) updateData['mainBranchCode'] = mainBranchCode;
+
+    // Update the user record
+    await db.update(
+      'Users',
+      updateData,
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    // Update branches if provided
+    if (branches != null) {
+      // First, remove existing user-branch relationships
+      await db.delete(
+        'UserBranches',
+        where: 'userId = ?',
+        whereArgs: [userId],
+      );
+
+      // Insert new branches and relationships
+      for (var branch in branches) {
+        // Insert branch if it doesn't exist
+        final branchId = await db.insert(
+          'Branches',
+          {
+            'branchName': branch['name'],
+            'branchCode': branch['branchCode'],
+            'id': branch['id'],
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
 
         // Link user with branch in UserBranches table

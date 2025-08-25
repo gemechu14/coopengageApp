@@ -7,6 +7,8 @@ import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'dart:convert'; // Added for jsonDecode
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -15,20 +17,21 @@ class ProfileScreen extends StatefulWidget {
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with TickerProviderStateMixin {
   final storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
       storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
     ),
   );
-  
+
   String username = "";
   String firstLetter = "";
   String role = '';
   bool isProfileLoading = true;
   bool isBranchesLoading = true;
-  
+
   List<Map<String, dynamic>>? branches;
   String? mainBranchCode;
   String? mainBranchCompanyName;
@@ -52,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.repeat(reverse: true);
-    
+
     GlobalData().fetchToken();
     UserID = GlobalData().userId;
     _fetchToken();
@@ -123,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                           ),
                         ),
                       const SizedBox(height: 4),
-                      
+
                       // Role
                       if (isProfileLoading)
                         _buildSkeletonText(80, 14)
@@ -136,11 +139,11 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                           ),
                         ),
                       const SizedBox(height: 16),
-                      
+
                       // Main Branch Section
                       _buildMainBranchSection(),
                       const SizedBox(height: 16),
-                      
+
                       // Other Branches Section
                       _buildOtherBranchesSection(),
                     ],
@@ -150,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Settings Section
           _buildSettingsSection(),
         ],
@@ -206,8 +209,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
         const SizedBox(height: 8),
         if (isProfileLoading)
           Column(
-            children: List.generate(3, (index) => 
-              Padding(
+            children: List.generate(
+              3,
+              (index) => Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: _buildSkeletonText(100 + (index * 20), 14),
               ),
@@ -297,7 +301,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: Colors.grey[300]!.withOpacity(0.3 + (_animation.value * 0.4)),
+            color:
+                Colors.grey[300]!.withOpacity(0.3 + (_animation.value * 0.4)),
             borderRadius: BorderRadius.circular(4),
           ),
         );
@@ -313,7 +318,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           width: radius * 2,
           height: radius * 2,
           decoration: BoxDecoration(
-            color: Colors.grey[300]!.withOpacity(0.3 + (_animation.value * 0.4)),
+            color:
+                Colors.grey[300]!.withOpacity(0.3 + (_animation.value * 0.4)),
             shape: BoxShape.circle,
           ),
         );
@@ -340,31 +346,178 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
 
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
+    print("ProfileScreen: Token found: ${token != null ? 'Yes' : 'No'}");
+    
     if (token != null && token.isNotEmpty) {
-      // Decode the token to get user details
-      var decodedToken = JwtDecoder.decode(token);
-      setState(() {
-        username = decodedToken['sub'] ?? "User";
-        firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
-        role = decodedToken['role'][0];
-        UserID = decodedToken['userId'];
-        branches = decodedToken.containsKey("branch")
-            ? List<Map<String, dynamic>>.from(decodedToken["branch"])
-            : [];
+      try {
+        // Try to decode the token to get user details
+        var decodedToken = JwtDecoder.decode(token);
+        print("ProfileScreen: JWT decoded successfully");
         
-        // Decode mainBranch if available in the token
-        if (decodedToken.containsKey("mainBranch")) {
-          mainBranchCode = decodedToken["mainBranch"]["branchCode"];
-          mainBranchCompanyName = decodedToken["mainBranch"]["companyName"];
-          mainBranchId = decodedToken["mainBranch"]["id"];
-        }
+        setState(() {
+          username = decodedToken['sub'] ?? "User";
+          firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
+          role = decodedToken['role'][0];
+          UserID = decodedToken['userId'];
+          
+          // Don't get branches from token, we'll get them from database
+          branches = [];
+          
+          // Decode mainBranch if available in the token
+          if (decodedToken.containsKey("mainBranch")) {
+            mainBranchCode = decodedToken["mainBranch"]["branchCode"];
+            mainBranchCompanyName = decodedToken["mainBranch"]["companyName"];
+            mainBranchId = decodedToken["mainBranch"]["id"];
+          }
 
-        isProfileLoading = false;
-        isBranchesLoading = false;
-      });
+          isProfileLoading = false;
+          isBranchesLoading = false;
+        });
+        
+        // After setting basic info, fetch branches from database
+        await _fetchBranchesFromDatabase();
+        
+      } catch (e) {
+        print("ProfileScreen: JWT decoding failed: $e");
+        // If JWT decoding fails, try to get user data from local database
+        final dbHelper = DatabaseHelper();
+        final user = await dbHelper.getUserByToken(token);
+        print("ProfileScreen: User found by token: ${user != null ? 'Yes' : 'No'}");
+        
+        if (user != null) {
+          print("ProfileScreen: Using data from database");
+          setState(() {
+            username = user['username'] ?? user['fullName'] ?? "User";
+            firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
+            role = user['role'] ?? '';
+            UserID = user['userId'];
+            
+            // Set main branch from database
+            mainBranchCode = user['mainBranchCode'];
+            mainBranchCompanyName = user['mainBranchName'];
+            mainBranchId = user['mainBranchId'];
+
+            isProfileLoading = false;
+            isBranchesLoading = false;
+          });
+          
+          // Fetch branches from database
+          await _fetchBranchesFromDatabase();
+          
+        } else {
+          // If no user found by token, try to get the first user from database
+          final users = await dbHelper.getUsers();
+          print("ProfileScreen: Total users in database: ${users.length}");
+          
+          if (users.isNotEmpty) {
+            final firstUser = users.first;
+            print("ProfileScreen: Using first user from database");
+            setState(() {
+              username = firstUser['username'] ?? firstUser['fullName'] ?? "User";
+              firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
+              role = firstUser['role'] ?? '';
+              UserID = firstUser['userId'];
+              
+              // Set main branch from database
+              mainBranchCode = firstUser['mainBranchCode'];
+              mainBranchCompanyName = firstUser['mainBranchName'];
+              mainBranchId = firstUser['mainBranchId'];
+
+              isProfileLoading = false;
+              isBranchesLoading = false;
+            });
+            
+            // Fetch branches from database
+            await _fetchBranchesFromDatabase();
+            
+          } else {
+            print("ProfileScreen: No users found in database");
+            setState(() {
+              isProfileLoading = false;
+              isBranchesLoading = false;
+            });
+          }
+        }
+      }
     } else {
+      print("ProfileScreen: No token found, checking database for any user");
+      // If no token, try to get any user from database
+      final dbHelper = DatabaseHelper();
+      final users = await dbHelper.getUsers();
+
+      print("kdfkdfkdjfjkdkjfjeuueurueurueueruur");
+      print(users);
+      if (users.isNotEmpty) {
+        final firstUser = users.first;
+        print("ProfileScreen: Using first user from database (no token)");
+        setState(() {
+          username = firstUser['username'] ?? firstUser['fullName'] ?? "User";
+          firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
+          role = firstUser['role'] ?? '';
+          UserID = firstUser['userId'];
+          
+          // Set main branch from database
+          mainBranchCode = firstUser['mainBranchCode'];
+          mainBranchCompanyName = firstUser['mainBranchName'];
+          mainBranchId = firstUser['mainBranchId'];
+
+          isProfileLoading = false;
+          isBranchesLoading = false;
+        });
+        
+        // Fetch branches from database
+        await _fetchBranchesFromDatabase();
+        
+      } else {
+        setState(() {
+          isProfileLoading = false;
+          isBranchesLoading = false;
+        });
+      }
+    }
+    
+    print("ProfileScreen: Final data - username: $username, role: $role, UserID: $UserID");
+  }
+
+  Future<void> _fetchBranchesFromDatabase() async {
+    print("ProfileScreen: Fetching branches from database...");
+    final dbHelper = DatabaseHelper();
+    
+    try {
+      // Get all branches from the Branches table
+      final db = await dbHelper.database;
+      final List<Map<String, dynamic>> branchResults = await db.query('Branches');
+      
+      print("ProfileScreen: Raw branches from database: $branchResults");
+      
+      if (branchResults.isNotEmpty) {
+        // Convert database results to the expected format
+        final List<Map<String, dynamic>> formattedBranches = branchResults.map((branch) {
+          return {
+            'id': branch['id'],
+            'name': branch['branchName'] ?? 'Unnamed Branch',
+            'branchCode': branch['branchCode'] ?? '',
+            'companyName': branch['companyName'] ?? branch['branchName'] ?? 'Unnamed Branch',
+          };
+        }).toList();
+        
+        print("ProfileScreen: Formatted branches: $formattedBranches");
+        
+        setState(() {
+          branches = formattedBranches;
+          isBranchesLoading = false;
+        });
+      } else {
+        print("ProfileScreen: No branches found in database");
+        setState(() {
+          branches = [];
+          isBranchesLoading = false;
+        });
+      }
+    } catch (e) {
+      print("ProfileScreen: Error fetching branches: $e");
       setState(() {
-        isProfileLoading = false;
+        branches = [];
         isBranchesLoading = false;
       });
     }
