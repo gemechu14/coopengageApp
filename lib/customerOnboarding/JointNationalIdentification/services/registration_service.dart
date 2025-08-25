@@ -30,8 +30,8 @@ class RegistrationService {
       print(token);
       // Create multipart request
       final request = http.MultipartRequest(
-        'PUT',
-        Uri.parse('$baseUrl/api/v1/accounts/individual/$authId'),
+        'POST',
+        Uri.parse('$baseUrl/api/v1/accounts/individual'),
       );
 
       request.headers['Authorization'] = 'Bearer $token';

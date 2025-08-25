@@ -195,32 +195,32 @@ class RegistrationService {
         request.fields['customerInfo.dateOfBirth'] = '';
       }
 
-      // Add signature file if available
-      if (signature != null) {
-        final tempDir = Directory.systemTemp;
-        final tempFile = File('${tempDir.path}/signature.png');
-        await tempFile.writeAsBytes(signature);
+      // // Add signature file if available
+      // if (signature != null) {
+      //   final tempDir = Directory.systemTemp;
+      //   final tempFile = File('${tempDir.path}/signature.png');
+      //   await tempFile.writeAsBytes(signature);
 
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'customerInfo.signature',
-            tempFile.path,
-          ),
-        );
-      }
+      //   request.files.add(
+      //     await http.MultipartFile.fromPath(
+      //       'customerInfo.signature',
+      //       tempFile.path,
+      //     ),
+      //   );
+      // }
 
-      // Add photo file if available
-      if (photo != null && photo.isNotEmpty) {
-        final photoFile = File(photo);
-        if (await photoFile.exists()) {
-          request.files.add(
-            await http.MultipartFile.fromPath(
-              'customerInfo.photo',
-              photoFile.path,
-            ),
-          );
-        }
-      }
+      // // Add photo file if available
+      // if (photo != null && photo.isNotEmpty) {
+      //   final photoFile = File(photo);
+      //   if (await photoFile.exists()) {
+      //     request.files.add(
+      //       await http.MultipartFile.fromPath(
+      //         'customerInfo.photo',
+      //         photoFile.path,
+      //       ),
+      //     );
+      //   }
+      // }
 
       // Send the request
       final response = await request.send();
@@ -237,6 +237,7 @@ class RegistrationService {
         );
       }
     } catch (e) {
+      print(e.toString());
       print('Error submitting registration: $e');
       rethrow;
     }

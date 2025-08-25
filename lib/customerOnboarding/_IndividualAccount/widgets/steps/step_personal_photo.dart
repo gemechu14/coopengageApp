@@ -30,14 +30,85 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
     _loadExistingPhoto();
   }
 
+  @override
+  void dispose() {
+    _cleanupTempFiles();
+    super.dispose();
+  }
+
+  void _cleanupTempFiles() {
+    // Clean up temporary files created for image restoration
+    if (profilePath.isNotEmpty && profilePath.contains('restored_')) {
+      try {
+        File(profilePath).delete();
+      } catch (e) {
+        debugPrint("Note: Could not delete temp photo file: $e");
+      }
+    }
+  }
+
+  void _clearPhoto() {
+    setState(() {
+      profilePath = '';
+      _photoBytes = null;
+    });
+
+    // Update registration data
+    ref.read(registrationDataProvider.notifier).updatePhoto(photo: null);
+
+    // Clear validation errors
+    ref.read(formValidationProvider.notifier).clearError('photo');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Photo cleared successfully'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+
+    debugPrint("🗑️ Photo cleared from provider");
+  }
+
   void _loadExistingPhoto() {
     final registrationData = ref.read(registrationDataProvider);
+    debugPrint("🔄 [PersonalPhoto] Loading existing photo...");
+
     if (registrationData.photo != null) {
-      // If we have photo data, we need to save it temporarily to display
-      // For now, we'll just mark that we have a photo
-      setState(() {
-        profilePath = 'has_photo'; // Placeholder to indicate photo exists
+      debugPrint(
+          "   - Found photo data (${registrationData.photo!.length} bytes)");
+      _photoBytes = registrationData.photo;
+
+      // Create a temporary file for display
+      _createTempImageFile(registrationData.photo!, 'personal_photo')
+          .then((path) {
+        if (mounted && path != null) {
+          setState(() {
+            profilePath = path;
+          });
+          debugPrint("   - Photo restored successfully");
+        }
       });
+    } else {
+      debugPrint("   - No photo data found");
+    }
+  }
+
+  Future<String?> _createTempImageFile(
+      Uint8List bytes, String imageType) async {
+    try {
+      final tempDir = Directory.systemTemp;
+      final fileName =
+          'restored_${imageType}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final tempFile = File('${tempDir.path}/$fileName');
+
+      await tempFile.writeAsBytes(bytes);
+      debugPrint(
+          "✅ Created temporary image file for $imageType: ${tempFile.path}");
+
+      return tempFile.path;
+    } catch (e) {
+      debugPrint("❌ Error creating temporary image file for $imageType: $e");
+      return null;
     }
   }
 
@@ -104,9 +175,6 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
               personalPhoto(),
 
               const SizedBox(height: 30),
-
-            
-            
             ],
           ),
         ),
@@ -153,39 +221,41 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
                   ],
                 ),
                 child: profilePath.isEmpty
-                    ?
-                
-                    _buildPlaceholderIcon()
-                  
+                    ? _buildPlaceholderIcon()
                     : Stack(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(20.0),
-                            child: profilePath == 'has_photo'
-                                ? FutureBuilder<Uint8List?>(
-                                    future: _getImageBytesFromData(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData &&
-                                          snapshot.data != null) {
-                                        return Image.memory(
-                                          snapshot.data!,
-                                          height: 200.0,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                        );
-                                      } else {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      }
-                                    },
+                            borderRadius: BorderRadius.circular(12.0),
+                            child: _photoBytes != null
+                                ? Image.memory(
+                                    _photoBytes!,
+                                    height: 180.0,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
                                   )
                                 : Image.file(
                                     File(profilePath),
-                                    height: 200.0,
+                                    height: 180.0,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
+                          ),
+                          // Success indicator
+                          Positioned(
+                            top: 8,
+                            right: 40,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
                           ),
                           // Full screen button
                           Positioned(
@@ -236,6 +306,33 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
                                 ),
                                 child: const Icon(
                                   Icons.edit,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Clear photo button
+                          Positioned(
+                            bottom: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () => _clearPhoto(),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.8),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.delete,
                                   color: Colors.white,
                                   size: 16,
                                 ),
@@ -374,17 +471,68 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
   }
 
   // Image handling methods - same as IdTypeStep
+  // Future<void> _pickImage(ImageSource source) async {
+  //   try {
+  //     // Check permissions first - simplified flow
+  //     bool hasPermission = await _checkPermission(source);
+  //     if (!hasPermission) {
+  //       // Just show a simple message and return
+  //       _showErrorSnackBar('Permission required to continue');
+  //       return;
+  //     }
+
+  //     // Show loading indicator
+  //     showDialog(
+  //       context: context,
+  //       barrierDismissible: false,
+  //       builder: (context) => const Center(
+  //         child: CircularProgressIndicator(),
+  //       ),
+  //     );
+
+  //     final XFile? image = await _picker.pickImage(
+  //       source: source,
+  //       imageQuality: 80,
+  //       maxWidth: 1920,
+  //       maxHeight: 1080,
+  //     );
+
+  //     // Dismiss loading indicator
+  //     if (Navigator.canPop(context)) {
+  //       Navigator.pop(context);
+  //     }
+
+  //   } catch (e) {
+  //     // Dismiss loading indicator if still showing
+  //     if (Navigator.canPop(context)) {
+  //       Navigator.pop(context);
+  //     }
+
+  //     String errorMessage = 'Failed to pick image';
+  //     if (e.toString().contains('permission')) {
+  //       errorMessage =
+  //           'Permission denied. Please grant camera permission in settings.';
+  //     } else if (e.toString().contains('camera')) {
+  //       errorMessage = 'Camera not available. Please try again or use gallery.';
+  //     } else if (e.toString().contains('cancel')) {
+  //       // User cancelled, don't show error
+  //       return;
+  //     } else {
+  //       errorMessage = 'Failed to pick image: ${e.toString()}';
+  //     }
+
+  //     _showErrorSnackBar(errorMessage);
+  //   }
+  // }
+
   Future<void> _pickImage(ImageSource source) async {
     try {
-      // Check permissions first - simplified flow
       bool hasPermission = await _checkPermission(source);
       if (!hasPermission) {
-        // Just show a simple message and return
         _showErrorSnackBar('Permission required to continue');
         return;
       }
 
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -400,31 +548,34 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
         maxHeight: 1080,
       );
 
-      // Dismiss loading indicator
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
+      // Dismiss loading
+      if (Navigator.canPop(context)) Navigator.pop(context);
 
-    
+      if (image != null) {
+        final bytes = await _getImageBytes(image.path, 'personal_photo.jpg');
+        if (bytes != null) {
+          setState(() {
+            profilePath = image.path;
+            _photoBytes = bytes;
+          });
+
+          // Update registration data immediately
+          _updatePhotoData();
+
+          debugPrint("✅ Personal photo updated (${bytes.length} bytes)");
+        } else {
+          _showErrorSnackBar('Failed to read image bytes');
+        }
+      }
     } catch (e) {
-      // Dismiss loading indicator if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
+      if (Navigator.canPop(context)) Navigator.pop(context);
       String errorMessage = 'Failed to pick image';
       if (e.toString().contains('permission')) {
         errorMessage =
             'Permission denied. Please grant camera permission in settings.';
       } else if (e.toString().contains('camera')) {
         errorMessage = 'Camera not available. Please try again or use gallery.';
-      } else if (e.toString().contains('cancel')) {
-        // User cancelled, don't show error
-        return;
-      } else {
-        errorMessage = 'Failed to pick image: ${e.toString()}';
       }
-
       _showErrorSnackBar(errorMessage);
     }
   }
@@ -453,20 +604,35 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
     }
   }
 
-
   Future<void> _updatePhotoData() async {
     try {
-      if (profilePath.isNotEmpty && profilePath != 'has_photo') {
+      if (_photoBytes != null) {
+        // Update registration data
+        ref
+            .read(registrationDataProvider.notifier)
+            .updatePhoto(photo: _photoBytes);
+
+        // Clear any validation errors
+        ref.read(formValidationProvider.notifier).clearError('photo');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        debugPrint(
+            "✅ Photo data updated in provider (${_photoBytes!.length} bytes)");
+      } else if (profilePath.isNotEmpty && !profilePath.contains('restored_')) {
         final Uint8List? profileBytes =
             await _getImageBytes(profilePath, "profile.png");
 
         if (profileBytes != null) {
-          // Update registration data
+          _photoBytes = profileBytes;
           ref
               .read(registrationDataProvider.notifier)
               .updatePhoto(photo: profileBytes);
-
-          // Clear any validation errors
           ref.read(formValidationProvider.notifier).clearError('photo');
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -475,6 +641,9 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
               backgroundColor: Colors.green,
             ),
           );
+
+          debugPrint(
+              "✅ Photo file converted and updated (${profileBytes.length} bytes)");
         }
       }
     } catch (e) {
@@ -484,6 +653,7 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
           backgroundColor: Colors.red,
         ),
       );
+      debugPrint("❌ Error updating photo data: $e");
     }
   }
 
@@ -522,10 +692,8 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
       profileBytes = await _getImageBytes(profilePath, "profile.png");
     }
 
-
     // Get current user ID
     final userId = ref.read(userIdProvider);
-
 
     // Call controller method
     final success =
@@ -536,7 +704,6 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
             );
 
     if (success) {
-    
     } else {
       // Error is already handled by the controller and shown via SnackBar
     }
@@ -545,49 +712,68 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
   void _showFullScreenImage(BuildContext context, String imagePath) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.7,
-            child: Column(
-              children: [
-                Expanded(
-                  child: imagePath == 'has_photo'
-                      ? FutureBuilder<Uint8List?>(
-                          future: _getImageBytesFromData(),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData && snapshot.data != null) {
-                              return Image.memory(
-                                snapshot.data!,
-                                fit: BoxFit.contain,
-                              );
-                            } else {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                          },
-                        )
-                      : Image.file(
-                          File(imagePath),
-                          fit: BoxFit.contain,
-                        ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ),
-              ],
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black.withOpacity(0.9),
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            Center(
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
-          ),
-        );
-      },
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
+
+  // void _showFullScreenImage(BuildContext context, String imagePath) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return Dialog(
+  //         child: Container(
+  //           width: MediaQuery.of(context).size.width * 0.9,
+  //           height: MediaQuery.of(context).size.height * 0.7,
+  //           child: Column(
+  //             children: [
+  //               Expanded(
+  //                 child: _photoBytes != null
+  //                     ? Image.memory(
+  //                         _photoBytes!,
+  //                         fit: BoxFit.contain,
+  //                       )
+  //                     : Image.file(
+  //                         File(imagePath),
+  //                         fit: BoxFit.contain,
+  //                       ),
+  //               ),
+  //               Padding(
+  //                 padding: const EdgeInsets.all(8.0),
+  //                 child: TextButton(
+  //                   onPressed: () => Navigator.of(context).pop(),
+  //                   child: const Text('Close'),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

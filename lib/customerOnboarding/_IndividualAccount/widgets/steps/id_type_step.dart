@@ -25,14 +25,14 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
-  
+
   String? _selectedBranch;
   String? _selectedDocumentType;
-  
+
   // Image paths
   String _frontImagePath = '';
   String _backImagePath = '';
-  
+
   // Image bytes for API
   Uint8List? _frontImageBytes;
   Uint8List? _backImageBytes;
@@ -47,11 +47,87 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     final registrationData = ref.read(registrationDataProvider);
     _selectedBranch = registrationData.branch;
     _selectedDocumentType = registrationData.documentName;
+    
+    // Restore image data if available
+    _restoreImageData(registrationData);
+  }
+
+  void _restoreImageData(dynamic registrationData) {
+    debugPrint("🔄 [IdTypeStep] Restoring image data...");
+    
+    // Check if we have stored image bytes
+    if (registrationData.residenceCard != null) {
+      debugPrint("   - Found front image data (${registrationData.residenceCard.length} bytes)");
+      _frontImageBytes = registrationData.residenceCard;
+      // Create a temporary file path for display
+      _createTempImageFile(registrationData.residenceCard, 'front').then((path) {
+        if (mounted && path != null) {
+          setState(() {
+            _frontImagePath = path;
+          });
+          debugPrint("   - Front image restored successfully");
+        }
+      });
+    } else {
+      debugPrint("   - No front image data found");
+    }
+    
+    if (registrationData.residenceCardBack != null) {
+      debugPrint("   - Found back image data (${registrationData.residenceCardBack.length} bytes)");
+      _backImageBytes = registrationData.residenceCardBack;
+      // Create a temporary file path for display
+      _createTempImageFile(registrationData.residenceCardBack, 'back').then((path) {
+        if (mounted && path != null) {
+          setState(() {
+            _backImagePath = path;
+          });
+          debugPrint("   - Back image restored successfully");
+        }
+      });
+    } else {
+      debugPrint("   - No back image data found");
+    }
+  }
+
+  Future<String?> _createTempImageFile(Uint8List bytes, String imageType) async {
+    try {
+      final tempDir = Directory.systemTemp;
+      final fileName = 'restored_${imageType}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final tempFile = File('${tempDir.path}/$fileName');
+      
+      await tempFile.writeAsBytes(bytes);
+      debugPrint("✅ Created temporary image file for $imageType: ${tempFile.path}");
+      
+      return tempFile.path;
+    } catch (e) {
+      debugPrint("❌ Error creating temporary image file for $imageType: $e");
+      return null;
+    }
   }
 
   @override
   void dispose() {
+    _cleanupTempFiles();
     super.dispose();
+  }
+
+  void _cleanupTempFiles() {
+    // Clean up temporary files created for image restoration
+    if (_frontImagePath.isNotEmpty && _frontImagePath.contains('restored_')) {
+      try {
+        File(_frontImagePath).delete();
+      } catch (e) {
+        debugPrint("Note: Could not delete temp front image file: $e");
+      }
+    }
+    
+    if (_backImagePath.isNotEmpty && _backImagePath.contains('restored_')) {
+      try {
+        File(_backImagePath).delete();
+      } catch (e) {
+        debugPrint("Note: Could not delete temp back image file: $e");
+      }
+    }
   }
 
   @override
@@ -73,26 +149,25 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Header
                 _buildHeader(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Branch Selection
                 _buildBranchSelection(validationErrors),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Document Type
                 _buildDocumentTypeSelection(validationErrors),
-                
+
                 const SizedBox(height: 20),
-              
+
                 _buildIdCardPhotos(),
-                
+
                 const SizedBox(height: 30),
-        
               ],
             ),
           ),
@@ -151,9 +226,9 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
               _selectedBranch = value;
             });
             ref.read(registrationDataProvider.notifier).updateIdTypeInfo(
-              branch: value,
-              documentName: _selectedDocumentType,
-            );
+                  branch: value,
+                  documentName: _selectedDocumentType,
+                );
             ref.read(formValidationProvider.notifier).clearError('branch');
           },
         ),
@@ -177,10 +252,12 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
               _selectedDocumentType = value;
             });
             ref.read(registrationDataProvider.notifier).updateIdTypeInfo(
-              branch: _selectedBranch,
-              documentName: value,
-            );
-            ref.read(formValidationProvider.notifier).clearError('documentType');
+                  branch: _selectedBranch,
+                  documentName: value,
+                );
+            ref
+                .read(formValidationProvider.notifier)
+                .clearError('documentType');
           },
           prefixIcon: Icons.document_scanner,
           errorMessage: validationErrors['documentType'] ?? '',
@@ -243,7 +320,9 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20.0),
                 border: Border.all(
-                  color: imagePath.isEmpty ? const Color.fromARGB(255, 249, 244, 244) : Colors.transparent,
+                  color: imagePath.isEmpty
+                      ? const Color.fromARGB(255, 249, 244, 244)
+                      : Colors.transparent,
                   width: imagePath.isEmpty ? 2 : 0,
                 ),
                 boxShadow: [
@@ -266,8 +345,10 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
   Widget _buildPlaceholderIcon(String imageType) {
     final documentType = _selectedDocumentType ?? 'ID';
-    final title = imageType == 'front' ? 'Front Photo of $documentType' : 'Back Photo of $documentType';
-    
+    final title = imageType == 'front'
+        ? 'Front Photo of $documentType'
+        : 'Back Photo of $documentType';
+
     return Container(
       padding: const EdgeInsets.all(0),
       decoration: BoxDecoration(
@@ -478,7 +559,7 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 5.0, left: 5,top: 5),
+      padding: const EdgeInsets.only(bottom: 5.0, left: 5, top: 5),
       child: Text(
         text,
         style: const TextStyle(
@@ -508,11 +589,11 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     String imageType,
     Function(String path, Uint8List bytes) onImageSelected,
   ) {
-    final title = imageType == 'front' 
+    final title = imageType == 'front'
         ? 'Front Photo of ${_selectedDocumentType ?? 'ID'}'
         : 'Back Photo of ${_selectedDocumentType ?? 'ID'}';
     final subtitle = 'Choose how you want to add your photo';
-    
+
     showDialog(
       context: context,
       builder: (context) => ImageSelectionDialog(
@@ -540,7 +621,8 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Camera Unavailable'),
-        content: const Text('Camera is not available. Would you like to select from gallery instead?'),
+        content: const Text(
+            'Camera is not available. Would you like to select from gallery instead?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -565,15 +647,12 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     Function(String path, Uint8List bytes) onImageSelected,
   ) async {
     try {
-      // Check permissions first - simplified flow
       bool hasPermission = await _checkPermission(source);
       if (!hasPermission) {
-        // Just show a simple message and return
         _showErrorSnackBar('Permission required to continue');
         return;
       }
 
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -589,53 +668,109 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         maxHeight: 1080,
       );
 
-      // Dismiss loading indicator
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
+      // Dismiss loading
+      if (Navigator.canPop(context)) Navigator.pop(context);
 
-    } catch (e) {
-      // Dismiss loading indicator if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
+      if (image != null) {
+        final bytes = await _getImageBytes(image.path, 'temp_${imageType}.jpg');
+        if (bytes != null) {
+          onImageSelected(image.path, bytes); // <-- Call callback to update UI
+        } else {
+          _showErrorSnackBar('Failed to read image bytes');
+        }
+      } else {
+        // User cancelled, do nothing
       }
-      
+    } catch (e) {
+      if (Navigator.canPop(context)) Navigator.pop(context);
       String errorMessage = 'Failed to pick image';
       if (e.toString().contains('permission')) {
-        errorMessage = 'Permission denied. Please grant camera permission in settings.';
+        errorMessage =
+            'Permission denied. Please grant camera permission in settings.';
       } else if (e.toString().contains('camera')) {
         errorMessage = 'Camera not available. Please try again or use gallery.';
-      } else if (e.toString().contains('cancel')) {
-        // User cancelled, don't show error
-        return;
-      } else {
-        errorMessage = 'Failed to pick image: ${e.toString()}';
       }
-      
       _showErrorSnackBar(errorMessage);
     }
   }
+
+  // Future<void> _pickImage(
+  //   ImageSource source,
+  //   String imageType,
+  //   Function(String path, Uint8List bytes) onImageSelected,
+  // ) async {
+  //   try {
+  //     // Check permissions first - simplified flow
+  //     bool hasPermission = await _checkPermission(source);
+  //     if (!hasPermission) {
+  //       // Just show a simple message and return
+  //       _showErrorSnackBar('Permission required to continue');
+  //       return;
+  //     }
+
+  //     // Show loading indicator
+  //     showDialog(
+  //       context: context,
+  //       barrierDismissible: false,
+  //       builder: (context) => const Center(
+  //         child: CircularProgressIndicator(),
+  //       ),
+  //     );
+
+  //     final XFile? image = await _picker.pickImage(
+  //       source: source,
+  //       imageQuality: 80,
+  //       maxWidth: 1920,
+  //       maxHeight: 1080,
+  //     );
+
+  //     // Dismiss loading indicator
+  //     if (Navigator.canPop(context)) {
+  //       Navigator.pop(context);
+  //     }
+
+  //   } catch (e) {
+  //     // Dismiss loading indicator if still showing
+  //     if (Navigator.canPop(context)) {
+  //       Navigator.pop(context);
+  //     }
+
+  //     String errorMessage = 'Failed to pick image';
+  //     if (e.toString().contains('permission')) {
+  //       errorMessage = 'Permission denied. Please grant camera permission in settings.';
+  //     } else if (e.toString().contains('camera')) {
+  //       errorMessage = 'Camera not available. Please try again or use gallery.';
+  //     } else if (e.toString().contains('cancel')) {
+  //       // User cancelled, don't show error
+  //       return;
+  //     } else {
+  //       errorMessage = 'Failed to pick image: ${e.toString()}';
+  //     }
+
+  //     _showErrorSnackBar(errorMessage);
+  //   }
+  // }
 
   Future<bool> _checkPermission(ImageSource source) async {
     if (source == ImageSource.camera) {
       // Check camera permission status
       PermissionStatus status = await Permission.camera.status;
-      
+
       // If not granted, request it
       if (!status.isGranted) {
         status = await Permission.camera.request();
       }
-      
+
       return status.isGranted;
     } else {
       // Check gallery permission status
       PermissionStatus status = await Permission.photos.status;
-      
+
       // If not granted, request it
       if (!status.isGranted) {
         status = await Permission.photos.request();
       }
-      
+
       return status.isGranted;
     }
   }
@@ -692,28 +827,30 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
   void _updateRegistrationData() {
     ref.read(registrationDataProvider.notifier).updateIdTypeInfo(
-      branch: _selectedBranch,
-      documentName: _selectedDocumentType,
-      residenceCard: _frontImageBytes,
-      residenceCardBack: _backImageBytes,
-    );
+          branch: _selectedBranch,
+          documentName: _selectedDocumentType,
+          residenceCard: _frontImageBytes,
+          residenceCardBack: _backImageBytes,
+        );
   }
 
   // Handle registration step completion - similar to your previous implementation
   Future<void> handleIdTypeStep() async {
     // Get connectivity status
     final isOnline = ref.read(connectivityProvider);
-    
+
     // Get image bytes
     Uint8List? frontImageBytes;
     Uint8List? backImageBytes;
 
     if (_frontImagePath.isNotEmpty) {
-      frontImageBytes = await _getImageBytes(_frontImagePath, "front_${_selectedDocumentType ?? 'id'}.png");
+      frontImageBytes = await _getImageBytes(
+          _frontImagePath, "front_${_selectedDocumentType ?? 'id'}.png");
     }
 
     if (_backImagePath.isNotEmpty) {
-      backImageBytes = await _getImageBytes(_backImagePath, "back_${_selectedDocumentType ?? 'id'}.png");
+      backImageBytes = await _getImageBytes(
+          _backImagePath, "back_${_selectedDocumentType ?? 'id'}.png");
     }
 
     print("📤 Front Image Bytes: $frontImageBytes");
@@ -721,11 +858,11 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
     // Update the registration data provider
     ref.read(registrationDataProvider.notifier).updateIdTypeInfo(
-      branch: _selectedBranch,
-      documentName: _selectedDocumentType,
-      residenceCard: frontImageBytes,
-      residenceCardBack: backImageBytes,
-    );
+          branch: _selectedBranch,
+          documentName: _selectedDocumentType,
+          residenceCard: frontImageBytes,
+          residenceCardBack: backImageBytes,
+        );
 
     // Update progress
     ref.read(registrationDataProvider.notifier).updateProgress(25.0);
@@ -736,8 +873,6 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
       status: "INITIAL",
       formCompleted: false, // Always false for this step
     );
-
-  
   }
 
   void _showSuccessSnackBar(String message) {

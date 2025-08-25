@@ -102,6 +102,12 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   Future<void> _initializeStep() async {
     if (_disposed) return;
 
+    debugPrint("🚀 [AccountType] Initializing step...");
+    debugPrint("   - Customer age: $_calculatedAge");
+    debugPrint("   - Customer gender: ${widget.customerGender}");
+    debugPrint("   - Initial deposit: ${widget.initialDeposit}");
+    debugPrint("   - Banking type: ${widget.bankingType}");
+
     try {
       await ref.read(accountTypeStepProvider.notifier).initializeStep(
             customerAge: _calculatedAge,
@@ -109,9 +115,11 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             initialDeposit: widget.initialDeposit,
             bankingType: widget.bankingType,
           );
+      
+      debugPrint("✅ [AccountType] Provider initialization complete, starting filter...");
       _filterAccountTypes();
     } catch (e) {
-      debugPrint('Error initializing account type step: $e');
+      debugPrint('❌ [AccountType] Error initializing account type step: $e');
     }
   }
 
@@ -125,20 +133,28 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     List<AccountType> filtered =
         List.from(accountTypeStepState.availableAccountTypes);
 
-    print("dkfjdkfdkfdjfjkjdkfjkdkjfdjkkj");
-    print(filtered.length);
+    debugPrint("🔍 [AccountType] Starting filter process:");
+    debugPrint("   - Available account types: ${filtered.length}");
+    debugPrint("   - Customer age: $_calculatedAge");
+    debugPrint("   - Customer gender: ${widget.customerGender}");
+    debugPrint("   - Selected product type: ${stepperState.selectedProductType}");
+    debugPrint("   - Banking type: ${widget.bankingType}");
 
     // Apply filters
-    filtered = _applyAgeFilter(filtered);
+    // filtered = _applyAgeFilter(filtered);
+    debugPrint("   - After age filter: ${filtered.length}");
 
-    filtered =
-        _applyProductTypeFilter(filtered, stepperState.selectedProductType);
+    filtered = _applyProductTypeFilter(filtered, stepperState.selectedProductType);
+    debugPrint("   - After product type filter: ${filtered.length}");
+    
     filtered = _applyGenderFilter(filtered, stepperState.sex);
+    debugPrint("   - After gender filter: ${filtered.length}");
 
     if (mounted) {
       setState(() {
         _filteredAccountTypes = filtered;
       });
+      debugPrint("✅ [AccountType] Filter complete - showing ${filtered.length} account types");
     }
   }
 
@@ -249,8 +265,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   /// Build main content
 
   Widget _buildContent(AccountTypeStepState state) {
-    // 1. Show loading first
-    if (state.isLoading || _filteredAccountTypes.isEmpty && !_disposed) {
+    // 1. Show loading only if explicitly loading and not initialized
+    if (state.isLoading && !state.isInitialized) {
       return _buildLoadingState();
     }
 
@@ -259,12 +275,17 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       return _buildErrorState(state.errorMessage!);
     }
 
-    // 3. Show empty state *only* if loading is false and no results
-    if (_filteredAccountTypes.isEmpty) {
+    // 3. Show empty state only if initialized but no filtered results
+    if (state.isInitialized && _filteredAccountTypes.isEmpty) {
       return _buildNoAccountTypesState();
     }
 
-    // 4. Show data
+    // 4. Show loading if not initialized yet (fallback)
+    if (!state.isInitialized) {
+      return _buildLoadingState();
+    }
+
+    // 5. Show data
     return Column(
       children: [
         _buildAccountTypesList(),
@@ -366,9 +387,17 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             ),
             const SizedBox(height: 8),
             Text(
-              'No account types match your current profile. Please check your information and try again.',
+              'No account types match your current profile (Age: $_calculatedAge, Gender: ${widget.customerGender}, Banking: ${widget.bankingType}). Please check your information and try again.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                debugPrint("🔄 [AccountType] Manual retry requested");
+                _initializeStep();
+              },
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -474,6 +503,12 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
         const SizedBox(height: 4),
         Text(
           '${accountType.bankingType} ',
+          style: TextStyle(
+            fontSize: 12,
+            color: subtitleColor,
+          ),
+        ),Text(
+          '${accountType.minAge} ',
           style: TextStyle(
             fontSize: 12,
             color: subtitleColor,
