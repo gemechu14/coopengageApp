@@ -39,9 +39,18 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
     _initializeData();
   }
 
+  // Helper method to check if fields should be read-only
+  bool get _isReadOnly {
+    final registrationData = ref.watch(registrationDataProvider);
+    return registrationData.haveCboAccount;
+  }
+
   void _initializeData() {
     final registrationData = ref.read(registrationDataProvider);
 
+    // Check if user has CBO account to determine read-only mode
+    final haveCboAccount = registrationData.haveCboAccount;
+    
     // Load existing data into text controllers
     if (registrationData.fullName != null && registrationData.fullName!.isNotEmpty)
       _fullNameController.text = registrationData.fullName!;
@@ -306,7 +315,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                   hintText: "Select Title",
                   selectedValue: _selectedTitle,
                   items: ListContants.title,
-                  onChanged: (value) {
+                  onChanged: _isReadOnly ? (_) {} : (value) {
                     setState(() {
                       _selectedTitle = value;
                     });
@@ -323,6 +332,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                         .read(formValidationProvider.notifier)
                         .clearError('titleGender');
                   },
+                  readOnly: _isReadOnly,
                   errorMessage: validationErrors['title'] ?? '',
                   isRequired: true,
                 ),
@@ -351,7 +361,8 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                   errorMessage: validationErrors['fullName'] ?? '',
                   leadingIcon: Icons.person,
                   isRequired: true,
-                  onChanged: (value) {
+                  readOnly: _isReadOnly,
+                  onChanged: _isReadOnly ? null : (value) {
                     // Update registration data
                     ref
                         .read(registrationDataProvider.notifier)
@@ -391,7 +402,8 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                   errorMessage: validationErrors['surname'] ?? '',
                   leadingIcon: Icons.person,
                   isRequired: false,
-                  onChanged: (value) {
+                  readOnly: _isReadOnly,
+                  onChanged: _isReadOnly ? null : (value) {
                     // Update registration data
                     ref
                         .read(registrationDataProvider.notifier)
@@ -438,7 +450,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                 // Date of Birth
                 _buildLabel("Date of Birth *"),
                 GestureDetector(
-                  onTap: () => _selectDate(context),
+                  onTap: _isReadOnly ? null : () => _selectDate(context),
                   child: AbsorbPointer(
                     child: ReusableTextFormField(
                       hintText: "Date of Birth",
@@ -447,6 +459,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                       errorMessage: validationErrors['dateOfBirth'] ?? '',
                       leadingIcon: Icons.calendar_today,
                       isRequired: true,
+                      readOnly: true, // Always read-only since it's a date picker
                     ),
                   ),
                 ),
@@ -556,12 +569,18 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
             children: [
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('Male'),
+                  title: Text(
+                    'Male',
+                    style: TextStyle(
+                      color: _isReadOnly ? Colors.grey[600] : Colors.black,
+                    ),
+                  ),
                   value: 'MALE', // Radio button value
                   groupValue: _selectedGender, // Current selected gender
-                  activeColor:
-                      cyanblueColor, // Use cyanblue color for selection
-                  onChanged: (String? value) {
+                  activeColor: _isReadOnly 
+                      ? Colors.grey[400] 
+                      : cyanblueColor, // Use cyanblue color for selection
+                  onChanged: _isReadOnly ? null : (String? value) {
                     setState(() {
                       _selectedGender = value!;
                     });
@@ -582,12 +601,18 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
               ),
               Expanded(
                 child: RadioListTile<String>(
-                  title: const Text('Female'),
+                  title: Text(
+                    'Female',
+                    style: TextStyle(
+                      color: _isReadOnly ? Colors.grey[600] : Colors.black,
+                    ),
+                  ),
                   value: 'FEMALE', // Radio button value
                   groupValue: _selectedGender, // Current selected gender
-                  activeColor:
-                      cyanblueColor, // Use cyanblue color for selection
-                  onChanged: (String? value) {
+                  activeColor: _isReadOnly 
+                      ? Colors.grey[400] 
+                      : cyanblueColor, // Use cyanblue color for selection
+                  onChanged: _isReadOnly ? null : (String? value) {
                     setState(() {
                       _selectedGender = value!;
                     });

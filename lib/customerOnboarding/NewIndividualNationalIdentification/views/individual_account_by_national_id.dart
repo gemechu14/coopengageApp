@@ -799,20 +799,35 @@ class _IndividualAccountByNationalIdState
               ],
             ),
             content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Are you sure you want to submit your registration?',
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'Once submitted, your information will be sent for review.',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Thank you. Your registration has been successfully submitted.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+
+                  // Text(
+                  //   'Thank you for s submitted your registration.',
+                  //   style: TextStyle(fontSize: 16),
+                  // ),
+                  SizedBox(height: 10),
+                ]),
+            // Column(
+            //   mainAxisSize: MainAxisSize.min,
+            //   crossAxisAlignment: CrossAxisAlignment.start,
+            //   children: const [
+            //     Text(
+            //       'Are you sure you want to submit your registration?',
+            //       style: TextStyle(fontSize: 16),
+            //     ),
+            //     SizedBox(height: 10),
+            //     Text(
+            //       'Once submitted, your information will be sent for review.',
+            //       style: TextStyle(fontSize: 16),
+            //     ),
+            //   ],
+            // ),
             actionsPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             actions: [

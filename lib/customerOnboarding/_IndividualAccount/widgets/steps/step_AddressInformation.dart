@@ -45,6 +45,12 @@ class _StepPaymentState extends ConsumerState<StepAddressinformation> {
     });
   }
 
+  // Helper method to check if fields should be read-only
+  bool get _isReadOnly {
+    final registrationData = ref.watch(registrationDataProvider);
+    return registrationData.haveCboAccount;
+  }
+
   void _loadExistingData() {
     final registrationData = ref.read(registrationDataProvider);
 
@@ -282,18 +288,23 @@ class _StepPaymentState extends ConsumerState<StepAddressinformation> {
               errorMessage: validationErrors['zoneSubCity'] ?? '',
               leadingIcon: Icons.location_city,
               isRequired: false,
-              onChanged: (value) {
-                // Update registration data
-                ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                      zoneSubCity: value,
-                    );
-                // Clear validation errors when user makes changes
-                if (value.isNotEmpty) {
-                  ref
-                      .read(formValidationProvider.notifier)
-                      .clearError('zoneSubCity');
-                }
-              },
+              // readOnly: _isReadOnly,
+              onChanged: _isReadOnly
+                  ? null
+                  : (value) {
+                      // Update registration data
+                      ref
+                          .read(registrationDataProvider.notifier)
+                          .updateAddressInfo(
+                            zoneSubCity: value,
+                          );
+                      // Clear validation errors when user makes changes
+                      if (value.isNotEmpty) {
+                        ref
+                            .read(formValidationProvider.notifier)
+                            .clearError('zoneSubCity');
+                      }
+                    },
             ),
             // Error display under Zone Subcity
             if (validationErrors['zoneSubCity'] != null &&

@@ -48,6 +48,12 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
     }
   }
 
+  // Helper method to check if fields should be read-only
+  bool get _isReadOnly {
+    final registrationData = ref.watch(registrationDataProvider);
+    return registrationData.haveCboAccount;
+  }
+
   // @override
   // void dispose() {
   //   // Don't dispose controllers as they're managed by providers
@@ -142,7 +148,9 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                 _buildLabel("Phone Number *"),
                 PhoneNumberWidget(
                   phoneNumberController: _phoneController,
-                  onChanged: (value) {
+                  isEnabled: !_isReadOnly,
+                  readOnly: _isReadOnly,
+                  onChanged: _isReadOnly ? null : (value) {
                     // Clear validation error when user types
                     if (value.isNotEmpty) {
                       ref

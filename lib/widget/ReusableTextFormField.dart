@@ -12,6 +12,7 @@ class ReusableTextFormField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool isRequired; // New parameter to handle required validation
   final bool isEnabled;
+  final bool readOnly; // New parameter for read-only mode
   final Function(String)? onChanged; // Add onChanged callback
   const ReusableTextFormField({
     Key? key,
@@ -22,6 +23,7 @@ class ReusableTextFormField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
     this.isEnabled = true,
+    this.readOnly = false,
     this.isRequired = true, // Defaults to required
     this.onChanged, // Add onChanged parameter
   }) : super(key: key);
@@ -37,26 +39,29 @@ class ReusableTextFormField extends StatelessWidget {
         controller: controller,
         inputFormatters: inputFormatters,
         keyboardType: keyboardType,
+        readOnly: readOnly,
         onChanged: onChanged, // Add onChanged callback
         decoration: InputDecoration(
           // fillColor: Colors.white,
           enabled: isEnabled,
+          filled: readOnly,
+          fillColor: readOnly ? Colors.grey[100] : null,
           hintText: hintText,
           hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
           isDense: true,
           contentPadding:
               const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-          border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
+          border: OutlineInputBorder(
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : Colors.black),
           ),
-          enabledBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.black),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : Colors.black),
           ),
-          focusedBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.blue),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : Colors.blue),
           ),
           errorBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -66,7 +71,7 @@ class ReusableTextFormField extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(color: Colors.red),
           ),
-          prefixIcon: leadingIcon != null ? Icon(leadingIcon) : null,
+          prefixIcon: leadingIcon != null ? Icon(leadingIcon, color: readOnly ? Colors.grey : null) : null,
         ),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {

@@ -9,6 +9,7 @@ class ReusableDropdown extends StatelessWidget {
   final String errorMessage;
   final bool isRequired;
   final bool isGreyBorder;
+  final bool readOnly; // New parameter for read-only mode
 
   const ReusableDropdown({
     Key? key,
@@ -20,6 +21,7 @@ class ReusableDropdown extends StatelessWidget {
     this.isGreyBorder = true,
     required this.errorMessage,
     required this.isRequired,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -38,20 +40,23 @@ class ReusableDropdown extends StatelessWidget {
           isExpanded: true,
           hint: Text(
             hintText,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: Colors.black,
+              color: readOnly ? Colors.grey[600] : Colors.black,
             ),
             overflow: TextOverflow.ellipsis,
           ),
-          style: const TextStyle(fontSize: 15, color: Colors.black),
+          style: TextStyle(
+            fontSize: 15, 
+            color: readOnly ? Colors.grey[600] : Colors.black
+          ),
           items: items.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
               child: Text(item),
             );
           }).toList(),
-          onChanged: onChanged,
+          onChanged: readOnly ? null : onChanged,
           validator: isRequired
               ? (value) {
                   if (value == null || value.isEmpty) {
@@ -62,22 +67,24 @@ class ReusableDropdown extends StatelessWidget {
               : null,
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: readOnly ? Colors.grey[100] : Colors.white,
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: borderRadius,
-              borderSide: BorderSide(color: borderColor),
+              borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : borderColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: borderRadius,
-              borderSide: BorderSide(color: borderColor),
+              borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : borderColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: borderRadius,
-              borderSide:
-                  BorderSide(color: (Colors.grey), width: 1.3), // bold on focus
+              borderSide: BorderSide(
+                color: readOnly ? Colors.grey[300]! : Colors.grey, 
+                width: 1.3
+              ),
             ),
             errorBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -88,7 +95,7 @@ class ReusableDropdown extends StatelessWidget {
               borderSide: BorderSide(color: Colors.red),
             ),
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: Colors.grey[700])
+                ? Icon(prefixIcon, color: readOnly ? Colors.grey[400] : Colors.grey[700])
                 : null,
           ),
         ),

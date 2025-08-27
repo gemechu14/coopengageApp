@@ -197,6 +197,16 @@ class RegistrationDataNotifier extends StateNotifier<RegistrationData> {
     );
   }
 
+  void updateCboAccountInfo({
+    bool? haveCboAccount,
+    Map<String, dynamic>? existingAccountData,
+  }) {
+    state = state.copyWith(
+      haveCboAccount: haveCboAccount,
+      existingAccountData: existingAccountData,
+    );
+  }
+
   void updateProgress(double percentage) {
     state = state.copyWith(percentageCompleted: percentage);
   }

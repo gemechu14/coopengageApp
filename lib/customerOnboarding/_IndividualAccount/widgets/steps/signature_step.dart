@@ -47,18 +47,18 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
 
   void _initializeControllers() {
     _motherNameController = TextEditingController();
-    
+
     // Initialize with existing data if available
     final registrationData = ref.read(registrationDataProvider);
     if (registrationData.motherName != null) {
       _motherNameController.text = registrationData.motherName!;
     }
-    
+
     // Add listener to update registration data when text changes
     _motherNameController.addListener(() {
       ref.read(registrationDataProvider.notifier).updatePersonalInfo(
-        motherName: _motherNameController.text,
-      );
+            motherName: _motherNameController.text,
+          );
       // Clear validation error when user types
       if (_motherNameController.text.isNotEmpty) {
         ref.read(formValidationProvider.notifier).clearError('motherName');
@@ -68,15 +68,17 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
 
   void _updateSignatureFromImage(Uint8List bytes) {
     // Update the registration data with the uploaded signature
-    ref.read(registrationDataProvider.notifier).updateSignature(signature: bytes);
-    
+    ref
+        .read(registrationDataProvider.notifier)
+        .updateSignature(signature: bytes);
+
     // Update the UI to show the new signature
     setState(() {
       // The UI will automatically update because we're watching registrationDataProvider
     });
-    
+
     // Show success message
-    _showSuccessSnackBar('Signature uploaded successfully');
+    // _showSuccessSnackBar('Signature uploaded successfully');
     debugPrint("✅ Signature updated from image (${bytes.length} bytes)");
   }
 
@@ -176,7 +178,6 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
                 isRequired: true,
               ),
 
-
               const SizedBox(height: 20),
 
               // Signature
@@ -185,9 +186,6 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
               _buildSignaturePadSelection(),
 
               const SizedBox(height: 30),
-
-   
-          
             ],
           ),
         ),
@@ -206,7 +204,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12.0),
             border: Border.all(
-              color: signature != null ? Colors.green.shade300 : Colors.grey.shade300, 
+              color: signature != null
+                  ? Colors.green.shade300
+                  : Colors.grey.shade300,
               width: signature != null ? 2 : 1,
             ),
             boxShadow: [
@@ -237,15 +237,15 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
                       right: 8,
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                        // decoration: BoxDecoration(
+                        //   color: Colors.green,
+                        //   borderRadius: BorderRadius.circular(12),
+                        // ),
+                        // child: const Icon(
+                        //   Icons.check,
+                        //   color: Colors.white,
+                        //   size: 16,
+                        // ),
                       ),
                     ),
                     // Clear signature button
@@ -258,15 +258,15 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
                         },
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.clear,
-                            color: Colors.white,
-                            size: 16,
-                          ),
+                          // decoration: BoxDecoration(
+                          //   color: Colors.red.withOpacity(0.8),
+                          //   borderRadius: BorderRadius.circular(12),
+                          // ),
+                          // child: const Icon(
+                          //   Icons.clear,
+                          //   color: Colors.white,
+                          //   size: 16,
+                          // ),
                         ),
                       ),
                     ),
@@ -320,7 +320,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   }
 
   void _clearSignatureFromProvider() {
-    ref.read(registrationDataProvider.notifier).updateSignature(signature: null);
+    ref
+        .read(registrationDataProvider.notifier)
+        .updateSignature(signature: null);
     setState(() {
       // Clear all signature controllers as well
       _signatureController1.clear();
@@ -505,60 +507,62 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
 
   // Image handling methods - similar to IdTypeStep
 
-  Future<void> _pickImage(ImageSource source, {
-  required Function(String path, Uint8List bytes) onImageSelected,
-  required String type, // 'front', 'back', or 'signature'
-}) async {
-  try {
-    // Check permissions
-    bool hasPermission = await _checkPermission(source);
-    if (!hasPermission) {
-      _showErrorSnackBar('Permission required to continue');
-      return;
+  Future<void> _pickImage(
+    ImageSource source, {
+    required Function(String path, Uint8List bytes) onImageSelected,
+    required String type, // 'front', 'back', or 'signature'
+  }) async {
+    try {
+      // Check permissions
+      bool hasPermission = await _checkPermission(source);
+      if (!hasPermission) {
+        _showErrorSnackBar('Permission required to continue');
+        return;
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1920,
+        maxHeight: 1080,
+      );
+
+      // Dismiss loading indicator
+      if (Navigator.canPop(context)) Navigator.pop(context);
+
+      if (image != null) {
+        // Read image bytes
+        final bytes = await image.readAsBytes();
+
+        // Save to temp file for display
+        final tempFile = File('${Directory.systemTemp.path}/${type}_temp.jpg');
+        await tempFile.writeAsBytes(bytes, flush: true);
+
+        // Call the callback with path + bytes
+        onImageSelected(tempFile.path, bytes);
+      }
+
+      // If user cancels (image == null), do nothing
+    } catch (e) {
+      if (Navigator.canPop(context)) Navigator.pop(context);
+
+      String errorMessage = 'Failed to pick image';
+      if (e.toString().contains('permission')) {
+        errorMessage =
+            'Permission denied. Please grant camera permission in settings.';
+      } else if (e.toString().contains('camera')) {
+        errorMessage = 'Camera not available. Please try again or use gallery.';
+      }
+      _showErrorSnackBar(errorMessage);
     }
-
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final XFile? image = await _picker.pickImage(
-      source: source,
-      imageQuality: 80,
-      maxWidth: 1920,
-      maxHeight: 1080,
-    );
-
-    // Dismiss loading indicator
-    if (Navigator.canPop(context)) Navigator.pop(context);
-
-    if (image != null) {
-      // Read image bytes
-      final bytes = await image.readAsBytes();
-
-      // Save to temp file for display
-      final tempFile = File('${Directory.systemTemp.path}/${type}_temp.jpg');
-      await tempFile.writeAsBytes(bytes, flush: true);
-
-      // Call the callback with path + bytes
-      onImageSelected(tempFile.path, bytes);
-    }
-
-    // If user cancels (image == null), do nothing
-  } catch (e) {
-    if (Navigator.canPop(context)) Navigator.pop(context);
-
-    String errorMessage = 'Failed to pick image';
-    if (e.toString().contains('permission')) {
-      errorMessage = 'Permission denied. Please grant camera permission in settings.';
-    } else if (e.toString().contains('camera')) {
-      errorMessage = 'Camera not available. Please try again or use gallery.';
-    }
-    _showErrorSnackBar(errorMessage);
   }
-}
 
   // Future<void> _pickImage(ImageSource source) async {
   //   try {
@@ -590,13 +594,12 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   //       Navigator.pop(context);
   //     }
 
-     
   //   } catch (e) {
   //     // Dismiss loading indicator if still showing
   //     if (Navigator.canPop(context)) {
   //       Navigator.pop(context);
   //     }
-      
+
   //     String errorMessage = 'Failed to pick image';
   //     if (e.toString().contains('permission')) {
   //       errorMessage = 'Permission denied. Please grant camera permission in settings.';
@@ -607,7 +610,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   //     } else {
   //       errorMessage = 'Failed to pick image: ${e.toString()}';
   //     }
-      
+
   //     _showErrorSnackBar(errorMessage);
   //   }
   // }
@@ -665,13 +668,10 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
       }
     });
   }
- 
- 
- 
+
   Widget _buildPlaceholderIcon(String imageType) {
-    
-    final title  = 'Personal Photo';
-    
+    final title = 'Personal Photo';
+
     return Container(
       padding: const EdgeInsets.all(0),
       decoration: BoxDecoration(
@@ -752,15 +752,17 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   Future<void> _saveCombinedSignature() async {
     final Uint8List? combinedImage = await _combineSignatures();
     if (combinedImage != null) {
-      ref.read(registrationDataProvider.notifier).updateSignature(signature: combinedImage);
-      
+      ref
+          .read(registrationDataProvider.notifier)
+          .updateSignature(signature: combinedImage);
+
       // Update UI
       setState(() {
         // The UI will automatically update because we're watching registrationDataProvider
       });
-      
+
       // Show success message
-      _showSuccessSnackBar('Signatures saved successfully');
+      // _showSuccessSnackBar('Signatures saved successfullyss');
       debugPrint("✅ Combined signature saved (${combinedImage.length} bytes)");
     } else {
       _showErrorSnackBar('Failed to save signatures');
@@ -819,7 +821,8 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   }
 
   // Convert image to bytes - same as IdTypeStep implementation
-  Future<Uint8List?> _getImageBytes(Uint8List imageBytes, String tempFileName) async {
+  Future<Uint8List?> _getImageBytes(
+      Uint8List imageBytes, String tempFileName) async {
     try {
       // Save the bytes as a temporary file
       final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
@@ -834,15 +837,16 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   // Handle signature step completion - using controller like other steps
   Future<void> handleSignatureStep() async {
     print("🔄 Starting Signature Step Registration...");
-    
+
     // Get connectivity status
     final isOnline = ref.read(connectivityProvider);
-    
+
     // Get signature bytes - check for uploaded signature first, then drawn signatures
     Uint8List? signatureBytes;
     final registrationData = ref.read(registrationDataProvider);
-    
-    if (registrationData.signature != null && registrationData.signature!.isNotEmpty) {
+
+    if (registrationData.signature != null &&
+        registrationData.signature!.isNotEmpty) {
       // Use uploaded signature if available
       signatureBytes = registrationData.signature;
       print("📤 Using uploaded signature");
@@ -854,20 +858,17 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     // Get current user ID
     final userId = ref.read(userIdProvider);
 
-
-
     // Call controller method
-    final success = await ref.read(registrationControllerProvider)
-        .handleSignatureStep(
-      signature: signatureBytes ?? Uint8List(0), // Provide empty bytes if null
-      isOnline: isOnline,
-      userId: userId,
-    );
+    final success =
+        await ref.read(registrationControllerProvider).handleSignatureStep(
+              signature:
+                  signatureBytes ?? Uint8List(0), // Provide empty bytes if null
+              isOnline: isOnline,
+              userId: userId,
+            );
 
     if (success) {
-
     } else {
-  
       // Error is already handled by the controller and shown via SnackBar
     }
   }

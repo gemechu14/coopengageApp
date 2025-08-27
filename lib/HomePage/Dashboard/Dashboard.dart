@@ -10,9 +10,11 @@ import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/service/UserService.dart';
+import 'package:coopengageplus/services/token_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:http/http.dart' as http;
 
 class Dashboard extends StatefulWidget {
   final VoidCallback onSettingsTap;
@@ -29,6 +31,8 @@ class _DashboardState extends State<Dashboard> {
     _fetchToken();
     fetchUserCounts();
     fetchUsers();
+    // Initialize token monitoring
+    TokenService.initialize();
   }
 
   List<Map<String, dynamic>> currentMonthData1 = [
@@ -275,133 +279,6 @@ class _DashboardState extends State<Dashboard> {
                 ),
               ),
 
-              // Container(
-              //   decoration: BoxDecoration(
-              //     border: Border.all(color: Colors.white), // Optional border
-              //     borderRadius:
-              //         BorderRadius.circular(16), // Adjust the radius as needed
-              //   ),
-              //   child: Image.asset(
-              //     "assets/alternet123.png",
-              //     width: MediaQuery.of(context).size.width * 0.9,
-              //     height: 150,
-              //     fit: BoxFit.fill,
-              //   ),
-              // ),
-              // Padding(
-              //   padding:
-              //       const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              //   child: Container(
-              //     decoration: BoxDecoration(
-              //       gradient: const LinearGradient(
-              //         begin: Alignment.topLeft,
-              //         end: Alignment.bottomRight,
-              //         colors: [
-              //           Color(0xFF0891B2), // Cyan
-              //           Color(0xFF0EA5E9), // Sky blue
-              //           Color(0xFF3B82F6), // Blue
-              //           Color(0xFF1E40AF), // Deep blue
-              //         ],
-              //       ),
-              //       borderRadius: BorderRadius.circular(17),
-              //       boxShadow: [
-              //         BoxShadow(
-              //           color: Colors.cyan.withOpacity(0.3),
-              //           blurRadius: 6,
-              //           offset: const Offset(0, 8),
-              //         ),
-              //       ],
-              //     ),
-              //     child: Container(
-              //       height: 120,
-              //       padding: const EdgeInsets.all(16),
-              //       child: Row(
-              //         children: [
-              //           // Left: Content
-              //           Expanded(
-              //             child: Column(
-              //               mainAxisAlignment: MainAxisAlignment.center,
-              //               crossAxisAlignment: CrossAxisAlignment.start,
-              //               children: [
-              //                 Row(
-              //                   children: [
-              //                     Container(
-              //                       width: 32,
-              //                       height: 32,
-              //                       decoration: BoxDecoration(
-              //                         color: Colors.white.withOpacity(0.2),
-              //                         borderRadius: BorderRadius.circular(8),
-              //                       ),
-              //                       child: const Icon(
-              //                         Icons.account_balance,
-              //                         color: Colors.white,
-              //                         size: 20,
-              //                       ),
-              //                     ),
-              //                     const SizedBox(width: 12),
-              //                     Expanded(
-              //                       child: Text(
-              //                         'Cooperative Bank of Oromia',
-              //                         style: TextStyle(
-              //                           color: Colors.white,
-              //                           fontSize: 14,
-              //                           fontWeight: FontWeight.bold,
-              //                         ),
-              //                       ),
-              //                     ),
-              //                   ],
-              //                 ),
-
-              //                 const SizedBox(height: 1),
-              //                 Text(
-              //                   "You're not just onboarding customers — you're transforming lives.",
-              //                   // "Bank Smarter. Live Better. Start with Cooperative Bank of Oromia.",
-              //                   style: TextStyle(
-              //                     color: Colors.white.withOpacity(0.9),
-              //                     fontSize: 12,
-              //                     fontWeight: FontWeight.w500,
-              //                     fontStyle: FontStyle.italic,
-              //                   ),
-              //                 ),
-              //                 const SizedBox(height: 4),
-              //                 // Text(
-              //                 //   "Your Trusted Banking Partner",
-              //                 //   style: TextStyle(
-              //                 //     color: Colors.white.withOpacity(0.8),
-              //                 //     fontSize: 11,
-              //                 //     fontWeight: FontWeight.w400,
-              //                 //   ),
-              //                 // ),
-              //               ],
-              //             ),
-              //           ),
-              //           // Right: Logo area
-              //           Container(
-              //             width: 60,
-              //             alignment: Alignment.center,
-              //             child: Container(
-              //               width: 50,
-              //               height: 50,
-              //               decoration: BoxDecoration(
-              //                 // color: Colors.white.withOpacity(0.2),
-              //                 borderRadius: BorderRadius.circular(1),
-              //                 // border: Border.all(
-              //                 //   color: Colors.white.withOpacity(0.3),
-              //                 //   width: 2,
-              //                 // ),
-              //               ),
-              //               child: const Icon(
-              //                 Icons.note_alt,
-              //                 color: Colors.white,
-              //                 size: 50,
-              //               ),
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              // ),
 
               if (localCustomers > 0)
                 Padding(
@@ -448,6 +325,13 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  @override
+  void dispose() {
+    // Clean up token monitoring when widget is disposed
+    TokenService.stopTokenMonitoring();
+    super.dispose();
+  }
+
   Future<void> fetchUserCounts() async {
     setState(() {
       isLoadingCount = {
@@ -462,11 +346,24 @@ class _DashboardState extends State<Dashboard> {
       String? token = await storage.read(key: "token");
       if (token != null && token.isNotEmpty) {
         try {
+          // Check if token is still valid before making API call
+          bool isTokenValid = await TokenService.isTokenValid();
+          if (!isTokenValid) {
+            print("Token expired during fetchUserCounts, logging out user");
+            await TokenService.forceLogoutWithContext(context);
+            return;
+          }
+          
           var decodedToken = JwtDecoder.decode(token);
           String userId = decodedToken['userId'].toString();
 
           String url = '/api/v1/accounts/status-count';
           var response = await networkHandler.fetchData(url);
+
+          // Check for token errors first
+          if (await _handleNetworkResponse(response)) {
+            return; // Token error handled, exit
+          }
 
           if (response.statusCode == 200 || response.statusCode == 201) {
             final data = jsonDecode(response.body);
@@ -507,6 +404,11 @@ class _DashboardState extends State<Dashboard> {
               };
             });
           } else {
+            // Check for specific token error
+            final errorData = jsonDecode(response.body);
+            if (await _handleTokenError(errorData)) {
+              return; // Token error handled, exit
+            }
             throw Exception('Failed to load user counts');
           }
         } catch (error) {
@@ -605,6 +507,14 @@ class _DashboardState extends State<Dashboard> {
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
       try {
+        // Check if token is still valid before accessing data
+        bool isTokenValid = await TokenService.isTokenValid();
+        if (!isTokenValid) {
+          print("Token expired during fetchUsers, logging out user");
+          await TokenService.forceLogoutWithContext(context);
+          return;
+        }
+        
         DatabaseHelper dbHelper = DatabaseHelper();
 
         List<Map<String, dynamic>> fetchedUsers =
@@ -615,6 +525,10 @@ class _DashboardState extends State<Dashboard> {
         });
       } catch (e) {
         print("Error fetching users: $e");
+        // Check if this is a token-related error
+        if (e.toString().contains("Token") || e.toString().contains("Unauthorized")) {
+          await _handleTokenError({"error_message": e.toString()});
+        }
       }
     }
   }
@@ -622,16 +536,135 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
-      var decodedToken = JwtDecoder.decode(token);
-      setState(() {
-        UserID = decodedToken["userId"];
-
-        isLoading = false;
-      });
+      try {
+        // Check if token is valid using TokenService
+        bool isTokenValid = await TokenService.isTokenValid();
+        
+        if (!isTokenValid) {
+          // Token is expired, force logout
+          print("Token expired in Dashboard, logging out user");
+          await TokenService.forceLogoutWithContext(context);
+          return;
+        }
+        
+        var decodedToken = JwtDecoder.decode(token);
+        setState(() {
+          UserID = decodedToken["userId"];
+          isLoading = false;
+        });
+        
+        // Check if token will expire soon and show warning
+        _checkTokenExpirationWarning();
+      } catch (e) {
+        print("Error decoding token: $e");
+        // Token is invalid, force logout
+        await TokenService.forceLogoutWithContext(context);
+      }
     } else {
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  /// Check if token will expire soon and show warning
+  Future<void> _checkTokenExpirationWarning() async {
+    try {
+      Duration? remainingTime = await TokenService.getTokenRemainingTime();
+      if (remainingTime != null && remainingTime.inMinutes <= 5) {
+        // Show warning if token expires in 5 minutes or less
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Your session will expire in ${remainingTime.inMinutes} minutes. Please save your work.'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 8),
+              action: SnackBarAction(
+                label: 'Refresh',
+                textColor: Colors.white,
+                onPressed: () {
+                  // You can implement token refresh logic here if your API supports it
+                  print("Token refresh requested");
+                },
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error checking token expiration warning: $e");
+    }
+  }
+
+  /// Check for common token-related errors and handle them
+  Future<bool> _handleTokenError(dynamic errorData) async {
+    if (errorData is Map<String, dynamic>) {
+      String? errorMessage = errorData['error_message'];
+      
+      if (errorMessage != null) {
+        // Check for specific token invalidation errors
+        if (errorMessage.contains("Token was issued before the latest login") ||
+            errorMessage.contains("Token invalid") ||
+            errorMessage.contains("Invalid token") ||
+            errorMessage.contains("Token expired") ||
+            errorMessage.contains("Unauthorized") ||
+            errorMessage.contains("Forbidden")) {
+          
+          print("Token error detected: $errorMessage - Logging out user");
+          
+          // Show user-friendly message before logout
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                children: [
+                  Icon(Icons.error, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Your session has been invalidated. Please login again.'),
+                  ),
+                ],
+              ),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+          
+          // Wait a moment for user to see the message, then logout
+          await Future.delayed(Duration(seconds: 2));
+          await TokenService.forceLogoutWithContext(context);
+          return true; // Error was handled
+        }
+      }
+    }
+    return false; // Error was not handled
+  }
+
+  /// Handle network response and check for token errors
+  Future<bool> _handleNetworkResponse(http.Response response) async {
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      // Unauthorized or Forbidden - likely token issue
+      try {
+        final errorData = jsonDecode(response.body);
+        if (await _handleTokenError(errorData)) {
+          return true; // Token error handled
+        }
+      } catch (e) {
+        // If we can't parse the error, still treat as token issue
+        print("Network error ${response.statusCode}, treating as token issue");
+        await _handleTokenError({"error_message": "Unauthorized access"});
+        return true;
+      }
+    }
+    return false; // No token error
   }
 }

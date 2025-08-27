@@ -1,7 +1,3 @@
-
-
-
-
 // ignore_for_file: non_constant_identifier_names
 
 import 'dart:io';
@@ -23,8 +19,7 @@ class AttachDocumentsStep extends ConsumerStatefulWidget {
       _AttachDocumentsStepStepState();
 }
 
-class _AttachDocumentsStepStepState
-    extends ConsumerState<AttachDocumentsStep> {
+class _AttachDocumentsStepStepState extends ConsumerState<AttachDocumentsStep> {
   int expandedIndex = 0;
   final List<TextEditingController> motherNameControllers = [];
   final TextEditingController initialDepositController =
@@ -177,17 +172,17 @@ class _AttachDocumentsStepStepState
               ),
               onDelete: (index) => notifier.removeTinNumberPhoto(index),
             ),
-            _buildUploadSection(
-              context: context,
-              label: "Trade Name Registration",
-              icon: Icons.description_rounded,
-              filePaths: tradeNameFiles,
-              onUpload: () => showFilePickerOptions(
-                context: context,
-                onFilePicked: (path) => notifier.addTradeNameFile(path),
-              ),
-              onDelete: (index) => notifier.removeTradeNameFile(index),
-            ),
+            // _buildUploadSection(
+            //   context: context,
+            //   label: "Trade Name Registration",
+            //   icon: Icons.description_rounded,
+            //   filePaths: tradeNameFiles,
+            //   onUpload: () => showFilePickerOptions(
+            //     context: context,
+            //     onFilePicked: (path) => notifier.addTradeNameFile(path),
+            //   ),
+            //   onDelete: (index) => notifier.removeTradeNameFile(index),
+            // ),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -263,8 +258,8 @@ class _AttachDocumentsStepStepState
                   allowedExtensions: ['pdf'],
                 );
                 if (result != null && result.files.single.path != null) {
-                  final securePath =
-                      await saveFileToInternalStorage(result.files.single.path!);
+                  final securePath = await saveFileToInternalStorage(
+                      result.files.single.path!);
                   onFilePicked(securePath);
                 }
               },
@@ -277,7 +272,8 @@ class _AttachDocumentsStepStepState
                 final XFile? image =
                     await ImagePicker().pickImage(source: ImageSource.camera);
                 if (image != null) {
-                  final securePath = await saveFileToInternalStorage(image.path);
+                  final securePath =
+                      await saveFileToInternalStorage(image.path);
                   onFilePicked(securePath);
                 }
               },
@@ -290,7 +286,8 @@ class _AttachDocumentsStepStepState
                 final XFile? image =
                     await ImagePicker().pickImage(source: ImageSource.gallery);
                 if (image != null) {
-                  final securePath = await saveFileToInternalStorage(image.path);
+                  final securePath =
+                      await saveFileToInternalStorage(image.path);
                   onFilePicked(securePath);
                 }
               },
@@ -342,7 +339,8 @@ class _AttachDocumentsStepStepState
                 if (images != null) {
                   List<String> securePaths = [];
                   for (final img in images) {
-                    final securePath = await saveFileToInternalStorage(img.path);
+                    final securePath =
+                        await saveFileToInternalStorage(img.path);
                     securePaths.add(securePath);
                   }
                   onFilesPicked(securePaths);
@@ -357,7 +355,8 @@ class _AttachDocumentsStepStepState
                 final XFile? image =
                     await ImagePicker().pickImage(source: ImageSource.camera);
                 if (image != null) {
-                  final securePath = await saveFileToInternalStorage(image.path);
+                  final securePath =
+                      await saveFileToInternalStorage(image.path);
                   onFilesPicked([securePath]);
                 }
               },
@@ -367,4 +366,6 @@ class _AttachDocumentsStepStepState
       },
     );
   }
+
+
 }

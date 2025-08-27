@@ -226,7 +226,31 @@ class RegistrationService {
         print('Update status code: \\${response.statusCode}');
         print('Update response body: \\${response.body}');
         if (response.statusCode == 200 || response.statusCode == 201) {
-          return ServiceResult.success(userId: userId);
+          final data = jsonDecode(response.body);
+          
+          // Check if user has CBO account and extract existing data
+          final haveCboAccount = data['haveCboAccount'] as bool? ?? false;
+          Map<String, dynamic>? existingAccountData;
+          
+          if (haveCboAccount) {
+            existingAccountData = {
+              'fullName': data['fullName'],
+              'surname': data['surname'],
+              'phone': data['phone'],
+              'country': data['country'],
+              'sex': data['sex'],
+              'dateOfBirth': data['dateOfBirth'],
+              'zoneSubCity': data['zoneSubCity'],
+            };
+          }
+          
+          return ServiceResult.success(
+            userId: userId,
+            data: {
+              'haveCboAccount': haveCboAccount,
+              'existingAccountData': existingAccountData,
+            },
+          );
         } else {
           return ServiceResult.error('Failed to update user');
         }
@@ -256,7 +280,30 @@ class RegistrationService {
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body);
           final newUserId = data['id'].toString();
-          return ServiceResult.success(userId: newUserId);
+          
+          // Check if user has CBO account and extract existing data
+          final haveCboAccount = data['haveCboAccount'] as bool? ?? false;
+          Map<String, dynamic>? existingAccountData;
+          
+          if (haveCboAccount) {
+            existingAccountData = {
+              'fullName': data['fullName'],
+              'surname': data['surname'],
+              'phone': data['phone'],
+              'country': data['country'],
+              'sex': data['sex'],
+              'dateOfBirth': data['dateOfBirth'],
+              'zoneSubCity': data['zoneSubCity'],
+            };
+          }
+          
+          return ServiceResult.success(
+            userId: newUserId,
+            data: {
+              'haveCboAccount': haveCboAccount,
+              'existingAccountData': existingAccountData,
+            },
+          );
         } else {
           return ServiceResult.error('Failed to create user');
         }

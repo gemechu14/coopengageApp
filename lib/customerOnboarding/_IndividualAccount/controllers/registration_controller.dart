@@ -61,14 +61,58 @@ class RegistrationController {
       if (serviceResult.isSuccess && serviceResult.userId != null) {
         // Store the userId if it's returned (new user created or updated)
         _ref.read(userIdProvider.notifier).setUserId(serviceResult.userId!);
-        // Store the new customer ID in registration data for subsequent steps
-        _registrationDataNotifier.updateBasicInfo(
-          phone: phoneNumber,
-          email: email,
-          productType: productType,
-          customerId:
-              serviceResult.userId!, // Store the new or updated customer ID
-        );
+        
+        // Check if there's CBO account data in the response
+        if (serviceResult.hasData) {
+          final haveCboAccount = serviceResult.getData<bool>('haveCboAccount') ?? false;
+          final existingAccountData = serviceResult.getData<Map<String, dynamic>>('existingAccountData');
+          
+          // Update registration data with CBO account information
+          _registrationDataNotifier.updateCboAccountInfo(
+            haveCboAccount: haveCboAccount,
+            existingAccountData: existingAccountData,
+          );
+          
+          // If user has CBO account, populate existing data
+          if (haveCboAccount && existingAccountData != null) {
+            _registrationDataNotifier.updateBasicInfo(
+              phone: phoneNumber,
+              email: email,
+              productType: productType,
+              customerId: serviceResult.userId!,
+            );
+            
+            // Populate existing personal info from CBO account
+            _registrationDataNotifier.updatePersonalInfo(
+              fullName: existingAccountData['fullName'],
+              surname: existingAccountData['surname'],
+              sex: existingAccountData['sex'],
+              dateOfBirth: existingAccountData['dateOfBirth'],
+            );
+            
+            // Populate existing address info from CBO account
+            _registrationDataNotifier.updateAddressInfo(
+              country: existingAccountData['country'],
+              zoneSubCity: existingAccountData['zoneSubCity'],
+            );
+          } else {
+            // Store the new customer ID in registration data for subsequent steps
+            _registrationDataNotifier.updateBasicInfo(
+              phone: phoneNumber,
+              email: email,
+              productType: productType,
+              customerId: serviceResult.userId!,
+            );
+          }
+        } else {
+          // Store the new customer ID in registration data for subsequent steps
+          _registrationDataNotifier.updateBasicInfo(
+            phone: phoneNumber,
+            email: email,
+            productType: productType,
+            customerId: serviceResult.userId!,
+          );
+        }
       }
       // Store the existing user ID (the registering person) if available
       if (serviceResult.hasData) {

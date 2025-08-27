@@ -46,6 +46,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   List<AccountType> _filteredAccountTypes = [];
   String? _shareError;
   int _calculatedAge = 0;
+  bool _isFiltering = false; // Add this to track filtering state
+  bool _showNoResults = false; // Add this to control when to show "no results"
 
   @override
   void initState() {
@@ -57,6 +59,13 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   @override
   void didUpdateWidget(covariant AccountTypeStep oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Reset states when widget updates
+    if (mounted) {
+      setState(() {
+        _showNoResults = false;
+        _isFiltering = false;
+      });
+    }
     _filterAccountTypes();
   }
 
@@ -108,6 +117,14 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     debugPrint("   - Initial deposit: ${widget.initialDeposit}");
     debugPrint("   - Banking type: ${widget.bankingType}");
 
+    // Reset states
+    if (mounted) {
+      setState(() {
+        _showNoResults = false;
+        _isFiltering = false;
+      });
+    }
+
     try {
       await ref.read(accountTypeStepProvider.notifier).initializeStep(
             customerAge: _calculatedAge,
@@ -116,7 +133,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             bankingType: widget.bankingType,
           );
       
-      debugPrint("✅ [AccountType] Provider initialization complete, starting filter...");
+      debugPrint(
+          "✅ [AccountType] Provider initialization complete, starting filter...");
       _filterAccountTypes();
     } catch (e) {
       debugPrint('❌ [AccountType] Error initializing account type step: $e');
@@ -126,6 +144,14 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   /// Filter account types based on user criteria
   void _filterAccountTypes() {
     if (_disposed) return;
+
+    // Set filtering state to true and hide no results
+    if (mounted) {
+      setState(() {
+        _isFiltering = true;
+        _showNoResults = false;
+      });
+    }
 
     final accountTypeStepState = ref.read(accountTypeStepProvider);
     final stepperState = ref.read(stepperProvider);
@@ -137,24 +163,42 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     debugPrint("   - Available account types: ${filtered.length}");
     debugPrint("   - Customer age: $_calculatedAge");
     debugPrint("   - Customer gender: ${widget.customerGender}");
-    debugPrint("   - Selected product type: ${stepperState.selectedProductType}");
+    debugPrint(
+        "   - Selected product type: ${stepperState.selectedProductType}");
     debugPrint("   - Banking type: ${widget.bankingType}");
 
     // Apply filters
     // filtered = _applyAgeFilter(filtered);
     debugPrint("   - After age filter: ${filtered.length}");
 
-    filtered = _applyProductTypeFilter(filtered, stepperState.selectedProductType);
+    filtered =
+        _applyProductTypeFilter(filtered, stepperState.selectedProductType);
     debugPrint("   - After product type filter: ${filtered.length}");
-    
+
     filtered = _applyGenderFilter(filtered, stepperState.sex);
     debugPrint("   - After gender filter: ${filtered.length}");
 
     if (mounted) {
       setState(() {
         _filteredAccountTypes = filtered;
+        _isFiltering = false; // Set filtering to false when done
       });
-      debugPrint("✅ [AccountType] Filter complete - showing ${filtered.length} account types");
+      
+      // Add a delay before showing "no results" to ensure data has time to load
+      if (filtered.isEmpty) {
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted && _filteredAccountTypes.isEmpty) {
+            setState(() {
+              _showNoResults = true;
+            });
+          }
+        });
+      } else {
+        _showNoResults = true;
+      }
+      
+      debugPrint(
+          "✅ [AccountType] Filter complete - showing ${filtered.length} account types");
     }
   }
 
@@ -263,25 +307,24 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   }
 
   /// Build main content
-
   Widget _buildContent(AccountTypeStepState state) {
-    // 1. Show loading only if explicitly loading and not initialized
-    if (state.isLoading && !state.isInitialized) {
+    // 1. Show loading if not initialized yet or currently filtering
+    if (!state.isInitialized || state.isLoading || _isFiltering) {
       return _buildLoadingState();
     }
 
     // 2. Show error if any
-    if (state.errorMessage != null) {
+    if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
       return _buildErrorState(state.errorMessage!);
     }
 
-    // 3. Show empty state only if initialized but no filtered results
-    if (state.isInitialized && _filteredAccountTypes.isEmpty) {
+    // 3. Show empty state only if filtering is done, no results, and we're ready to show no results
+    if (_filteredAccountTypes.isEmpty && _showNoResults) {
       return _buildNoAccountTypesState();
     }
 
-    // 4. Show loading if not initialized yet (fallback)
-    if (!state.isInitialized) {
+    // 4. Show loading while waiting for filtered results to be ready
+    if (_filteredAccountTypes.isEmpty) {
       return _buildLoadingState();
     }
 
@@ -293,6 +336,36 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       ],
     );
   }
+
+  // Widget _buildContent(AccountTypeStepState state) {
+  //   // 1. Show loading if not initialized yet
+  //   if (!state.isInitialized) {
+  //     return _buildLoadingState();
+  //   }
+
+  //   // 2. Show loading if explicitly loading
+  //   if (state.isLoading) {
+  //     return _buildLoadingState();
+  //   }
+
+  //   // 3. Show error if any
+  //   if (state.errorMessage != null) {
+  //     return _buildErrorState(state.errorMessage!);
+  //   }
+
+  //   // 4. Show empty state only if initialized, not loading, and no filtered results
+  //   if (_filteredAccountTypes.isEmpty) {
+  //     return _buildNoAccountTypesState();
+  //   }
+
+  //   // 5. Show data
+  //   return Column(
+  //     children: [
+  //       _buildAccountTypesList(),
+  //       _buildSharesSection(),
+  //     ],
+  //   );
+  // }
 
   // Widget _buildContent(AccountTypeStepState state) {
   //   if (state.isLoading) {
@@ -507,7 +580,8 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             fontSize: 12,
             color: subtitleColor,
           ),
-        ),Text(
+        ),
+        Text(
           '${accountType.minAge} ',
           style: TextStyle(
             fontSize: 12,

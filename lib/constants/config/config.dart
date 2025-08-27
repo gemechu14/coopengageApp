@@ -23,19 +23,16 @@ class AppConstants {
 
 ///////PUBLIC SERVER
 
-  // static const baseURL = 'https://coopengage.coopbankoromiasc.com';
-  // static const baseUrl = "https://coopengage.coopbankoromiasc.com/api/v1";
-  // // static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
-  // static const webSocketUrl = 'wss://coopengage.coopbankoromiasc.com/ws/fayda';
-
-
-
+  static const baseURL = 'https://coopengage.coopbankoromiasc.com';
+  static const baseUrl = "https://coopengage.coopbankoromiasc.com/api/v1";
+  // static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
+  static const webSocketUrl = 'wss://coopengage.coopbankoromiasc.com/ws/fayda';
 
   ////TEST SERVER
-    static const baseURL = 'http://10.8.100.111:9061';
-  static const baseUrl = "http://10.8.100.111:9061/api/v1";
-  // static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
-  static const webSocketUrl = 'wss://http://10.8.100.111:9061/ws/fayda';
+  //   static const baseURL = 'http://10.8.100.111:9061';
+  // static const baseUrl = "http://10.8.100.111:9061/api/v1";
+  // // static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
+  // static const webSocketUrl = 'wss://http://10.8.100.111:9061/ws/fayda';
 
   // static const websocketURL= 'ws://10.12.53.33:9062'
 

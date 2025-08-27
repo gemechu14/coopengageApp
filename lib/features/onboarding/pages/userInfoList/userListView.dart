@@ -451,7 +451,41 @@ class _UserInfoPageState extends State<UserListPage> {
 
   Widget _buildOrganizationList() {
     if (filteredUsers.isEmpty) {
-      return Center(child: Text('No organizations found'));
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.business, size: 64, color: Colors.blue),
+            SizedBox(height: 5),
+            Text(
+              'No Organization Accounts Found',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+      // return Center(
+      //   child: Column(
+      //     mainAxisSize: MainAxisSize.min,
+      //     children: [
+      //       Icon(Icons.people, size: 64, color: Colors.blue),
+      //       SizedBox(height: 5),
+      //       Text(
+      //         'No Joint Accounts Found',
+      //         style: TextStyle(
+      //           fontSize: 18,
+      //           color: Colors.black,
+      //           fontWeight: FontWeight.bold,
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      // );
+      // Center(child: Text('No organizations found'));
     }
     return ListView.builder(
       itemCount: filteredUsers.length,

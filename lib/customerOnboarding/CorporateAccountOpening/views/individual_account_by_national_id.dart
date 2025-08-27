@@ -558,7 +558,7 @@ class _IndividualAccountByNationalIdState
                         builder: (context) {
                           final buttonText =
                               stepperState.activeStep == 5 ? 'Submit' : 'Next';
-                          
+
                           return Text(
                             buttonText,
                             style: const TextStyle(
@@ -670,7 +670,6 @@ class _IndividualAccountByNationalIdState
               child: CircularProgressIndicator(color: cyanblueColor)),
     );
     try {
-
       // Prepare co
       //mpany and members data for API
       final requestData = <String, dynamic>{
@@ -697,6 +696,26 @@ class _IndividualAccountByNationalIdState
         final file = File(stepperState.letterOfRequestFiles.first);
         if (await file.exists()) {
           requestData["letterOfRequest"] = await file.readAsBytes();
+        }
+      }
+      // Add otherFiles if available (same pattern as letterOfRequestFiles)
+      if (stepperState.otherFiles.isNotEmpty) {
+        List<Map<String, dynamic>> otherFilesData = [];
+
+        for (int i = 0; i < stepperState.otherFiles.length; i++) {
+          String filePath = stepperState.otherFiles[i];
+          final file = File(filePath);
+
+          if (await file.exists()) {
+            otherFilesData.add({
+              "description": "Document ${i + 1}", // Auto-generate description
+              "file": await file.readAsBytes(), // Convert to bytes
+            });
+          }
+        }
+
+        if (otherFilesData.isNotEmpty) {
+          requestData["otherFiles"] = otherFilesData;
         }
       }
       if (stepperState.licenseFiles.isNotEmpty) {
@@ -874,5 +893,4 @@ class _IndividualAccountByNationalIdState
       }
     }
   }
-
 }
