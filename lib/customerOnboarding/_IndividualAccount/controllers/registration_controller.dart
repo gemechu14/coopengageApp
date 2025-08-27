@@ -61,7 +61,7 @@ class RegistrationController {
       if (serviceResult.isSuccess && serviceResult.userId != null) {
         // Store the userId if it's returned (new user created or updated)
         _ref.read(userIdProvider.notifier).setUserId(serviceResult.userId!);
-        
+          
         // Check if there's CBO account data in the response
         if (serviceResult.hasData) {
           final haveCboAccount = serviceResult.getData<bool>('haveCboAccount') ?? false;

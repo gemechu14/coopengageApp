@@ -483,6 +483,8 @@ class _IndividualAccountByNationalIdState
                         signature: stepperState.signature,
                         bankShare: stepperState.bankShare,
                         customerShare: stepperState.customerShare,
+                        dateOfBirth: stepperState.dateOfBirth,
+                        // zoneSubCity: stepperState,
                         // currency: stepperState.currency,
                         // ... any other shared fields
 
@@ -678,7 +680,7 @@ class _IndividualAccountByNationalIdState
           'employerName': v['employerName'] ?? '',
           'monthlyIncome': v['monthlyIncome'] ?? '',
           'sex': v['sex'] ?? m.sex ?? '',
-          // 'photo': v['photo'] ?? '',
+          'photo': v['photo'] ?? '',
         };
       }).toList();
 

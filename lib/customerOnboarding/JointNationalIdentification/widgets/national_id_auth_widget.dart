@@ -66,9 +66,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       _errorMessage = null;
       _dialogShown = false;
       _wsConnecting = false;
+      _clientId = null; // Reset client ID for fresh connection
       _closeWebSocket();
       if (_selectedMemberIndex != null) {
-        // Restart WS auth for current member
+        // Restart WS auth for current member with fresh connection
         _startWsAuth();
       }
     } catch (e) {}
@@ -125,13 +126,35 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                     ),
                   )
                 : ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      // Completely reset and start fresh
+                      print('=== STARTING FRESH AUTHORIZATION FOR MEMBER ${index + 1} ===');
+                      
+                      // Force close any existing WebSocket immediately
+                      await _forceCloseEverything();
+                      
+                      // Reset all state variables
                       setState(() {
                         _selectedMemberIndex = index;
                         _errorMessage = null;
                         _authUrl = null;
                         _dialogShown = false;
+                        _clientId = null;
+                        _wsConnecting = false;
+                        _isWebViewLoading = false;
+                        _showingDialog = false;
                       });
+                      
+                      // Clear WebView completely
+                      _webViewController?.clearCache();
+                      _webViewController?.clearLocalStorage();
+                      _webViewController = null;
+                      
+                      // Wait a bit longer to ensure everything is cleaned up
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      
+                      print('=== STARTING WEBSOCKET CONNECTION ===');
+                      // Start fresh WebSocket auth
                       _startWsAuth();
                     },
                     child: const Text('Authorize'),
@@ -225,8 +248,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    if (!_disposed) _startWsAuth();
+                  onPressed: () async {
+                    if (!_disposed) {
+                      print('=== RETRY BUTTON CLICKED ===');
+                      await _forceCloseEverything();
+                      await Future.delayed(const Duration(milliseconds: 300));
+                      _startWsAuth();
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: cyanblueColor,
@@ -353,9 +381,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          print('=== WEBVIEW DIALOG CLOSE BUTTON CLICKED ===');
                           Navigator.of(context).pop();
-                          _closeWebSocket();
+                          await _forceCloseEverything();
                           setState(() {
                             _selectedMemberIndex = null;
                             _authUrl = null;
@@ -1094,24 +1123,60 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   // ===== WebSocket-based flow =====
   void _startWsAuth() async {
     if (_disposed) return;
+    
+    print('NationalIdAuthWidget: === STARTING WS AUTH ===');
+    print('NationalIdAuthWidget: Selected member index: $_selectedMemberIndex');
+    
+    // Ensure everything is closed first
+    _closeWebSocket();
+    
     setState(() {
       _wsConnecting = true;
       _errorMessage = null;
       _authUrl = null;
-      _clientId = null;
+      _clientId = null; // Will generate fresh client ID
       _dialogShown = false;
+      _showingDialog = false;
+      _isWebViewLoading = false;
     });
+    
+    // Wait longer to ensure WebSocket is properly closed and state is reset
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    if (_disposed) return;
+    
+    print('NationalIdAuthWidget: Starting WebSocket connection...');
     await _connectWebSocket();
   }
 
   Future<void> _connectWebSocket() async {
     try {
       print('NationalIdAuthWidget: Connecting to WebSocket at $_wsUrl');
+      print('NationalIdAuthWidget: Current clientId before connection: $_clientId');
       _closeWebSocket();
+      
+      // Add timeout for WebSocket connection
       _channel = WebSocketChannel.connect(Uri.parse(_wsUrl));
+      
+      // Set up timeout for the connection
+      Timer? connectionTimeout = Timer(const Duration(seconds: 30), () {
+        if (_wsConnecting && !_disposed) {
+          print('NationalIdAuthWidget: WebSocket connection timeout');
+          setState(() {
+            _errorMessage = 'Connection timeout. Please try again.';
+            _wsConnecting = false;
+          });
+          _closeWebSocket();
+        }
+      });
+      
       _wsSub = _channel!.stream.listen(
-        (event) => _handleWsMessage(event),
+        (event) {
+          connectionTimeout?.cancel(); // Cancel timeout on first message
+          _handleWsMessage(event);
+        },
         onError: (err) {
+          connectionTimeout?.cancel();
           print('NationalIdAuthWidget: WebSocket error: $err');
           if (_disposed) return;
           setState(() {
@@ -1120,6 +1185,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           });
         },
         onDone: () {
+          connectionTimeout?.cancel();
           print('NationalIdAuthWidget: WebSocket connection done');
           if (_disposed) return;
           // Only mark disconnected if not in normal completion
@@ -1146,15 +1212,17 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   void _registerClient() {
-    print("dfjkdjdkjjkfdkdkjkdjf");
-    // Generate a temporary client id; server may confirm/override in response
+    print("NationalIdAuthWidget: Starting client registration");
+    // Generate a fresh client id; server may confirm/override in response
     _clientId = _generateClientId();
+    print('NationalIdAuthWidget: Generated new clientId: $_clientId');
     final payload = {
       'type': 'register_client',
       'clientId': _clientId,
     };
     print('NationalIdAuthWidget: Registering client with payload: $payload');
     _channel?.sink.add(jsonEncode(payload));
+    print('NationalIdAuthWidget: Client registration message sent');
   }
 
   Future<void> _fetchAuthUrl() async {
@@ -1270,6 +1338,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   void _closeWebSocket() {
     try {
       print('NationalIdAuthWidget: Closing WebSocket connection');
+      print('NationalIdAuthWidget: Current clientId being closed: $_clientId');
       _wsSub?.cancel();
       _wsSub = null;
       _channel?.sink.close(ws_status.normalClosure);
@@ -1277,6 +1346,37 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       print('NationalIdAuthWidget: WebSocket closed successfully');
     } catch (e) {
       print('NationalIdAuthWidget: Error closing WebSocket: $e');
+    }
+  }
+
+  Future<void> _forceCloseEverything() async {
+    try {
+      print('NationalIdAuthWidget: === FORCE CLOSING EVERYTHING ===');
+      
+      // Close WebSocket
+      _closeWebSocket();
+      
+      // Close any open dialogs
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      
+      // Clear WebView
+      _webViewController?.clearCache();
+      _webViewController?.clearLocalStorage();
+      _webViewController = null;
+      
+      // Reset all state
+      _authUrl = null;
+      _errorMessage = null;
+      _wsConnecting = false;
+      _dialogShown = false;
+      _showingDialog = false;
+      _isWebViewLoading = false;
+      _selectedMemberIndex = null;
+      _clientId = null;
+      
+      print('NationalIdAuthWidget: === FORCE CLOSE COMPLETE ===');
+    } catch (e) {
+      print('NationalIdAuthWidget: Error in force close: $e');
     }
   }
 
@@ -1336,6 +1436,10 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           _webViewController = null;
           _selectedMemberIndex = null;
           _isWebViewLoading = false;
+          // Reset WebSocket state completely
+          _clientId = null;
+          _wsConnecting = false;
+          _errorMessage = null;
         });
       }
     }
@@ -1349,6 +1453,20 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       base64Picture = picture; // expected to be base64 data URL or raw b64
     }
 
+    // Handle address data properly
+    String? country;
+    String? state;
+    String? city;
+    
+    final address = data['address'];
+    if (address is Map<String, dynamic>) {
+      country = address['country']?.toString();
+      state = address['state']?.toString() ?? address['region']?.toString();
+      city = address['city']?.toString() ?? address['locality']?.toString();
+    } else if (address is String) {
+      country = address;
+    }
+
     // Map common fields
     final mapped = <String, dynamic>{
       'fullName': data['name'] ?? data['full_name'] ?? data['fullName'],
@@ -1357,7 +1475,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       'sex': data['sex'] ?? data['gender'],
       'dateOfBirth': data['dateOfBirth'] ?? data['dob'],
       'picture': base64Picture,
-      "country": data['address'],
+      'country': country,
+      'state': state,
+      'city': city,
       // Preserve original as well
       // 'raw': data,
     };

@@ -83,30 +83,30 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                           Icons.person,
                           [
                             _buildSummaryItem('Full Name', member.fullName ?? 'Not provided'),
-                            _buildSummaryItem('Surname', member.verifiedData?['surname'] ?? 'Not provided'),
+                            _buildSummaryItem('Surname', _getStringValue(member.verifiedData?['surname']) ?? 'Not provided'),
                             _buildSummaryItem('Mother Name', member.motherName ?? 'Not provided'),
                             _buildSummaryItem('Title', member.title ?? 'Not provided'),
                             _buildSummaryItem('Sex', member.sex ?? 'Not provided'),
                             _buildSummaryItem('Date of Birth', member.dateOfBirth ?? 'Not provided'),
                             _buildSummaryItem('Marital Status', member.maritalStatus ?? 'Not provided'),
-                            _buildSummaryItem('Phone', member.verifiedData?['phone'] ?? 'Not provided'),
-                            _buildSummaryItem('Email', member.verifiedData?['email'] ?? 'Not provided'),
-                            _buildSummaryItem('Country', member.verifiedData?['country'] ?? 'Not provided'),
-                            _buildSummaryItem('State', member.verifiedData?['state'] ?? 'Not provided'),
-                            _buildSummaryItem('City', member.verifiedData?['city'] ?? 'Not provided'),
-                            _buildSummaryItem('Zone/Sub City', member.verifiedData?['zoneSubCity'] ?? 'Not provided'),
-                            _buildSummaryItem('Street Address', member.verifiedData?['streetAddress'] ?? 'Not provided'),
-                            _buildSummaryItem('House No', member.verifiedData?['houseNo'] ?? 'Not provided'),
-                            _buildSummaryItem('Zip Code', member.verifiedData?['zipCode'] ?? 'Not provided'),
-                            _buildSummaryItem('Occupation', member.verifiedData?['occupation'] ?? 'Not provided'),
-                            _buildSummaryItem('Monthly Income', member.verifiedData?['monthlyIncome'] ?? 'Not provided'),
-                            _buildSummaryItem('Sector', member.verifiedData?['sector'] ?? 'Not provided'),
-                            _buildSummaryItem('Employer Name', member.verifiedData?['employerName'] ?? 'Not provided'),
-                            _buildSummaryItem('Document Name', member.verifiedData?['documentName'] ?? 'Not provided'),
-                            _buildSummaryItem('Legal ID', member.verifiedData?['legalId'] ?? 'Not provided'),
-                            _buildSummaryItem('Issue Authority', member.verifiedData?['issueAuthority'] ?? 'Not provided'),
-                            _buildSummaryItem('Issue Date', member.verifiedData?['issueDate'] ?? 'Not provided'),
-                            _buildSummaryItem('Expiry Date', member.verifiedData?['expiryDate'] ?? 'Not provided'),
+                            _buildSummaryItem('Phone', _getStringValue(member.verifiedData?['phone']) ?? 'Not provided'),
+                            _buildSummaryItem('Email', _getStringValue(member.verifiedData?['email']) ?? 'Not provided'),
+                            _buildSummaryItem('Country', _getStringValue(member.verifiedData?['country']) ?? 'Not provided'),
+                            _buildSummaryItem('State', _getStringValue(member.verifiedData?['state']) ?? 'Not provided'),
+                            _buildSummaryItem('City', _getStringValue(member.verifiedData?['city']) ?? 'Not provided'),
+                            _buildSummaryItem('Zone/Sub City', _getStringValue(member.verifiedData?['zoneSubCity']) ?? 'Not provided'),
+                            _buildSummaryItem('Street Address', _getStringValue(member.verifiedData?['streetAddress']) ?? 'Not provided'),
+                            _buildSummaryItem('House No', _getStringValue(member.verifiedData?['houseNo']) ?? 'Not provided'),
+                            _buildSummaryItem('Zip Code', _getStringValue(member.verifiedData?['zipCode']) ?? 'Not provided'),
+                            _buildSummaryItem('Occupation', _getStringValue(member.verifiedData?['occupation']) ?? 'Not provided'),
+                            _buildSummaryItem('Monthly Income', _getStringValue(member.verifiedData?['monthlyIncome']) ?? 'Not provided'),
+                            _buildSummaryItem('Sector', _getStringValue(member.verifiedData?['sector']) ?? 'Not provided'),
+                            _buildSummaryItem('Employer Name', _getStringValue(member.verifiedData?['employerName']) ?? 'Not provided'),
+                            _buildSummaryItem('Document Name', _getStringValue(member.verifiedData?['documentName']) ?? 'Not provided'),
+                            _buildSummaryItem('Legal ID', _getStringValue(member.verifiedData?['legalId']) ?? 'Not provided'),
+                            _buildSummaryItem('Issue Authority', _getStringValue(member.verifiedData?['issueAuthority']) ?? 'Not provided'),
+                            _buildSummaryItem('Issue Date', _getStringValue(member.verifiedData?['issueDate']) ?? 'Not provided'),
+                            _buildSummaryItem('Expiry Date', _getStringValue(member.verifiedData?['expiryDate']) ?? 'Not provided'),
                             _buildSummaryItem('Verified', member.isVerified ? 'Yes' : 'No'),
                           ],
                         );
@@ -251,5 +251,29 @@ class RegistrationSummaryScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String? _getStringValue(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      return value;
+    }
+    if (value is Map<String, dynamic>) {
+      // If it's an address object, try to extract meaningful string representation
+      if (value.containsKey('country')) {
+        return value['country']?.toString();
+      }
+      if (value.containsKey('state')) {
+        return value['state']?.toString();
+      }
+      if (value.containsKey('city')) {
+        return value['city']?.toString();
+      }
+      // If it's a complex object, try to get a reasonable string representation
+      return value.toString();
+    }
+    return value.toString();
   }
 }

@@ -113,18 +113,18 @@ class RegistrationService {
           }
         });
 
-        // Attach signature as file if available
-        if (signatures.length > i && signatures[i] != null) {
-          final tempDir = Directory.systemTemp;
-          final tempFile = File('${tempDir.path}/signature_$i.png');
-          await tempFile.writeAsBytes(signatures[i]!);
-          request.files.add(
-            await http.MultipartFile.fromPath(
-              'customers[$i].signature',
-              tempFile.path,
-            ),
-          );
-        }
+        // // Attach signature as file if available
+        // if (signatures.length > i && signatures[i] != null) {
+        //   final tempDir = Directory.systemTemp;
+        //   final tempFile = File('${tempDir.path}/signature_$i.png');
+        //   await tempFile.writeAsBytes(signatures[i]!);
+        //   request.files.add(
+        //     await http.MultipartFile.fromPath(
+        //       'customers[$i].signature',
+        //       tempFile.path,
+        //     ),
+        //   );
+        // }
       }
       // Add other fields (branch, currency, etc)
       otherFields.forEach((key, value) {
