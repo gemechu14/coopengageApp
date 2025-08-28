@@ -284,7 +284,7 @@ class _LoginscreenState extends State<Loginscreen> {
         // ONLINE LOGIN
         final response = await networkHandler
             .post('${AppConstants.baseURL}/login', data)
-            .timeout(const Duration(seconds: 30));
+            .timeout(const Duration(seconds: 40));
         print(
             "statusCodestatusCodestatusCodestatusCodestatusCodestdddatusCode");
         print(response.statusCode);
@@ -298,7 +298,7 @@ class _LoginscreenState extends State<Loginscreen> {
           // Call /api/v1/users/me to get user data
           final userResponse = await networkHandler
               .get('/api/v1/users/me')
-              .timeout(const Duration(seconds: 30));
+              .timeout(const Duration(seconds: 70));
           print("dkfkdfhdkdkkfkdkdkdjkjdjkdjkdfjkkjfjkdfkjd");
           print(userResponse);
 

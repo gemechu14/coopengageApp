@@ -181,6 +181,7 @@ class NetworkHandler {
     ioClient.close(); // Close the client after request
     return response;
   }
+
   // Future<http.Response> post(
   //   String url,
   //   Map<String, dynamic> body,
