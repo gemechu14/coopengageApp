@@ -128,11 +128,12 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 : ElevatedButton(
                     onPressed: () async {
                       // Completely reset and start fresh
-                      print('=== STARTING FRESH AUTHORIZATION FOR MEMBER ${index + 1} ===');
-                      
+                      print(
+                          '=== STARTING FRESH AUTHORIZATION FOR MEMBER ${index + 1} ===');
+
                       // Force close any existing WebSocket immediately
                       await _forceCloseEverything();
-                      
+
                       // Reset all state variables
                       setState(() {
                         _selectedMemberIndex = index;
@@ -144,15 +145,15 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                         _isWebViewLoading = false;
                         _showingDialog = false;
                       });
-                      
+
                       // Clear WebView completely
                       _webViewController?.clearCache();
                       _webViewController?.clearLocalStorage();
                       _webViewController = null;
-                      
+
                       // Wait a bit longer to ensure everything is cleaned up
                       await Future.delayed(const Duration(milliseconds: 500));
-                      
+
                       print('=== STARTING WEBSOCKET CONNECTION ===');
                       // Start fresh WebSocket auth
                       _startWsAuth();
@@ -1079,25 +1080,50 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           }
         }
 
+        // if (value is Map<String, dynamic>) {
+        //   return Padding(
+        //     padding: const EdgeInsets.only(top: 8.0),
+        //     child: Column(
+        //       crossAxisAlignment: CrossAxisAlignment.start,
+        //       children: [
+        //         Text(
+        //           '${key.replaceAll('_', ' ').toUpperCase()}:',
+        //           style: const TextStyle(fontWeight: FontWeight.bold),
+        //         ),
+        //         Padding(
+        //           padding: const EdgeInsets.only(left: 16.0),
+        //           child: Column(
+        //             crossAxisAlignment: CrossAxisAlignment.start,
+        //             children: value.entries.map<Widget>((subEntry) {
+        //               return Text('${subEntry.key}: ${subEntry.value}');
+        //             }).toList(),
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   );
+        // }
         if (value is Map<String, dynamic>) {
+          final filteredMap = _filterPreferredFields(value); // use your filter
           return Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${key.replaceAll('_', ' ').toUpperCase()}:',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: value.entries.map<Widget>((subEntry) {
-                      return Text('${subEntry.key}: ${subEntry.value}');
-                    }).toList(),
-                  ),
-                ),
+                // Text(
+                //   '${key.replaceAll('_', ' ').toUpperCase()}:',
+                //   style: const TextStyle(fontWeight: FontWeight.bold),
+                // ),
+                // Padding(
+                //   padding: const EdgeInsets.only(left: 16.0),
+                //   child: Column(
+                //     crossAxisAlignment: CrossAxisAlignment.start,
+                //     children: filteredMap.entries.map<Widget>((subEntry) {
+                //       return Text(
+                //           '${subEntry.key.replaceAll('_', ' ').toUpperCase()}: ${subEntry.value}');
+                //     }).toList(),
+                //   ),
+                // ),
               ],
             ),
           );
@@ -1123,13 +1149,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   // ===== WebSocket-based flow =====
   void _startWsAuth() async {
     if (_disposed) return;
-    
+
     print('NationalIdAuthWidget: === STARTING WS AUTH ===');
     print('NationalIdAuthWidget: Selected member index: $_selectedMemberIndex');
-    
+
     // Ensure everything is closed first
     _closeWebSocket();
-    
+
     setState(() {
       _wsConnecting = true;
       _errorMessage = null;
@@ -1139,12 +1165,12 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       _showingDialog = false;
       _isWebViewLoading = false;
     });
-    
+
     // Wait longer to ensure WebSocket is properly closed and state is reset
     await Future.delayed(const Duration(milliseconds: 800));
-    
+
     if (_disposed) return;
-    
+
     print('NationalIdAuthWidget: Starting WebSocket connection...');
     await _connectWebSocket();
   }
@@ -1152,12 +1178,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   Future<void> _connectWebSocket() async {
     try {
       print('NationalIdAuthWidget: Connecting to WebSocket at $_wsUrl');
-      print('NationalIdAuthWidget: Current clientId before connection: $_clientId');
+      print(
+          'NationalIdAuthWidget: Current clientId before connection: $_clientId');
       _closeWebSocket();
-      
+
       // Add timeout for WebSocket connection
       _channel = WebSocketChannel.connect(Uri.parse(_wsUrl));
-      
+
       // Set up timeout for the connection
       Timer? connectionTimeout = Timer(const Duration(seconds: 30), () {
         if (_wsConnecting && !_disposed) {
@@ -1169,7 +1196,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           _closeWebSocket();
         }
       });
-      
+
       _wsSub = _channel!.stream.listen(
         (event) {
           connectionTimeout?.cancel(); // Cancel timeout on first message
@@ -1352,18 +1379,18 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   Future<void> _forceCloseEverything() async {
     try {
       print('NationalIdAuthWidget: === FORCE CLOSING EVERYTHING ===');
-      
+
       // Close WebSocket
       _closeWebSocket();
-      
+
       // Close any open dialogs
       Navigator.of(context).popUntil((route) => route.isFirst);
-      
+
       // Clear WebView
       _webViewController?.clearCache();
       _webViewController?.clearLocalStorage();
       _webViewController = null;
-      
+
       // Reset all state
       _authUrl = null;
       _errorMessage = null;
@@ -1373,7 +1400,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       _isWebViewLoading = false;
       _selectedMemberIndex = null;
       _clientId = null;
-      
+
       print('NationalIdAuthWidget: === FORCE CLOSE COMPLETE ===');
     } catch (e) {
       print('NationalIdAuthWidget: Error in force close: $e');
@@ -1446,41 +1473,87 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   }
 
   Map<String, dynamic> _mapAuthenticationData(Map<String, dynamic> data) {
+    print('NationalIdAuthWidget: Raw authentication data: $data');
+
     // Extract base64 image if provided under 'picture'
     String? base64Picture;
     final picture = data['picture'];
     if (picture is String && picture.isNotEmpty) {
       base64Picture = picture; // expected to be base64 data URL or raw b64
+      print(
+          'NationalIdAuthWidget: Picture data found: ${picture.length} chars');
     }
 
     // Handle address data properly
     String? country;
     String? state;
     String? city;
-    
+    String? zone;
+    String? woreda;
+    String? region;
+
     final address = data['address'];
     if (address is Map<String, dynamic>) {
-      country = address['country']?.toString();
-      state = address['state']?.toString() ?? address['region']?.toString();
-      city = address['city']?.toString() ?? address['locality']?.toString();
+      print('NationalIdAuthWidget: Processing address data: $address');
+      country = address['country']?.toString()?.trim();
+      zone = address['zone']?.toString()?.trim();
+      woreda = address['woreda']?.toString()?.trim();
+      region = address['region']?.toString()?.trim();
+
+      // Set state to region if available, otherwise use zone
+      state = region ?? zone;
+      city = woreda; // Use woreda as city for Ethiopian addressing
+
+      print(
+          'NationalIdAuthWidget: Extracted address - Country: $country, State: $state, City: $city, Zone: $zone, Woreda: $woreda');
     } else if (address is String) {
       country = address;
+      print('NationalIdAuthWidget: Address is string: $country');
     }
+
+    // Handle name variations
+    String? fullName = data['name'] ?? data['full_name'] ?? data['fullName'];
+    print('NationalIdAuthWidget: Full name: $fullName');
+
+    // Handle gender variations
+    String? gender = data['gender'] ?? data['sex'];
+    print('NationalIdAuthWidget: Gender: $gender');
+
+    // Handle birthdate variations
+    String? dateOfBirth =
+        data['birthdate'] ?? data['dateOfBirth'] ?? data['dob'];
+    print('NationalIdAuthWidget: Date of birth: $dateOfBirth');
+
+    // Handle email and sub
+    String? email = data['email']?.toString();
+    String? sub = data['sub']?.toString();
+    print('NationalIdAuthWidget: Email: $email, Sub: $sub');
 
     // Map common fields
     final mapped = <String, dynamic>{
-      'fullName': data['name'] ?? data['full_name'] ?? data['fullName'],
-      'email': data['email'],
-      'sub': data['sub'],
-      'sex': data['sex'] ?? data['gender'],
-      'dateOfBirth': data['dateOfBirth'] ?? data['dob'],
+      'fullName': fullName,
+      'email': email,
+      'sub': sub,
+      'sex': gender,
+      'gender': gender, // Keep both for compatibility
+      'dateOfBirth': dateOfBirth,
+      'birthdate': dateOfBirth, // Keep both for compatibility
       'picture': base64Picture,
       'country': country,
       'state': state,
+      'region': region,
       'city': city,
+      'zone': zone,
+      'woreda': woreda,
+      'zoneSubCity': zone, // Map zone to zoneSubCity for compatibility
+      'streetAddress': woreda, // Map woreda to streetAddress for compatibility
+      // Preserve original address structure as well
+      'address': address,
       // Preserve original as well
       // 'raw': data,
     };
+
+    print('NationalIdAuthWidget: Mapped authentication data: $mapped');
     return mapped;
   }
 
@@ -1504,19 +1577,19 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
               const Text(
                 'Authentication Complete!',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green,
+                  color: Colors.blue,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
                 'National ID verification was successful.',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 12,
                   color: Colors.black87,
                 ),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
               ),
             ],
           ),
@@ -1527,7 +1600,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                 _showingDialog = false;
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Continue'),

@@ -92,6 +92,9 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                             _buildSummaryItem('Phone', _getStringValue(member.verifiedData?['phone']) ?? 'Not provided'),
                             _buildSummaryItem('Email', _getStringValue(member.verifiedData?['email']) ?? 'Not provided'),
                             _buildSummaryItem('Country', _getStringValue(member.verifiedData?['country']) ?? 'Not provided'),
+                            _buildSummaryItem('Region', _getStringValue(member.verifiedData?['region']) ?? 'Not provided'),
+                            _buildSummaryItem('Zone', _getStringValue(member.verifiedData?['zone']) ?? 'Not provided'),
+                            _buildSummaryItem('Woreda', _getStringValue(member.verifiedData?['woreda']) ?? 'Not provided'),
                             _buildSummaryItem('State', _getStringValue(member.verifiedData?['state']) ?? 'Not provided'),
                             _buildSummaryItem('City', _getStringValue(member.verifiedData?['city']) ?? 'Not provided'),
                             _buildSummaryItem('Zone/Sub City', _getStringValue(member.verifiedData?['zoneSubCity']) ?? 'Not provided'),
@@ -258,22 +261,32 @@ class RegistrationSummaryScreen extends ConsumerWidget {
       return null;
     }
     if (value is String) {
-      return value;
+      return value.trim().isEmpty ? null : value.trim();
     }
     if (value is Map<String, dynamic>) {
       // If it's an address object, try to extract meaningful string representation
       if (value.containsKey('country')) {
-        return value['country']?.toString();
+        return value['country']?.toString()?.trim();
+      }
+      if (value.containsKey('region')) {
+        return value['region']?.toString()?.trim();
+      }
+      if (value.containsKey('zone')) {
+        return value['zone']?.toString()?.trim();
+      }
+      if (value.containsKey('woreda')) {
+        return value['woreda']?.toString()?.trim();
       }
       if (value.containsKey('state')) {
-        return value['state']?.toString();
+        return value['state']?.toString()?.trim();
       }
       if (value.containsKey('city')) {
-        return value['city']?.toString();
+        return value['city']?.toString()?.trim();
       }
       // If it's a complex object, try to get a reasonable string representation
       return value.toString();
     }
-    return value.toString();
+    String stringValue = value.toString().trim();
+    return stringValue.isEmpty ? null : stringValue;
   }
 }

@@ -4,9 +4,85 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:coopengageplus/constants/config/config.dart';
+import 'package:flutter/material.dart';
+import 'package:coopengageplus/services/token_service.dart';
 
 class RegistrationService {
   static const String baseUrl = AppConstants.baseURL;
+
+  /// Handle token expiration and session timeout
+  Future<void> _handleTokenExpiration(
+      BuildContext? context, String errorMessage) async {
+    print('RegistrationService: Token expired - $errorMessage');
+
+    try {
+      // Clear stored token
+      await storage.delete(key: "token");
+      await storage.delete(key: "username");
+      await storage.delete(key: "role");
+      await storage.delete(key: "userId");
+
+      print('RegistrationService: Cleared stored credentials');
+
+      // Show session expired message if context is available
+      if (context != null) {
+        // Show snackbar or dialog about session expiration
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.warning, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Your session has expired. Please login again.'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Login',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to login screen
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login', // Adjust this route name as needed
+                  (Route<dynamic> route) => false,
+                );
+              },
+            ),
+          ),
+        );
+
+        // Wait a moment for user to see the message
+        await Future.delayed(Duration(seconds: 2));
+
+        // Force logout and redirect to login
+        await TokenService.forceLogoutWithContext(context);
+      } else {
+        // If no context, just clear data and let the app handle it
+        print('RegistrationService: No context available, clearing data only');
+      }
+    } catch (e) {
+      print('RegistrationService: Error handling token expiration: $e');
+    }
+  }
+
+  /// Check if token is valid before making requests
+  Future<bool> _isTokenValid() async {
+    try {
+      final token = await storage.read(key: "token");
+      if (token == null || token.isEmpty) {
+        return false;
+      }
+
+      // Use TokenService to check validity
+      return await TokenService.isTokenValid();
+    } catch (e) {
+      print('RegistrationService: Error checking token validity: $e');
+      return false;
+    }
+  }
 
   Future<Map<String, dynamic>> submitRegistration({
     required String authId,
@@ -19,8 +95,16 @@ class RegistrationService {
     String? title,
     required String customerInfoInitialDeposit,
     Uint8List? signature,
+    BuildContext? context, // Add context parameter for error handling
   }) async {
     try {
+      // Check token validity first
+      if (!await _isTokenValid()) {
+        print('RegistrationService: Token is invalid, handling expiration');
+        await _handleTokenExpiration(context, 'Token is invalid or expired');
+        throw Exception('Session expired. Please login again.');
+      }
+
       String? token = await storage.read(key: "token");
 
       if (token == null) {
@@ -48,19 +132,19 @@ class RegistrationService {
       request.fields['title'] = title!;
 
       // Add signature file if available
-      if (signature != null) {
-        // Create a temporary file for the signature
-        final tempDir = Directory.systemTemp;
-        final tempFile = File('${tempDir.path}/signature.png');
-        await tempFile.writeAsBytes(signature);
+      // if (signature != null) {
+      //   // Create a temporary file for the signature
+      //   final tempDir = Directory.systemTemp;
+      //   final tempFile = File('${tempDir.path}/signature.png');
+      //   await tempFile.writeAsBytes(signature);
 
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'customerInfo.signature',
-            tempFile.path,
-          ),
-        );
-      }
+      //   request.files.add(
+      //     await http.MultipartFile.fromPath(
+      //       'customerInfo.signature',
+      //       tempFile.path,
+      //     ),
+      //   );
+      // }
 
       // Send the request
       final response = await request.send();
@@ -72,6 +156,21 @@ class RegistrationService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(responseBody);
       } else {
+        // Check for token expiration
+        if (response.statusCode == 401) {
+          final responseData = json.decode(responseBody);
+          final errorMessage = responseData['error_message'] ?? 'Token expired';
+
+          if (errorMessage.toString().toLowerCase().contains('token') &&
+              (errorMessage.toString().toLowerCase().contains('expired') ||
+                  errorMessage.toString().toLowerCase().contains('invalid'))) {
+            print(
+                'RegistrationService: Token expired detected in submitRegistration');
+            await _handleTokenExpiration(context, errorMessage);
+            throw Exception('Session expired. Please login again.');
+          }
+        }
+
         throw Exception(
             'Registration failed with status: ${response.statusCode}. Response: $responseBody');
       }
@@ -86,8 +185,16 @@ class RegistrationService {
     required Map<String, String> otherFields,
     required List<Uint8List?>
         signatures, // Each member's signature as Uint8List (nullable)
+    BuildContext? context, // Add context parameter for error handling
   }) async {
     try {
+      // Check token validity first
+      if (!await _isTokenValid()) {
+        print('RegistrationService: Token is invalid, handling expiration');
+        await _handleTokenExpiration(context, 'Token is invalid or expired');
+        throw Exception('Session expired. Please login again.');
+      }
+
       String? token = await storage.read(key: "token");
       if (token == null) {
         throw Exception("Token not found");
@@ -146,8 +253,23 @@ class RegistrationService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(responseBody);
       } else {
+        // Check for token expiration
+        if (response.statusCode == 401) {
+          final responseData = json.decode(responseBody);
+          final errorMessage = responseData['error_message'] ?? 'Token expired';
+
+          if (errorMessage.toString().toLowerCase().contains('token') &&
+              (errorMessage.toString().toLowerCase().contains('expired') ||
+                  errorMessage.toString().toLowerCase().contains('invalid'))) {
+            print(
+                'RegistrationService: Token expired detected in submitJointRegistration');
+            await _handleTokenExpiration(context, errorMessage);
+            throw Exception('Session expired. Please login again.');
+          }
+        }
+
         throw Exception(
-            'Registration failed with status: \\${response.statusCode}. Response: \\${responseBody}');
+            'Registration failed with status: ${response.statusCode}. Response: ${responseBody}');
       }
     } catch (e) {
       print('Error submitting joint registration: $e');
