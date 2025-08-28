@@ -9,6 +9,10 @@ class RegistrationData {
   String status = "INITIAL";
   bool formCompleted = false;
 
+  // CBO Account Info
+  bool haveCboAccount = false;
+  Map<String, dynamic>? existingAccountData;
+
   // Customer Info
   String? fullName;
   String? surname;
@@ -165,6 +169,8 @@ class RegistrationData {
     this.percentageCompleted = 0,
     this.status = "INITIAL",
     this.formCompleted = false,
+    this.haveCboAccount = false,
+    this.existingAccountData,
   }) : sex = sex ?? 'MALE', // Default to MALE
        title = title ?? 'MR'; // Default to MR
 
@@ -204,6 +210,8 @@ class RegistrationData {
     double? percentageCompleted,
     String? status,
     bool? formCompleted,
+    bool? haveCboAccount,
+    Map<String, dynamic>? existingAccountData,
   }) {
     return RegistrationData(
       phone: phone ?? this.phone,
@@ -241,6 +249,8 @@ class RegistrationData {
       percentageCompleted: percentageCompleted ?? this.percentageCompleted,
       status: status ?? this.status,
       formCompleted: formCompleted ?? this.formCompleted,
+      haveCboAccount: haveCboAccount ?? this.haveCboAccount,
+      existingAccountData: existingAccountData ?? this.existingAccountData,
     );
   }
 
@@ -275,5 +285,6 @@ class RegistrationData {
     'percentageCompleted': percentageCompleted,
     'status': status,
     'formCompleted': formCompleted,
+    'haveCboAccount': haveCboAccount,
   };
 }

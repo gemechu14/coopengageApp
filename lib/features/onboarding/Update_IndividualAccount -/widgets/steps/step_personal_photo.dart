@@ -417,7 +417,34 @@ class _StepPersonalPhotoState extends ConsumerState<StepPersonalPhoto> {
         Navigator.pop(context);
       }
 
-   
+      if (image != null) {
+        final bytes = await _getImageBytes(image.path, 'temp_photo.jpg');
+        if (bytes != null) {
+          // Update registration data with the uploaded photo
+          ref.read(registrationDataProvider.notifier).updatePhoto(photo: bytes);
+          
+          // Update local state to show the photo
+          setState(() {
+            profilePath = image.path;
+            _photoBytes = bytes;
+          });
+          
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo uploaded successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Clear any validation errors
+          ref.read(formValidationProvider.notifier).clearError('photo');
+        } else {
+          _showErrorSnackBar('Failed to read image bytes');
+        }
+      } else {
+        // User cancelled, do nothing
+      }
     } catch (e) {
       // Dismiss loading indicator if still showing
       if (Navigator.canPop(context)) {

@@ -90,6 +90,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
     print("object1111111111111111111111111111111111");
     final registrationData = ref.watch(registrationDataProvider);
     final validationErrors = ref.watch(formValidationProvider);
+    final bool hasExistingCboAccount = registrationData.haveCboAccount;
     print(registrationData);
     // Always sync controller text with provider
     if (registrationData.phone != null &&
@@ -162,7 +163,8 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                 _buildLabel("Phone Number *"),
                 PhoneNumberWidget(
                   phoneNumberController: _phoneController,
-                  onChanged: (value) {
+                  isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
+                  onChanged: hasExistingCboAccount ? null : (value) {
                     // Clear validation error when user types
                     if (value.isNotEmpty) {
                       ref

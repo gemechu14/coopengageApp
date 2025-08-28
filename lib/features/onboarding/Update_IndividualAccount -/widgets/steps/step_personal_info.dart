@@ -245,6 +245,8 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
   @override
   Widget build(BuildContext context) {
     final validationErrors = ref.watch(formValidationProvider);
+    final registrationData = ref.watch(registrationDataProvider);
+    final bool hasExistingCboAccount = registrationData.haveCboAccount;
 
     return Container(
       width: double.infinity,
@@ -353,7 +355,8 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                   errorMessage: validationErrors['fullName'] ?? '',
                   leadingIcon: Icons.person,
                   isRequired: true,
-                  onChanged: (value) {
+                  isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
+                  onChanged: hasExistingCboAccount ? null : (value) {
                     // Update registration data
                     ref
                         .read(registrationDataProvider.notifier)
@@ -393,7 +396,8 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                   errorMessage: validationErrors['surname'] ?? '',
                   leadingIcon: Icons.person,
                   isRequired: false,
-                  onChanged: (value) {
+                  isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
+                  onChanged: hasExistingCboAccount ? null : (value) {
                     // Update registration data
                     ref
                         .read(registrationDataProvider.notifier)
@@ -440,7 +444,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                 // Date of Birth
                 _buildLabel("Date of Birth *"),
                 GestureDetector(
-                  onTap: () => _selectDate(context),
+                  onTap: hasExistingCboAccount ? null : () => _selectDate(context),
                   child: AbsorbPointer(
                     child: ReusableTextFormField(
                       hintText: "Date of Birth",
@@ -449,6 +453,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                       errorMessage: validationErrors['dateOfBirth'] ?? '',
                       leadingIcon: Icons.calendar_today,
                       isRequired: true,
+                      isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
                     ),
                   ),
                 ),
@@ -509,7 +514,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
 
                 // Gender
                 _buildLabel("Gender *"),
-                _buildGenderWidget(),
+                _buildGenderWidget(hasExistingCboAccount),
 
                 // Error display under Gender
                 if (validationErrors['gender'] != null &&
@@ -548,7 +553,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
     );
   }
 
-  Widget _buildGenderWidget() {
+  Widget _buildGenderWidget(bool hasExistingCboAccount) {
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: Column(
@@ -563,7 +568,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                   groupValue: _selectedGender, // Current selected gender
                   activeColor:
                       cyanblueColor, // Use cyanblue color for selection
-                  onChanged: (String? value) {
+                  onChanged: hasExistingCboAccount ? null : (String? value) {
                     setState(() {
                       _selectedGender = value!;
                     });
@@ -589,7 +594,7 @@ class _StepPersonalInfoState extends ConsumerState<StepPersonalInfo> {
                   groupValue: _selectedGender, // Current selected gender
                   activeColor:
                       cyanblueColor, // Use cyanblue color for selection
-                  onChanged: (String? value) {
+                  onChanged: hasExistingCboAccount ? null : (String? value) {
                     setState(() {
                       _selectedGender = value!;
                     });

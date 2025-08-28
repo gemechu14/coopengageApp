@@ -9,6 +9,7 @@ class ReusableDropdown extends StatelessWidget {
   final String errorMessage; // Error message for validation
   final bool isRequired; // Whether the field is required
   final bool isGreyBorder;
+  final bool isEnabled; // Whether the field is enabled
   const ReusableDropdown({
     Key? key,
     required this.selectedValue,
@@ -19,6 +20,7 @@ class ReusableDropdown extends StatelessWidget {
     bool? isGreyBorder,
     required this.errorMessage,
     required this.isRequired, // Add the required flag
+    this.isEnabled = true, // Default to enabled
   })  : isGreyBorder = isGreyBorder ?? false,
         super(key: key);
 
@@ -45,7 +47,7 @@ class ReusableDropdown extends StatelessWidget {
             ),
           );
         }).toList(),
-        onChanged: onChanged,
+        onChanged: isEnabled ? onChanged : null,
         validator: isRequired
             ? (value) {
                 if (value == null || value.isEmpty) {
@@ -56,6 +58,8 @@ class ReusableDropdown extends StatelessWidget {
             : null, // No validation if isRequired is false
         decoration: InputDecoration(
           isDense: true,
+          filled: !isEnabled,
+          fillColor: !isEnabled ? Colors.grey[100] : null,
           border: OutlineInputBorder(
             borderRadius: const BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(

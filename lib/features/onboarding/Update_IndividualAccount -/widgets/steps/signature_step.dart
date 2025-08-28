@@ -189,14 +189,45 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
           child: (() {
             if (signature != null) {
               if (signature is Uint8List) {
-                return Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.memory(
-                      signature,
-                      fit: BoxFit.cover,
+                return Stack(
+                  children: [
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.memory(
+                          signature,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
-                  ),
+                    // Change signature button (top right)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => _showImagePicker(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               } else if (signature is String) {
                 return Center(
@@ -416,7 +447,23 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
         Navigator.pop(context);
       }
 
-      
+      if (image != null) {
+        final bytes = await _getImageBytes(image.path, 'temp_signature.jpg');
+        if (bytes != null) {
+          // Update registration data with the uploaded signature
+          ref.read(registrationDataProvider.notifier).updateSignature(signature: bytes);
+          
+          // Show success message
+          _showSuccessSnackBar('Signature uploaded successfully!');
+          
+          // Clear any validation errors
+          ref.read(formValidationProvider.notifier).clearError('signature');
+        } else {
+          _showErrorSnackBar('Failed to read image bytes');
+        }
+      } else {
+        // User cancelled, do nothing
+      }
     } catch (e) {
       // Dismiss loading indicator if still showing
       if (Navigator.canPop(context)) {
@@ -631,17 +678,21 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   }
 
   // Convert image to bytes - same as IdTypeStep implementation
-  Future<Uint8List?> _getImageBytes(Uint8List imageBytes, String tempFileName) async {
-    try {
+  Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
+    final imageFile = File(path);
+
+    if (await imageFile.exists()) {
+      Uint8List bytes = await imageFile.readAsBytes();
+
       // Save the bytes as a temporary file
       final tempFile = File('${Directory.systemTemp.path}/$tempFileName');
-      await tempFile.writeAsBytes(imageBytes);
+      await tempFile.writeAsBytes(bytes);
 
       print("✅ Saved temporary signature at: ${tempFile.path}");
-      print("📤 Signature Bytes Length: ${imageBytes.length}");
-      return imageBytes; // Return the image bytes
-    } catch (e) {
-      print("❌ Error saving signature: $e");
+      print("📤 Signature Bytes Length: ${bytes.length}");
+      return bytes; // Return the image bytes
+    } else {
+      print("❌ File does not exist at: $path");
       return null;
     }
   }

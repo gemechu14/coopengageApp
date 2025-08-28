@@ -47,70 +47,103 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     final registrationData = ref.read(registrationDataProvider);
     _selectedBranch = registrationData.branch;
     _selectedDocumentType = registrationData.documentName;
+    
+    // Restore image data if available
+    _restoreImageData(registrationData);
+  }
 
-    // Initialize image bytes or url from provider if available
+  void _restoreImageData(dynamic registrationData) {
+    debugPrint("🔄 [IdTypeStep] Restoring image data...");
+    
+    // Check if we have stored image bytes
     if (registrationData.residenceCard != null) {
       if (registrationData.residenceCard is Uint8List) {
+        debugPrint("   - Found front image data (${registrationData.residenceCard.length} bytes)");
         _frontImageBytes = registrationData.residenceCard;
+        // Create a temporary file path for display
+        _createTempImageFile(registrationData.residenceCard, 'front').then((path) {
+          if (mounted && path != null) {
+            setState(() {
+              _frontImagePath = path;
+            });
+            debugPrint("   - Front image restored successfully");
+          }
+        });
       } else if (registrationData.residenceCard is String) {
         _frontImageBytes = null;
         _frontImagePath = registrationData.residenceCard;
       }
+    } else {
+      debugPrint("   - No front image data found");
     }
+    
     if (registrationData.residenceCardBack != null) {
       if (registrationData.residenceCardBack is Uint8List) {
+        debugPrint("   - Found back image data (${registrationData.residenceCardBack.length} bytes)");
         _backImageBytes = registrationData.residenceCardBack;
+        // Create a temporary file path for display
+        _createTempImageFile(registrationData.residenceCardBack, 'back').then((path) {
+          if (mounted && path != null) {
+            setState(() {
+              _backImagePath = path;
+            });
+            debugPrint("   - Back image restored successfully");
+          }
+        });
       } else if (registrationData.residenceCardBack is String) {
         _backImageBytes = null;
         _backImagePath = registrationData.residenceCardBack;
       }
+    } else {
+      debugPrint("   - No back image data found");
     }
   }
 
-  void _syncWithProviderData() {
-    final registrationData = ref.read(registrationDataProvider);
-
-    // Sync branch and document type
-    if (_selectedBranch != registrationData.branch) {
-      _selectedBranch = registrationData.branch;
-    }
-    if (_selectedDocumentType != registrationData.documentName) {
-      _selectedDocumentType = registrationData.documentName;
-    }
-
-    // Sync image bytes or url
-    if (registrationData.residenceCard != null) {
-      if (registrationData.residenceCard is Uint8List) {
-        _frontImageBytes = registrationData.residenceCard;
-        _frontImagePath = '';
-      } else if (registrationData.residenceCard is String) {
-        _frontImageBytes = null;
-        _frontImagePath = registrationData.residenceCard;
-      }
-    }
-    if (registrationData.residenceCardBack != null) {
-      if (registrationData.residenceCardBack is Uint8List) {
-        _backImageBytes = registrationData.residenceCardBack;
-        _backImagePath = '';
-      } else if (registrationData.residenceCardBack is String) {
-        _backImageBytes = null;
-        _backImagePath = registrationData.residenceCardBack;
-      }
+  Future<String?> _createTempImageFile(Uint8List bytes, String imageType) async {
+    try {
+      final tempDir = Directory.systemTemp;
+      final fileName = 'restored_${imageType}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final tempFile = File('${tempDir.path}/$fileName');
+      
+      await tempFile.writeAsBytes(bytes);
+      debugPrint("✅ Created temporary image file for $imageType: ${tempFile.path}");
+      
+      return tempFile.path;
+    } catch (e) {
+      debugPrint("❌ Error creating temporary image file for $imageType: $e");
+      return null;
     }
   }
 
   @override
   void dispose() {
+    _cleanupTempFiles();
     super.dispose();
+  }
+
+  void _cleanupTempFiles() {
+    // Clean up temporary files created for image restoration
+    if (_frontImagePath.isNotEmpty && _frontImagePath.contains('restored_')) {
+      try {
+        File(_frontImagePath).delete();
+      } catch (e) {
+        debugPrint("Note: Could not delete temp front image file: $e");
+      }
+    }
+    
+    if (_backImagePath.isNotEmpty && _backImagePath.contains('restored_')) {
+      try {
+        File(_backImagePath).delete();
+      } catch (e) {
+        debugPrint("Note: Could not delete temp back image file: $e");
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required by AutomaticKeepAliveClientMixin
     final validationErrors = ref.watch(formValidationProvider);
-
-    // Sync with provider data
-    _syncWithProviderData();
 
     return Container(
       width: double.infinity,
@@ -168,22 +201,18 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         children: [
           Row(
             children: [
-              const SizedBox(width: 2),
-              Icon(Icons.card_giftcard, color: Colors.blue.shade700),
+              Icon(Icons.info_outline, color: Colors.blue.shade700),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'ID Type & Documents',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
-                  ),
+              Text(
+                'ID Type & Documents',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade700,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
           Text(
             'Please select your branch and upload your identification documents.',
             style: TextStyle(
@@ -289,32 +318,23 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     String imageType, {
     required Function(String path, Uint8List bytes) onImageSelected,
   }) {
-    // Check if we have image bytes for this type
-    bool hasImageBytes = false;
-    if (imageType == 'front') {
-      hasImageBytes = _frontImageBytes != null;
-    } else {
-      hasImageBytes = _backImageBytes != null;
-    }
-
-    // Show image if we have either a path or bytes
-    bool hasImage = imagePath.isNotEmpty || hasImageBytes;
-
     return Center(
       child: Column(
         children: [
-          const SizedBox(height: 20.0),
+          const SizedBox(height: 10.0),
           GestureDetector(
             onTap: () => _showImageSelectionDialog(imageType, onImageSelected),
             child: Container(
-              height: 150.0,
-              width: MediaQuery.of(context).size.width * 0.8,
+              height: 160.0,
+              width: MediaQuery.of(context).size.width * 0.85,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20.0),
                 border: Border.all(
-                  color: !hasImage ? Colors.grey.shade300 : Colors.transparent,
-                  width: !hasImage ? 2 : 0,
+                  color: imagePath.isEmpty
+                      ? const Color.fromARGB(255, 249, 244, 244)
+                      : Colors.transparent,
+                  width: imagePath.isEmpty ? 2 : 0,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -324,14 +344,9 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
                   ),
                 ],
               ),
-              child: !hasImage
+              child: imagePath.isEmpty
                   ? _buildPlaceholderIcon(imageType)
-                  : _buildCapturedImage(
-                      imagePath,
-                      imageType,
-                      imageType == 'front'
-                          ? _frontImageBytes
-                          : _backImageBytes),
+                  : _buildCapturedImage(imagePath, imageType),
             ),
           ),
         ],
@@ -416,56 +431,19 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     );
   }
 
-  Widget _buildCapturedImage(
-      String imagePath, String imageType, dynamic imageBytes) {
+  Widget _buildCapturedImage(String imagePath, String imageType) {
     return Stack(
       children: [
         GestureDetector(
-          onTap: () => _showFullScreenImage(context, imagePath, imageBytes),
+          onTap: () => _showFullScreenImage(context, imagePath),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20.0),
-            child: (() {
-              if (imageBytes != null) {
-                if (imageBytes is Uint8List) {
-                  return Image.memory(
-                    imageBytes,
-                    height: 150.0,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  );
-                } else if (imageBytes is String) {
-                  return Image.network(
-                    imageBytes,
-                    height: 150.0,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  );
-                }
-              }
-              if (imagePath.isNotEmpty) {
-                if (imagePath.startsWith('http')) {
-                  return Image.network(
-                    imagePath,
-                    height: 150.0,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  );
-                } else {
-                  return Image.file(
-                    File(imagePath),
-                    height: 150.0,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  );
-                }
-              }
-              return Container(
-                height: 150.0,
-                width: double.infinity,
-                color: Colors.grey.shade300,
-                child: const Icon(Icons.error, color: Colors.red),
-              );
-            })(),
+            child: Image.file(
+              File(imagePath),
+              height: 150.0,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         // Change image button
@@ -513,8 +491,8 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         Positioned(
           top: 8,
           left: 8,
-          child: GestureDetector(
-            onTap: () => _showFullScreenImage(context, imagePath, imageBytes),
+                      child: GestureDetector(
+            onTap: () => _showFullScreenImage(context, imagePath),
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -542,11 +520,11 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
 
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 5.0, left: 5, top: 5),
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),
@@ -630,15 +608,12 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     Function(String path, Uint8List bytes) onImageSelected,
   ) async {
     try {
-      // Check permissions first - simplified flow
       bool hasPermission = await _checkPermission(source);
       if (!hasPermission) {
-        // Just show a simple message and return
         _showErrorSnackBar('Permission required to continue');
         return;
       }
 
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -654,31 +629,28 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         maxHeight: 1080,
       );
 
-      // Dismiss loading indicator
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
+      // Dismiss loading
+      if (Navigator.canPop(context)) Navigator.pop(context);
 
-      
+      if (image != null) {
+        final bytes = await _getImageBytes(image.path, 'temp_${imageType}.jpg');
+        if (bytes != null) {
+          onImageSelected(image.path, bytes); // <-- Call callback to update UI
+        } else {
+          _showErrorSnackBar('Failed to read image bytes');
+        }
+      } else {
+        // User cancelled, do nothing
+      }
     } catch (e) {
-      // Dismiss loading indicator if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
+      if (Navigator.canPop(context)) Navigator.pop(context);
       String errorMessage = 'Failed to pick image';
       if (e.toString().contains('permission')) {
         errorMessage =
             'Permission denied. Please grant camera permission in settings.';
       } else if (e.toString().contains('camera')) {
         errorMessage = 'Camera not available. Please try again or use gallery.';
-      } else if (e.toString().contains('cancel')) {
-        // User cancelled, don't show error
-        return;
-      } else {
-        errorMessage = 'Failed to pick image: ${e.toString()}';
       }
-
       _showErrorSnackBar(errorMessage);
     }
   }
@@ -707,7 +679,6 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     }
   }
 
-
   // Convert image to bytes - same as your previous implementation
   Future<Uint8List?> _getImageBytes(String path, String tempFileName) async {
     final imageFile = File(path);
@@ -728,8 +699,7 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
     }
   }
 
-  void _showFullScreenImage(
-      BuildContext context, String imagePath, dynamic imageBytes) {
+  void _showFullScreenImage(BuildContext context, String imagePath) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -738,46 +708,12 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
         child: Stack(
           children: [
             Center(
-              child: (() {
-                if (imageBytes != null) {
-                  if (imageBytes is Uint8List) {
-                    return Image.memory(
-                      imageBytes,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    );
-                  } else if (imageBytes is String) {
-                    return Image.network(
-                      imageBytes,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    );
-                  }
-                }
-                if (imagePath.isNotEmpty) {
-                  if (imagePath.startsWith('http')) {
-                    return Image.network(
-                      imagePath,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    );
-                  } else {
-                    return Image.file(
-                      File(imagePath),
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    );
-                  }
-                }
-                return Container(
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.error, color: Colors.red, size: 50),
-                );
-              })(),
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
             Positioned(
               top: 40,

@@ -92,12 +92,16 @@ class RegistrationDataNotifier extends StateNotifier<RegistrationData> {
     String? email,
     String? productType,
     String? customerId,
+    bool? haveCboAccount,
+    Map<String, dynamic>? existingAccountData,
   }) {
     state = state.copyWith(
       phone: phone,
       email: email,
       productType: productType,
       customerId: customerId,
+      haveCboAccount: haveCboAccount,
+      existingAccountData: existingAccountData,
     );
   }
 

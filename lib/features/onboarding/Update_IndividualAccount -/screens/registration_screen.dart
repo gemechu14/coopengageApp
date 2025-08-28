@@ -48,6 +48,8 @@ class _RegistrationScreenState
         print("dfdfjdjfjdjfjddkddfjdjfjdjfjdjdjfhdf");
 
         print(userInfo);
+        print("kdfjkdfhdkfhdkfdkhfkhdhkfkhdkhfkhdhfkkd");
+        print(userInfo['haveCboAccount']);
 
         String? phone =
             formatPhoneNumber(userInfo['phone'] ?? userInfo['phoneNumber']);
@@ -110,6 +112,8 @@ class _RegistrationScreenState
             accountType: userInfo['accountType'],
             currency: userInfo['currency'],
             termsAccepted: userInfo['termsAccepted'],
+            haveCboAccount: userInfo['haveCboAccount'] ?? false,
+            existingAccountData: userInfo,
           );
         });
       }

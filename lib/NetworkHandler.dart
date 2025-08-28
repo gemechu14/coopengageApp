@@ -408,6 +408,10 @@ class NetworkHandler {
     print(data);
     String? token = await storage.read(key: "token");
 
+    print("dkfjdkfdkfdhkfkekhdfkhdkhfkhdkhkhf");
+    print(url);
+    print(token);
+
     if (token == null) {
       throw Exception("Token not found");
     }
@@ -525,7 +529,9 @@ class NetworkHandler {
             contentType: MediaType.parse('image/jpeg'),
           );
           request.files.add(httpFile);
-        } else if (value is String) {
+        } 
+        
+        else if (value is String) {
           request.fields[key] = value;
         }
       }

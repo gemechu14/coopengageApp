@@ -182,6 +182,8 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
   @override
   Widget build(BuildContext context) {
     final validationErrors = ref.watch(formValidationProvider);
+    final registrationData = ref.watch(registrationDataProvider);
+    final bool hasExistingCboAccount = registrationData.haveCboAccount;
 
     return Container(
       width: double.infinity,
@@ -242,21 +244,39 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
             _buildLabel("State"),
             ReusableDropdown(
               hintText: "Select State",
-              selectedValue: selectedState,
+              selectedValue: selectedState?.trim(), // <- trim here too
               items: ListContants.ethiopianStates,
               onChanged: (value) {
                 setState(() {
-                  selectedState = value;
+                  selectedState = value?.trim();
                 });
-                // Update registration data
                 ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                      stateValue: value,
+                      stateValue: value?.trim(),
                     );
                 ref.read(formValidationProvider.notifier).clearError('state');
               },
               errorMessage: validationErrors['state'] ?? '',
               isRequired: false,
+              isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
             ),
+
+            // ReusableDropdown(
+            //   hintText: "Select State",
+            //   selectedValue: selectedState,
+            //   items: ListContants.ethiopianStates,
+            //   onChanged: (value) {
+            //     setState(() {
+            //       selectedState = value?.trim();
+            //     });
+            //     // Update registration data
+            //     ref.read(registrationDataProvider.notifier).updateAddressInfo(
+            //           stateValue: value,
+            //         );
+            //     ref.read(formValidationProvider.notifier).clearError('state');
+            //   },
+            //   errorMessage: validationErrors['state'] ?? '',
+            //   isRequired: false,
+            // ),
             // Error display under State
             if (validationErrors['state'] != null &&
                 validationErrors['state']!.isNotEmpty)
@@ -282,7 +302,8 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
               errorMessage: validationErrors['zoneSubCity'] ?? '',
               leadingIcon: Icons.location_city,
               isRequired: false,
-              onChanged: (value) {
+              isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
+              onChanged: hasExistingCboAccount ? null : (value) {
                 // Update registration data
                 ref.read(registrationDataProvider.notifier).updateAddressInfo(
                       zoneSubCity: value,
@@ -320,7 +341,8 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
               errorMessage: validationErrors['streetAddress'] ?? '',
               leadingIcon: Icons.location_city,
               isRequired: false,
-              onChanged: (value) {
+              isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
+              onChanged: hasExistingCboAccount ? null : (value) {
                 // Update registration data
                 ref.read(registrationDataProvider.notifier).updateAddressInfo(
                       streetAddress: value,
