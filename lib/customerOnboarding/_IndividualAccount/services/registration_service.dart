@@ -227,11 +227,11 @@ class RegistrationService {
         print('Update response body: \\${response.body}');
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body);
-          
+
           // Check if user has CBO account and extract existing data
           final haveCboAccount = data['haveCboAccount'] as bool? ?? false;
           Map<String, dynamic>? existingAccountData;
-          
+
           if (haveCboAccount) {
             existingAccountData = {
               'fullName': data['fullName'],
@@ -243,7 +243,7 @@ class RegistrationService {
               'zoneSubCity': data['zoneSubCity'],
             };
           }
-          
+
           return ServiceResult.success(
             userId: userId,
             data: {
@@ -280,11 +280,11 @@ class RegistrationService {
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body);
           final newUserId = data['id'].toString();
-          
+
           // Check if user has CBO account and extract existing data
           final haveCboAccount = data['haveCboAccount'] as bool? ?? false;
           Map<String, dynamic>? existingAccountData;
-          
+
           if (haveCboAccount) {
             existingAccountData = {
               'fullName': data['fullName'],
@@ -296,7 +296,7 @@ class RegistrationService {
               'zoneSubCity': data['zoneSubCity'],
             };
           }
-          
+
           return ServiceResult.success(
             userId: newUserId,
             data: {
@@ -375,14 +375,15 @@ class RegistrationService {
 
       // Add retry logic for network issues
       int retryCount = 0;
-      const maxRetries = 3;
-
+      const maxRetries = 1;
+      print("73734777777777777777777777777777");
       while (retryCount < maxRetries) {
         try {
           final response = await _networkHandler
-              .put1('/api/v1/accounts/individual/$userId', requestData)
-              .timeout(const Duration(seconds: 20)); // Increased timeout
-
+              .put1('/api/v1/accounts/individualdfdf/$userId', requestData)
+              .timeout(const Duration(seconds: 60)); // Increased timeout
+          print("fdkfdfddddddddddddffffffffffffffffffffffffff");
+          print(response.statusCode);
           if (response.statusCode == 200 || response.statusCode == 201) {
             return ServiceResult.success();
           } else {

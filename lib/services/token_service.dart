@@ -6,47 +6,48 @@ import '../Screen/LoginScreen.dart';
 
 class TokenService {
   static Timer? _tokenCheckTimer;
-  static const Duration _checkInterval = Duration(minutes: 1); // Check every minute
+  static const Duration _checkInterval =
+      Duration(minutes: 1); // Check every minute
   static final GlobalData _globalData = GlobalData();
-  
+
   /// Start monitoring token expiration
   static void startTokenMonitoring() {
     // Cancel any existing timer
     stopTokenMonitoring();
-    
+
     // Start new timer
     _tokenCheckTimer = Timer.periodic(_checkInterval, (timer) {
       _checkTokenExpiration();
     });
-    
+
     // Also check immediately
     _checkTokenExpiration();
   }
-  
+
   /// Stop monitoring token expiration
   static void stopTokenMonitoring() {
     _tokenCheckTimer?.cancel();
     _tokenCheckTimer = null;
   }
-  
+
   /// Check if current token is expired and logout if needed
   static Future<void> _checkTokenExpiration() async {
     try {
       final token = await _globalData.storage.read(key: "token");
-      
+
       if (token == null || token.isEmpty) {
         // No token found, user should be logged out
         await _performLogout();
         return;
       }
-      
+
       // Check if token is expired
       if (JwtDecoder.isExpired(token)) {
         print("Token expired, logging out user automatically");
         await _performLogout();
         return;
       }
-      
+
       // Check if token will expire soon (within 5 minutes)
       final timeToExpiry = JwtDecoder.getRemainingTime(token);
       if (timeToExpiry.inMinutes <= 5) {
@@ -54,14 +55,13 @@ class TokenService {
         // You can show a warning notification here if needed
         _showTokenExpirationWarning();
       }
-      
     } catch (e) {
       print("Error checking token expiration: $e");
       // If there's an error decoding the token, it's likely invalid
       await _performLogout();
     }
   }
-  
+
   /// Perform logout and navigate to login screen
   static Future<void> _performLogout() async {
     try {
@@ -70,18 +70,17 @@ class TokenService {
       await _globalData.storage.delete(key: "username");
       await _globalData.storage.delete(key: "role");
       await _globalData.storage.delete(key: "userId");
-      
+
       // Clear any other app-specific data
       await _clearAppData();
-      
+
       // Stop token monitoring
       stopTokenMonitoring();
-      
     } catch (e) {
       print("Error during automatic logout: $e");
     }
   }
-  
+
   /// Clear app-specific data on logout
   static Future<void> _clearAppData() async {
     // Add any additional cleanup here
@@ -93,29 +92,28 @@ class TokenService {
       _globalData.role = null;
       _globalData.userId = null;
       GlobalData.UserId = null;
-      
+
       // You can add more cleanup here as needed
       // For example: clear any Riverpod providers, cached data, etc.
-      
     } catch (e) {
       print("Error clearing app data: $e");
     }
   }
-  
+
   /// Show warning when token is about to expire
   static void _showTokenExpirationWarning() {
-    // For now, just print a warning. 
+    // For now, just print a warning.
     // You can implement UI notification when you have access to context
     print("Warning: Token will expire soon!");
   }
-  
+
   /// Handle token refresh (implement based on your API)
   static Future<void> _handleTokenRefresh() async {
     try {
       // Implement token refresh logic here
       // This would typically involve calling your API's refresh endpoint
       print("Token refresh requested - implement based on your API");
-      
+
       // Example implementation:
       // final refreshToken = await _globalData.storage.read(key: "refreshToken");
       // if (refreshToken != null) {
@@ -128,48 +126,47 @@ class TokenService {
       //     print("Token refreshed successfully");
       //   }
       // }
-      
     } catch (e) {
       print("Error refreshing token: $e");
     }
   }
-  
+
   /// Manually check if current token is valid
   static Future<bool> isTokenValid() async {
     try {
       final token = await _globalData.storage.read(key: "token");
-      
+
       if (token == null || token.isEmpty) {
         return false;
       }
-      
+
       return !JwtDecoder.isExpired(token);
     } catch (e) {
       print("Error checking token validity: $e");
       return false;
     }
   }
-  
+
   /// Get remaining time until token expires
   static Future<Duration?> getTokenRemainingTime() async {
     try {
       final token = await _globalData.storage.read(key: "token");
-      
+
       if (token == null || token.isEmpty) {
         return null;
       }
-      
+
       if (JwtDecoder.isExpired(token)) {
         return Duration.zero;
       }
-      
+
       return JwtDecoder.getRemainingTime(token);
     } catch (e) {
       print("Error getting token remaining time: $e");
       return null;
     }
   }
-  
+
   /// Initialize token service (call this when app starts and user is logged in)
   static Future<void> initialize() async {
     final isValid = await isTokenValid();
@@ -184,13 +181,13 @@ class TokenService {
   /// Force logout with context (call this from UI when you have context available)
   static Future<void> forceLogoutWithContext(BuildContext context) async {
     await _performLogout();
-    
+
     // Navigate to login screen
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const Loginscreen()),
       (Route<dynamic> route) => false,
     );
-    
+
     // Show logout message
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -210,7 +207,8 @@ class TokenService {
             Icon(Icons.warning, color: Colors.white),
             SizedBox(width: 8),
             Expanded(
-              child: Text('Your session will expire soon. Please save your work.'),
+              child:
+                  Text('Your session will expire soon. Please save your work.'),
             ),
           ],
         ),
@@ -227,4 +225,4 @@ class TokenService {
       ),
     );
   }
-} 
+}

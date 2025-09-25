@@ -806,29 +806,56 @@ CREATE TABLE selected_language  (
 
     // Insert branches and establish relationships in UserBranches if branches data is provided
     if (branches != null) {
-      for (var branch in branches) {
+      print("🔍 DEBUG: insertUser1 - Processing ${branches.length} branches");
+      for (int i = 0; i < branches.length; i++) {
+        final branch = branches[i];
+        print("🔍 DEBUG: insertUser1 - Branch $i data: $branch");
+        
+        // Prepare branch data with proper field mapping
+        final branchData = {
+          'id': branch['id'],
+          'branchName': branch['branchName'] ?? branch['name'] ?? branch['companyName'] ?? 'Unknown Branch',
+          'branchCode': branch['branchCode'] ?? '',
+          'companyName': branch['companyName'] ?? branch['name'] ?? branch['branchName'] ?? 'Unknown Branch',
+        };
+        
+        print("🔍 DEBUG: insertUser1 - Inserting branch data: $branchData");
+        
         // Insert branch if it doesn't exist
-        final branchId = await db.insert(
-          'Branches',
-          {
-            'branchName': branch['companyName'],
-            'branchCode': branch['branchCode'],
-            'id': branch['id'],
-          },
-          conflictAlgorithm:
-              ConflictAlgorithm.ignore, // Prevent duplicate branches
-        );
+        try {
+          final branchId = await db.insert(
+            'Branches',
+            branchData,
+            conflictAlgorithm: ConflictAlgorithm.replace, // Use replace to update existing branches
+          );
+          
+          print("🔍 DEBUG: insertUser1 - Branch inserted with ID: $branchId");
 
-        // Link user with branch in UserBranches table
-        await db.insert(
-          'UserBranches',
-          {
-            'userId': userId,
-            'branchId': branchId,
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+          // Link user with branch in UserBranches table
+          await db.insert(
+            'UserBranches',
+            {
+              'userId': userId,
+              'branchId': branch['id'], // Use the original branch ID from API
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace, // Use replace to avoid duplicates
+          );
+          
+          print("🔍 DEBUG: insertUser1 - UserBranch relationship created: userId=$userId, branchId=${branch['id']}");
+        } catch (e) {
+          print("❌ DEBUG: insertUser1 - Error inserting branch $i: $e");
+        }
       }
+      
+      // Verify branches were stored correctly
+      final storedBranches = await db.query('Branches');
+      final userBranches = await db.query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
+      print("🔍 DEBUG: insertUser1 - Total stored branches: ${storedBranches.length}");
+      print("🔍 DEBUG: insertUser1 - User branches relationships: ${userBranches.length}");
+      print("🔍 DEBUG: insertUser1 - Stored branches: $storedBranches");
+      print("🔍 DEBUG: insertUser1 - User branch relationships: $userBranches");
+    } else {
+      print("🔍 DEBUG: insertUser1 - No branches data provided");
     }
   }
 
@@ -883,36 +910,66 @@ CREATE TABLE selected_language  (
 
     // Update branches if provided
     if (branches != null) {
+      print("🔍 DEBUG: updateUser - Processing ${branches.length} branches");
+      
       // First, remove existing user-branch relationships
       await db.delete(
         'UserBranches',
         where: 'userId = ?',
         whereArgs: [userId],
       );
+      print("🔍 DEBUG: updateUser - Cleared existing user-branch relationships");
 
       // Insert new branches and relationships
-      for (var branch in branches) {
+      for (int i = 0; i < branches.length; i++) {
+        final branch = branches[i];
+        print("🔍 DEBUG: updateUser - Branch $i data: $branch");
+        
+        // Prepare branch data with proper field mapping
+        final branchData = {
+          'id': branch['id'],
+          'branchName': branch['branchName'] ?? branch['name'] ?? branch['companyName'] ?? 'Unknown Branch',
+          'branchCode': branch['branchCode'] ?? '',
+          'companyName': branch['companyName'] ?? branch['name'] ?? branch['branchName'] ?? 'Unknown Branch',
+        };
+        
+        print("🔍 DEBUG: updateUser - Inserting branch data: $branchData");
+        
         // Insert branch if it doesn't exist
-        final branchId = await db.insert(
-          'Branches',
-          {
-            'branchName': branch['name'],
-            'branchCode': branch['branchCode'],
-            'id': branch['id'],
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+        try {
+          final branchId = await db.insert(
+            'Branches',
+            branchData,
+            conflictAlgorithm: ConflictAlgorithm.replace, // Use replace to update existing branches
+          );
+          
+          print("🔍 DEBUG: updateUser - Branch inserted with ID: $branchId");
 
-        // Link user with branch in UserBranches table
-        await db.insert(
-          'UserBranches',
-          {
-            'userId': userId,
-            'branchId': branchId,
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+          // Link user with branch in UserBranches table
+          await db.insert(
+            'UserBranches',
+            {
+              'userId': userId,
+              'branchId': branch['id'], // Use the original branch ID from API
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+          
+          print("🔍 DEBUG: updateUser - UserBranch relationship created: userId=$userId, branchId=${branch['id']}");
+        } catch (e) {
+          print("❌ DEBUG: updateUser - Error inserting branch $i: $e");
+        }
       }
+      
+      // Verify branches were stored correctly
+      final storedBranches = await db.query('Branches');
+      final userBranches = await db.query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
+      print("🔍 DEBUG: updateUser - Total stored branches: ${storedBranches.length}");
+      print("🔍 DEBUG: updateUser - User branches relationships: ${userBranches.length}");
+      print("🔍 DEBUG: updateUser - Stored branches: $storedBranches");
+      print("🔍 DEBUG: updateUser - User branch relationships: $userBranches");
+    } else {
+      print("🔍 DEBUG: updateUser - No branches data provided");
     }
   }
 

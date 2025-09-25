@@ -156,7 +156,7 @@ class SimpleFaydaService {
 
       // Wait for authentication result with timeout (5 minutes)
       return await _authCompleter!.future.timeout(
-        const Duration(minutes: 5),
+        const Duration(minutes: 6),
         onTimeout: () {
           throw Exception(
               'Authentication timeout. No result received from server.');
@@ -171,6 +171,7 @@ class SimpleFaydaService {
 
   /// Handle WebSocket messages
   void _handleMessage(dynamic message) async {
+    
     try {
       print('📨 Raw WebSocket message: $message');
 

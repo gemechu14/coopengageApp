@@ -362,7 +362,7 @@ class RegistrationService {
       //   'percentageCompleted': 37.5,
       //   'status': 'INITIAL',
       // };
-
+      print("kfdkfkjdjffjkdkjfkjdkjkfjkjdjkkjfkjdkfjdjkfjkdjkf");
       final requestData = {
         if (signature != null && signature is Uint8List)
           'customerInfo.signature': signature,
@@ -379,8 +379,8 @@ class RegistrationService {
       while (retryCount < maxRetries) {
         try {
           final response = await _networkHandler
-              .put1('/api/v1/accounts/individual/$userId', requestData)
-              .timeout(const Duration(seconds: 20)); // Increased timeout
+              .put1('/api/v1/accounts/individualdd/$userId', requestData)
+              .timeout(const Duration(seconds: 30)); // Increased timeout
 
           if (response.statusCode == 200 || response.statusCode == 201) {
             return ServiceResult.success();
@@ -629,10 +629,8 @@ class RegistrationService {
       }
 
       final requestData = {
-
-
         if (photo != null && photo is Uint8List)
-        'customerInfo.signature': photo,
+          'customerInfo.signature': photo,
         // 'customerInfo.photo':
         //     photo, // Photo will be handled separately if needed
 

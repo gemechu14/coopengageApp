@@ -6,9 +6,12 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/textField/CustomTextFormField.dart';
+import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/constants/text_styles.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 
@@ -108,8 +111,7 @@ class _AgentPageState extends State<AgentPage> {
     const storage = FlutterSecureStorage(
       aOptions: AndroidOptions(
           encryptedSharedPreferences: true,
-          storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding
-          ),
+          storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
     );
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
@@ -182,6 +184,12 @@ class _AgentPageState extends State<AgentPage> {
                 child: CustomTextFormField(
                   // hintText: "Enter phonenumber or email",
                   controller: phoneNumberController,
+                  isPhoneOrEmail: true, // validate phone OR email
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'[0-9a-zA-Z@._-]')),
+                    LengthLimitingTextInputFormatter(50), // optional max length
+                  ],
                   errorMessage: "PhoneNumber empty", hintText: '',
 
                   // leadingIcon: Icons.person,
@@ -213,21 +221,65 @@ class _AgentPageState extends State<AgentPage> {
                 height: 8,
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 15, right: 15),
-                child: CustomTextFormField(
-                  hintText: '', controller: tinController,
-                  keyboardType: TextInputType.number,
-                  // inputFormatters: [
-                  //   FilteringTextInputFormatter
-                  //       .digitsOnly, // Only allow numbers
-                  // ],
-
-                  errorMessage: "TIN cannot be empty",
-                  isRequired: true,
-
-                  // leadingIcon: Icons.person,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: Container(
+                  width: width < 600 ? double.infinity : width * 0.5,
+                  child: CustomTextFormField(
+                    hintText: "Enter TIN",
+                    keyboardType: TextInputType.number,
+                    controller: tinController,
+                    errorMessage: "TIN cannot be empty",
+                    isRequired: true,
+                    exactLength: 10, // 🔑 Enforce exactly 10 digits
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(
+                          10), // Prevent typing > 10
+                    ],
+                  ),
                 ),
               ),
+              // Padding(
+              //   padding: const EdgeInsets.only(left: 15, right: 15),
+              //   child: TextFormField(
+              //     controller: tinController,
+              //     keyboardType: TextInputType.number,
+              //     inputFormatters: [
+              //       FilteringTextInputFormatter.digitsOnly,
+              //       LengthLimitingTextInputFormatter(10), // Prevent typing > 10
+              //     ],
+              //     decoration: InputDecoration(
+              //       isDense: true,
+              //       hintText: '',
+              //       hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
+              //       labelStyle: const TextStyle(fontSize: 20),
+              //       contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
+              //       border: const OutlineInputBorder(
+              //         borderRadius: BorderRadius.all(Radius.circular(15)),
+              //         borderSide: BorderSide(color: Colors.grey),
+              //       ),
+              //       focusedBorder: const OutlineInputBorder(
+              //         borderRadius: BorderRadius.all(Radius.circular(15)),
+              //         borderSide: BorderSide(color: Colors.grey),
+              //       ),
+              //       errorBorder: const OutlineInputBorder(
+              //         borderRadius: BorderRadius.all(Radius.circular(15)),
+              //         borderSide: BorderSide(color: Colors.red),
+              //       ),
+              //     ),
+              //     validator: (value) {
+              //       if (value == null || value.isEmpty) {
+              //         return 'TIN cannot be empty';
+              //       }
+              //       if (value.length != 10) {
+              //         return 'TIN must be exactly 10 digits';
+              //       }
+              //       return null;
+              //     },
+              //   ),
+              // ),
+
               // reusableTextFormField(
               //   hintText: "Enter TIN",
               //   controller: tinController,
@@ -385,7 +437,7 @@ class _AgentPageState extends State<AgentPage> {
                       try {
                         var response = await networkHandler
                             .postAgent("/api/v1/agents", data)
-                            .timeout(const Duration(seconds: 20));
+                            .timeout(const Duration(seconds: 50));
 
                         if (response.statusCode == 200 ||
                             response.statusCode == 201) {
@@ -445,18 +497,44 @@ class _AgentPageState extends State<AgentPage> {
                         setState(() {
                           isApiCallProcess = false;
                           validate = false;
-                          errorText = "An error occurred. Please try again.";
                           circular = false;
                         });
-                        FormHelper.showSimpleAlertDialog(
-                          context,
-                          "Coop Engage +",
-                          errorText,
-                          "OK",
-                          () {
-                            Navigator.of(context).pop();
-                          },
-                        );
+
+                        // Handle token expiration specifically
+                        if (e.toString().contains('Token expired') ||
+                            e.toString().contains('Invalid token') ||
+                            e.toString().contains('please login again')) {
+                          // Show logout message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Session expired. Please login again.'),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+
+                          // Navigate to login screen
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Loginscreen(),
+                            ),
+                            (route) => false,
+                          );
+                        } else {
+                          // Handle other errors
+                          errorText = "An error occurred. Please try again.";
+                          FormHelper.showSimpleAlertDialog(
+                            context,
+                            "Coop Engage +",
+                            errorText,
+                            "OK",
+                            () {
+                              Navigator.of(context).pop();
+                            },
+                          );
+                        }
                       }
                     }
                   }),
@@ -715,8 +793,9 @@ class _AgentPageState extends State<AgentPage> {
   }
 
   Future<void> fetchBranches() async {
-    const url =
-        'http://10.2.125.41:9061/api/branches'; // Replace with your actual URL
+    const url = "${AppConstants.baseURL}/api/branches";
+    // const url =
+    //     'http://10.2.125.41:9061/api/branches'; // Replace with your actual URL
     try {
       // print(url);
       final response = await http.get(Uri.parse(url));
@@ -731,18 +810,44 @@ class _AgentPageState extends State<AgentPage> {
       }
     } catch (error) {
       print("Error fetching branches: $error");
+
+      // Handle token expiration if it's a network error
+      if (error.toString().contains('Token expired') ||
+          error.toString().contains('Invalid token') ||
+          error.toString().contains('please login again')) {
+        // Show logout message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Session expired. Please login again.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // Navigate to login screen
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Loginscreen(),
+            ),
+            (route) => false,
+          );
+        }
+      }
     }
   }
 
   Future<void> fetchMultipleBranches() async {
-    const url = 'http://10.2.125.41:9060/api/branches';
+    // const url = 'http://10.2.125.41:9060/api/branches';
+    const url = "${AppConstants.baseURL}/api/branches";
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         // Parse the JSON response
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          branches = data; // Store the fetched branches
+          branches = data; // Store the branches
           // Map fetched branches to MultiSelectItems
           branchItems = branches.map((branch) {
             return MultiSelectItem<String>(
@@ -756,6 +861,31 @@ class _AgentPageState extends State<AgentPage> {
       }
     } catch (error) {
       print("Error fetching branches: $error");
+
+      // Handle token expiration if it's a network error
+      if (error.toString().contains('Token expired') ||
+          error.toString().contains('Invalid token') ||
+          error.toString().contains('please login again')) {
+        // Show logout message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Session expired. Please login again.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // Navigate to login screen
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Loginscreen(),
+            ),
+            (route) => false,
+          );
+        }
+      }
     }
   }
 }

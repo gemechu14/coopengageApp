@@ -1,21 +1,15 @@
 // ignore_for_file: unused_local_variable, avoid_print
 
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
-import 'package:coopengageplus/main.dart';
-import 'package:http/io_client.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/cupertino.dart';
-// import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
-// import 'package:http/io_client.dart';
-import 'package:http/io_client.dart';
-import 'package:coopengageplus/service/certificate_service.dart';
+// Certificate service removed for security - using standard HTTP client
 
 class NetworkHandler {
   // String baseurl = "http://10.2.125.41:9061";
@@ -37,24 +31,8 @@ class NetworkHandler {
     print(" ");
     print(uri);
 
-    // Create an HttpClient with SSL certificate support
-    HttpClient httpClient;
-    try {
-      // Get current environment and create secure client
-      String environment = await CertificateService.getCurrentEnvironment();
-      httpClient = await CertificateService.createSecureHttpClient(
-          environment: environment);
-    } catch (e) {
-      print(
-          'Error creating secure client, falling back to development mode: $e');
-      // Fallback to development mode if certificate loading fails
-      httpClient = CertificateService.createDevelopmentHttpClient();
-    }
-
-    // Wrap it in an IOClient
-    IOClient ioClient = IOClient(httpClient);
-
-    var response = await ioClient.get(
+    // Use standard HTTP client for security
+    var response = await http.get(
       uri,
       headers: {
         "Authorization": "Bearer $token",
@@ -147,38 +125,34 @@ class NetworkHandler {
     String url,
     Map<String, dynamic> body,
   ) async {
-    // Create an HttpClient with SSL certificate support
-    HttpClient client;
-    try {
-      // Get current environment and create secure client
-      String environment = await CertificateService.getCurrentEnvironment();
-      client = await CertificateService.createSecureHttpClient(
-          environment: environment);
-    } catch (e) {
-      print(
-          'Error creating secure client for POST, falling back to development mode: $e');
-      // Fallback to development mode if certificate loading fails
-      client = CertificateService.createDevelopmentHttpClient();
-    }
-
-    // Wrap it in IOClient
-    IOClient ioClient = IOClient(client);
-
+    // Use standard HTTP client for security
+    url = formater(url);
+    print("kdfjdkjfkdjfkdddddddddddddddddddddddkdfjdkjfkdjfkddddddddddddddddddddddd");
+    print(url);
     var uri = Uri.parse(url);
     log.d(body);
     print("Request URL:");
     print(uri);
 
-    var response = await ioClient.post(
+    var response = await http.post(
       uri,
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "CoopEngage+ Mobile App/1.0",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
         // "Authorization": "Bearer $token" // Uncomment if using token
       },
       body: json.encode(body),
     );
 
-    ioClient.close(); // Close the client after request
+    print("ldfkdjfkdfjdkkfd");
     return response;
   }
 
@@ -404,11 +378,12 @@ class NetworkHandler {
   }
 
   Future<http.Response> put1(String url, Map<String, dynamic> data) async {
-    print("888888888888888888888888888888888888");
+    print("888888888888888888888888888888888888888888888888888888888888888888888888");
     print(data);
     String? token = await storage.read(key: "token");
 
-    print("dkfjdkfdkfdhkfkekhdfkhdkhfkhdkhkhf");
+    print("ddddddddddkfkdfjkdfjdkfjddddddddddkfkdddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdffjkdf");
+    print(data);
     print(url);
     print(token);
 
@@ -529,9 +504,7 @@ class NetworkHandler {
             contentType: MediaType.parse('image/jpeg'),
           );
           request.files.add(httpFile);
-        } 
-        
-        else if (value is String) {
+        } else if (value is String) {
           request.fields[key] = value;
         }
       }
@@ -540,6 +513,9 @@ class NetworkHandler {
     try {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
+
+      print("kfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjdddddddddd");
+      print(response.statusCode);
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw Exception(
@@ -554,8 +530,12 @@ class NetworkHandler {
   }
 
   Future<http.StreamedResponse> patchImage(String url, String filepath) async {
-    url = formater(url);
     String? token = await storage.read(key: "token");
+    if (token == null) {
+      throw Exception("Token not found - please login again");
+    }
+    
+    url = formater(url);
     var request = http.MultipartRequest('PATCH', Uri.parse(url));
     request.files.add(await http.MultipartFile.fromPath("img", filepath));
     request.headers.addAll({
@@ -577,6 +557,10 @@ class NetworkHandler {
 
   Future<http.Response> fetchData(String url) async {
     String? token = await storage.read(key: "token");
+    if (token == null) {
+      throw Exception("Token not found - please login again");
+    }
+    
     url = formater(url);
 
     var uri = Uri.parse(url);
@@ -593,6 +577,10 @@ class NetworkHandler {
 
   Future<http.Response> getUserData(String url) async {
     String? token = await storage.read(key: "token");
+    if (token == null) {
+      throw Exception("Token not found - please login again");
+    }
+    
     url = formater(url);
     print("fhdfhdhjfhdhfjdj");
     print(url);

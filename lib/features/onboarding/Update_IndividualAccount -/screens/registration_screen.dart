@@ -541,14 +541,48 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
               Icons.arrow_back_ios_new,
               color: Colors.blue,
             )),
+        // title: Row(
+        //   children: [
+        //     Text(
+        //       'Update ${step.title}',
+        //       style: TextStyle(
+        //         fontSize: 22,
+        //         color: Colors.blue,
+        //         fontWeight: FontWeight.bold,
+        //       ),
+        //     ),
+        //     if (isCompleted) ...[
+        //       const SizedBox(width: 8),
+        //       Container(
+        //         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        //         decoration: BoxDecoration(
+        //           color: Colors.green.withOpacity(0.1),
+        //           borderRadius: BorderRadius.circular(12),
+        //         ),
+        //         child: const Text(
+        //           'Completed',
+        //           style: TextStyle(
+        //             color: Colors.green,
+        //             fontSize: 12,
+        //             fontWeight: FontWeight.bold,
+        //           ),
+        //         ),
+        //       ),
+        //     ],
+        //   ],
+        // ),
         title: Row(
           children: [
-            Text(
-              'Update ${step.title}',
-              style: TextStyle(
-                fontSize: 17,
-                color: Colors.blue,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                'Update ${step.title}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow
+                    .ellipsis, // add this to show dots if text is too long
               ),
             ),
             if (isCompleted) ...[

@@ -837,7 +837,7 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
   // Handle registration step completion - similar to your previous implementation
   Future<void> handleIdTypeStep() async {
     // Get connectivity status
-    final isOnline = ref.read(connectivityProvider);
+    // final isOnline = ref.read(connectivityProvider);
 
     // Get image bytes
     Uint8List? frontImageBytes;

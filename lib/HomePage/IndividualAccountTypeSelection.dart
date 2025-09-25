@@ -81,11 +81,11 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                         //   (route) => false,
                         // );
 
-
-                         Navigator.pushAndRemoveUntil(
+                        Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => NationalIdentificationWebSocket()),
+                              builder: (context) =>
+                                  NationalIdentificationWebSocket()),
                           (route) => false,
                         );
                       },
@@ -189,13 +189,15 @@ class IndividualAccountTypeSelection extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          description,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white.withOpacity(0.9),
-                            height: 1.3,
+                        Expanded(
+                          child: Text(
+                            description,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white.withOpacity(0.9),
+                              height: 1.3,
+                            ),
                           ),
                         ),
                       ],

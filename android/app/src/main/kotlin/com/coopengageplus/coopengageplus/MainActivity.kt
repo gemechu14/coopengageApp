@@ -1,4 +1,4 @@
-package com.example.coopengageplus
+package com.coopengageplus.coopengageplus
 
 import io.flutter.embedding.android.FlutterActivity
 

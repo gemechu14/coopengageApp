@@ -9,6 +9,7 @@ import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/common_widgets/textField/ConfirmPasswordTextField.dart';
 import 'package:coopengageplus/common_widgets/textField/CustomTextFormField.dart';
 import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
@@ -571,8 +572,22 @@ class _LoginscreenState extends State<AgentRegistration> {
     //     'http://10.2.125.41:9060/api/branches'; // Replace with your actual URL
     try {
       // print(url);
-      final response = await http.get(Uri.parse(url));
 
+      String? token = await storage.read(key: "token");
+
+      print("dkfjdkfdkfdhkfkekhdfkhdkhfkhdkhkhfdkfjdkfdkfdhkfkekhdfkhdkhfkhdkhkhf");
+      print(url);
+      print(token);
+
+      // final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          if (token != null) "Authorization": "Bearer $token",
+        },
+      );
+      print("dfjdkfdkfdkkjfdjkfjkd");
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {

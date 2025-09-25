@@ -244,21 +244,39 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
             _buildLabel("State"),
             ReusableDropdown(
               hintText: "Select State",
-              selectedValue: selectedState?.trim(), // <- trim here too
+              selectedValue: _normalizeState(selectedState), // normalize here
               items: ListContants.ethiopianStates,
               onChanged: (value) {
+                final normalizedValue = _normalizeState(value);
                 setState(() {
-                  selectedState = value?.trim();
+                  selectedState = normalizedValue;
                 });
                 ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                      stateValue: value?.trim(),
+                      stateValue: normalizedValue,
                     );
                 ref.read(formValidationProvider.notifier).clearError('state');
               },
               errorMessage: validationErrors['state'] ?? '',
               isRequired: false,
-              isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
+              isEnabled: !hasExistingCboAccount,
             ),
+            // ReusableDropdown(
+            //   hintText: "Select State",
+            //   selectedValue: selectedState?.trim(), // <- trim here too
+            //   items: ListContants.ethiopianStates,
+            //   onChanged: (value) {
+            //     setState(() {
+            //       selectedState = value?.trim();
+            //     });
+            //     ref.read(registrationDataProvider.notifier).updateAddressInfo(
+            //           stateValue: value?.trim(),
+            //         );
+            //     ref.read(formValidationProvider.notifier).clearError('state');
+            //   },
+            //   errorMessage: validationErrors['state'] ?? '',
+            //   isRequired: false,
+            //   isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
+            // ),
 
             // ReusableDropdown(
             //   hintText: "Select State",
@@ -302,19 +320,24 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
               errorMessage: validationErrors['zoneSubCity'] ?? '',
               leadingIcon: Icons.location_city,
               isRequired: false,
-              isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
-              onChanged: hasExistingCboAccount ? null : (value) {
-                // Update registration data
-                ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                      zoneSubCity: value,
-                    );
-                // Clear validation errors when user makes changes
-                if (value.isNotEmpty) {
-                  ref
-                      .read(formValidationProvider.notifier)
-                      .clearError('zoneSubCity');
-                }
-              },
+              isEnabled:
+                  !hasExistingCboAccount, // Disable if user has CBO account
+              onChanged: hasExistingCboAccount
+                  ? null
+                  : (value) {
+                      // Update registration data
+                      ref
+                          .read(registrationDataProvider.notifier)
+                          .updateAddressInfo(
+                            zoneSubCity: value,
+                          );
+                      // Clear validation errors when user makes changes
+                      if (value.isNotEmpty) {
+                        ref
+                            .read(formValidationProvider.notifier)
+                            .clearError('zoneSubCity');
+                      }
+                    },
             ),
             // Error display under Zone Subcity
             if (validationErrors['zoneSubCity'] != null &&
@@ -341,19 +364,24 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
               errorMessage: validationErrors['streetAddress'] ?? '',
               leadingIcon: Icons.location_city,
               isRequired: false,
-              isEnabled: !hasExistingCboAccount, // Disable if user has CBO account
-              onChanged: hasExistingCboAccount ? null : (value) {
-                // Update registration data
-                ref.read(registrationDataProvider.notifier).updateAddressInfo(
-                      streetAddress: value,
-                    );
-                // Clear validation errors when user makes changes
-                if (value.isNotEmpty) {
-                  ref
-                      .read(formValidationProvider.notifier)
-                      .clearError('streetAddress');
-                }
-              },
+              isEnabled:
+                  !hasExistingCboAccount, // Disable if user has CBO account
+              onChanged: hasExistingCboAccount
+                  ? null
+                  : (value) {
+                      // Update registration data
+                      ref
+                          .read(registrationDataProvider.notifier)
+                          .updateAddressInfo(
+                            streetAddress: value,
+                          );
+                      // Clear validation errors when user makes changes
+                      if (value.isNotEmpty) {
+                        ref
+                            .read(formValidationProvider.notifier)
+                            .clearError('streetAddress');
+                      }
+                    },
             ),
             // Error display under Woreda
             if (validationErrors['streetAddress'] != null &&
@@ -512,5 +540,17 @@ class _StepPaymentState extends ConsumerState<StepAddressInformation> {
         ),
       ),
     );
+  }
+
+  String? _normalizeState(String? value) {
+    if (value == null) return null;
+
+    // Find a match ignoring case and extra spaces
+    final match = ListContants.ethiopianStates.firstWhere(
+      (s) => s.toLowerCase().trim() == value.toLowerCase().trim(),
+      orElse: () => '',
+    );
+
+    return match.isNotEmpty ? match : null; // Return null if no valid match
   }
 }

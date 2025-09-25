@@ -4,6 +4,8 @@ import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/features/onboarding/pages/help.dart';
 import 'package:coopengageplus/service/GlobalData.dart';
 import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/constants/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -41,20 +43,20 @@ class _ProfileScreenState extends State<ProfileScreen>
   int? UserID;
   String? token;
 
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+  late AnimationController _shimmerController;
+  late Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    _shimmerAnimation = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
     );
-    _animationController.repeat(reverse: true);
+    _shimmerController.repeat();
 
     GlobalData().fetchToken();
     UserID = GlobalData().userId;
@@ -63,306 +65,534 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: graybackgroundColor,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: whiteColor,
+          elevation: 0,
           title: CustomNavHeading(
             text: translation(context).profile,
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.power_settings_new),
-              onPressed: logout,
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              decoration: BoxDecoration(
+                color: primaryBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.logout_rounded, color: primaryBlue),
+                onPressed: logout,
+                tooltip: 'Logout',
+              ),
             ),
           ],
         ),
       ),
-      body: ListView(
+      body: RefreshIndicator(
+        onRefresh: _refreshProfile,
+        color: primaryBlue,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Profile Card
+              _buildProfileCard(),
+              const SizedBox(height: 20),
+              
+              // Branch Information Card
+              _buildBranchInfoCard(),
+              const SizedBox(height: 20),
+              
+              // Settings Section
+              _buildSettingsCard(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileCard() {
+    return Container(
+      padding: const EdgeInsets.all(24.0),
+      decoration: BoxDecoration(
+        color: whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.transparent,
-            child: Row(
-              children: [
-                // Profile Avatar
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.black,
-                  child: isProfileLoading
-                      ? _buildSkeletonCircle(40)
-                      : Text(
+          Row(
+            children: [
+              // Profile Avatar with gradient background
+              Container(
+                height: 80,
+                width: 80,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [primaryBlue, Colors.blue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryBlue.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: isProfileLoading
+                    ? _buildShimmerContainer(80, 80, 20)
+                    : Center(
+                        child: Text(
                           firstLetter,
                           style: const TextStyle(
-                            fontSize: 24,
-                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: whiteColor,
                           ),
                         ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Username
-                      if (isProfileLoading)
-                        _buildSkeletonText(120, 16)
-                      else
-                        Text(
-                          username,
-                          maxLines: 1,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            overflow: TextOverflow.ellipsis,
-                            color: Colors.black,
-                          ),
+                      ),
+              ),
+              const SizedBox(width: 20),
+              
+              // User Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isProfileLoading)
+                      _buildShimmerContainer(150, 20, 4)
+                    else
+                      Text(
+                        username,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: blackColor,
                         ),
-                      const SizedBox(height: 4),
-
-                      // Role
-                      if (isProfileLoading)
-                        _buildSkeletonText(80, 14)
-                      else
-                        Text(
+                      ),
+                    const SizedBox(height: 8),
+                    
+                    if (isProfileLoading)
+                      _buildShimmerContainer(100, 16, 4)
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
                           role,
                           style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: primaryBlue,
                           ),
                         ),
-                      const SizedBox(height: 16),
-
-                      // Main Branch Section
-                      _buildMainBranchSection(),
-                      const SizedBox(height: 16),
-
-                      // Other Branches Section
-                      _buildOtherBranchesSection(),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-
-          // Settings Section
-          _buildSettingsSection(),
         ],
       ),
     );
   }
 
-  Widget _buildMainBranchSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Main Branch:',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+  Widget _buildBranchInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 8),
-        if (isProfileLoading)
-          _buildSkeletonText(150, 14)
-        else if (mainBranchCompanyName != null)
-          Text(
-            mainBranchCompanyName!,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.black,
-            ),
-          )
-        else
-          const Text(
-            "No main branch available",
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey,
-            ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: secondaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.business_rounded,
+                  color: secondaryBlue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Branch Information',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: blackColor,
+                ),
+              ),
+            ],
           ),
-      ],
+          const SizedBox(height: 20),
+          
+          // Main Branch
+          _buildBranchSection(
+            title: 'Main Branch',
+            branchName: mainBranchCompanyName,
+            icon: Icons.home_work_rounded,
+            isMain: true,
+          ),
+          
+          if (branches != null && branches!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+            
+            // Other Branches
+            _buildBranchSection(
+              title: 'Other Branches',
+              branches: branches,
+              icon: Icons.account_tree_rounded,
+              isMain: false,
+            ),
+          ],
+        ],
+      ),
     );
   }
 
-  Widget _buildOtherBranchesSection() {
+  Widget _buildBranchSection({
+    required String title,
+    String? branchName,
+    List<Map<String, dynamic>>? branches,
+    required IconData icon,
+    required bool isMain,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Other Branch Names:',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (isProfileLoading)
-          Column(
-            children: List.generate(
-              3,
-              (index) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: _buildSkeletonText(100 + (index * 20), 14),
+        Row(
+          children: [
+            Icon(icon, size: 16, color: Colors.grey[600]),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
               ),
             ),
-          )
-        else if (branches != null && branches!.isNotEmpty)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: branches!.map((branch) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  branch['companyName'] ?? "Unnamed Branch",
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: Colors.black,
-                  ),
-                ),
-              );
-            }).toList(),
-          )
-        else
-          const Text(
-            "No branches available",
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSettingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            "Settings",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
+          ],
         ),
         const SizedBox(height: 8),
-        ListTile(
-          leading: const Icon(Icons.info, color: Colors.blue),
-          title: const Text("About"),
-          onTap: () {
-            // Navigate to About Page
-          },
-        ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.help, color: Colors.blue),
-          title: const Text("Help"),
-          onTap: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => HelpPage()),
-              (route) => false,
-            );
-          },
-        ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.sync, color: Colors.blue),
-          title: const Text("Sync Registered Customer"),
-          onTap: () async {
-            await GlobalData.syncUnsyncedCustomers(context);
-          },
-        ),
-        const Divider(),
+        
+        if (isProfileLoading)
+          _buildShimmerContainer(200, 16, 4)
+        else if (isMain)
+          _buildBranchTile(branchName ?? "No main branch available")
+        else if (branches != null && branches.isNotEmpty)
+          ...branches.map((branch) => _buildBranchTile(
+                branch['companyName'] ?? "Unnamed Branch",
+                isSubBranch: true,
+              ))
+        else
+          _buildBranchTile("No branches available", isEmpty: true),
       ],
     );
   }
 
-  Widget _buildSkeletonText(double width, double height) {
+  Widget _buildBranchTile(String name, {bool isSubBranch = false, bool isEmpty = false}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isEmpty 
+            ? Colors.grey[50] 
+            : (isSubBranch ? tertiaryBlue.withOpacity(0.1) : primaryBlue.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isEmpty 
+              ? Colors.grey[300]! 
+              : (isSubBranch ? tertiaryBlue.withOpacity(0.3) : primaryBlue.withOpacity(0.3)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isEmpty ? Icons.info_outline : Icons.business,
+            size: 16,
+            color: isEmpty 
+                ? Colors.grey[500] 
+                : (isSubBranch ? tertiaryBlue : primaryBlue),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              name,
+              style: TextStyle(
+                fontSize: 14,
+                color: isEmpty ? Colors.grey[600] : blackColor,
+                fontWeight: isEmpty ? FontWeight.normal : FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: yellowColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.settings_rounded,
+                    color: yellowColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  "Settings",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: blackColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          _buildSettingsTile(
+            icon: Icons.info_rounded,
+            title: "About",
+            subtitle: "App information and version",
+            onTap: () {
+              // Navigate to About Page
+            },
+          ),
+          
+          _buildSettingsTile(
+            icon: Icons.help_rounded,
+            title: "Help",
+            subtitle: "Get support and assistance",
+            onTap: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HelpPage()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: primaryBlue, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: blackColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerContainer(double width, double height, double radius) {
     return AnimatedBuilder(
-      animation: _animation,
+      animation: _shimmerAnimation,
       builder: (context, child) {
         return Container(
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color:
-                Colors.grey[300]!.withOpacity(0.3 + (_animation.value * 0.4)),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(radius),
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Colors.grey[300]!,
+                Colors.grey[100]!,
+                Colors.grey[300]!,
+              ],
+              stops: [
+                _shimmerAnimation.value - 0.3,
+                _shimmerAnimation.value,
+                _shimmerAnimation.value + 0.3,
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildSkeletonCircle(double radius) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          width: radius * 2,
-          height: radius * 2,
-          decoration: BoxDecoration(
-            color:
-                Colors.grey[300]!.withOpacity(0.3 + (_animation.value * 0.4)),
-            shape: BoxShape.circle,
-          ),
-        );
-      },
-    );
+  Future<void> _refreshProfile() async {
+    setState(() {
+      isProfileLoading = true;
+      isBranchesLoading = true;
+    });
+    await _fetchToken();
   }
 
   void logout() async {
-    setState(() {
-      isProfileLoading = true;
-    });
-
-    await storage.delete(key: "token");
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const Loginscreen()),
-      (route) => false,
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: primaryBlue),
+            const SizedBox(height: 16),
+            Text(
+              'Logging out...',
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+          ],
+        ),
+      ),
     );
 
-    setState(() {
-      isProfileLoading = false;
-    });
+    await storage.delete(key: "token");
+    
+    if (mounted) {
+      Navigator.of(context).pop(); // Close loading dialog
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const Loginscreen()),
+        (route) => false,
+      );
+    }
   }
 
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
     print("ProfileScreen: Token found: ${token != null ? 'Yes' : 'No'}");
-    
+
     if (token != null && token.isNotEmpty) {
       try {
         // Try to decode the token to get user details
         var decodedToken = JwtDecoder.decode(token);
         print("ProfileScreen: JWT decoded successfully");
-        
+
         setState(() {
           username = decodedToken['sub'] ?? "User";
           firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
           role = decodedToken['role'][0];
           UserID = decodedToken['userId'];
-          
+
           // Don't get branches from token, we'll get them from database
           branches = [];
-          
+
           // Decode mainBranch if available in the token
           if (decodedToken.containsKey("mainBranch")) {
             mainBranchCode = decodedToken["mainBranch"]["branchCode"];
@@ -373,17 +603,17 @@ class _ProfileScreenState extends State<ProfileScreen>
           isProfileLoading = false;
           isBranchesLoading = false;
         });
-        
+
         // After setting basic info, fetch branches from database
         await _fetchBranchesFromDatabase();
-        
       } catch (e) {
         print("ProfileScreen: JWT decoding failed: $e");
         // If JWT decoding fails, try to get user data from local database
         final dbHelper = DatabaseHelper();
         final user = await dbHelper.getUserByToken(token);
-        print("ProfileScreen: User found by token: ${user != null ? 'Yes' : 'No'}");
-        
+        print(
+            "ProfileScreen: User found by token: ${user != null ? 'Yes' : 'No'}");
+
         if (user != null) {
           print("ProfileScreen: Using data from database");
           setState(() {
@@ -391,7 +621,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
             role = user['role'] ?? '';
             UserID = user['userId'];
-            
+
             // Set main branch from database
             mainBranchCode = user['mainBranchCode'];
             mainBranchCompanyName = user['mainBranchName'];
@@ -400,24 +630,25 @@ class _ProfileScreenState extends State<ProfileScreen>
             isProfileLoading = false;
             isBranchesLoading = false;
           });
-          
+
           // Fetch branches from database
           await _fetchBranchesFromDatabase();
-          
         } else {
           // If no user found by token, try to get the first user from database
           final users = await dbHelper.getUsers();
           print("ProfileScreen: Total users in database: ${users.length}");
-          
+
           if (users.isNotEmpty) {
             final firstUser = users.first;
             print("ProfileScreen: Using first user from database");
             setState(() {
-              username = firstUser['username'] ?? firstUser['fullName'] ?? "User";
-              firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
+              username =
+                  firstUser['username'] ?? firstUser['fullName'] ?? "User";
+              firstLetter =
+                  username.isNotEmpty ? username[0].toUpperCase() : '';
               role = firstUser['role'] ?? '';
               UserID = firstUser['userId'];
-              
+
               // Set main branch from database
               mainBranchCode = firstUser['mainBranchCode'];
               mainBranchCompanyName = firstUser['mainBranchName'];
@@ -426,10 +657,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               isProfileLoading = false;
               isBranchesLoading = false;
             });
-            
+
             // Fetch branches from database
             await _fetchBranchesFromDatabase();
-            
           } else {
             print("ProfileScreen: No users found in database");
             setState(() {
@@ -455,7 +685,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
           role = firstUser['role'] ?? '';
           UserID = firstUser['userId'];
-          
+
           // Set main branch from database
           mainBranchCode = firstUser['mainBranchCode'];
           mainBranchCompanyName = firstUser['mainBranchName'];
@@ -464,10 +694,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           isProfileLoading = false;
           isBranchesLoading = false;
         });
-        
+
         // Fetch branches from database
         await _fetchBranchesFromDatabase();
-        
       } else {
         setState(() {
           isProfileLoading = false;
@@ -475,34 +704,39 @@ class _ProfileScreenState extends State<ProfileScreen>
         });
       }
     }
-    
-    print("ProfileScreen: Final data - username: $username, role: $role, UserID: $UserID");
+
+    print(
+        "ProfileScreen: Final data - username: $username, role: $role, UserID: $UserID");
   }
 
   Future<void> _fetchBranchesFromDatabase() async {
     print("ProfileScreen: Fetching branches from database...");
     final dbHelper = DatabaseHelper();
-    
+
     try {
       // Get all branches from the Branches table
       final db = await dbHelper.database;
-      final List<Map<String, dynamic>> branchResults = await db.query('Branches');
-      
+      final List<Map<String, dynamic>> branchResults =
+          await db.query('Branches');
+
       print("ProfileScreen: Raw branches from database: $branchResults");
-      
+
       if (branchResults.isNotEmpty) {
         // Convert database results to the expected format
-        final List<Map<String, dynamic>> formattedBranches = branchResults.map((branch) {
+        final List<Map<String, dynamic>> formattedBranches =
+            branchResults.map((branch) {
           return {
             'id': branch['id'],
             'name': branch['branchName'] ?? 'Unnamed Branch',
             'branchCode': branch['branchCode'] ?? '',
-            'companyName': branch['companyName'] ?? branch['branchName'] ?? 'Unnamed Branch',
+            'companyName': branch['companyName'] ??
+                branch['branchName'] ??
+                'Unnamed Branch',
           };
         }).toList();
-        
+
         print("ProfileScreen: Formatted branches: $formattedBranches");
-        
+
         setState(() {
           branches = formattedBranches;
           isBranchesLoading = false;

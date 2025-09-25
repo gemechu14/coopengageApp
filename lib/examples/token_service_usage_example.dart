@@ -139,7 +139,7 @@ class _ExampleRegistrationScreenState extends State<ExampleRegistrationScreen> {
     final remainingTime = await TokenService.getTokenRemainingTime();
     if (remainingTime != null && remainingTime.inMinutes <= 10 && mounted) {
       // Show warning that token will expire soon
-      TokenService.showTokenExpirationWarningWithContext(context);
+      // TokenService.showTokenExpirationWarningWithContext(context);
     }
   }
 

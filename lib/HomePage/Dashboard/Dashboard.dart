@@ -35,18 +35,6 @@ class _DashboardState extends State<Dashboard> {
     TokenService.initialize();
   }
 
-  List<Map<String, dynamic>> currentMonthData1 = [
-    {'name': 'New Accounts', 'target': 1000, 'achievements': 360},
-    {'name': 'Inactive Accounts', 'target': 200, 'achievements': 30},
-    {'name': 'Agents', 'target': 10, 'achievements': 0},
-  ];
-
-  List<Map<String, dynamic>> currentMonthData2 = [
-    {'name': 'New Accounts', 'target': 1000, 'achievements': 100},
-    {'name': 'Inactive Accounts', 'target': 200, 'achievements': 300},
-    {'name': 'Agents', 'target': 10, 'achievements': 0},
-  ];
-
   List<Map<String, dynamic>>? currentMonthData;
   final storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
@@ -123,31 +111,10 @@ class _DashboardState extends State<Dashboard> {
           title: CustomNavHeading(
             text: "Home",
           ),
-          backgroundColor: Colors.white,
+          // backgroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
           elevation: 0,
-          actions: [
-            Row(
-              children: [
-                Text(
-                  isOnline ? 'Active' : 'Offline',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: isOnline ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    isOnline ? Icons.toggle_on : Icons.toggle_off,
-                    color: isOnline ? Colors.green : Colors.red,
-                    size: 36,
-                  ),
-                  onPressed: toggleOnlineStatus,
-                ),
-                const SizedBox(width: 2),
-              ],
-            )
-          ],
+          actions: [],
         ),
       ),
       body: SingleChildScrollView(
@@ -209,13 +176,15 @@ class _DashboardState extends State<Dashboard> {
                                     MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    title,
-                                    style: TextStyle(
-                                      fontSize: titleFontSize,
-                                      fontWeight: FontWeight.bold,
+                                  Expanded(
+                                    child: Text(
+                                      title,
+                                      style: TextStyle(
+                                        fontSize: titleFontSize,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   Container(
                                     width: iconSize,
@@ -278,7 +247,6 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ),
               ),
-
 
               if (localCustomers > 0)
                 Padding(
@@ -353,7 +321,7 @@ class _DashboardState extends State<Dashboard> {
             await TokenService.forceLogoutWithContext(context);
             return;
           }
-          
+
           var decodedToken = JwtDecoder.decode(token);
           String userId = decodedToken['userId'].toString();
 
@@ -514,7 +482,7 @@ class _DashboardState extends State<Dashboard> {
           await TokenService.forceLogoutWithContext(context);
           return;
         }
-        
+
         DatabaseHelper dbHelper = DatabaseHelper();
 
         List<Map<String, dynamic>> fetchedUsers =
@@ -526,7 +494,8 @@ class _DashboardState extends State<Dashboard> {
       } catch (e) {
         print("Error fetching users: $e");
         // Check if this is a token-related error
-        if (e.toString().contains("Token") || e.toString().contains("Unauthorized")) {
+        if (e.toString().contains("Token") ||
+            e.toString().contains("Unauthorized")) {
           await _handleTokenError({"error_message": e.toString()});
         }
       }
@@ -539,20 +508,20 @@ class _DashboardState extends State<Dashboard> {
       try {
         // Check if token is valid using TokenService
         bool isTokenValid = await TokenService.isTokenValid();
-        
+
         if (!isTokenValid) {
           // Token is expired, force logout
           print("Token expired in Dashboard, logging out user");
           await TokenService.forceLogoutWithContext(context);
           return;
         }
-        
+
         var decodedToken = JwtDecoder.decode(token);
         setState(() {
           UserID = decodedToken["userId"];
           isLoading = false;
         });
-        
+
         // Check if token will expire soon and show warning
         _checkTokenExpirationWarning();
       } catch (e) {
@@ -580,9 +549,10 @@ class _DashboardState extends State<Dashboard> {
                 children: [
                   Icon(Icons.warning, color: Colors.white),
                   SizedBox(width: 8),
-                  Expanded(
-                    child: Text('Your session will expire in ${remainingTime.inMinutes} minutes. Please save your work.'),
-                  ),
+                  // Expanded(
+                  //   child: Text(
+                  //       'Your session will expire in ${remainingTime.inMinutes} minutes. Please save your work.'),
+                  // ),
                 ],
               ),
               backgroundColor: Colors.orange,
@@ -608,7 +578,7 @@ class _DashboardState extends State<Dashboard> {
   Future<bool> _handleTokenError(dynamic errorData) async {
     if (errorData is Map<String, dynamic>) {
       String? errorMessage = errorData['error_message'];
-      
+
       if (errorMessage != null) {
         // Check for specific token invalidation errors
         if (errorMessage.contains("Token was issued before the latest login") ||
@@ -617,28 +587,28 @@ class _DashboardState extends State<Dashboard> {
             errorMessage.contains("Token expired") ||
             errorMessage.contains("Unauthorized") ||
             errorMessage.contains("Forbidden")) {
-          
           print("Token error detected: $errorMessage - Logging out user");
-          
+
           // Show user-friendly message before logout
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.white),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text('Your session has been invalidated. Please login again.'),
-                  ),
-                ],
-              ),
+                  children: [
+                    Icon(Icons.error, color: Colors.white),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                          'Your session has been invalidated. Please login again.'),
+                    ),
+                  ],
+                ),
                 backgroundColor: Colors.red,
                 duration: Duration(seconds: 3),
               ),
             );
           }
-          
+
           // Wait a moment for user to see the message, then logout
           await Future.delayed(Duration(seconds: 2));
           await TokenService.forceLogoutWithContext(context);

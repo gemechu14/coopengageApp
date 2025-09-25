@@ -98,7 +98,7 @@ class _IdTypeStepState extends ConsumerState<IdTypeStep>
       debugPrint("   - No back image data found");
     }
   }
-
+ 
   Future<String?> _createTempImageFile(Uint8List bytes, String imageType) async {
     try {
       final tempDir = Directory.systemTemp;

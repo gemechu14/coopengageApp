@@ -8,7 +8,7 @@ import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/AlertDialog/dialog_helper.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 // import 'package:coopengageplus/constants/config/environment_config.dart';
-import 'package:coopengageplus/service/certificate_service.dart';
+// Certificate service removed for security - using standard HTTP client
 // import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/customerOnboarding/agent/agentRegistration.dart';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
@@ -103,22 +103,25 @@ class _LoginscreenState extends State<Loginscreen> {
               child: Container(
                 width: width < 600 ? double.infinity : width * 0.5,
                 child: TextFormField(
-                  decoration: const InputDecoration(
+                  enabled: !isApiCallProcess,
+                  decoration: InputDecoration(
                     hintText: "Username",
-                    labelStyle: TextStyle(fontSize: 20),
-                    contentPadding: EdgeInsets.fromLTRB(20, 2, 2, 4),
-                    border: OutlineInputBorder(
+                    labelStyle: const TextStyle(fontSize: 20),
+                    contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
+                    border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                       borderSide: BorderSide(color: Colors.black),
                     ),
-                    focusedBorder: OutlineInputBorder(
+                    focusedBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                       borderSide: BorderSide(color: Colors.black),
                     ),
-                    errorBorder: OutlineInputBorder(
+                    errorBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                       borderSide: BorderSide(color: Colors.red),
                     ),
+                    filled: isApiCallProcess,
+                    fillColor: isApiCallProcess ? Colors.grey[100] : null,
                   ),
                   controller: _username,
                   validator: (value) {
@@ -145,18 +148,20 @@ class _LoginscreenState extends State<Loginscreen> {
                   style: TextStyle(color: Colors.black, fontSize: 16),
                 ),
                 TextButton(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AgentRegistration(),
-                        ),
-                        (route) => false);
-                  },
-                  child: const Text(
+                  onPressed: isApiCallProcess
+                      ? null
+                      : () {
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AgentRegistration(),
+                              ),
+                              (route) => false);
+                        },
+                  child: Text(
                     "Register",
                     style: TextStyle(
-                      color: Colors.blue,
+                      color: isApiCallProcess ? Colors.grey : Colors.blue,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -215,17 +220,20 @@ class _LoginscreenState extends State<Loginscreen> {
       child: Container(
         width: width < 600 ? double.infinity : width * 0.5,
         child: TextFormField(
+          enabled: !isApiCallProcess,
           obscureText: hidePassword,
           decoration: InputDecoration(
             hintText: "Password",
             suffixIcon: IconButton(
               icon:
                   Icon(hidePassword ? Icons.visibility_off : Icons.visibility),
-              onPressed: () {
-                setState(() {
-                  hidePassword = !hidePassword;
-                });
-              },
+              onPressed: isApiCallProcess
+                  ? null
+                  : () {
+                      setState(() {
+                        hidePassword = !hidePassword;
+                      });
+                    },
             ),
             labelStyle: const TextStyle(fontSize: 20),
             contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
@@ -241,6 +249,8 @@ class _LoginscreenState extends State<Loginscreen> {
               borderRadius: BorderRadius.all(Radius.circular(15)),
               borderSide: BorderSide(color: Colors.red),
             ),
+            filled: isApiCallProcess,
+            fillColor: isApiCallProcess ? Colors.grey[100] : null,
           ),
           controller: _password,
           validator: (value) {
@@ -261,20 +271,7 @@ class _LoginscreenState extends State<Loginscreen> {
     final data = {"username": username, "password": password};
     final dbHelper = DatabaseHelper();
 
-    // Test certificate loading before making the request
-    try {
-      print('=== Testing Certificate Loading ===');
-      String currentEnv = await CertificateService.getCurrentEnvironment();
-      print('Current environment: $currentEnv');
-
-      // Test if we can create a secure client
-      HttpClient testClient = await CertificateService.createSecureHttpClient(
-          environment: currentEnv);
-      print('✅ Certificate loaded successfully for $currentEnv environment');
-    } catch (e) {
-      print('❌ Certificate loading failed: $e');
-      print('Falling back to development mode...');
-    }
+    // Certificate service removed for security - using standard HTTP client
 
     try {
       if (await isOnline()) {
@@ -283,8 +280,8 @@ class _LoginscreenState extends State<Loginscreen> {
         print(AppConstants.baseURL);
         // ONLINE LOGIN
         final response = await networkHandler
-            .post('${AppConstants.baseURL}/login', data)
-            .timeout(const Duration(seconds: 40));
+            .post('/login', data)
+            .timeout(const Duration(seconds: 70));
         print(
             "statusCodestatusCodestatusCodestatusCodestatusCodestdddatusCode");
         print(response.statusCode);
@@ -295,153 +292,343 @@ class _LoginscreenState extends State<Loginscreen> {
           print(token);
           await storage.write(key: "token", value: token);
 
-          // Call /api/v1/users/me to get user data
-          final userResponse = await networkHandler
-              .get('/api/v1/users/me')
-              .timeout(const Duration(seconds: 70));
-          print("dkfkdfhdkdkkfkdkdkdjkjdjkdjkdfjkkjfjkdfkjd");
-          print(userResponse);
+          // 🔒 ENHANCED DATA LOADING WITH RETRY MECHANISM
+          bool userDataStored = false;
+          bool accountTypesStored = false;
+          int maxRetries = 3;
+          int currentRetry = 0;
 
-          // Check if response is a Response object or direct data
-          Map<String, dynamic> userData;
-          if (userResponse is http.Response) {
-            // It's a Response object
-            if (userResponse.statusCode == 200) {
-              userData = json.decode(userResponse.body);
-            } else {
-              DialogHelper.show(
-                context,
-                title: "Coop Engage+",
-                message:
-                    "Failed to fetch user data. Status: ${userResponse.statusCode}",
-                type: DialogType.error,
-              );
-              return;
-            }
-          } else if (userResponse is Map<String, dynamic>) {
-            // It's direct data (already parsed)
-            userData = userResponse;
-          } else {
-            // Try to handle as string and parse
+          // STEP 1: Fetch and store user data with retry
+          while (!userDataStored && currentRetry < maxRetries) {
             try {
-              userData = json.decode(userResponse.toString());
-            } catch (e) {
-              DialogHelper.show(
-                context,
-                title: "Coop Engage+",
-                message: "Invalid user data format received.",
-                type: DialogType.error,
-              );
-              return;
-            }
-          }
+              currentRetry++;
+              print("🔄 Attempt $currentRetry: Fetching user data...");
+              
+              final userResponse = await networkHandler
+                  .get('/api/v1/users/me')
+                  .timeout(const Duration(seconds: 60));
+              
+              print("dkfkdfhdkdkkfkdkdkdjkjdjkdjkdfjkkjfjkdfkjd");
+              print(userResponse);
 
-          final userId = userData["userId"];
-          final role = userData["role"] ?? '';
-          final clientId = userData["client"]["id"]?.toString();
-          final fullName = userData["fullName"] ?? '';
-          final email = userData["email"] ?? '';
-          final status = userData["status"] ?? '';
-          final lastLoggedIn = userData["lastLoggedIn"] ?? '';
-          final registeredAt = userData["registeredAt"] ?? '';
-          final updatedAt = userData["updatedAt"] ?? '';
+              // Check if response is a Response object or direct data
+              Map<String, dynamic> userData;
+              if (userResponse is http.Response) {
+                // It's a Response object
+                if (userResponse.statusCode == 200) {
+                  userData = json.decode(userResponse.body);
+                } else {
+                  throw Exception("Failed to fetch user data. Status: ${userResponse.statusCode}");
+                }
+              } else if (userResponse is Map<String, dynamic>) {
+                // It's direct data (already parsed)
+                userData = userResponse;
+              } else if (userResponse != null) {
+                // Try to handle as string and parse
+                userData = json.decode(userResponse.toString());
+              } else {
+                throw Exception("Received null response from user data API");
+              }
 
-          // Extract client data
-          final clientData = userData["client"] ?? {};
-          final clientName = clientData["name"] ?? '';
-          final clientDescription = clientData["description"] ?? '';
+              // 🔒 SECURE DATA EXTRACTION WITH VALIDATION
+              final userId = userData["userId"];
+              if (userId == null) {
+                throw Exception("Invalid user data: Missing user ID");
+              }
 
-          // Extract branches data
-          final branches =
-              List<Map<String, dynamic>>.from(userData["branches"] ?? []);
+              final role = userData["role"] ?? '';
+              final clientData = userData["client"] ?? {};
+              final clientId = clientData["id"]?.toString();
 
-          // Extract main branch data
-          final mainBranch = userData["mainBranch"] ?? {};
-          final mainBranchId = mainBranch["id"];
-          final mainBranchName = mainBranch["name"] ?? '';
-          final mainBranchCode = mainBranch["branchCode"] ?? '';
+              if (clientId == null || clientId.isEmpty) {
+                throw Exception("Invalid user data: Missing client information");
+              }
 
-          bool userExists = await dbHelper.userExists(username);
-          await dbHelper.insertToken(token);
+              // Extract user information with safe defaults
+              final fullName = userData["fullName"] ?? '';
+              final email = userData["email"] ?? '';
+              final status = userData["status"] ?? '';
+              final lastLoggedIn = userData["lastLoggedIn"] ?? '';
+              final registeredAt = userData["registeredAt"] ?? '';
+              final updatedAt = userData["updatedAt"] ?? '';
 
-          if (!userExists) {
-            await dbHelper.insertUser1(
-              username: username,
-              password: password,
-              userId: userId,
-              clientId: clientId,
-              token: token,
-              role: role,
-              branches: branches,
-              fullName: fullName,
-              email: email,
-              status: status,
-              lastLoggedIn: lastLoggedIn,
-              registeredAt: registeredAt,
-              updatedAt: updatedAt,
-              clientName: clientName,
-              clientDescription: clientDescription,
-              mainBranchId: mainBranchId,
-              mainBranchName: mainBranchName,
-              mainBranchCode: mainBranchCode,
-            );
-          } else {
-            // Update existing user with new data
-            await dbHelper.updateUser(
-              username: username,
-              userId: userId,
-              clientId: clientId,
-              token: token,
-              role: role,
-              branches: branches,
-              fullName: fullName,
-              email: email,
-              status: status,
-              lastLoggedIn: lastLoggedIn,
-              registeredAt: registeredAt,
-              updatedAt: updatedAt,
-              clientName: clientName,
-              clientDescription: clientDescription,
-              mainBranchId: mainBranchId,
-              mainBranchName: mainBranchName,
-              mainBranchCode: mainBranchCode,
-            );
-          }
+              // Extract client data
+              final clientName = clientData["name"] ?? '';
+              final clientDescription = clientData["description"] ?? '';
 
-          // SYNC ACCOUNT TYPES
-          final accountTypesResponse =
-              await networkHandler.get('/api/v1/account-types');
-
-          if (accountTypesResponse is List<dynamic>) {
-            int localCount = await dbHelper.getAccountTypeCount();
-            int incomingCount = accountTypesResponse.length;
-
-            var localdata = await dbHelper.getAllAccountTypes();
-            print("local account types");
-            print(localdata);
-
-            if (localCount < incomingCount) {
-              await dbHelper.clearAccountTypesTable();
-              final typesToSave = accountTypesResponse.map((e) {
-                return {
-                  "id": e["id"].toString(),
-                  "name": e["name"] ?? "",
-                  "description": e["description"] ?? "",
-                  "category": e["category"] ?? "",
-                  "bankingType": e["bankingType"] ?? "",
-                  "origin": e["origin"] ?? "",
-                  "minAge": e["minAge"]?.toString() ?? "",
-                  "maxAge": e["maxAge"]?.toString() ?? "",
-                  "minAmount": e["minAmount"]?.toString() ?? "",
-                  "sex": e["sex"] ?? "",
-                  "status": e["status"] ?? "",
-                  "code": e["code"].toString()
+              // Extract branches data with validation
+              final branchesData = userData["branches"];
+              List<Map<String, dynamic>> branches = [];
+              if (branchesData is List) {
+                branches = List<Map<String, dynamic>>.from(branchesData);
+              }
+              
+              // 🔍 DEBUG: Log branches data structure
+              print("🔍 DEBUG: Raw branches data from API: $branchesData");
+              print("🔍 DEBUG: Processed branches list: $branches");
+              print("🔍 DEBUG: Branches count: ${branches.length}");
+              
+              // Validate and normalize branches data
+              List<Map<String, dynamic>> normalizedBranches = [];
+              for (int i = 0; i < branches.length; i++) {
+                final branch = branches[i];
+                print("🔍 DEBUG: Branch $i structure: $branch");
+                
+                // Create normalized branch data with all possible field mappings
+                Map<String, dynamic> normalizedBranch = {
+                  'id': branch['id'],
+                  'name': branch['name'] ?? branch['branchName'] ?? branch['companyName'] ?? 'Unknown Branch',
+                  'branchName': branch['branchName'] ?? branch['name'] ?? branch['companyName'] ?? 'Unknown Branch',
+                  'companyName': branch['companyName'] ?? branch['name'] ?? branch['branchName'] ?? 'Unknown Branch',
+                  'branchCode': branch['branchCode'] ?? '',
                 };
-              }).toList();
+                normalizedBranches.add(normalizedBranch);
+                print("🔍 DEBUG: Normalized branch $i: $normalizedBranch");
+              }
 
-              await dbHelper.insertAccountTypes(typesToSave);
+              // Extract main branch data with validation
+              final mainBranch = userData["mainBranch"] ?? {};
+              final mainBranchId = mainBranch["id"];
+              final mainBranchName = mainBranch["name"] ?? mainBranch["branchName"] ?? '';
+              final mainBranchCode = mainBranch["branchCode"] ?? '';
+              
+              // 🔍 DEBUG: Log main branch data
+              print("🔍 DEBUG: Raw main branch data: $mainBranch");
+              print("🔍 DEBUG: Main branch ID: $mainBranchId");
+              print("🔍 DEBUG: Main branch name: $mainBranchName");
+              print("🔍 DEBUG: Main branch code: $mainBranchCode");
+
+              // �� SECURE USER AND TOKEN STORAGE
+              bool userExists = await dbHelper.userExists(username);
+              await dbHelper.insertToken(token);
+
+              print("✅ User data validated and token stored securely");
+
+              if (!userExists) {
+                await dbHelper.insertUser1(
+                  username: username,
+                  password: password,
+                  userId: userId,
+                  clientId: clientId,
+                  token: token,
+                  role: role,
+                  branches: normalizedBranches,
+                  fullName: fullName,
+                  email: email,
+                  status: status,
+                  lastLoggedIn: lastLoggedIn,
+                  registeredAt: registeredAt,
+                  updatedAt: updatedAt,
+                  clientName: clientName,
+                  clientDescription: clientDescription,
+                  mainBranchId: mainBranchId,
+                  mainBranchName: mainBranchName,
+                  mainBranchCode: mainBranchCode,
+                );
+              } else {
+                // Update existing user with new data
+                await dbHelper.updateUser(
+                  username: username,
+                  userId: userId,
+                  clientId: clientId,
+                  token: token,
+                  role: role,
+                  branches: normalizedBranches,
+                  fullName: fullName,
+                  email: email,
+                  status: status,
+                  lastLoggedIn: lastLoggedIn,
+                  registeredAt: registeredAt,
+                  updatedAt: updatedAt,
+                  clientName: clientName,
+                  clientDescription: clientDescription,
+                  mainBranchId: mainBranchId,
+                  mainBranchName: mainBranchName,
+                  mainBranchCode: mainBranchCode,
+                );
+              }
+
+              // Verify user data was stored successfully
+              final verifyUser = await dbHelper.getUserByToken(token);
+              if (verifyUser != null && verifyUser['userId'] == userId) {
+                userDataStored = true;
+                print("✅ User data stored and verified successfully");
+                
+                // 🔍 COMPREHENSIVE VERIFICATION: Check main branch and other branches
+                print("🔍 VERIFICATION: Checking main branch data...");
+                print("🔍 VERIFICATION: Expected main branch - ID: $mainBranchId, Name: $mainBranchName, Code: $mainBranchCode");
+                print("🔍 VERIFICATION: Stored main branch - ID: ${verifyUser['mainBranchId']}, Name: ${verifyUser['mainBranchName']}, Code: ${verifyUser['mainBranchCode']}");
+                
+                // Verify branches were stored
+                final db = await dbHelper.database;
+                final storedBranches = await db.query('Branches');
+                final userBranches = await db.query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
+                
+                print("🔍 VERIFICATION: Total branches in database: ${storedBranches.length}");
+                print("🔍 VERIFICATION: User's branch relationships: ${userBranches.length}");
+                print("🔍 VERIFICATION: Expected branches count: ${normalizedBranches.length}");
+                
+                // Detailed branch verification
+                for (int i = 0; i < storedBranches.length; i++) {
+                  final storedBranch = storedBranches[i];
+                  print("🔍 VERIFICATION: Stored branch $i: ID=${storedBranch['id']}, Name=${storedBranch['branchName']}, Company=${storedBranch['companyName']}, Code=${storedBranch['branchCode']}");
+                }
+                
+                // Check if we have the expected number of branches
+                if (normalizedBranches.isNotEmpty && userBranches.length != normalizedBranches.length) {
+                  print("⚠️ WARNING: Expected ${normalizedBranches.length} branches but found ${userBranches.length} user-branch relationships");
+                  // Don't fail here, just log the discrepancy
+                }
+                
+                // Verify main branch is stored correctly
+                bool mainBranchStored = true;
+                if (mainBranchId != null) {
+                  if (verifyUser['mainBranchId'] != mainBranchId || 
+                      verifyUser['mainBranchName'] != mainBranchName) {
+                    print("⚠️ WARNING: Main branch data mismatch");
+                    mainBranchStored = false;
+                  }
+                }
+                
+                print("✅ VERIFICATION COMPLETE: Main branch stored: $mainBranchStored, Branches stored: ${userBranches.length}/${normalizedBranches.length}");
+              } else {
+                throw Exception("Failed to verify user data storage");
+              }
+
+            } catch (e) {
+              print("❌ Attempt $currentRetry failed for user data: $e");
+              if (currentRetry >= maxRetries) {
+                DialogHelper.show(
+                  context,
+                  title: "Coop Engage+",
+                  message: "Failed to load user data after $maxRetries attempts. Please try again.",
+                  type: DialogType.error,
+                );
+                return;
+              }
+              // Wait before retry (exponential backoff)
+              await Future.delayed(Duration(seconds: currentRetry * 2));
             }
           }
+
+          // STEP 2: Fetch and store account types with retry (only if user data is stored)
+          if (userDataStored) {
+            currentRetry = 0;
+            while (!accountTypesStored && currentRetry < maxRetries) {
+              try {
+                currentRetry++;
+                print("🔄 Attempt $currentRetry: Fetching account types...");
+
+                final accountTypesResponse = await networkHandler
+                    .get('/api/v1/account-types')
+                    .timeout(const Duration(seconds: 30));
+
+                if (accountTypesResponse is List<dynamic>) {
+                  int localCount = await dbHelper.getAccountTypeCount();
+                  int incomingCount = accountTypesResponse.length;
+
+                  print("Account types sync: Local=$localCount, Incoming=$incomingCount");
+
+                  if (localCount < incomingCount || currentRetry == 1) {
+                    // Validate and sanitize account types data
+                    final List<Map<String, dynamic>> validatedTypes = [];
+
+                    for (var accountType in accountTypesResponse) {
+                      if (accountType is Map<String, dynamic>) {
+                        // Validate required fields
+                        final id = accountType["id"];
+                        final name = accountType["name"];
+                        final code = accountType["code"];
+
+                        if (id != null && name != null) {
+                          validatedTypes.add({
+                            "id": id.toString(),
+                            "name": name.toString(),
+                            "description": accountType["description"]?.toString() ?? "",
+                            "category": accountType["category"]?.toString() ?? "",
+                            "bankingType": accountType["bankingType"]?.toString() ?? "",
+                            "origin": accountType["origin"]?.toString() ?? "",
+                            "minAge": accountType["minAge"]?.toString() ?? "",
+                            "maxAge": accountType["maxAge"]?.toString() ?? "",
+                            "minAmount": accountType["minAmount"]?.toString() ?? "",
+                            "sex": accountType["sex"]?.toString() ?? "",
+                            "status": accountType["status"]?.toString() ?? "",
+                            "code": code?.toString() ?? ""
+                          });
+                        } else {
+                          print("⚠️ Skipping invalid account type: Missing required fields");
+                        }
+                      }
+                    }
+
+                    if (validatedTypes.isNotEmpty) {
+                      await dbHelper.clearAccountTypesTable();
+                      await dbHelper.insertAccountTypes(validatedTypes);
+                      
+                      // Verify account types were stored successfully
+                      final verifyCount = await dbHelper.getAccountTypeCount();
+                      if (verifyCount >= validatedTypes.length) {
+                        accountTypesStored = true;
+                        print("✅ Account types synced and verified successfully: ${validatedTypes.length} types");
+                      } else {
+                        throw Exception("Failed to verify account types storage");
+                      }
+                    } else {
+                      print("❌ No valid account types to sync");
+                      accountTypesStored = true; // Mark as completed even with no data
+                    }
+                  } else {
+                    print("✅ Account types already up to date");
+                    accountTypesStored = true;
+                  }
+                } else if (accountTypesResponse == null) {
+                  throw Exception("Received null response from account types API");
+                } else {
+                  throw Exception("Account types response is not a valid list");
+                }
+
+              } catch (e) {
+                print("❌ Attempt $currentRetry failed for account types: $e");
+                if (currentRetry >= maxRetries) {
+                  print("⚠️ Failed to sync account types after $maxRetries attempts. Continuing with login...");
+                  // Don't fail login if account types sync fails
+                  // The app can still function with cached account types
+                  accountTypesStored = true; // Mark as completed to continue
+                } else {
+                  // Wait before retry (exponential backoff)
+                  await Future.delayed(Duration(seconds: currentRetry * 2));
+                }
+              }
+            }
+          }
+
+          // 🔒 FINAL DATA INTEGRITY CHECK
+          final storedToken = await storage.read(key: "token");
+          if (storedToken != token) {
+            DialogHelper.show(
+              context,
+              title: "Coop Engage+",
+              message: "Security error: Token verification failed.",
+              type: DialogType.error,
+            );
+            return;
+          }
+
+          // Additional verification: Check if user data is accessible
+          final finalUserCheck = await dbHelper.getUserByToken(token);
+          if (finalUserCheck == null) {
+            DialogHelper.show(
+              context,
+              title: "Coop Engage+",
+              message: "Data integrity error: User data not accessible.",
+              type: DialogType.error,
+            );
+            return;
+          }
+
+          print("✅ Login successful - All data validated and stored securely");
+          print("✅ User data stored: $userDataStored");
+          print("✅ Account types stored: $accountTypesStored");
 
           // NAVIGATION BASED ON ROLE
           // if (role == "CRM") {
@@ -456,6 +643,8 @@ class _LoginscreenState extends State<Loginscreen> {
             MaterialPageRoute(builder: (_) => const MainPage()),
             (route) => false,
           );
+
+          // print(accountTypesResponse.);
           // }
         } else {
           DialogHelper.show(
