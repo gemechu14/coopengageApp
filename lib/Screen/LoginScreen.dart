@@ -276,20 +276,14 @@ class _LoginscreenState extends State<Loginscreen> {
     try {
       if (await isOnline()) {
         NetworkHandler networkHandler = NetworkHandler();
-        print("BASE URLddddsddsdsdsdsdsdsdsdssds");
-        print(AppConstants.baseURL);
         // ONLINE LOGIN
         final response = await networkHandler
             .post('/login', data)
             .timeout(const Duration(seconds: 70));
-        print(
-            "statusCodestatusCodestatusCodestatusCodestatusCodestdddatusCode");
-        print(response.statusCode);
+
         if (response.statusCode == 200 || response.statusCode == 201) {
           final output = json.decode(response.body);
           final token = output["access_token"];
-          print("output tokent t ");
-          print(token);
           await storage.write(key: "token", value: token);
 
           // 🔒 ENHANCED DATA LOADING WITH RETRY MECHANISM
@@ -303,12 +297,11 @@ class _LoginscreenState extends State<Loginscreen> {
             try {
               currentRetry++;
               print("🔄 Attempt $currentRetry: Fetching user data...");
-              
+
               final userResponse = await networkHandler
                   .get('/api/v1/users/me')
-                  .timeout(const Duration(seconds: 60));
-              
-              print("dkfkdfhdkdkkfkdkdkdjkjdjkdjkdfjkkjfjkdfkjd");
+                  .timeout(const Duration(seconds: 70));
+
               print(userResponse);
 
               // Check if response is a Response object or direct data
@@ -318,7 +311,8 @@ class _LoginscreenState extends State<Loginscreen> {
                 if (userResponse.statusCode == 200) {
                   userData = json.decode(userResponse.body);
                 } else {
-                  throw Exception("Failed to fetch user data. Status: ${userResponse.statusCode}");
+                  throw Exception(
+                      "Failed to fetch user data. Status: ${userResponse.statusCode}");
                 }
               } else if (userResponse is Map<String, dynamic>) {
                 // It's direct data (already parsed)
@@ -341,7 +335,8 @@ class _LoginscreenState extends State<Loginscreen> {
               final clientId = clientData["id"]?.toString();
 
               if (clientId == null || clientId.isEmpty) {
-                throw Exception("Invalid user data: Missing client information");
+                throw Exception(
+                    "Invalid user data: Missing client information");
               }
 
               // Extract user information with safe defaults
@@ -362,24 +357,34 @@ class _LoginscreenState extends State<Loginscreen> {
               if (branchesData is List) {
                 branches = List<Map<String, dynamic>>.from(branchesData);
               }
-              
+
               // 🔍 DEBUG: Log branches data structure
               print("🔍 DEBUG: Raw branches data from API: $branchesData");
               print("🔍 DEBUG: Processed branches list: $branches");
               print("🔍 DEBUG: Branches count: ${branches.length}");
-              
+
               // Validate and normalize branches data
               List<Map<String, dynamic>> normalizedBranches = [];
               for (int i = 0; i < branches.length; i++) {
                 final branch = branches[i];
                 print("🔍 DEBUG: Branch $i structure: $branch");
-                
+
                 // Create normalized branch data with all possible field mappings
                 Map<String, dynamic> normalizedBranch = {
                   'id': branch['id'],
-                  'name': branch['name'] ?? branch['branchName'] ?? branch['companyName'] ?? 'Unknown Branch',
-                  'branchName': branch['branchName'] ?? branch['name'] ?? branch['companyName'] ?? 'Unknown Branch',
-                  'companyName': branch['companyName'] ?? branch['name'] ?? branch['branchName'] ?? 'Unknown Branch',
+                  'userId': branch['userId'],
+                  'name': branch['name'] ??
+                      branch['branchName'] ??
+                      branch['companyName'] ??
+                      'Unknown Branch',
+                  'branchName': branch['branchName'] ??
+                      branch['name'] ??
+                      branch['companyName'] ??
+                      'Unknown Branch',
+                  'companyName': branch['companyName'] ??
+                      branch['name'] ??
+                      branch['branchName'] ??
+                      'Unknown Branch',
                   'branchCode': branch['branchCode'] ?? '',
                 };
                 normalizedBranches.add(normalizedBranch);
@@ -389,9 +394,10 @@ class _LoginscreenState extends State<Loginscreen> {
               // Extract main branch data with validation
               final mainBranch = userData["mainBranch"] ?? {};
               final mainBranchId = mainBranch["id"];
-              final mainBranchName = mainBranch["name"] ?? mainBranch["branchName"] ?? '';
+              final mainBranchName =
+                  mainBranch["name"] ?? mainBranch["branchName"] ?? '';
               final mainBranchCode = mainBranch["branchCode"] ?? '';
-              
+
               // 🔍 DEBUG: Log main branch data
               print("🔍 DEBUG: Raw main branch data: $mainBranch");
               print("🔍 DEBUG: Main branch ID: $mainBranchId");
@@ -400,11 +406,17 @@ class _LoginscreenState extends State<Loginscreen> {
 
               // �� SECURE USER AND TOKEN STORAGE
               bool userExists = await dbHelper.userExists(username);
+
+              print("existing users ");
+              print(dbHelper.getUsers());
               await dbHelper.insertToken(token);
 
               print("✅ User data validated and token stored securely");
 
               if (!userExists) {
+                print("User is new, clearing any previous branches...");
+                await dbHelper
+                    .clearBranchesForUser(userId); // 🔒 This clears everything
                 await dbHelper.insertUser1(
                   username: username,
                   password: password,
@@ -413,6 +425,7 @@ class _LoginscreenState extends State<Loginscreen> {
                   token: token,
                   role: role,
                   branches: normalizedBranches,
+                  // branches: [],
                   fullName: fullName,
                   email: email,
                   status: status,
@@ -424,8 +437,33 @@ class _LoginscreenState extends State<Loginscreen> {
                   mainBranchId: mainBranchId,
                   mainBranchName: mainBranchName,
                   mainBranchCode: mainBranchCode,
+                  // mainBranchId: null, // <-- null for new user
+                  // mainBranchName: '',
+                  // mainBranchCode: '',
                 );
               } else {
+                // 🔄 Existing user: Clear old main + branches before updating
+                print(
+                    "User exists, clearing previous main branch and branches...");
+                print(
+                    "User exists, clearing all previous branches and main branch...");
+
+                // 1. Clear all branches
+                // final db = await dbHelper.database;
+                // await db.delete('Branches');
+                // await db.delete('UserBranches'); // if you have this table too
+
+                // // 2. Reset main branch for this user
+                // await db.update(
+                //   'Users',
+                //   {
+                //     'mainBranchId': null,
+                //     'mainBranchName': '',
+                //     'mainBranchCode': ''
+                //   },
+                //   where: 'username = ?',
+                //   whereArgs: [username],
+                // );
                 // Update existing user with new data
                 await dbHelper.updateUser(
                   username: username,
@@ -453,55 +491,65 @@ class _LoginscreenState extends State<Loginscreen> {
               if (verifyUser != null && verifyUser['userId'] == userId) {
                 userDataStored = true;
                 print("✅ User data stored and verified successfully");
-                
+
                 // 🔍 COMPREHENSIVE VERIFICATION: Check main branch and other branches
                 print("🔍 VERIFICATION: Checking main branch data...");
-                print("🔍 VERIFICATION: Expected main branch - ID: $mainBranchId, Name: $mainBranchName, Code: $mainBranchCode");
-                print("🔍 VERIFICATION: Stored main branch - ID: ${verifyUser['mainBranchId']}, Name: ${verifyUser['mainBranchName']}, Code: ${verifyUser['mainBranchCode']}");
-                
+                print(
+                    "🔍 VERIFICATION: Expected main branch - ID: $mainBranchId, Name: $mainBranchName, Code: $mainBranchCode");
+                print(
+                    "🔍 VERIFICATION: Stored main branch - ID: ${verifyUser['mainBranchId']}, Name: ${verifyUser['mainBranchName']}, Code: ${verifyUser['mainBranchCode']}");
+
                 // Verify branches were stored
                 final db = await dbHelper.database;
                 final storedBranches = await db.query('Branches');
-                final userBranches = await db.query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
-                
-                print("🔍 VERIFICATION: Total branches in database: ${storedBranches.length}");
-                print("🔍 VERIFICATION: User's branch relationships: ${userBranches.length}");
-                print("🔍 VERIFICATION: Expected branches count: ${normalizedBranches.length}");
-                
+                final userBranches = await db.query('UserBranches',
+                    where: 'userId = ?', whereArgs: [userId]);
+
+                print(
+                    "🔍 VERIFICATION: Total branches in database: ${storedBranches.length}");
+                print(
+                    "🔍 VERIFICATION: User's branch relationships: ${userBranches.length}");
+                print(
+                    "🔍 VERIFICATION: Expected branches count: ${normalizedBranches.length}");
+
                 // Detailed branch verification
                 for (int i = 0; i < storedBranches.length; i++) {
                   final storedBranch = storedBranches[i];
-                  print("🔍 VERIFICATION: Stored branch $i: ID=${storedBranch['id']}, Name=${storedBranch['branchName']}, Company=${storedBranch['companyName']}, Code=${storedBranch['branchCode']}");
+                  print(
+                      "🔍 VERIFICATION: Stored branch $i: ID=${storedBranch['id']}, Name=${storedBranch['branchName']}, Company=${storedBranch['companyName']}, Code=${storedBranch['branchCode']}");
                 }
-                
+
                 // Check if we have the expected number of branches
-                if (normalizedBranches.isNotEmpty && userBranches.length != normalizedBranches.length) {
-                  print("⚠️ WARNING: Expected ${normalizedBranches.length} branches but found ${userBranches.length} user-branch relationships");
+                if (normalizedBranches.isNotEmpty &&
+                    userBranches.length != normalizedBranches.length) {
+                  print(
+                      "⚠️ WARNING: Expected ${normalizedBranches.length} branches but found ${userBranches.length} user-branch relationships");
                   // Don't fail here, just log the discrepancy
                 }
-                
+
                 // Verify main branch is stored correctly
                 bool mainBranchStored = true;
                 if (mainBranchId != null) {
-                  if (verifyUser['mainBranchId'] != mainBranchId || 
+                  if (verifyUser['mainBranchId'] != mainBranchId ||
                       verifyUser['mainBranchName'] != mainBranchName) {
                     print("⚠️ WARNING: Main branch data mismatch");
                     mainBranchStored = false;
                   }
                 }
-                
-                print("✅ VERIFICATION COMPLETE: Main branch stored: $mainBranchStored, Branches stored: ${userBranches.length}/${normalizedBranches.length}");
+
+                print(
+                    "✅ VERIFICATION COMPLETE: Main branch stored: $mainBranchStored, Branches stored: ${userBranches.length}/${normalizedBranches.length}");
               } else {
                 throw Exception("Failed to verify user data storage");
               }
-
             } catch (e) {
               print("❌ Attempt $currentRetry failed for user data: $e");
               if (currentRetry >= maxRetries) {
                 DialogHelper.show(
                   context,
                   title: "Coop Engage+",
-                  message: "Failed to load user data after $maxRetries attempts. Please try again.",
+                  message:
+                      "Failed to load user data after $maxRetries attempts. Please try again.",
                   type: DialogType.error,
                 );
                 return;
@@ -521,13 +569,14 @@ class _LoginscreenState extends State<Loginscreen> {
 
                 final accountTypesResponse = await networkHandler
                     .get('/api/v1/account-types')
-                    .timeout(const Duration(seconds: 30));
+                    .timeout(const Duration(seconds: 60));
 
                 if (accountTypesResponse is List<dynamic>) {
                   int localCount = await dbHelper.getAccountTypeCount();
                   int incomingCount = accountTypesResponse.length;
 
-                  print("Account types sync: Local=$localCount, Incoming=$incomingCount");
+                  print(
+                      "Account types sync: Local=$localCount, Incoming=$incomingCount");
 
                   if (localCount < incomingCount || currentRetry == 1) {
                     // Validate and sanitize account types data
@@ -544,19 +593,24 @@ class _LoginscreenState extends State<Loginscreen> {
                           validatedTypes.add({
                             "id": id.toString(),
                             "name": name.toString(),
-                            "description": accountType["description"]?.toString() ?? "",
-                            "category": accountType["category"]?.toString() ?? "",
-                            "bankingType": accountType["bankingType"]?.toString() ?? "",
+                            "description":
+                                accountType["description"]?.toString() ?? "",
+                            "category":
+                                accountType["category"]?.toString() ?? "",
+                            "bankingType":
+                                accountType["bankingType"]?.toString() ?? "",
                             "origin": accountType["origin"]?.toString() ?? "",
                             "minAge": accountType["minAge"]?.toString() ?? "",
                             "maxAge": accountType["maxAge"]?.toString() ?? "",
-                            "minAmount": accountType["minAmount"]?.toString() ?? "",
+                            "minAmount":
+                                accountType["minAmount"]?.toString() ?? "",
                             "sex": accountType["sex"]?.toString() ?? "",
                             "status": accountType["status"]?.toString() ?? "",
                             "code": code?.toString() ?? ""
                           });
                         } else {
-                          print("⚠️ Skipping invalid account type: Missing required fields");
+                          print(
+                              "⚠️ Skipping invalid account type: Missing required fields");
                         }
                       }
                     }
@@ -564,38 +618,37 @@ class _LoginscreenState extends State<Loginscreen> {
                     if (validatedTypes.isNotEmpty) {
                       await dbHelper.clearAccountTypesTable();
                       await dbHelper.insertAccountTypes(validatedTypes);
-                      
+
                       // Verify account types were stored successfully
                       final verifyCount = await dbHelper.getAccountTypeCount();
                       if (verifyCount >= validatedTypes.length) {
                         accountTypesStored = true;
-                        print("✅ Account types synced and verified successfully: ${validatedTypes.length} types");
+                        print(
+                            "✅ Account types synced and verified successfully: ${validatedTypes.length} types");
                       } else {
-                        throw Exception("Failed to verify account types storage");
+                        throw Exception(
+                            "Failed to verify account types storage");
                       }
                     } else {
                       print("❌ No valid account types to sync");
-                      accountTypesStored = true; // Mark as completed even with no data
+                      accountTypesStored =
+                          true; // Mark as completed even with no data
                     }
                   } else {
                     print("✅ Account types already up to date");
                     accountTypesStored = true;
                   }
                 } else if (accountTypesResponse == null) {
-                  throw Exception("Received null response from account types API");
+                  throw Exception(
+                      "Received null response from account types API");
                 } else {
                   throw Exception("Account types response is not a valid list");
                 }
-
               } catch (e) {
                 print("❌ Attempt $currentRetry failed for account types: $e");
                 if (currentRetry >= maxRetries) {
-                  print("⚠️ Failed to sync account types after $maxRetries attempts. Continuing with login...");
-                  // Don't fail login if account types sync fails
-                  // The app can still function with cached account types
                   accountTypesStored = true; // Mark as completed to continue
                 } else {
-                  // Wait before retry (exponential backoff)
                   await Future.delayed(Duration(seconds: currentRetry * 2));
                 }
               }

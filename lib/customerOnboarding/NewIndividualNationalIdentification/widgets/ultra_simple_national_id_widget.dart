@@ -482,6 +482,42 @@ class _UltraSimpleNationalIdWidgetState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(simpleNationalIdProvider);
+    
+    // Listen for authentication completion and close WebView
+    ref.listen(simpleNationalIdProvider, (previous, next) {
+      // Close WebView immediately when authentication completes
+      if (next.isCompleted && next.userData != null) {
+        debugPrint('🎉 [Widget] Authentication completed - FORCE closing WebView');
+        debugPrint('   - isCompleted: ${next.isCompleted}');
+        debugPrint('   - hasUserData: ${next.userData != null}');
+        debugPrint('   - showWebView: $_showWebView');
+        
+        if (_showWebView) {
+          setState(() {
+            _showWebView = false;
+            debugPrint('✅ [Widget] WebView closed successfully');
+          });
+        }
+        _stopStatusMonitoring();
+      }
+    });
+    
+    // ADDITIONAL: Force close WebView if authentication is completed
+    if (state.isCompleted && state.userData != null && _showWebView) {
+      debugPrint('🔄 [Widget] Force closing WebView in build method');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _showWebView) {
+          setState(() {
+            _showWebView = false;
+            debugPrint('✅ [Widget] WebView force closed in post frame callback');
+          });
+        }
+      });
+    }
+    
+    // DEBUG: Print state changes
+    debugPrint('🔍 [Widget] Build - isCompleted: ${state.isCompleted}, hasData: ${state.userData != null}, showWebView: $_showWebView');
+    
     _showWebViewIfReady(state);
     
     return Padding(
@@ -516,9 +552,26 @@ class _UltraSimpleNationalIdWidgetState
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
             ),
           ),
+          _buildCloseButton(),
+          const SizedBox(width: 8),
           _buildRetryButton(),
         ],
       ),
+    );
+  }
+
+  /// Builds close button
+  Widget _buildCloseButton() {
+    return IconButton(
+      onPressed: () {
+        debugPrint('❌ [Widget] Manual close requested');
+        setState(() {
+          _showWebView = false;
+        });
+        _stopStatusMonitoring();
+      },
+      icon: const Icon(Icons.close, color: Colors.red),
+      tooltip: 'Close Authentication',
     );
   }
 

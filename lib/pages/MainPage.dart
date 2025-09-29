@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:coopengageplus/services/token_service.dart';
 
 import 'package:google_nav_bar/google_nav_bar.dart';
 
@@ -39,6 +40,13 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _pageController = PageController();
     _fetchToken();
+    // Initialize token monitoring
+    _initializeTokenService();
+  }
+
+  Future<void> _initializeTokenService() async {
+    // Initialize token service for automatic logout on expiration
+    await TokenService.initialize();
   }
 
   Future<void> _fetchToken() async {
@@ -82,6 +90,8 @@ class _MainPageState extends State<MainPage> {
             setState(() {
               isLoading = false;
             });
+            // No valid token or role found, redirect to login
+            _redirectToLogin();
           }
         }
       }
@@ -100,6 +110,8 @@ class _MainPageState extends State<MainPage> {
         setState(() {
           isLoading = false;
         });
+        // No users found in database, redirect to login
+        _redirectToLogin();
       }
     }
     
@@ -237,12 +249,20 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  void logout() async {
-    await storage.delete(key: "token");
+  void _redirectToLogin() async {
+    // Stop token monitoring
+    TokenService.stopTokenMonitoring();
+    
+    // Navigate to login page
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
       (route) => false,
     );
+  }
+
+  void logout() async {
+    // Use TokenService for complete logout
+    await TokenService.forceLogoutWithContext(context);
   }
 }

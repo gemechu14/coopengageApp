@@ -109,11 +109,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               // Profile Card
               _buildProfileCard(),
               const SizedBox(height: 20),
-              
+
               // Branch Information Card
               _buildBranchInfoCard(),
               const SizedBox(height: 20),
-              
+
               // Settings Section
               _buildSettingsCard(),
             ],
@@ -174,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
               ),
               const SizedBox(width: 20),
-              
+
               // User Info
               Expanded(
                 child: Column(
@@ -192,7 +192,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                       ),
                     const SizedBox(height: 8),
-                    
                     if (isProfileLoading)
                       _buildShimmerContainer(100, 16, 4)
                     else
@@ -267,7 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Main Branch
           _buildBranchSection(
             title: 'Main Branch',
@@ -275,12 +274,12 @@ class _ProfileScreenState extends State<ProfileScreen>
             icon: Icons.home_work_rounded,
             isMain: true,
           ),
-          
+
           if (branches != null && branches!.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 16),
-            
+
             // Other Branches
             _buildBranchSection(
               title: 'Other Branches',
@@ -319,7 +318,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           ],
         ),
         const SizedBox(height: 8),
-        
         if (isProfileLoading)
           _buildShimmerContainer(200, 16, 4)
         else if (isMain)
@@ -335,19 +333,24 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildBranchTile(String name, {bool isSubBranch = false, bool isEmpty = false}) {
+  Widget _buildBranchTile(String name,
+      {bool isSubBranch = false, bool isEmpty = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isEmpty 
-            ? Colors.grey[50] 
-            : (isSubBranch ? tertiaryBlue.withOpacity(0.1) : primaryBlue.withOpacity(0.1)),
+        color: isEmpty
+            ? Colors.grey[50]
+            : (isSubBranch
+                ? tertiaryBlue.withOpacity(0.1)
+                : primaryBlue.withOpacity(0.1)),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isEmpty 
-              ? Colors.grey[300]! 
-              : (isSubBranch ? tertiaryBlue.withOpacity(0.3) : primaryBlue.withOpacity(0.3)),
+          color: isEmpty
+              ? Colors.grey[300]!
+              : (isSubBranch
+                  ? tertiaryBlue.withOpacity(0.3)
+                  : primaryBlue.withOpacity(0.3)),
         ),
       ),
       child: Row(
@@ -355,8 +358,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           Icon(
             isEmpty ? Icons.info_outline : Icons.business,
             size: 16,
-            color: isEmpty 
-                ? Colors.grey[500] 
+            color: isEmpty
+                ? Colors.grey[500]
                 : (isSubBranch ? tertiaryBlue : primaryBlue),
           ),
           const SizedBox(width: 8),
@@ -419,7 +422,6 @@ class _ProfileScreenState extends State<ProfileScreen>
               ],
             ),
           ),
-          
           _buildSettingsTile(
             icon: Icons.info_rounded,
             title: "About",
@@ -428,7 +430,6 @@ class _ProfileScreenState extends State<ProfileScreen>
               // Navigate to About Page
             },
           ),
-          
           _buildSettingsTile(
             icon: Icons.help_rounded,
             title: "Help",
@@ -563,7 +564,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
 
     await storage.delete(key: "token");
-    
+
     if (mounted) {
       Navigator.of(context).pop(); // Close loading dialog
       Navigator.pushAndRemoveUntil(
@@ -593,13 +594,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           // Don't get branches from token, we'll get them from database
           branches = [];
 
-          // Decode mainBranch if available in the token
-          if (decodedToken.containsKey("mainBranch")) {
-            mainBranchCode = decodedToken["mainBranch"]["branchCode"];
-            mainBranchCompanyName = decodedToken["mainBranch"]["companyName"];
-            mainBranchId = decodedToken["mainBranch"]["id"];
-          }
-
           isProfileLoading = false;
           isBranchesLoading = false;
         });
@@ -615,8 +609,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             "ProfileScreen: User found by token: ${user != null ? 'Yes' : 'No'}");
 
         if (user != null) {
-          print("ProfileScreen: Using data from database");
+          print("ProfileScreen: Using data from databasesds");
           setState(() {
+            print(user['mainBranchName']);
             username = user['username'] ?? user['fullName'] ?? "User";
             firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
             role = user['role'] ?? '';
@@ -719,14 +714,16 @@ class _ProfileScreenState extends State<ProfileScreen>
       final List<Map<String, dynamic>> branchResults =
           await db.query('Branches');
 
-      print("ProfileScreen: Raw branches from database: $branchResults");
+      print("ProfileScreen: Raw branches from database11: $branchResults");
 
       if (branchResults.isNotEmpty) {
+        print("dfdkjfdk");
         // Convert database results to the expected format
         final List<Map<String, dynamic>> formattedBranches =
             branchResults.map((branch) {
           return {
             'id': branch['id'],
+            "userId": branch['userId'],
             'name': branch['branchName'] ?? 'Unnamed Branch',
             'branchCode': branch['branchCode'] ?? '',
             'companyName': branch['companyName'] ??
@@ -735,7 +732,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           };
         }).toList();
 
-        print("ProfileScreen: Formatted branches: $formattedBranches");
+        print("ProfileScreen: Formatted branchess: $formattedBranches");
 
         setState(() {
           branches = formattedBranches;

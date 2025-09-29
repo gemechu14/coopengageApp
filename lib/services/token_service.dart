@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:flutter/material.dart';
 import '../service/GlobalData.dart';
-import '../Screen/LoginScreen.dart';
+import '../main.dart'; // Import to access global navigator key
 
 class TokenService {
   static Timer? _tokenCheckTimer;
@@ -76,6 +77,24 @@ class TokenService {
 
       // Stop token monitoring
       stopTokenMonitoring();
+
+      // Navigate to login screen using global navigator
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const Loginscreen()),
+          (Route<dynamic> route) => false,
+        );
+
+        // Show logout message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session expired. Please login again.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
     } catch (e) {
       print("Error during automatic logout: $e");
     }
@@ -174,6 +193,7 @@ class TokenService {
       startTokenMonitoring();
       print("Token service initialized and monitoring started");
     } else {
+      
       print("No valid token found, token monitoring not started");
     }
   }
@@ -193,7 +213,7 @@ class TokenService {
       const SnackBar(
         content: Text('Session expired. Please login again.'),
         backgroundColor: Colors.orange,
-        duration: Duration(seconds: 3),
+        duration: Duration(seconds: 1),
       ),
     );
   }
@@ -214,14 +234,14 @@ class TokenService {
         ),
         backgroundColor: Colors.orange,
         duration: const Duration(seconds: 5),
-        action: SnackBarAction(
-          label: 'Refresh',
-          textColor: Colors.white,
-          onPressed: () {
-            // You can implement token refresh logic here if your API supports it
-            _handleTokenRefresh();
-          },
-        ),
+        // action: SnackBarAction(
+        //   label: 'Refresh',
+        //   textColor: Colors.white,
+        //   onPressed: () {
+        //     // You can implement token refresh logic here if your API supports it
+        //     _handleTokenRefresh();
+        //   },
+        // ),
       ),
     );
   }

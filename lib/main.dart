@@ -77,7 +77,7 @@
 import 'dart:io';
 
 import 'package:coopengageplus/HttpOverrides.dart';
-import 'package:coopengageplus/Screen/LoginScreen.dart';
+import 'package:coopengageplus/pages/LoginPage.dart';
 import 'package:coopengageplus/Screen/SplashScreen.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
@@ -89,6 +89,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:device_preview/device_preview.dart'; // <-- Added
+
+// Global navigator key for accessing navigation context from anywhere
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 bool isOnline = true;
 
@@ -142,12 +145,13 @@ class MyApp extends StatelessWidget {
       useInheritedMediaQuery: true, // <-- Important for Device Preview
       locale: DevicePreview.locale(context), // <-- Use preview locale
       builder: DevicePreview.appBuilder, // <-- Wraps the app
+      navigatorKey: navigatorKey, // Add this line
 
       home: const SplashScreen(),
 
       routes: {
         '/home': (context) => const MainPage(),
-        '/login': (context) => const Loginscreen(),
+        '/login': (context) => const LoginPage(),
       },
 
       localizationsDelegates: [

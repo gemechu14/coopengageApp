@@ -510,7 +510,7 @@ class _AgentPageState extends State<AgentPage> {
                               content:
                                   Text('Session expired. Please login again.'),
                               backgroundColor: Colors.orange,
-                              duration: Duration(seconds: 3),
+                              duration: Duration(seconds: 1),
                             ),
                           );
 
@@ -821,7 +821,7 @@ class _AgentPageState extends State<AgentPage> {
             const SnackBar(
               content: Text('Session expired. Please login again.'),
               backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
+              duration: Duration(seconds: 1),
             ),
           );
 
@@ -872,7 +872,7 @@ class _AgentPageState extends State<AgentPage> {
             const SnackBar(
               content: Text('Session expired. Please login again.'),
               backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
+              duration: Duration(seconds: 1),
             ),
           );
 

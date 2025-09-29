@@ -52,6 +52,7 @@ class DatabaseHelper {
         await db.execute('''
           CREATE TABLE Branches(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId INTEGER,
             branchName TEXT NOT NULL,
             branchCode TEXT NOT NULL,
             companyName TEXT
@@ -68,8 +69,6 @@ class DatabaseHelper {
             FOREIGN KEY (branchId) REFERENCES Branches(id)
           )
         ''');
-
-
 
         await db.execute('''
   CREATE TABLE AccountTypes(
@@ -165,27 +164,27 @@ CREATE TABLE selected_language  (
             userId TEXT
           )''');
       },
-       onUpgrade: (db, oldVersion, newVersion) async {
-          if (oldVersion < 2) {
-           await _createCustomersTable(
-               db); // ✅ Create Customers table on upgrade
-         }
-         if (oldVersion < 3) {
-           // Add new columns to Users table
-           await db.execute('ALTER TABLE Users ADD COLUMN fullName TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN email TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN status TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN lastLoggedIn TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN registeredAt TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN updatedAt TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN clientName TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN clientDescription TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN mainBranchId INTEGER');
-           await db.execute('ALTER TABLE Users ADD COLUMN mainBranchName TEXT');
-           await db.execute('ALTER TABLE Users ADD COLUMN mainBranchCode TEXT');
-         }
-       },
-    
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await _createCustomersTable(
+              db); // ✅ Create Customers table on upgrade
+        }
+        if (oldVersion < 3) {
+          // Add new columns to Users table
+          await db.execute('ALTER TABLE Users ADD COLUMN fullName TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN email TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN status TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN lastLoggedIn TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN registeredAt TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN updatedAt TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN clientName TEXT');
+          await db
+              .execute('ALTER TABLE Users ADD COLUMN clientDescription TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN mainBranchId INTEGER');
+          await db.execute('ALTER TABLE Users ADD COLUMN mainBranchName TEXT');
+          await db.execute('ALTER TABLE Users ADD COLUMN mainBranchCode TEXT');
+        }
+      },
     );
   }
 
@@ -810,25 +809,32 @@ CREATE TABLE selected_language  (
       for (int i = 0; i < branches.length; i++) {
         final branch = branches[i];
         print("🔍 DEBUG: insertUser1 - Branch $i data: $branch");
-        
+
         // Prepare branch data with proper field mapping
         final branchData = {
           'id': branch['id'],
-          'branchName': branch['branchName'] ?? branch['name'] ?? branch['companyName'] ?? 'Unknown Branch',
+          'branchName': branch['branchName'] ??
+              branch['name'] ??
+              branch['companyName'] ??
+              'Unknown Branch',
           'branchCode': branch['branchCode'] ?? '',
-          'companyName': branch['companyName'] ?? branch['name'] ?? branch['branchName'] ?? 'Unknown Branch',
+          'companyName': branch['companyName'] ??
+              branch['name'] ??
+              branch['branchName'] ??
+              'Unknown Branch',
         };
-        
+
         print("🔍 DEBUG: insertUser1 - Inserting branch data: $branchData");
-        
+
         // Insert branch if it doesn't exist
         try {
           final branchId = await db.insert(
             'Branches',
             branchData,
-            conflictAlgorithm: ConflictAlgorithm.replace, // Use replace to update existing branches
+            conflictAlgorithm: ConflictAlgorithm
+                .replace, // Use replace to update existing branches
           );
-          
+
           print("🔍 DEBUG: insertUser1 - Branch inserted with ID: $branchId");
 
           // Link user with branch in UserBranches table
@@ -838,20 +844,25 @@ CREATE TABLE selected_language  (
               'userId': userId,
               'branchId': branch['id'], // Use the original branch ID from API
             },
-            conflictAlgorithm: ConflictAlgorithm.replace, // Use replace to avoid duplicates
+            conflictAlgorithm:
+                ConflictAlgorithm.replace, // Use replace to avoid duplicates
           );
-          
-          print("🔍 DEBUG: insertUser1 - UserBranch relationship created: userId=$userId, branchId=${branch['id']}");
+
+          print(
+              "🔍 DEBUG: insertUser1 - UserBranch relationship created: userId=$userId, branchId=${branch['id']}");
         } catch (e) {
           print("❌ DEBUG: insertUser1 - Error inserting branch $i: $e");
         }
       }
-      
+
       // Verify branches were stored correctly
       final storedBranches = await db.query('Branches');
-      final userBranches = await db.query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
-      print("🔍 DEBUG: insertUser1 - Total stored branches: ${storedBranches.length}");
-      print("🔍 DEBUG: insertUser1 - User branches relationships: ${userBranches.length}");
+      final userBranches = await db
+          .query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
+      print(
+          "🔍 DEBUG: insertUser1 - Total stored branches: ${storedBranches.length}");
+      print(
+          "🔍 DEBUG: insertUser1 - User branches relationships: ${userBranches.length}");
       print("🔍 DEBUG: insertUser1 - Stored branches: $storedBranches");
       print("🔍 DEBUG: insertUser1 - User branch relationships: $userBranches");
     } else {
@@ -859,6 +870,21 @@ CREATE TABLE selected_language  (
     }
   }
 
+//// delete old branches
+  Future<void> clearUserBranches(int userId) async {
+    final db = await database;
+
+    // Delete all branch relationships for the user
+    await db.delete(
+      'UserBranches',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    print("🔍 DEBUG: Cleared all branches for userId=$userId");
+  }
+
+  ///
   Future<void> updateUser({
     required int userId,
     String? username,
@@ -895,7 +921,8 @@ CREATE TABLE selected_language  (
     if (registeredAt != null) updateData['registeredAt'] = registeredAt;
     if (updatedAt != null) updateData['updatedAt'] = updatedAt;
     if (clientName != null) updateData['clientName'] = clientName;
-    if (clientDescription != null) updateData['clientDescription'] = clientDescription;
+    if (clientDescription != null)
+      updateData['clientDescription'] = clientDescription;
     if (mainBranchId != null) updateData['mainBranchId'] = mainBranchId;
     if (mainBranchName != null) updateData['mainBranchName'] = mainBranchName;
     if (mainBranchCode != null) updateData['mainBranchCode'] = mainBranchCode;
@@ -911,38 +938,47 @@ CREATE TABLE selected_language  (
     // Update branches if provided
     if (branches != null) {
       print("🔍 DEBUG: updateUser - Processing ${branches.length} branches");
-      
+
       // First, remove existing user-branch relationships
       await db.delete(
         'UserBranches',
         where: 'userId = ?',
         whereArgs: [userId],
       );
-      print("🔍 DEBUG: updateUser - Cleared existing user-branch relationships");
+      print(
+          "🔍 DEBUG: updateUser - Cleared existing user-branch relationships");
 
       // Insert new branches and relationships
       for (int i = 0; i < branches.length; i++) {
         final branch = branches[i];
         print("🔍 DEBUG: updateUser - Branch $i data: $branch");
-        
+
         // Prepare branch data with proper field mapping
         final branchData = {
           'id': branch['id'],
-          'branchName': branch['branchName'] ?? branch['name'] ?? branch['companyName'] ?? 'Unknown Branch',
+          'userId': branch['userId'],
+          'branchName': branch['branchName'] ??
+              branch['name'] ??
+              branch['companyName'] ??
+              'Unknown Branch',
           'branchCode': branch['branchCode'] ?? '',
-          'companyName': branch['companyName'] ?? branch['name'] ?? branch['branchName'] ?? 'Unknown Branch',
+          'companyName': branch['companyName'] ??
+              branch['name'] ??
+              branch['branchName'] ??
+              'Unknown Branch',
         };
-        
+
         print("🔍 DEBUG: updateUser - Inserting branch data: $branchData");
-        
+
         // Insert branch if it doesn't exist
         try {
           final branchId = await db.insert(
             'Branches',
             branchData,
-            conflictAlgorithm: ConflictAlgorithm.replace, // Use replace to update existing branches
+            conflictAlgorithm: ConflictAlgorithm
+                .replace, // Use replace to update existing branches
           );
-          
+
           print("🔍 DEBUG: updateUser - Branch inserted with ID: $branchId");
 
           // Link user with branch in UserBranches table
@@ -954,23 +990,59 @@ CREATE TABLE selected_language  (
             },
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
-          
-          print("🔍 DEBUG: updateUser - UserBranch relationship created: userId=$userId, branchId=${branch['id']}");
+
+          print(
+              "🔍 DEBUG: updateUser - UserBranch relationship created: userId=$userId, branchId=${branch['id']}");
         } catch (e) {
           print("❌ DEBUG: updateUser - Error inserting branch $i: $e");
         }
       }
-      
+
       // Verify branches were stored correctly
       final storedBranches = await db.query('Branches');
-      final userBranches = await db.query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
-      print("🔍 DEBUG: updateUser - Total stored branches: ${storedBranches.length}");
-      print("🔍 DEBUG: updateUser - User branches relationships: ${userBranches.length}");
+      final userBranches = await db
+          .query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
+      print(
+          "🔍 DEBUG: updateUser - Total stored branches: ${storedBranches.length}");
+      print(
+          "🔍 DEBUG: updateUser - User branches relationships: ${userBranches.length}");
       print("🔍 DEBUG: updateUser - Stored branches: $storedBranches");
       print("🔍 DEBUG: updateUser - User branch relationships: $userBranches");
     } else {
       print("🔍 DEBUG: updateUser - No branches data provided");
     }
+  }
+
+  Future<void> clearBranchesForUser(int userId) async {
+    final db = await database;
+
+    // 1️⃣ Delete all user-branch links
+    await db.delete(
+      'UserBranches',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    // 2️⃣ Optionally, remove branches that are not linked to any user
+    // This ensures completely cleaning branches that might have been left behind
+    await db.rawDelete('''
+    DELETE FROM Branches
+    WHERE id NOT IN (SELECT branchId FROM UserBranches)
+  ''');
+
+    // 3️⃣ Clear main branch info from Users table
+    await db.update(
+      'Users',
+      {
+        'mainBranchId': null,
+        'mainBranchName': '',
+        'mainBranchCode': '',
+      },
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    print("✅ Cleared all branches and main branch info for userId=$userId");
   }
 
 /////////////////////////////////////////////////////////////////////////

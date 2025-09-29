@@ -335,7 +335,7 @@ class RegistrationService {
 
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 70));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success();
@@ -376,13 +376,11 @@ class RegistrationService {
       // Add retry logic for network issues
       int retryCount = 0;
       const maxRetries = 1;
-      print("73734777777777777777777777777777");
       while (retryCount < maxRetries) {
         try {
           final response = await _networkHandler
-              .put1('/api/v1/accounts/individualdfdf/$userId', requestData)
+              .put1('/api/v1/accounts/individual/$userId', requestData)
               .timeout(const Duration(seconds: 60)); // Increased timeout
-          print("fdkfdfddddddddddddffffffffffffffffffffffffff");
           print(response.statusCode);
           if (response.statusCode == 200 || response.statusCode == 201) {
             return ServiceResult.success();
@@ -446,7 +444,7 @@ class RegistrationService {
 
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success();
@@ -613,7 +611,7 @@ class RegistrationService {
         try {
           final response = await _networkHandler
               .put1('/api/v1/accounts/individual/$userId', requestData)
-              .timeout(const Duration(seconds: 20));
+              .timeout(const Duration(seconds: 60));
 
           if (response.statusCode == 200 || response.statusCode == 201) {
             return ServiceResult.success();
@@ -753,7 +751,7 @@ class RegistrationService {
 
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success(userId: userId);
@@ -845,7 +843,7 @@ class RegistrationService {
 
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success();
@@ -924,7 +922,7 @@ class RegistrationService {
 
       final response = await _networkHandler
           .put1('/api/v1/accounts/individual/$userId', requestData)
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ServiceResult.success();

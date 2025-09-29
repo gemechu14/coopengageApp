@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/token_service.dart';
+import '../main.dart';
 
 /// Widget that monitors token expiration and handles automatic logout
 /// Add this widget to your main app screens to enable token monitoring
@@ -60,9 +61,14 @@ class _TokenMonitorWidgetState extends State<TokenMonitorWidget>
   Future<void> _checkTokenOnResume() async {
     // Check token validity when app resumes
     final isValid = await TokenService.isTokenValid();
-    if (!isValid && mounted) {
-      // Token is invalid, force logout
-      await TokenService.forceLogoutWithContext(context);
+    if (!isValid) {
+      // Token is invalid, force logout using global navigator if this context is unavailable
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        await TokenService.forceLogoutWithContext(context);
+      } else if (mounted) {
+        await TokenService.forceLogoutWithContext(this.context);
+      }
     }
   }
 
