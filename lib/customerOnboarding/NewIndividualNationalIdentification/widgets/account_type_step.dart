@@ -132,7 +132,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             initialDeposit: widget.initialDeposit,
             bankingType: widget.bankingType,
           );
-      
+
       debugPrint(
           "✅ [AccountType] Provider initialization complete, starting filter...");
       _filterAccountTypes();
@@ -183,7 +183,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
         _filteredAccountTypes = filtered;
         _isFiltering = false; // Set filtering to false when done
       });
-      
+
       // Add a delay before showing "no results" to ensure data has time to load
       if (filtered.isEmpty) {
         Future.delayed(const Duration(milliseconds: 800), () {
@@ -196,7 +196,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       } else {
         _showNoResults = true;
       }
-      
+
       debugPrint(
           "✅ [AccountType] Filter complete - showing ${filtered.length} account types");
     }
@@ -238,6 +238,9 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
         .where((type) => type.sex == 'BOTH' || type.sex == normalizedUserSex)
         .toList();
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -336,57 +339,6 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       ],
     );
   }
-
-  // Widget _buildContent(AccountTypeStepState state) {
-  //   // 1. Show loading if not initialized yet
-  //   if (!state.isInitialized) {
-  //     return _buildLoadingState();
-  //   }
-
-  //   // 2. Show loading if explicitly loading
-  //   if (state.isLoading) {
-  //     return _buildLoadingState();
-  //   }
-
-  //   // 3. Show error if any
-  //   if (state.errorMessage != null) {
-  //     return _buildErrorState(state.errorMessage!);
-  //   }
-
-  //   // 4. Show empty state only if initialized, not loading, and no filtered results
-  //   if (_filteredAccountTypes.isEmpty) {
-  //     return _buildNoAccountTypesState();
-  //   }
-
-  //   // 5. Show data
-  //   return Column(
-  //     children: [
-  //       _buildAccountTypesList(),
-  //       _buildSharesSection(),
-  //     ],
-  //   );
-  // }
-
-  // Widget _buildContent(AccountTypeStepState state) {
-  //   if (state.isLoading) {
-  //     return _buildLoadingState();
-  //   }
-
-  //   if (state.errorMessage != null) {
-  //     return _buildErrorState(state.errorMessage!);
-  //   }
-
-  //   if (_filteredAccountTypes.isEmpty) {
-  //     return _buildNoAccountTypesState();
-  //   }
-
-  //   return Column(
-  //     children: [
-  //       _buildAccountTypesList(),
-  //       _buildSharesSection(),
-  //     ],
-  //   );
-  // }
 
   /// Build loading state
   Widget _buildLoadingState() {
@@ -581,13 +533,13 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
             color: subtitleColor,
           ),
         ),
-        Text(
-          '${accountType.minAge} ',
-          style: TextStyle(
-            fontSize: 12,
-            color: subtitleColor,
-          ),
-        ),
+        // Text(
+        //   '${accountType.minAge} ',
+        //   style: TextStyle(
+        //     fontSize: 12,
+        //     color: subtitleColor,
+        //   ),
+        // ),
         const SizedBox(height: 8),
         _buildAccountDetails(accountType, subtitleColor),
       ],

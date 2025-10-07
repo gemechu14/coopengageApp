@@ -34,6 +34,9 @@ class StepperState {
   final String? dateOfBirth;
   final String? customerType;
   final String? legalId;
+  final String? issueAuthority;
+  final String? issueDate;
+  final String? expireDate;
   final double? percentageComplete;
   final String? createdAt;
   final String? updatedAt;
@@ -69,6 +72,9 @@ class StepperState {
     this.dateOfBirth,
     this.customerType,
     this.legalId,
+    this.issueAuthority,
+    this.issueDate,
+    this.expireDate,
     this.percentageComplete,
     this.createdAt,
     this.updatedAt,
@@ -105,6 +111,9 @@ class StepperState {
     String? dateOfBirth,
     String? customerType,
     String? legalId,
+    String? issueAuthority,
+    String? issueDate,
+    String? expireDate,
     double? percentageComplete,
     String? createdAt,
     String? updatedAt,
@@ -141,6 +150,9 @@ class StepperState {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       customerType: customerType ?? this.customerType,
       legalId: legalId ?? this.legalId,
+      issueAuthority: issueAuthority ?? this.issueAuthority,
+      issueDate: issueDate ?? this.issueDate,
+      expireDate: expireDate ?? this.expireDate,
       percentageComplete: percentageComplete ?? this.percentageComplete,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -163,6 +175,8 @@ class StepperNotifier extends StateNotifier<StepperState> {
 
   // Navigate to next step with safety checks
   void nextStep() {
+    print("macx step");
+    print(maxStep);
     if (state.activeStep < maxStep) {
       // print(
       //     'Stepper: Moving from step ${state.activeStep} to step ${state.activeStep + 1}');
@@ -174,7 +188,6 @@ class StepperNotifier extends StateNotifier<StepperState> {
   // Navigate to previous step with safety checks
   void previousStep() {
     if (state.activeStep > 0) {
-   
       state = state.copyWith(activeStep: state.activeStep - 1);
       // print('Stepper: Successfully moved to step ${state.activeStep}');
     }
@@ -381,6 +394,18 @@ class StepperNotifier extends StateNotifier<StepperState> {
     state = state.copyWith(legalId: legalId);
   }
 
+  void updateIssueAuthority(String? issueAuthority) {
+    state = state.copyWith(issueAuthority: issueAuthority);
+  }
+
+  void updateIssueDate(String? issueDate) {
+    state = state.copyWith(issueDate: issueDate);
+  }
+
+  void updateExpireDate(String? expireDate) {
+    state = state.copyWith(expireDate: expireDate);
+  }
+
   void updatePercentageComplete(double? percentageComplete) {
     state = state.copyWith(percentageComplete: percentageComplete);
   }
@@ -409,5 +434,5 @@ class StepperNotifier extends StateNotifier<StepperState> {
 final stepperProvider =
     StateNotifierProvider<StepperNotifier, StepperState>((ref) {
   // Set maxStep to 3 for 4 steps (0-based)
-  return StepperNotifier(maxStep: 3);
+  return StepperNotifier(maxStep: 4);
 });

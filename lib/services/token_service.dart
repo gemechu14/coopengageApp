@@ -54,7 +54,7 @@ class TokenService {
       if (timeToExpiry.inMinutes <= 5) {
         print("Token will expire in ${timeToExpiry.inMinutes} minutes");
         // You can show a warning notification here if needed
-        _showTokenExpirationWarning();
+        // _showTokenExpirationWarning();
       }
     } catch (e) {
       print("Error checking token expiration: $e");
@@ -91,7 +91,7 @@ class TokenService {
           const SnackBar(
             content: Text('Session expired. Please login again.'),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 1),
+            duration: Duration(milliseconds: 300),
           ),
         );
       }
@@ -120,35 +120,36 @@ class TokenService {
   }
 
   /// Show warning when token is about to expire
-  static void _showTokenExpirationWarning() {
-    // For now, just print a warning.
-    // You can implement UI notification when you have access to context
-    print("Warning: Token will expire soon!");
-  }
+  // static void _showTokenExpirationWarning() {
+  //   // For now, just print a warning.
+  //   // You can implement UI notification when you have access to context
+  //   print("Warning: Token will expire soon!");
+  // }
 
-  /// Handle token refresh (implement based on your API)
-  static Future<void> _handleTokenRefresh() async {
-    try {
-      // Implement token refresh logic here
-      // This would typically involve calling your API's refresh endpoint
-      print("Token refresh requested - implement based on your API");
+  // /// Handle token refresh (implement based on your API)
+  // static Future<void> _handleTokenRefresh() async {
+  //   try {
+  //     // Implement token refresh logic here
+  //     // This would typically involve calling your API's refresh endpoint
+  //     print("Token refresh requested - implement based on your API");
 
-      // Example implementation:
-      // final refreshToken = await _globalData.storage.read(key: "refreshToken");
-      // if (refreshToken != null) {
-      //   final response = await NetworkHandler().post('/auth/refresh', {
-      //     'refreshToken': refreshToken
-      //   });
-      //   if (response.statusCode == 200) {
-      //     final data = jsonDecode(response.body);
-      //     await _globalData.storage.write(key: "token", value: data['token']);
-      //     print("Token refreshed successfully");
-      //   }
-      // }
-    } catch (e) {
-      print("Error refreshing token: $e");
-    }
-  }
+  //     // Example implementation:
+  //     // final refreshToken = await _globalData.storage.read(key: "refreshToken");
+  //     // if (refreshToken != null) {
+  //     //   final response = await NetworkHandler().post('/auth/refresh', {
+  //     //     'refreshToken': refreshToken
+  //     //   });
+  //     //   if (response.statusCode == 200) {
+  //     //     final data = jsonDecode(response.body);
+  //     //     await _globalData.storage.write(key: "token", value: data['token']);
+  //     //     print("Token refreshed successfully");
+  //     //   }
+  //     // }
+  //   } catch (e) {
+  //     print("Error refreshing token: $e");
+
+  //   }
+  // }
 
   /// Manually check if current token is valid
   static Future<bool> isTokenValid() async {
@@ -193,7 +194,6 @@ class TokenService {
       startTokenMonitoring();
       print("Token service initialized and monitoring started");
     } else {
-      
       print("No valid token found, token monitoring not started");
     }
   }
@@ -213,7 +213,7 @@ class TokenService {
       const SnackBar(
         content: Text('Session expired. Please login again.'),
         backgroundColor: Colors.orange,
-        duration: Duration(seconds: 1),
+        duration: Duration(milliseconds: 300),
       ),
     );
   }
@@ -233,7 +233,7 @@ class TokenService {
           ],
         ),
         backgroundColor: Colors.orange,
-        duration: const Duration(seconds: 5),
+        duration: Duration(milliseconds: 300),
         // action: SnackBarAction(
         //   label: 'Refresh',
         //   textColor: Colors.white,

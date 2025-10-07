@@ -523,7 +523,7 @@ class _DashboardState extends State<Dashboard> {
         });
 
         // Check if token will expire soon and show warning
-        _checkTokenExpirationWarning();
+        // _checkTokenExpirationWarning();
       } catch (e) {
         print("Error decoding token: $e");
         // Token is invalid, force logout
@@ -537,42 +537,42 @@ class _DashboardState extends State<Dashboard> {
   }
 
   /// Check if token will expire soon and show warning
-  Future<void> _checkTokenExpirationWarning() async {
-    try {
-      Duration? remainingTime = await TokenService.getTokenRemainingTime();
-      if (remainingTime != null && remainingTime.inMinutes <= 5) {
-        // Show warning if token expires in 5 minutes or less
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.warning, color: Colors.white),
-                  SizedBox(width: 8),
-                  // Expanded(
-                  //   child: Text(
-                  //       'Your session will expire in ${remainingTime.inMinutes} minutes. Please save your work.'),
-                  // ),
-                ],
-              ),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 8),
-              action: SnackBarAction(
-                label: 'Refresh',
-                textColor: Colors.white,
-                onPressed: () {
-                  // You can implement token refresh logic here if your API supports it
-                  print("Token refresh requested");
-                },
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print("Error checking token expiration warning: $e");
-    }
-  }
+  // Future<void> _checkTokenExpirationWarning() async {
+  //   try {
+  //     Duration? remainingTime = await TokenService.getTokenRemainingTime();
+  //     if (remainingTime != null && remainingTime.inMinutes <= 5) {
+  //       // Show warning if token expires in 5 minutes or less
+  //       if (mounted) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(
+  //             content: Row(
+  //               children: [
+  //                 Icon(Icons.warning, color: Colors.white),
+  //                 SizedBox(width: 8),
+  //                 // Expanded(
+  //                 //   child: Text(
+  //                 //       'Your session will expire in ${remainingTime.inMinutes} minutes. Please save your work.'),
+  //                 // ),
+  //               ],
+  //             ),
+  //             backgroundColor: Colors.orange,
+  //             duration: Duration(seconds: 8),
+  //             action: SnackBarAction(
+  //               label: 'Refresh',
+  //               textColor: Colors.white,
+  //               onPressed: () {
+  //                 // You can implement token refresh logic here if your API supports it
+  //                 print("Token refresh requested");
+  //               },
+  //             ),
+  //           ),
+  //         );
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print("Error checking token expiration warning: $e");
+  //   }
+  // }
 
   /// Check for common token-related errors and handle them
   Future<bool> _handleTokenError(dynamic errorData) async {

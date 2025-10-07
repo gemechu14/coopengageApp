@@ -294,15 +294,15 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                                         ),
                                       ),
                                       const SizedBox(height: 2),
-                                      Text(
-                                        'Min Age: ${account_type.minAge}  |  Max Age: ${account_type.maxAge}',
-                                        style: TextStyle(
-                                          color: isSelected
-                                              ? Colors.white70
-                                              : Colors.grey[600],
-                                          fontSize: 13,
-                                        ),
-                                      ),
+                                      // Text(
+                                      //   'Min Age: ${account_type.minAge}  |  Max Age: ${account_type.maxAge}',
+                                      //   style: TextStyle(
+                                      //     color: isSelected
+                                      //         ? Colors.white70
+                                      //         : Colors.grey[600],
+                                      //     fontSize: 13,
+                                      //   ),
+                                      // ),
                                       Text(
                                         'Min Deposit: ${account_type.minAmount}',
                                         style: TextStyle(

@@ -19,6 +19,14 @@ class _MemberAdditionalInfoStepState
   int expandedIndex = 0;
   final List<TextEditingController> motherNameControllers = [];
 
+  final List<TextEditingController> legalIdController = [];
+
+  //   late TextEditingController legalIdController;
+  // late TextEditingController issueAuthorityController;
+  // late TextEditingController issueDateController;
+  // late TextEditingController expireDateController;
+  // late TextEditingController fanController;
+
   @override
   void dispose() {
     for (final controller in motherNameControllers) {
@@ -39,6 +47,13 @@ class _MemberAdditionalInfoStepState
     }
     while (motherNameControllers.length > memberCount) {
       motherNameControllers.removeLast().dispose();
+    }
+
+    while (legalIdController.length < memberCount) {
+      legalIdController.add(TextEditingController());
+    }
+    while (legalIdController.length > memberCount) {
+      legalIdController.removeLast().dispose();
     }
 
     return SingleChildScrollView(

@@ -650,6 +650,9 @@ class _IndividualAccountByNationalIdState
       // Prepare members data for API
       final members = stepperState.members.map((m) {
         final v = m.verifiedData ?? {};
+        print("dfdkkfjdkfkdjkkfkdjjkfkdk");
+        print(v);
+
         return {
           'fullName': v['fullName'] ?? m.fullName,
           'surname': v['surname'] ?? v['lastName'] ?? '',
@@ -668,10 +671,14 @@ class _IndividualAccountByNationalIdState
           'postCode': v['postCode'] ?? '',
           'zoneSubCity': v['zoneSubCity'] ?? '',
           'houseNo': v['houseNo'] ?? '',
-          'documentName': v['documentName'] ?? '',
+          // 'documentName': v['documentName'] ?? '',
           'issueAuthority': v['issueAuthority'] ?? '',
-          'issueDate': v['issueDate'] ?? '',
-          'expiryDate': v['expiryDate'] ?? '',
+          // 'issueDate': v['issueDate'] ?? '',
+          // 'expiryDate': v['expiryDate'] ?? '',
+
+          'issueDate': '2025-01-01', // static value
+          'expiryDate': '2030-01-01',
+          'documentName': 'NATIONALID',
           'employeeStatus': v['employeeStatus'] ?? '',
           'legalId': v['legalId'] ?? '',
           'salary': v['salary'] ?? '',
@@ -680,7 +687,7 @@ class _IndividualAccountByNationalIdState
           'employerName': v['employerName'] ?? '',
           'monthlyIncome': v['monthlyIncome'] ?? '',
           'sex': v['sex'] ?? m.sex ?? '',
-          // 'photo': v['photo'] ?? '',
+          'photo': v['picture'] ?? '',
         };
       }).toList();
 

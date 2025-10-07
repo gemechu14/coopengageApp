@@ -11,12 +11,10 @@ import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentific
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/Signature.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/account_type_step.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/additional_information.dart';
-// import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/fayda_auth_widget.dart';
-// import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/national_id_auth_widget.dart';
+
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/ultra_simple_national_id_widget.dart';
-// import 'package:coopengageplus/features/auth/login/login_screen.dart';
-
+import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/id_information_step.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:coopengageplus/utils/checkToken.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +50,7 @@ class _IndividualAccountByNationalIdState
   @override
   void initState() {
     super.initState();
-    formKeys = List.generate(4, (index) => GlobalKey<FormState>());
+    formKeys = List.generate(5, (index) => GlobalKey<FormState>());
     stepConfigs = [
       StepConfig(
           title: 'National ID Authetication',
@@ -68,6 +66,11 @@ class _IndividualAccountByNationalIdState
         builder: (context, ref) => const PhoneFanWidget(),
       ),
       StepConfig(
+        title: 'ID Information',
+        icon: Icon(Icons.credit_card),
+        builder: (context, ref) => const IdInformationStep(),
+      ),
+      StepConfig(
         title: 'Signature',
         icon: Icon(Icons.edit),
         builder: (context, ref) => const SignatureStep(),
@@ -81,7 +84,7 @@ class _IndividualAccountByNationalIdState
             ref.read(stepperProvider.notifier).updateAccountType(value);
           },
           onAccountTypeSelected: (accountType) {},
-          formKey: formKeys[3],
+          formKey: formKeys[4],
           customerAge: ref.watch(stepperProvider).customerAge,
           customerGender: ref.watch(stepperProvider).customerGender,
           initialDeposit: ref.watch(stepperProvider).initialDeposit,
@@ -400,10 +403,46 @@ class _IndividualAccountByNationalIdState
                         );
                       }
                     } else if (stepperState.activeStep == 2) {
-                      print("step 2");
+                      // ID Information step validation
+                      final stepperState = ref.read(stepperProvider);
+                      if (stepperState.legalId == null ||
+                          stepperState.legalId!.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill in the Legal ID field'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+                      // if (stepperState.fanNumber.isEmpty) {
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     const SnackBar(
+                      //       content: Text('FAN number is required'),
+                      //       backgroundColor: Colors.red,
+                      //     ),
+                      //   );
+                      //   return;
+                      // }
+                      // if (stepperState.fanNumber.length != 16 ||
+                      //     !RegExp(r'^\d{16}$')
+                      //         .hasMatch(stepperState.fanNumber)) {
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     const SnackBar(
+                      //       content:
+                      //           Text('FAN number must be exactly 16 digits'),
+                      //       backgroundColor: Colors.red,
+                      //     ),
+                      //   );
+                      //   return;
+                      // }
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 3) {
-                      final currentFormKey = formKeys[3];
+                      print("step 3 - signature");
+                      print(stepperState.activeStep);
+                      ref.read(stepperProvider.notifier).nextStep();
+                    } else if (stepperState.activeStep == 4) {
+                      final currentFormKey = formKeys[4];
                       if (currentFormKey.currentState?.validate() ?? false) {
                         // Get National ID data from SimpleFaydaService
                         final faydaState = ref.read(simpleNationalIdProvider);
@@ -433,43 +472,47 @@ class _IndividualAccountByNationalIdState
 
                         // Build RegistrationData with National ID data
                         final registrationData = RegistrationData(
-                          fullName: faydaState.userData?.name ??
-                              stepperState.fullName ??
-                              '',
-                          email: faydaState.userData?.email ??
-                              stepperState.email ??
-                              '',
-                          phone: faydaState.userData?.phoneNumber ??
-                              stepperState.authPhone ??
-                              '',
-                          accountType: stepperState.selectedAccountType,
-                          branch: stepperState.selectedBranch,
-                          motherName: stepperState.motherName,
-                          initialDeposit:
-                              stepperState.initialDeposit?.toString(),
-                          dateOfBirth: faydaState.userData?.birthdate ??
-                              stepperState.dateOfBirth,
-                          productType: stepperState.selectedProductType,
-                          documentName: 'NATIONALID',
-                          signature: stepperState.signature,
-                          sex: faydaState.userData?.gender ?? stepperState.sex,
-                          country: faydaState.userData?.address?.country ??
-                              stepperState.country,
-                          state: faydaState.userData?.address?.region ??
-                              stepperState.state,
-                          zoneSubCity: faydaState
-                              .userData?.address?.zone, // Add zone data
-                          streetAddress: faydaState
-                              .userData?.address?.woreda, // Add woreda data
-                          // legalId: stepperState.legalId,
-                          bankShare: stepperState.bankShare,
-                          customerShare: stepperState.customerShare,
-                          title: stepperState.selectedTitle,
-                          photo: faydaState.userData?.picture,
-                          // Use the saved picture path
-                          maritalStatus: stepperState.selectedMaritalStatus,
-                          legalId: faydaState.userData?.sub ?? '',
-                        );
+                            fullName: faydaState.userData?.name ??
+                                stepperState.fullName ??
+                                '',
+                            email: faydaState.userData?.email ??
+                                stepperState.email ??
+                                '',
+                            phone: faydaState.userData?.phoneNumber ??
+                                stepperState.authPhone ??
+                                '',
+                            accountType: stepperState.selectedAccountType,
+                            branch: stepperState.selectedBranch,
+                            motherName: stepperState.motherName,
+                            initialDeposit:
+                                stepperState.initialDeposit?.toString(),
+                            dateOfBirth: faydaState.userData?.birthdate ??
+                                stepperState.dateOfBirth,
+                            productType: stepperState.selectedProductType,
+                            documentName: 'NATIONALID',
+                            signature: stepperState.signature,
+                            sex:
+                                faydaState.userData?.gender ?? stepperState.sex,
+                            country: faydaState.userData?.address?.country ??
+                                stepperState.country,
+                            state: faydaState.userData?.address?.region ??
+                                stepperState.state,
+                            zoneSubCity: faydaState
+                                .userData?.address?.zone, // Add zone data
+                            streetAddress: faydaState
+                                .userData?.address?.woreda, // Add woreda data
+                            // legalId: stepperState.legalId,
+                            bankShare: stepperState.bankShare,
+                            customerShare: stepperState.customerShare,
+                            title: stepperState.selectedTitle,
+                            photo: faydaState.userData?.picture,
+                            // Use the saved picture path
+                            maritalStatus: stepperState.selectedMaritalStatus,
+                            // legalId: faydaState.userData?.sub ?? '',
+                            legalId: stepperState.legalId ?? '',
+                            issueAuthority: stepperState.issueAuthority ?? '',
+                            expirayDate: stepperState.expireDate ?? '',
+                            issueDate: stepperState.issueDate ?? '');
 
                         await Navigator.push(
                           context,
@@ -509,7 +552,7 @@ class _IndividualAccountByNationalIdState
                       Builder(
                         builder: (context) {
                           final buttonText =
-                              stepperState.activeStep == 3 ? 'Submit' : 'Next';
+                              stepperState.activeStep == 4 ? 'Submit' : 'Next';
                           print(
                               'Button text for step ${stepperState.activeStep}: $buttonText');
                           return Text(
@@ -523,7 +566,7 @@ class _IndividualAccountByNationalIdState
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        stepperState.activeStep == 3
+                        stepperState.activeStep == 4
                             ? Icons.check
                             : Icons.arrow_forward,
                         size: 20,
@@ -743,31 +786,37 @@ class _IndividualAccountByNationalIdState
 
       // Call the registration service
       final result = await registrationService.submitRegistration(
-        accountType: stepperState.selectedAccountType ?? '1',
-        initialDeposit: (stepperState.initialDeposit ?? 1000.0).toString(),
-        branch: stepperState.selectedBranch ?? 'FINFINNE',
-        motherName: stepperState.motherName ?? 'N/A',
-        state: faydaState.userData?.address?.region ??
-            stepperState.state ??
-            'Addis abeba',
-        documentName: 'NATIONALID',
-        customerInfoInitialDeposit: '100',
-        signature: stepperState.signature,
-        title: stepperState.selectedTitle,
-        fullName: faydaState.userData?.name ?? stepperState.fullName ?? '',
-        Sex: faydaState.userData?.gender ?? stepperState.sex ?? '',
-        phone:
-            faydaState.userData?.phoneNumber ?? stepperState.phoneNumber ?? '',
-        email: faydaState.userData?.email ?? stepperState.email ?? '',
-        dateOfBirth:
-            faydaState.userData?.birthdate ?? stepperState.dateOfBirth ?? '',
-        country:
-            faydaState.userData?.address?.country ?? stepperState.country ?? '',
-        zoneSubCity: faydaState.userData?.address?.zone ?? '',
-        streetAddress: faydaState.userData?.address?.woreda ?? '',
-        photo: faydaState.userData?.picture ?? '',
-        legalId: faydaState.userData?.sub ?? '',
-      );
+          accountType: stepperState.selectedAccountType ?? '1',
+          initialDeposit: (stepperState.initialDeposit ?? 1000.0).toString(),
+          branch: stepperState.selectedBranch ?? 'FINFINNE',
+          motherName: stepperState.motherName ?? 'N/A',
+          state: faydaState.userData?.address?.region ??
+              stepperState.state ??
+              'Addis abeba',
+          documentName: 'NATIONALID',
+          customerInfoInitialDeposit: '100',
+          signature: stepperState.signature,
+          title: stepperState.selectedTitle,
+          fullName: faydaState.userData?.name ?? stepperState.fullName ?? '',
+          Sex: faydaState.userData?.gender ?? stepperState.sex ?? '',
+          phone: faydaState.userData?.phoneNumber ??
+              stepperState.phoneNumber ??
+              '',
+          email: faydaState.userData?.email ?? stepperState.email ?? '',
+          dateOfBirth:
+              faydaState.userData?.birthdate ?? stepperState.dateOfBirth ?? '',
+          country: faydaState.userData?.address?.country ??
+              stepperState.country ??
+              '',
+          zoneSubCity: faydaState.userData?.address?.zone ?? '',
+          streetAddress: faydaState.userData?.address?.woreda ?? '',
+          photo: faydaState.userData?.picture ?? '',
+          // legalId: faydaState.userData?.sub ?? '',
+
+          legalId: stepperState.legalId ?? '',
+          issueAuthority: stepperState.issueAuthority ?? '',
+          expirayDate: stepperState.expireDate ?? '',
+          issueDate: stepperState.issueDate ?? '');
 
       // Close loading dialog
       if (!_disposed && Navigator.canPop(context)) {
@@ -863,12 +912,30 @@ class _IndividualAccountByNationalIdState
       if (!_disposed && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
-      print("kdfdkfkdhkfkdfkdfkd");
-      print(e);
+
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      print("⚠️ Registration Error: $errorMessage");
+
       if (!_disposed) {
         DialogHelper.showErrorDialog(
-            context, "Registration Failed, please try later");
+          context,
+          errorMessage.isNotEmpty
+              ? errorMessage
+              : "Registration failed, please try again later.",
+        );
       }
     }
+
+    // catch (e) {
+    //   if (!_disposed && Navigator.canPop(context)) {
+    //     Navigator.pop(context);
+    //   }
+    //   print("kdfdkfkdhkfkdfkdfkd");
+    //   print(e);
+    //   if (!_disposed) {
+    //     DialogHelper.showErrorDialog(
+    //         context, "Registration Failed, please try later");
+    //   }
+    // }
   }
 }

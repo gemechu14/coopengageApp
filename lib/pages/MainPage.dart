@@ -51,7 +51,11 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
+
+
     print("MainPage: Token found: ${token != null ? 'Yes' : 'No'}");
+
+    print(token);
     
     if (token != null && token.isNotEmpty) {
       try {

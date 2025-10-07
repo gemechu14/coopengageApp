@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/services/token_service.dart';
+import 'package:http_parser/http_parser.dart';
 
 class RegistrationService {
   static const String baseUrl = AppConstants.baseURL;
@@ -188,6 +189,9 @@ class RegistrationService {
     BuildContext? context, // Add context parameter for error handling
   }) async {
     try {
+      print("Gemechu Bultidddddfdfdfdfdfdfdf");
+
+      print(members);
       // Check token validity first
       if (!await _isTokenValid()) {
         print('RegistrationService: Token is invalid, handling expiration');
@@ -200,7 +204,9 @@ class RegistrationService {
         throw Exception("Token not found");
       }
 
-      print("Gemechu Bulti");
+      print("Gemechu Bultidddddfdfdfdfdfdfdf");
+
+      print(members);
       print(token);
       print("Members");
       print(members);
@@ -214,12 +220,54 @@ class RegistrationService {
       // Add member fields
       for (int i = 0; i < members.length; i++) {
         final member = members[i];
+        // member.forEach((key, value) {
+        //   if (value != null) {
+        //     request.fields['customers[$i].$key'] = value.toString();
+        //   }
+        // });
+
+        // 1. Add all regular fields except photo & signature
         member.forEach((key, value) {
-          if (value != null) {
+          if (value != null && key != 'photo' && key != 'signature') {
             request.fields['customers[$i].$key'] = value.toString();
           }
         });
 
+// Attach signature if available
+        if (signatures.length > i && signatures[i] != null) {
+          final tempDir = Directory.systemTemp;
+          final tempFile = File('${tempDir.path}/signature_$i.png');
+          await tempFile.writeAsBytes(signatures[i]!);
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'customers[$i].signature',
+              tempFile.path,
+              contentType: MediaType('image', 'png'),
+            ),
+          );
+        }
+
+        // Attach photo if available
+        final photoData = member['photo'] as String?;
+        if (photoData != null) {
+          // Strip any data URL prefix
+          final base64Str =
+              photoData.contains(',') ? photoData.split(',').last : photoData;
+          final bytes = base64Decode(base64Str);
+
+          // Write to temp PNG file
+          final tempFile = File('${Directory.systemTemp.path}/photo_$i.png');
+          await tempFile.writeAsBytes(bytes);
+
+          // Attach only as file
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'customers[$i].photo', // make sure this matches the backend exactly
+              tempFile.path,
+              contentType: MediaType('image', 'png'),
+            ),
+          );
+        }
         // // Attach signature as file if available
         // if (signatures.length > i && signatures[i] != null) {
         //   final tempDir = Directory.systemTemp;

@@ -102,7 +102,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
           controller: initialdepositController,
           keyboardType: TextInputType.number,
           errorMessage: "Initial amount cannot be empty",
-          leadingIcon: Icons.balance,
+          leadingIcon: Icons.wallet,
           isRequired: true,
           onChanged: (value) {
             // Save to stepper state

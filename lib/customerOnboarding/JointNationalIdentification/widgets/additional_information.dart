@@ -63,6 +63,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
 
     // Initialize with existing values from state
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      
       final stepperState = ref.read(stepperProvider);
       if (stepperState.motherName != null &&
           stepperState.motherName!.isNotEmpty) {
