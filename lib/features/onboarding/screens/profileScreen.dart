@@ -11,6 +11,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
 import 'dart:convert'; // Added for jsonDecode
+import 'pages/overall_stats_page.dart';
+import 'pages/recent_invitations_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -112,6 +114,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
               // Branch Information Card
               _buildBranchInfoCard(),
+              const SizedBox(height: 20),
+
+              // Quick Actions Card
+              _buildQuickActionsCard(),
               const SizedBox(height: 20),
 
               // Settings Section
@@ -378,6 +384,83 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Widget _buildQuickActionsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.dashboard_outlined,
+                    color: cyanblueColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Quick Actions',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: blackColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildActionTile(
+            icon: Icons.analytics_outlined,
+            title: 'Overall Statistics',
+            subtitle: 'View your invitation performance',
+            color: primaryBlue,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OverallStatsPage(),
+                ),
+              );
+            },
+          ),
+          _buildActionTile(
+            icon: Icons.history_outlined,
+            title: 'Recent Invitations',
+            subtitle: 'View all sent invitations',
+            color: secondaryBlue,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RecentInvitationsPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSettingsCard() {
     return Container(
       decoration: BoxDecoration(
@@ -443,6 +526,66 @@ class _ProfileScreenState extends State<ProfileScreen>
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: blackColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
