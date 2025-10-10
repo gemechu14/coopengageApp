@@ -25,6 +25,9 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
   AccountType _selectedAccountType = AccountType.individual;
   SharePlatform _selectedPlatform = SharePlatform.whatsapp;
 
+  // Track if link has been generated to lock fields
+  bool _isLinkGenerated = false;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -73,6 +76,18 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
       return;
     }
 
+    // Format phone number: remove first 0 and add +251
+    String? formattedPhone;
+    if (_phoneController.text.trim().isNotEmpty) {
+      final phone = _phoneController.text.trim();
+      // Remove first 0 if present and add +251
+      if (phone.startsWith('0')) {
+        formattedPhone = '+251${phone.substring(1)}';
+      } else {
+        formattedPhone = '+251$phone';
+      }
+    }
+
     // Create request
     final request = LinkGenerationRequest(
       accountType: _selectedAccountType,
@@ -80,9 +95,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
       recipientName: _nameController.text.trim().isEmpty
           ? null
           : _nameController.text.trim(),
-      recipientPhone: _phoneController.text.trim().isEmpty
-          ? null
-          : _phoneController.text.trim(),
+      recipientPhone: formattedPhone,
       email: _emailController.text.trim().isEmpty
           ? null
           : _emailController.text.trim(),
@@ -95,6 +108,11 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
     final state = ref.read(linkGeneratorProvider);
     if (mounted) {
       if (state.hasResult && !state.hasError) {
+        // Lock fields after successful generation
+        setState(() {
+          _isLinkGenerated = true;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content:
@@ -106,7 +124,8 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
       } else if (state.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(state.errorMessage ?? 'An error occurred'),
+            // content: Text(state.errorMessage ?? 'An error occurred'),
+            content: Text("Link has already been generated earlier"),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -173,8 +192,12 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Generate Shareable Link',
-            style: TextStyle(color: cyanblueColor, fontSize: 17),
+            'Generate Link',
+            style: TextStyle(
+              color: cyanblueColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           // centerTitle: true,
           leading: IconButton(
@@ -193,7 +216,8 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                 const SizedBox(height: 16),
 
                 // Result Card
-                if (state.hasResult) _buildResultCard(state.result!),
+                if (_isLinkGenerated)
+                  if (state.hasResult) _buildResultCard(state.result!),
               ],
             ),
           ),
@@ -242,7 +266,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                     child: Text(type.displayName),
                   );
                 }).toList(),
-                onChanged: state.isLoading
+                onChanged: (state.isLoading || _isLinkGenerated)
                     ? null
                     : (value) {
                         if (value != null) {
@@ -257,10 +281,6 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                 value: _selectedPlatform,
                 decoration: InputDecoration(
                   labelText: 'Platform',
-                  // prefixIcon: Icon(
-                  //   _selectedPlatform.iconData,
-                  //   color: _selectedPlatform.color,
-                  // ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -279,7 +299,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                     ),
                   );
                 }).toList(),
-                onChanged: state.isLoading
+                onChanged: (state.isLoading || _isLinkGenerated)
                     ? null
                     : (value) {
                         if (value != null) {
@@ -299,7 +319,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
               // Recipient Name Field
               TextFormField(
                 controller: _nameController,
-                enabled: !state.isLoading,
+                enabled: !state.isLoading && !_isLinkGenerated,
                 decoration: InputDecoration(
                   labelText: 'Recipient Name (Optional)',
                   hintText: 'Enter recipient name',
@@ -318,7 +338,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   _selectedPlatform == SharePlatform.telegram)
                 TextFormField(
                   controller: _phoneController,
-                  enabled: !state.isLoading,
+                  enabled: !state.isLoading && !_isLinkGenerated,
                   keyboardType: TextInputType.phone,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
@@ -327,7 +347,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   decoration: InputDecoration(
                     labelText: 'Phone Number*',
                     hintText: '09xxxxxxxx or 07xxxxxxxx',
-                    // prefixIcon: const Icon(Icons.phone_outlined),
+                    prefixIcon: const Icon(Icons.phone_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -340,7 +360,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
               if (_selectedPlatform == SharePlatform.email)
                 TextFormField(
                   controller: _emailController,
-                  enabled: !state.isLoading,
+                  enabled: !state.isLoading && !_isLinkGenerated,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email Address *',
@@ -357,7 +377,8 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
 
               // Submit Button
               FilledButton.icon(
-                onPressed: state.isLoading ? null : _onSubmit,
+                onPressed:
+                    (state.isLoading || _isLinkGenerated) ? null : _onSubmit,
                 icon: state.isLoading
                     ? const SizedBox(
                         width: 20,
@@ -368,13 +389,18 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                               AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Icon(Icons.link),
+                    : Icon(_isLinkGenerated ? Icons.check_circle : Icons.link),
                 label: Text(
-                  state.isLoading ? 'Generating...' : 'Generate Link',
+                  state.isLoading
+                      ? 'Generating...'
+                      : _isLinkGenerated
+                          ? 'Link Generated'
+                          : 'Generate Link',
                   style: const TextStyle(fontSize: 16),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: cyanblueColor,
+                  backgroundColor:
+                      _isLinkGenerated ? Colors.grey : cyanblueColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -559,34 +585,34 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
             ],
 
             // Message Section (if provided)
-            if (result.message != null && result.message!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        result.message!,
-                        style: TextStyle(
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            // if (result.message != null && result.message!.isNotEmpty) ...[
+            //   const SizedBox(height: 16),
+            //   Container(
+            //     padding: const EdgeInsets.all(12),
+            //     decoration: BoxDecoration(
+            //       color: Theme.of(context).colorScheme.primaryContainer,
+            //       borderRadius: BorderRadius.circular(8),
+            //     ),
+            //     child: Row(
+            //       children: [
+            //         Icon(
+            //           Icons.info_outline,
+            //           color: Theme.of(context).colorScheme.primary,
+            //         ),
+            //         const SizedBox(width: 12),
+            //         Expanded(
+            //           child: Text(
+            //             result.message!,
+            //             style: TextStyle(
+            //               color:
+            //                   Theme.of(context).colorScheme.onPrimaryContainer,
+            //             ),
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ],
           ],
         ),
       ),
