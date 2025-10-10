@@ -25,7 +25,7 @@ class ListContants {
 
   static const List<String> AccountTypeSelection = [
     'AND',
-    'OR',
+    'AND_OR',
   ];
 
   static const List<String> NumberOfMembers = [

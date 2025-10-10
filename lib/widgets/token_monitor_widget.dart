@@ -55,7 +55,7 @@ class _TokenMonitorWidgetState extends State<TokenMonitorWidget>
 
   Future<void> _initializeTokenMonitoring() async {
     // Initialize the token service
-    await TokenService.initialize();
+    await TokenService.initialize(context);
   }
 
   Future<void> _checkTokenOnResume() async {

@@ -484,6 +484,9 @@ class _IndividualAccountByNationalIdState
                         bankShare: stepperState.bankShare,
                         customerShare: stepperState.customerShare,
                         dateOfBirth: stepperState.dateOfBirth,
+                        issueAuthority: stepperState.issueAuthority,
+                        // issueDate: '3456',
+
                         // zoneSubCity: stepperState,
                         // currency: stepperState.currency,
                         // ... any other shared fields
@@ -650,8 +653,10 @@ class _IndividualAccountByNationalIdState
       // Prepare members data for API
       final members = stepperState.members.map((m) {
         final v = m.verifiedData ?? {};
-        print("dfdkkfjdkfkdjkkfkdjjkfkdk");
-        print(v);
+
+        final otherDatas = m ?? {};
+        print("dfdkkfjdkfkdjkkfkdjjkfkdkeeee");
+        print(v['issueDate']);
 
         return {
           'fullName': v['fullName'] ?? m.fullName,
@@ -672,18 +677,19 @@ class _IndividualAccountByNationalIdState
           'zoneSubCity': v['zoneSubCity'] ?? '',
           'houseNo': v['houseNo'] ?? '',
           // 'documentName': v['documentName'] ?? '',
-          'issueAuthority': v['issueAuthority'] ?? '',
-          // 'issueDate': v['issueDate'] ?? '',
-          // 'expiryDate': v['expiryDate'] ?? '',
+          'issueAuthority': m.issueAuthority ?? '',
+          // 'issueDate': otherDatas['issueDate'] ?? '',
+          'issueDate': m.issueDate ?? '',
+          'expiryDate': m.expireDate ?? '',
 
-          'issueDate': '2025-01-01', // static value
-          'expiryDate': '2030-01-01',
+          // 'issueDate': '2025-01-01', // static value
+          // 'expiryDate': '2030-01-01',
           'documentName': 'NATIONALID',
           'employeeStatus': v['employeeStatus'] ?? '',
-          'legalId': v['legalId'] ?? '',
+          'legalId': m.legalId ?? '',
           'salary': v['salary'] ?? '',
           'sector': v['sector'] ?? '',
-          'industry': v['industry'] ?? '',
+          'industry': m.legalId ?? '',
           'employerName': v['employerName'] ?? '',
           'monthlyIncome': v['monthlyIncome'] ?? '',
           'sex': v['sex'] ?? m.sex ?? '',
@@ -702,7 +708,7 @@ class _IndividualAccountByNationalIdState
         'initialDeposit': (stepperState.initialDeposit ?? 100).toString(),
         // 'percentageCompleted':
         //     (stepperState.percentageComplete ?? 10).toString(),
-        'jointAccountType': 'AND_OR'
+        'jointAccountType': stepperState.jointAccountType ?? 'AND_OR',
       };
 
       print("submitted data");
@@ -784,6 +790,8 @@ class _IndividualAccountByNationalIdState
       if (!_disposed) {
         DialogHelper.showErrorDialog(
             context, "Registration Failed, please try later");
+        // context,
+        // "Registration failed: ${e.toString()}");
       }
     }
   }

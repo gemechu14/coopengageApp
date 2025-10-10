@@ -8,6 +8,13 @@ class JointMemberInfo {
   final String? maritalStatus;
   final dynamic signature;
   final bool isVerified;
+  final String? legalId;
+
+  // Add these new fields
+  final String? issueAuthority;
+  final String? issueDate;
+  final String? expireDate;
+
   final Map<String, dynamic>? verifiedData;
 
   JointMemberInfo({
@@ -21,6 +28,10 @@ class JointMemberInfo {
     this.signature,
     this.isVerified = false,
     this.verifiedData,
+    this.legalId,
+    this.issueAuthority,
+    this.issueDate,
+    this.expireDate,
   });
 
   JointMemberInfo copyWith({
@@ -33,7 +44,12 @@ class JointMemberInfo {
     String? maritalStatus,
     dynamic signature,
     bool? isVerified,
+    String? legalId,
     Map<String, dynamic>? verifiedData,
+    // required String legalId,
+    String? issueAuthority,
+    String? issueDate,
+    String? expireDate,
   }) {
     return JointMemberInfo(
       nationalId: nationalId ?? this.nationalId,
@@ -46,6 +62,10 @@ class JointMemberInfo {
       signature: signature ?? this.signature,
       isVerified: isVerified ?? this.isVerified,
       verifiedData: verifiedData ?? this.verifiedData,
+      legalId: legalId ?? this.legalId,
+      issueAuthority: issueAuthority ?? this.issueAuthority,
+      issueDate: issueDate ?? this.issueDate,
+      expireDate: expireDate ?? this.expireDate,
     );
   }
 
@@ -68,6 +88,10 @@ class JointMemberInfo {
       signature: map['signature'],
       isVerified: safeIsVerified,
       verifiedData: map['verifiedData'],
+      legalId: map['legalId'],
+      issueAuthority: map['issueAuthority'],
+      issueDate: map['issueDate'],
+      expireDate: map['expireDate'],
     );
   }
 
@@ -83,6 +107,10 @@ class JointMemberInfo {
       'signature': signature,
       'isVerified': isVerified,
       'verifiedData': verifiedData,
+      'legalId': legalId,
+      'issueAuthority': issueAuthority,
+      'issueDate': issueDate,
+      'expireDate': expireDate,
     };
   }
 }
@@ -100,7 +128,8 @@ class RegistrationData {
   final String? maritalStatus;
   final String? branch;
   final String? documentName;
-  final dynamic residenceCard; // Can be String, File, or Uint8List depending on usage
+  final dynamic
+      residenceCard; // Can be String, File, or Uint8List depending on usage
   final dynamic residenceCardBack;
   final String? occupation;
   final String? monthlyIncome;
@@ -197,10 +226,16 @@ class RegistrationData {
       signature: map['signature'],
       photo: map['photo'],
       termsAccepted: map['termsAccepted'],
-      percentageCompleted: map['percentageCompleted'] != null ? double.tryParse(map['percentageCompleted'].toString()) ?? 0.0 : 0.0,
+      percentageCompleted: map['percentageCompleted'] != null
+          ? double.tryParse(map['percentageCompleted'].toString()) ?? 0.0
+          : 0.0,
       status: map['status'],
-      bankShare: map['bankShare'] != null ? int.tryParse(map['bankShare'].toString()) : null,
-      customerShare: map['customerShare'] != null ? int.tryParse(map['customerShare'].toString()) : null,
+      bankShare: map['bankShare'] != null
+          ? int.tryParse(map['bankShare'].toString())
+          : null,
+      customerShare: map['customerShare'] != null
+          ? int.tryParse(map['customerShare'].toString())
+          : null,
       members: map['members'] != null
           ? List<JointMemberInfo>.from(
               (map['members'] as List).map((x) => JointMemberInfo.fromMap(x)))
@@ -248,4 +283,4 @@ class RegistrationData {
       'members': members?.map((x) => x.toMap()).toList(),
     };
   }
-} 
+}

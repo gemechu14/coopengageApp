@@ -5,6 +5,9 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:coopengageplus/constants/config/config.dart';
 import 'dart:async';
+import 'package:http_parser/http_parser.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:image/image.dart' as img;
 
 class RegistrationService {
   static const String baseUrl = AppConstants.baseURL;
@@ -152,24 +155,73 @@ class RegistrationService {
   Future<Map<String, dynamic>> submitOrganizationalRegistration({
     required Map<String, dynamic> requestData,
   }) async {
-    try {
-      print("incoming dataaaaa");
-      // print(requestData.);
-      String? token = await storage.read(key: "token");
-      if (token == null) {
-        throw Exception("Token not found");
+    Future<void> _addImageFile({
+      required http.MultipartRequest request,
+      required String fieldName,
+      required Uint8List? bytes,
+      required String filename,
+    }) async {
+      if (bytes == null || bytes.isEmpty) return;
+
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+
+        // Save as PNG
+        final pngPath = '${appDir.path}/$filename.png';
+        final pngFile = File(pngPath);
+        await pngFile.writeAsBytes(bytes);
+
+        // Add PNG to request
+        request.files.add(await http.MultipartFile.fromPath(
+          fieldName,
+          pngFile.path,
+          filename: '$filename.png',
+          contentType: MediaType('image', 'png'),
+        ));
+
+        print("✅ $fieldName uploaded as PNG");
+
+        // Optional: Also create JPG version if backend requires JPG
+        final decoded = img.decodeImage(bytes);
+        if (decoded != null) {
+          final jpgBytes = img.encodeJpg(decoded, quality: 90);
+          final jpgPath = '${appDir.path}/$filename.jpg';
+          final jpgFile = File(jpgPath);
+          await jpgFile.writeAsBytes(jpgBytes);
+
+          // Uncomment below if your backend accepts only JPG
+          /*
+        request.files.add(await http.MultipartFile.fromPath(
+          fieldName,
+          jpgFile.path,
+          filename: '$filename.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ));
+        print("✅ $fieldName also available as JPG");
+        */
+        }
+      } catch (e) {
+        print("❌ Error saving $fieldName: $e");
       }
+    }
+
+    try {
+      print("📩 Preparing organizational registration data......");
+      String? token = await storage.read(key: "token");
+
+      print(token);
+      if (token == null) throw Exception("Token not found");
+      print(requestData);
       final uri = Uri.parse('$baseUrl/api/v1/accounts/organizational');
       final request = http.MultipartRequest("POST", uri);
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
 
-      // Add company details
+      // 🏢 Company details
       request.fields["companyName"] = requestData["companyName"] ?? "";
       request.fields["email"] = requestData["email"] ?? "";
       request.fields["tinNumber"] = requestData["tinNumber"] ?? "";
       request.fields["legalId"] = requestData["legalId"] ?? "";
-      // request.fields["phoneNumber"] = 0+ requestData["phoneNumber"] ?? "";
       request.fields["phoneNumber"] = '0${requestData["phoneNumber"] ?? ""}';
       request.fields["dateOfEstablishment"] =
           requestData["dateOfEstablishment"] ?? "";
@@ -185,7 +237,7 @@ class RegistrationService {
       request.fields["percentageCompleted"] =
           requestData["percentageCompleted"]?.toString() ?? "0";
 
-      // Handle personal information (Representatives)
+      // 👥 Representatives / Customers
       List<Map<String, dynamic>> personalInfo = requestData["customers"] ?? [];
       for (int i = 0; i < personalInfo.length; i++) {
         var person = personalInfo[i];
@@ -201,83 +253,92 @@ class RegistrationService {
         request.fields["personalInfo[$i].expiryDate"] =
             person["expiryDate"] ?? "";
 
-        // Handle resident card front
-        if (person["residenceCard"] != null) {
-          request.files.add(await http.MultipartFile.fromBytes(
-            "personalInfo[$i].residenceCard",
-            person["residenceCard"],
-            filename: "residence_front_$i.jpg",
-          ));
-        }
+        // 🖼️ Attach images
+        await _addImageFile(
+          request: request,
+          fieldName: "personalInfo[$i].residenceCard",
+          bytes: person["residenceCard"],
+          filename: "residence_front_$i",
+        );
 
-        // Handle resident card back
-        if (person["residenceCardBack"] != null) {
-          request.files.add(await http.MultipartFile.fromBytes(
-            "personalInfo[$i].residenceCardBack",
-            person["residenceCardBack"],
-            filename: "residence_back_$i.jpg",
-          ));
-        }
+        await _addImageFile(
+          request: request,
+          fieldName: "personalInfo[$i].residenceCardBack",
+          bytes: person["residenceCardBack"],
+          filename: "residence_back_$i",
+        );
 
-        // Handle signature
-        if (person["signature"] != null) {
-          request.files.add(await http.MultipartFile.fromBytes(
-            "personalInfo[$i].signature",
-            person["signature"],
-            filename: "signature_$i.jpg",
-          ));
-        }
+        await _addImageFile(
+          request: request,
+          fieldName: "personalInfo[$i].signature",
+          bytes: person["signature"],
+          filename: "signature_$i",
+        );
 
-        // Handle photo
-        if (person["photo"] != null) {
-          request.files.add(await http.MultipartFile.fromBytes(
-            "personalInfo[$i].photo",
-            person["photo"],
-            filename: "photo_$i.jpg",
-          ));
-        }
+        await _addImageFile(
+          request: request,
+          fieldName: "personalInfo[$i].photo",
+          bytes: person["photo"],
+          filename: "photo_$i",
+        );
       }
 
-      // Handle files (if provided)
+      // 📎 Company-related documents
       if (requestData["letterOfRequest"] != null) {
         request.files.add(await http.MultipartFile.fromBytes(
-            "letterOfRequest", requestData["letterOfRequest"],
-            filename: "letter.pdf"));
+          "letterOfRequest",
+          requestData["letterOfRequest"],
+          filename: "letter.pdf",
+          contentType: MediaType('application', 'pdf'),
+        ));
       }
+
       if (requestData["tradeLicense"] != null) {
         request.files.add(await http.MultipartFile.fromBytes(
-            "tradeLicense", requestData["tradeLicense"],
-            filename: "license.pdf"));
+          "tradeLicense",
+          requestData["tradeLicense"],
+          filename: "license.pdf",
+          contentType: MediaType('application', 'pdf'),
+        ));
       }
+
       if (requestData["articlesOfAssociation"] != null) {
         request.files.add(await http.MultipartFile.fromBytes(
-            "articlesOfAssociation", requestData["articlesOfAssociation"],
-            filename: "articles.pdf"));
+          "articlesOfAssociation",
+          requestData["articlesOfAssociation"],
+          filename: "articles.pdf",
+          contentType: MediaType('application', 'pdf'),
+        ));
       }
 
       if (requestData["tinNumberFile"] != null) {
         request.files.add(await http.MultipartFile.fromBytes(
-            "tinNumberFile", requestData["tinNumberFile"],
-            filename: "tinNumberFile.pdf"));
+          "tinNumberFile",
+          requestData["tinNumberFile"],
+          filename: "tinNumberFile.pdf",
+          contentType: MediaType('application', 'pdf'),
+        ));
       }
-    
-      
 
-      print("Final request payload: ");
+      // 🧾 Debug print
+      print("📤 Final request payload:");
       print("Fields:");
       request.fields.forEach((k, v) => print('  $k: $v'));
       print("Files:");
       for (final file in request.files) {
-        print('  ${file.field}: ${file.filename} (${file.length} bytes)');
+        print('  ${file.field}: ${file.filename}');
       }
 
+      // 🚀 Send request
       final response = await request.send().timeout(
-        const Duration(seconds: 30),
+        const Duration(seconds: 90),
         onTimeout: () {
           throw TimeoutException("Request timed out. Please try again.");
         },
       );
+
       final responseBody = await response.stream.bytesToString();
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {
           "statusCode": response.statusCode,
@@ -285,7 +346,7 @@ class RegistrationService {
           "data": jsonDecode(responseBody),
         };
       } else {
-        print(responseBody);
+        print("❌ Error response: $responseBody");
         Map<String, dynamic> responseMap = json.decode(responseBody);
         String message = responseMap['message'] ?? 'No message available';
         return {
@@ -301,6 +362,7 @@ class RegistrationService {
         "data": null,
       };
     } catch (error) {
+      print("❌ Exception: $error");
       return {
         "statusCode": 500,
         "message": "An error occurred",
@@ -308,6 +370,4 @@ class RegistrationService {
       };
     }
   }
-
-
 }

@@ -38,88 +38,89 @@ class StepperState {
   final String? dateOfBirth;
   final String? customerType;
   final String? legalId;
+  final String? issueAuthority;
   final double? percentageComplete;
   final String? createdAt;
   final String? updatedAt;
   final int? accountId;
 
-  const StepperState({
-    this.activeStep = 0,
-    this.phoneNumber = '',
-    this.fanNumber = '',
-    this.otpCode = '',
-    this.selectedProductType,
-    this.selectedTitle,
-    this.selectedMaritalStatus,
-    this.selectedBranch,
-    this.motherName,
-    this.signature,
-    this.selectedAccountType,
-    this.jointAccountType,
-    this.customerAge = 25,
-    this.customerGender = 'MALE',
-    this.initialDeposit,
-    this.bankingType = 'DIGITAL',
-    this.bankShare,
-    this.customerShare,
-    this.numberOfMembers = 2,
-    this.members = const [],
-    this.authId,
-    this.fullName,
-    this.email,
-    this.emailVerified,
-    this.authPhone,
-    this.state,
-    this.country,
-    this.sex,
-    this.status,
-    this.dateOfBirth,
-    this.customerType,
-    this.legalId,
-    this.percentageComplete,
-    this.createdAt,
-    this.updatedAt,
-    this.accountId,
-  });
+  const StepperState(
+      {this.activeStep = 0,
+      this.phoneNumber = '',
+      this.fanNumber = '',
+      this.otpCode = '',
+      this.selectedProductType,
+      this.selectedTitle,
+      this.selectedMaritalStatus,
+      this.selectedBranch,
+      this.motherName,
+      this.signature,
+      this.selectedAccountType,
+      this.jointAccountType,
+      this.customerAge = 25,
+      this.customerGender = 'MALE',
+      this.initialDeposit,
+      this.bankingType = 'DIGITAL',
+      this.bankShare,
+      this.customerShare,
+      this.numberOfMembers = 2,
+      this.members = const [],
+      this.authId,
+      this.fullName,
+      this.email,
+      this.emailVerified,
+      this.authPhone,
+      this.state,
+      this.country,
+      this.sex,
+      this.status,
+      this.dateOfBirth,
+      this.customerType,
+      this.legalId,
+      this.percentageComplete,
+      this.createdAt,
+      this.updatedAt,
+      this.accountId,
+      this.issueAuthority});
 
-  StepperState copyWith({
-    int? activeStep,
-    String? phoneNumber,
-    String? fanNumber,
-    String? otpCode,
-    String? selectedProductType,
-    String? selectedTitle,
-    String? selectedMaritalStatus,
-    String? jointAccountType,
-    String? selectedBranch,
-    String? motherName,
-    Uint8List? signature,
-    String? selectedAccountType,
-    int? customerAge,
-    String? customerGender,
-    double? initialDeposit,
-    String? bankingType,
-    int? bankShare,
-    int? customerShare,
-    int? numberOfMembers,
-    List<JointMemberInfo>? members,
-    int? authId,
-    String? fullName,
-    String? email,
-    bool? emailVerified,
-    String? authPhone,
-    String? state,
-    String? country,
-    String? sex,
-    String? status,
-    String? dateOfBirth,
-    String? customerType,
-    String? legalId,
-    double? percentageComplete,
-    String? createdAt,
-    String? updatedAt,
-    int? accountId,
-  }) {
+  StepperState copyWith(
+      {int? activeStep,
+      String? phoneNumber,
+      String? fanNumber,
+      String? otpCode,
+      String? selectedProductType,
+      String? selectedTitle,
+      String? selectedMaritalStatus,
+      String? jointAccountType,
+      String? selectedBranch,
+      String? motherName,
+      Uint8List? signature,
+      String? selectedAccountType,
+      int? customerAge,
+      String? customerGender,
+      double? initialDeposit,
+      String? bankingType,
+      int? bankShare,
+      int? customerShare,
+      int? numberOfMembers,
+      List<JointMemberInfo>? members,
+      int? authId,
+      String? fullName,
+      String? email,
+      bool? emailVerified,
+      String? authPhone,
+      String? state,
+      String? country,
+      String? sex,
+      String? status,
+      String? dateOfBirth,
+      String? customerType,
+      String? legalId,
+      double? percentageComplete,
+      String? createdAt,
+      String? updatedAt,
+      int? accountId,
+      String? issueAuthority}) {
     return StepperState(
       activeStep: activeStep ?? this.activeStep,
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -154,6 +155,7 @@ class StepperState {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       customerType: customerType ?? this.customerType,
       legalId: legalId ?? this.legalId,
+      issueAuthority: issueAuthority ?? this.issueAuthority,
       percentageComplete: percentageComplete ?? this.percentageComplete,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -227,7 +229,7 @@ class StepperNotifier extends StateNotifier<StepperState> {
     state = state.copyWith(selectedMaritalStatus: maritalStatus);
   }
 
- void updateJointAccountType(String? jointAccountType) {
+  void updateJointAccountType(String? jointAccountType) {
     state = state.copyWith(jointAccountType: jointAccountType);
   }
 
@@ -427,6 +429,10 @@ class StepperNotifier extends StateNotifier<StepperState> {
 
   void updateLegalId(String? legalId) {
     state = state.copyWith(legalId: legalId);
+  }
+
+  void updateIssueAuthority(String? issueAuthority) {
+    state = state.copyWith(issueAuthority: issueAuthority);
   }
 
   void updatePercentageComplete(double? percentageComplete) {

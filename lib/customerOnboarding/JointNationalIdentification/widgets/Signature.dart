@@ -72,8 +72,8 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     ElevatedButton(
-                      onPressed: () =>
-                          _showSignaturePadDialog(context, memberIndex),
+                      onPressed: () => _showSignaturePadDialog(
+                          context, memberIndex, member.fullName),
                       child: const Text(
                         '   Sign   ',
                         style: TextStyle(
@@ -98,90 +98,119 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
     );
   }
 
-  void _showSignaturePadDialog(BuildContext context, int memberIndex) {
+  void _showSignaturePadDialog(
+      BuildContext context, int memberIndex, String? name) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          insetPadding: EdgeInsets.zero, // ✅ Remove default padding
-          backgroundColor: Colors.white, // ✅ Ensure background fills
-          child: SizedBox.expand(
-            // ✅ Expand to fill the screen
-            child: Scaffold(
-              appBar: AppBar(
-                title: Text('Draw Signatures for Member ${memberIndex + 1}'),
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                automaticallyImplyLeading: false,
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.white),
+          insetPadding: EdgeInsets.zero, // Full screen
+          backgroundColor: Colors.white,
+          child: Scaffold(
+            body: SafeArea(
+              child: Column(
+                children: [
+                  // Top bar with title and cancel button
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: cyanblueColor,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            ' ${name}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Signature pads take remaining space
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: List.generate(
+                          3, // or 1 for a single elegant pad
+                          (padIndex) => Column(
+                            children: [
+                              SignaturePad(
+                                controller:
+                                    _memberSignatureControllers[memberIndex]
+                                        [padIndex],
+                                label: 'Signature ${padIndex + 1}',
+                                onClear: () =>
+                                    _memberSignatureControllers[memberIndex]
+                                            [padIndex]
+                                        .clear(),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Save button fixed at bottom
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final combinedSignature = await _combineSignatures(
+                              _memberSignatureControllers[memberIndex]);
+                          if (combinedSignature != null) {
+                            setState(() {
+                              _signatureData[memberIndex] = combinedSignature;
+                            });
+                            ref
+                                .read(stepperProvider.notifier)
+                                .updateMemberSignature(
+                                    memberIndex, combinedSignature);
+                            Navigator.pop(context);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please complete all signatures'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: cyanblueColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Save',
+                          style: TextStyle(color: whiteColor, fontSize: 16),
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              ),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    ...List.generate(
-                      3,
-                      (padIndex) => Column(
-                        children: [
-                          SignaturePad(
-                            controller: _memberSignatureControllers[memberIndex]
-                                [padIndex],
-                            label: 'Signature ${padIndex + 1}',
-                            onClear: () =>
-                                _memberSignatureControllers[memberIndex]
-                                        [padIndex]
-                                    .clear(),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final combinedSignature = await _combineSignatures(
-                            _memberSignatureControllers[memberIndex]);
-                        if (combinedSignature != null) {
-                          setState(() {
-                            _signatureData[memberIndex] = combinedSignature;
-                          });
-                          ref
-                              .read(stepperProvider.notifier)
-                              .updateMemberSignature(
-                                  memberIndex, combinedSignature);
-                          Navigator.pop(context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please complete all signatures'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: cyanblueColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 14,
-                        ),
-                      ),
-                      child: const Text(
-                        'Save',
-                        style: TextStyle(color: whiteColor),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -193,72 +222,87 @@ class _SignatureStepStepState extends ConsumerState<SignatureStep> {
   // void _showSignaturePadDialog(BuildContext context, int memberIndex) {
   //   showDialog(
   //     context: context,
+  //     barrierDismissible: false,
   //     builder: (BuildContext context) {
   //       return Dialog(
-  //         child: SingleChildScrollView(
-  //           child: Container(
-  //             padding: const EdgeInsets.all(1),
-  //             child: Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 const SizedBox(height: 10),
-  //                 Text('Draw Signatures for Member ${memberIndex + 1}',
-  //                     style: const TextStyle(
-  //                         fontSize: 17,
-  //                         color: Colors.blue,
-  //                         fontWeight: FontWeight.bold)),
-  //                 const SizedBox(height: 20),
-  //                 ...List.generate(
-  //                     3,
-  //                     (padIndex) => Column(
-  //                           children: [
-  //                             SignaturePad(
-  //                               controller:
-  //                                   _memberSignatureControllers[memberIndex]
-  //                                       [padIndex],
-  //                               label: 'Signature ${padIndex + 1}',
-  //                               onClear: () =>
-  //                                   _memberSignatureControllers[memberIndex]
-  //                                           [padIndex]
-  //                                       .clear(),
-  //                             ),
-  //                             const SizedBox(height: 20),
-  //                           ],
-  //                         )),
-  //                 Row(
-  //                   mainAxisAlignment: MainAxisAlignment.end,
-  //                   children: [
-  //                     TextButton(
-  //                       onPressed: () => Navigator.pop(context),
-  //                       child: const Text('Cancel'),
-  //                     ),
-  //                     ElevatedButton(
-  //                       onPressed: () async {
-  //                         final combinedSignature = await _combineSignatures(
-  //                             _memberSignatureControllers[memberIndex]);
-  //                         if (combinedSignature != null) {
-  //                           setState(() {
-  //                             _signatureData[memberIndex] = combinedSignature;
-  //                           });
-  //                           ref
-  //                               .read(stepperProvider.notifier)
-  //                               .updateMemberSignature(
-  //                                   memberIndex, combinedSignature);
-  //                           Navigator.pop(context);
-  //                         } else {
-  //                           ScaffoldMessenger.of(context).showSnackBar(
-  //                             const SnackBar(
-  //                               content: Text('Please complete all signatures'),
-  //                               backgroundColor: Colors.red,
-  //                             ),
-  //                           );
-  //                         }
-  //                       },
-  //                       child: const Text('Save'),
-  //                     ),
-  //                   ],
+  //         insetPadding: EdgeInsets.zero, // ✅ Remove default padding
+  //         backgroundColor: Colors.white, // ✅ Ensure background fills
+  //         child: SizedBox.expand(
+  //           // ✅ Expand to fill the screen
+  //           child: Scaffold(
+  //             appBar: AppBar(
+  //               title: Text('Draw Signatures for Member ${memberIndex + 1}'),
+  //               backgroundColor: Colors.blue,
+  //               foregroundColor: Colors.white,
+  //               automaticallyImplyLeading: false,
+  //               actions: [
+  //                 TextButton(
+  //                   onPressed: () => Navigator.pop(context),
+  //                   child: const Text(
+  //                     'Cancel',
+  //                     style: TextStyle(color: Colors.white),
+  //                   ),
   //                 ),
   //               ],
+  //             ),
+  //             body: SingleChildScrollView(
+  //               padding: const EdgeInsets.all(16),
+  //               child: Column(
+  //                 children: [
+  //                   ...List.generate(
+  //                     3,
+  //                     (padIndex) => Column(
+  //                       children: [
+  //                         SignaturePad(
+  //                           controller: _memberSignatureControllers[memberIndex]
+  //                               [padIndex],
+  //                           label: 'Signature ${padIndex + 1}',
+  //                           onClear: () =>
+  //                               _memberSignatureControllers[memberIndex]
+  //                                       [padIndex]
+  //                                   .clear(),
+  //                         ),
+  //                         const SizedBox(height: 20),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 20),
+  //                   ElevatedButton(
+  //                     onPressed: () async {
+  //                       final combinedSignature = await _combineSignatures(
+  //                           _memberSignatureControllers[memberIndex]);
+  //                       if (combinedSignature != null) {
+  //                         setState(() {
+  //                           _signatureData[memberIndex] = combinedSignature;
+  //                         });
+  //                         ref
+  //                             .read(stepperProvider.notifier)
+  //                             .updateMemberSignature(
+  //                                 memberIndex, combinedSignature);
+  //                         Navigator.pop(context);
+  //                       } else {
+  //                         ScaffoldMessenger.of(context).showSnackBar(
+  //                           const SnackBar(
+  //                             content: Text('Please complete all signatures'),
+  //                             backgroundColor: Colors.red,
+  //                           ),
+  //                         );
+  //                       }
+  //                     },
+  //                     style: ElevatedButton.styleFrom(
+  //                       backgroundColor: cyanblueColor,
+  //                       padding: const EdgeInsets.symmetric(
+  //                         horizontal: 32,
+  //                         vertical: 14,
+  //                       ),
+  //                     ),
+  //                     child: const Text(
+  //                       'Save',
+  //                       style: TextStyle(color: whiteColor),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
   //             ),
   //           ),
   //         ),

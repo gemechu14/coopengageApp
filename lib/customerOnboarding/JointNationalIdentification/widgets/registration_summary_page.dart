@@ -19,15 +19,26 @@ class RegistrationSummaryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Get the list of account types from the provider
-    final accountTypes = ref.watch(accountTypeStepProvider).availableAccountTypes;
+    final accountTypes =
+        ref.watch(accountTypeStepProvider).availableAccountTypes;
     String? getAccountTypeNameById(String? id) {
       if (id == null) return null;
       final found = accountTypes.firstWhere(
         (type) => type.id.toString() == id,
-        orElse: () => AccountType(id: 0, name: '', minAge: 0, maxAge: 0, minAmount: 0, sex: '', bankingType: '', type: '', category: ''),
+        orElse: () => AccountType(
+            id: 0,
+            name: '',
+            minAge: 0,
+            maxAge: 0,
+            minAmount: 0,
+            sex: '',
+            bankingType: '',
+            type: '',
+            category: ''),
       );
       return found.name.isNotEmpty ? found.name : null;
     }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
@@ -74,7 +85,8 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 1. Show each member in their own section with all fields
-                    if (registrationData.members != null && registrationData.members!.isNotEmpty)
+                    if (registrationData.members != null &&
+                        registrationData.members!.isNotEmpty)
                       ...registrationData.members!.asMap().entries.map((entry) {
                         final i = entry.key;
                         final member = entry.value;
@@ -82,35 +94,111 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                           'Member ${i + 1}',
                           Icons.person,
                           [
-                            _buildSummaryItem('Full Name', member.fullName ?? 'Not provided'),
-                            _buildSummaryItem('Surname', _getStringValue(member.verifiedData?['surname']) ?? 'Not provided'),
-                            _buildSummaryItem('Mother Name', member.motherName ?? 'Not provided'),
-                            _buildSummaryItem('Title', member.title ?? 'Not provided'),
-                            _buildSummaryItem('Sex', member.sex ?? 'Not provided'),
-                            _buildSummaryItem('Date of Birth', member.dateOfBirth ?? 'Not provided'),
-                            _buildSummaryItem('Marital Status', member.maritalStatus ?? 'Not provided'),
-                            _buildSummaryItem('Phone', _getStringValue(member.verifiedData?['phone']) ?? 'Not provided'),
-                            _buildSummaryItem('Email', _getStringValue(member.verifiedData?['email']) ?? 'Not provided'),
-                            _buildSummaryItem('Country', _getStringValue(member.verifiedData?['country']) ?? 'Not provided'),
-                            _buildSummaryItem('Region', _getStringValue(member.verifiedData?['region']) ?? 'Not provided'),
-                            _buildSummaryItem('Zone', _getStringValue(member.verifiedData?['zone']) ?? 'Not provided'),
-                            _buildSummaryItem('Woreda', _getStringValue(member.verifiedData?['woreda']) ?? 'Not provided'),
-                            _buildSummaryItem('State', _getStringValue(member.verifiedData?['state']) ?? 'Not provided'),
-                            _buildSummaryItem('City', _getStringValue(member.verifiedData?['city']) ?? 'Not provided'),
-                            _buildSummaryItem('Zone/Sub City', _getStringValue(member.verifiedData?['zoneSubCity']) ?? 'Not provided'),
-                            _buildSummaryItem('Street Address', _getStringValue(member.verifiedData?['streetAddress']) ?? 'Not provided'),
-                            _buildSummaryItem('House No', _getStringValue(member.verifiedData?['houseNo']) ?? 'Not provided'),
-                            _buildSummaryItem('Zip Code', _getStringValue(member.verifiedData?['zipCode']) ?? 'Not provided'),
-                            _buildSummaryItem('Occupation', _getStringValue(member.verifiedData?['occupation']) ?? 'Not provided'),
-                            _buildSummaryItem('Monthly Income', _getStringValue(member.verifiedData?['monthlyIncome']) ?? 'Not provided'),
-                            _buildSummaryItem('Sector', _getStringValue(member.verifiedData?['sector']) ?? 'Not provided'),
-                            _buildSummaryItem('Employer Name', _getStringValue(member.verifiedData?['employerName']) ?? 'Not provided'),
-                            _buildSummaryItem('Document Name', _getStringValue(member.verifiedData?['documentName']) ?? 'Not provided'),
-                            _buildSummaryItem('Legal ID', _getStringValue(member.verifiedData?['legalId']) ?? 'Not provided'),
-                            _buildSummaryItem('Issue Authority', _getStringValue(member.verifiedData?['issueAuthority']) ?? 'Not provided'),
-                            _buildSummaryItem('Issue Date', _getStringValue(member.verifiedData?['issueDate']) ?? 'Not provided'),
-                            _buildSummaryItem('Expiry Date', _getStringValue(member.verifiedData?['expiryDate']) ?? 'Not provided'),
-                            _buildSummaryItem('Verified', member.isVerified ? 'Yes' : 'No'),
+                            _buildSummaryItem(
+                                'Full Name', member.fullName ?? 'Not provided'),
+                            // _buildSummaryItem(
+                            //     'Surname',
+                            //     _getStringValue(
+                            //             member.verifiedData?['surname']) ??
+                            //         'Not provided'),
+                            _buildSummaryItem('Mother Name',
+                                member.motherName ?? 'Not provided'),
+                            _buildSummaryItem(
+                                'Title', member.title ?? 'Not provided'),
+                            _buildSummaryItem(
+                                'Sex', member.sex ?? 'Not provided'),
+                            _buildSummaryItem('Date of Birth',
+                                member.dateOfBirth ?? 'Not provided'),
+                            _buildSummaryItem('Marital Status',
+                                member.maritalStatus ?? 'Not provided'),
+                            _buildSummaryItem(
+                                'Phone',
+                                _getStringValue(
+                                        member.verifiedData?['phone']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Email',
+                                _getStringValue(
+                                        member.verifiedData?['email']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Country',
+                                _getStringValue(
+                                        member.verifiedData?['country']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Region',
+                                _getStringValue(
+                                        member.verifiedData?['region']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Zone',
+                                _getStringValue(member.verifiedData?['zone']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Woreda',
+                                _getStringValue(
+                                        member.verifiedData?['woreda']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'State',
+                                _getStringValue(
+                                        member.verifiedData?['state']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'City',
+                                _getStringValue(member.verifiedData?['city']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Zone/Sub City',
+                                _getStringValue(
+                                        member.verifiedData?['zoneSubCity']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Street Address',
+                                _getStringValue(member
+                                        .verifiedData?['streetAddress']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'House No',
+                                _getStringValue(
+                                        member.verifiedData?['houseNo']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Zip Code',
+                                _getStringValue(
+                                        member.verifiedData?['zipCode']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Occupation',
+                                _getStringValue(
+                                        member.verifiedData?['occupation']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Monthly Income',
+                                _getStringValue(member
+                                        .verifiedData?['monthlyIncome']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Sector',
+                                _getStringValue(
+                                        member.verifiedData?['sector']) ??
+                                    'Not provided'),
+                            _buildSummaryItem(
+                                'Employer Name',
+                                _getStringValue(
+                                        member.verifiedData?['employerName']) ??
+                                    'Not provided'),
+                            _buildSummaryItem('Document Name', 'NATIONALID'),
+                            _buildSummaryItem('Legal ID', member.legalId ?? ''),
+                            _buildSummaryItem(
+                                'Issue Authority', member.issueAuthority ?? ''),
+                            _buildSummaryItem(
+                                'Issue Date', member.issueDate ?? ''),
+                            _buildSummaryItem(
+                                'Expiry Date', member.expireDate ?? ''),
+                            _buildSummaryItem(
+                                'Verified', member.isVerified ? 'Yes' : 'No'),
                           ],
                         );
                       }),
@@ -120,13 +208,35 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                       'Joint Account Information',
                       Icons.account_balance,
                       [
-                        _buildSummaryItem('Branch', registrationData.branch ?? 'Not provided'),
-                        _buildSummaryItem('Account Type', getAccountTypeNameById(registrationData.accountType) ?? 'Not selected'),
-                        _buildSummaryItem('Initial Deposit', registrationData.initialDeposit ?? 'Not provided'),
-                        _buildSummaryItem('Bank Share', registrationData.bankShare != null ? '${registrationData.bankShare}%' : 'Not provided'),
-                        _buildSummaryItem('Customer Share', registrationData.customerShare != null ? '${registrationData.customerShare}%' : 'Not provided'),
-                        _buildSummaryItem('Signature', registrationData.signature != null ? 'Uploaded' : 'Not uploaded'),
-                        _buildSummaryItem('Terms Accepted', registrationData.termsAccepted == true ? 'Yes' : 'No'),
+                        _buildSummaryItem('Branch',
+                            registrationData.branch ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'Account Type',
+                            getAccountTypeNameById(
+                                    registrationData.accountType) ??
+                                'Not selected'),
+                        _buildSummaryItem('Initial Deposit',
+                            registrationData.initialDeposit ?? 'Not provided'),
+                        _buildSummaryItem(
+                            'Bank Share',
+                            registrationData.bankShare != null
+                                ? '${registrationData.bankShare}%'
+                                : 'Not provided'),
+                        _buildSummaryItem(
+                            'Customer Share',
+                            registrationData.customerShare != null
+                                ? '${registrationData.customerShare}%'
+                                : 'Not provided'),
+                        _buildSummaryItem(
+                            'Signature',
+                            registrationData.signature != null
+                                ? 'Uploaded'
+                                : 'Not uploaded'),
+                        _buildSummaryItem(
+                            'Terms Accepted',
+                            registrationData.termsAccepted == true
+                                ? 'Yes'
+                                : 'No'),
                         // Add more joint account fields as needed
                       ],
                     ),

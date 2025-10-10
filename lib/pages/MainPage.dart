@@ -46,7 +46,7 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _initializeTokenService() async {
     // Initialize token service for automatic logout on expiration
-    await TokenService.initialize();
+    await TokenService.initialize(context);
   }
 
   Future<void> _fetchToken() async {

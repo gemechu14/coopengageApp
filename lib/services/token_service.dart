@@ -188,12 +188,18 @@ class TokenService {
   }
 
   /// Initialize token service (call this when app starts and user is logged in)
-  static Future<void> initialize() async {
+  static Future<void> initialize(BuildContext context) async {
     final isValid = await isTokenValid();
     if (isValid) {
       startTokenMonitoring();
       print("Token service initialized and monitoring started");
     } else {
+      //  await forceLogoutWithContext(context);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const Loginscreen()),
+        (Route<dynamic> route) => false,
+      );
+
       print("No valid token found, token monitoring not started");
     }
   }

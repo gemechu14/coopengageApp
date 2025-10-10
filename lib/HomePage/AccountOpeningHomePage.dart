@@ -1,14 +1,11 @@
 import 'package:coopengageplus/constants/kconstant.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/customerOnboarding/JointNationalIdentification/views/individual_account_by_national_id.dart';
-// import 'package:coopengageplus/customerOnboarding/_IndividualAccount/screens/registration_screen.dart';
-// import 'package:coopengageplus/features/onboarding/corporateCustomer/corporateAccount.dart';
-// import 'package:coopengageplus/features/onboarding/corporateCustomer/update/corporate_account_riverpod.dart';
-// import 'package:coopengageplus/features/onboarding/_corporate/screens/registration_screen.dart';
+import 'package:coopengageplus/customerOnboarding/SendLink/ContactSender.dart';
+import 'package:coopengageplus/customerOnboarding/SendLink/link_generator_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:coopengageplus/HomePage/IndividualAccountTypeSelection.dart';
-// import 'package:coopengageplus/features/onboarding/Indivudualaccount/CustomerRegistrationScreen.dart';
 
 class AccountOnboardingScreen extends StatelessWidget {
   AccountOnboardingScreen({Key? key}) : super(key: key);
@@ -16,7 +13,7 @@ class AccountOnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Light gray background
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -111,6 +108,25 @@ class AccountOnboardingScreen extends StatelessWidget {
                           MaterialPageRoute(
                               builder: (context) => CorporateAccountOpening()),
                           (route) => false,
+                        );
+                      },
+                    ),
+                    _buildAccountCard(
+                      title: 'Send a Link',
+                      description:
+                          'Send an link to account creation individual, joint and organization',
+                      icon: Icons.business_outlined,
+                      gradientColors: [
+                        // const Color.fromARGB(255, 11, 11, 11),
+                        // const Color.fromARGB(255, 33, 25, 16),
+                        const Color(0xFF0F172A),
+                        const Color(0xFF06B6D4),
+                      ],
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) => const LinkGeneratorPage()),
+                          // const RegistrationScreen()),
                         );
                       },
                     ),

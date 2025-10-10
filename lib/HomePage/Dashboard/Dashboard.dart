@@ -32,7 +32,7 @@ class _DashboardState extends State<Dashboard> {
     fetchUserCounts();
     fetchUsers();
     // Initialize token monitoring
-    TokenService.initialize();
+    TokenService.initialize(context);
   }
 
   List<Map<String, dynamic>>? currentMonthData;
