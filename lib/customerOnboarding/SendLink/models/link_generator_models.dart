@@ -65,7 +65,7 @@ enum SharePlatform {
   String get displayName => apiValue;
 }
 
-/// Request model for generating link
+/// Request model for generating link (WhatsApp/Telegram)
 class LinkGenerationRequest {
   final AccountType accountType;
   final SharePlatform platform;
@@ -99,7 +99,39 @@ class LinkGenerationRequest {
 
     return json;
   }
+}
 
+/// Request model for email invitation (Email platform)
+class EmailInvitationRequest {
+  final String recipientEmail;
+  final String recipientName;
+  final AccountType accountType;
+  final String? notes;
+
+  const EmailInvitationRequest({
+    required this.recipientEmail,
+    required this.recipientName,
+    required this.accountType,
+    this.notes,
+  });
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = {
+      'recipientEmail': recipientEmail.trim(),
+      'recipientName': recipientName.trim(),
+      'linkType': accountType.apiValue,
+    };
+
+    if (notes != null && notes!.trim().isNotEmpty) {
+      json['notes'] = notes!.trim();
+    }
+
+    return json;
+  }
+}
+
+/// Original LinkGenerationRequest copyWith method
+extension LinkGenerationRequestExtension on LinkGenerationRequest {
   LinkGenerationRequest copyWith({
     AccountType? accountType,
     SharePlatform? platform,

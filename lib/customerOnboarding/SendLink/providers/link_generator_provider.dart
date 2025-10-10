@@ -46,7 +46,34 @@ class LinkGeneratorNotifier extends StateNotifier<LinkGeneratorState> {
 
   final LinkGeneratorService _service;
 
-  /// Generate shareable link
+  /// Send email invitation
+  Future<void> sendEmailInvitation(EmailInvitationRequest request) async {
+    // Set loading state
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearResult: true,
+    );
+
+    try {
+      await _service.sendEmailInvitation(request);
+      
+      // Set success state (no result, just success)
+      state = state.copyWith(
+        isLoading: false,
+        clearError: true,
+      );
+    } catch (e) {
+      // Set error state
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+        clearResult: true,
+      );
+    }
+  }
+
+  /// Generate shareable link (WhatsApp/Telegram)
   Future<void> generateLink(LinkGenerationRequest request) async {
     // Set loading state
     state = state.copyWith(

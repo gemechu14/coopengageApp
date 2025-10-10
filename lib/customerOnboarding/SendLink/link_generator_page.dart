@@ -21,18 +21,21 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
 
   AccountType _selectedAccountType = AccountType.individual;
   SharePlatform _selectedPlatform = SharePlatform.whatsapp;
 
   // Track if link has been generated to lock fields
   bool _isLinkGenerated = false;
+  bool _isEmailSent = false; // Track if email was sent
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -69,6 +72,16 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
     return null;
   }
 
+  /// Validate recipient name for email
+  String? _validateNameForEmail(String? value) {
+    if (_selectedPlatform == SharePlatform.email) {
+      if (value == null || value.trim().isEmpty) {
+        return 'Recipient name is required for EMAIL';
+      }
+    }
+    return null;
+  }
+
   /// Handle form submission
   Future<void> _onSubmit() async {
     // Validate form
@@ -76,6 +89,63 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
       return;
     }
 
+    if (_selectedPlatform == SharePlatform.email) {
+      // Handle email invitation (different API)
+      await _handleEmailInvitation();
+    } else {
+      // Handle WhatsApp/Telegram (existing logic)
+      await _handleLinkGeneration();
+    }
+  }
+
+  /// Handle email invitation
+  Future<void> _handleEmailInvitation() async {
+    final emailRequest = EmailInvitationRequest(
+      recipientEmail: _emailController.text.trim(),
+      recipientName: _nameController.text.trim(),
+      accountType: _selectedAccountType,
+      notes: _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim(),
+    );
+
+    // Call provider to send email
+    await ref
+        .read(linkGeneratorProvider.notifier)
+        .sendEmailInvitation(emailRequest);
+
+    // Check result and show appropriate message
+    final state = ref.read(linkGeneratorProvider);
+    if (mounted) {
+      if (!state.hasError && !state.isLoading) {
+        // Lock fields after successful email send
+        setState(() {
+          _isEmailSent = true;
+          _isLinkGenerated = true; // Also set this to lock fields
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email invitation sent successfully!'),
+            backgroundColor: cyanblueColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else if (state.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(state.errorMessage ?? 'Failed to send email invitation'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Handle link generation (WhatsApp/Telegram)
+  Future<void> _handleLinkGeneration() async {
     // Format phone number: remove first 0 and add +251
     String? formattedPhone;
     if (_phoneController.text.trim().isNotEmpty) {
@@ -124,8 +194,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
       } else if (state.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            // content: Text(state.errorMessage ?? 'An error occurred'),
-            content: Text("Link has already been generated earlier"),
+            content: Text(state.errorMessage ?? 'Failed to generate link'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -215,9 +284,12 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                 _buildFormCard(state),
                 const SizedBox(height: 16),
 
-                // Result Card
-                if (_isLinkGenerated)
+                // Result Card (only for WhatsApp/Telegram, not Email)
+                if (_isLinkGenerated && !_isEmailSent)
                   if (state.hasResult) _buildResultCard(state.result!),
+
+                // Email Success Card
+                if (_isEmailSent) _buildEmailSuccessCard(),
               ],
             ),
           ),
@@ -258,7 +330,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  filled: true,
+                  filled: false,
                 ),
                 items: AccountType.values.map((type) {
                   return DropdownMenuItem(
@@ -284,7 +356,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  filled: true,
+                  filled: false,
                 ),
                 items: SharePlatform.values.map((platform) {
                   return DropdownMenuItem(
@@ -308,6 +380,7 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                             // Clear fields when platform changes
                             _phoneController.clear();
                             _emailController.clear();
+                            _notesController.clear();
                           });
                           // Revalidate form
                           _formKey.currentState?.validate();
@@ -321,15 +394,19 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                 controller: _nameController,
                 enabled: !state.isLoading && !_isLinkGenerated,
                 decoration: InputDecoration(
-                  labelText: 'Recipient Name (Optional)',
+                  labelText: _selectedPlatform == SharePlatform.email
+                      ? 'Recipient Name *'
+                      : 'Recipient Name (Optional)',
                   hintText: 'Enter recipient name',
                   prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  filled: true,
+                  filled: false,
                 ),
                 textCapitalization: TextCapitalization.words,
+                validator: _validateNameForEmail,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
               ),
               const SizedBox(height: 16),
 
@@ -351,13 +428,14 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    filled: true,
+                    filled: false,
                   ),
                   validator: _validatePhone,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                 ),
 
               // Email Field
-              if (_selectedPlatform == SharePlatform.email)
+              if (_selectedPlatform == SharePlatform.email) ...[
                 TextFormField(
                   controller: _emailController,
                   enabled: !state.isLoading && !_isLinkGenerated,
@@ -369,10 +447,29 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    filled: true,
+                    filled: false,
                   ),
                   validator: _validateEmail,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                 ),
+                const SizedBox(height: 16),
+
+                // Notes Field (Optional - for Email only)
+                TextFormField(
+                  controller: _notesController,
+                  enabled: !state.isLoading && !_isLinkGenerated,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: 'Notes (Optional)',
+                    hintText: 'e.g., High potential customer',
+                    // prefixIcon: const Icon(Icons.note_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: false,
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
 
               // Submit Button
@@ -392,10 +489,14 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                     : Icon(_isLinkGenerated ? Icons.check_circle : Icons.link),
                 label: Text(
                   state.isLoading
-                      ? 'Generating...'
+                      ? (_selectedPlatform == SharePlatform.email
+                          ? 'Sending Email...'
+                          : 'Generating...')
                       : _isLinkGenerated
-                          ? 'Link Generated'
-                          : 'Generate Link',
+                          ? (_isEmailSent ? 'Email Sent' : 'Link Generated')
+                          : (_selectedPlatform == SharePlatform.email
+                              ? 'Send Invitation'
+                              : 'Generate Link'),
                   style: const TextStyle(fontSize: 16),
                 ),
                 style: FilledButton.styleFrom(
@@ -616,6 +717,146 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Build email success card
+  Widget _buildEmailSuccessCard() {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Success Header
+            Row(
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: cyanblueColor,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Email Sent Successfully',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: cyanblueColor,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Success Message
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        color: cyanblueColor,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Invitation Email Sent',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'An invitation email has been sent to ${_emailController.text.trim()}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The recipient will receive the invitation link directly in their inbox.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Recipient Details
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailRow('Recipient:', _nameController.text.trim()),
+                  const SizedBox(height: 8),
+                  _buildDetailRow('Email:', _emailController.text.trim()),
+                  const SizedBox(height: 8),
+                  _buildDetailRow(
+                      'Account Type:', _selectedAccountType.displayName),
+                  if (_notesController.text.trim().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _buildDetailRow('Notes:', _notesController.text.trim()),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build detail row for email success card
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+              fontSize: 13,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

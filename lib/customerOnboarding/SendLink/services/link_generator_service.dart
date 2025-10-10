@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/link_generator_models.dart';
 
+
 /// Exception for link generation errors
 class LinkGenerationException implements Exception {
   final String message;
@@ -32,7 +33,70 @@ class LinkGeneratorService {
     required this.baseUrl,
   }) : _dio = dio;
 
-  /// Generate shareable link via API
+  /// Send email invitation (for Email platform)
+  Future<void> sendEmailInvitation(EmailInvitationRequest request) async {
+    try {
+      final url = '$baseUrl/api/v1/invitations/send';
+      
+      // Get authentication token from secure storage
+      String? token = await storage.read(key: "token");
+
+      final response = await _dio.post(
+        url,
+        data: jsonEncode(request.toJson()),
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Content-Type": "application/json"
+          },
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Email sent successfully
+        return;
+      } else if (response.statusCode == 400) {
+        final errorMsg = _extractErrorMessage(response.data);
+        throw LinkGenerationException(
+          errorMsg ?? 'Invalid request. Please check your input.',
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 401) {
+        throw LinkGenerationException(
+          'Unauthorized. Please login again.',
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 403) {
+        throw LinkGenerationException(
+          'You do not have permission to perform this action.',
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 404) {
+        throw LinkGenerationException(
+          'API endpoint not found.',
+          statusCode: response.statusCode,
+        );
+      } else {
+        throw LinkGenerationException(
+          'Request failed with status code ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      if (e is LinkGenerationException) {
+        rethrow;
+      }
+      throw LinkGenerationException(
+        'An unexpected error occurred: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
+  /// Generate shareable link via API (for WhatsApp/Telegram)
   Future<LinkGenerationResponse> generateLink(
     LinkGenerationRequest request,
   ) async {
