@@ -32,15 +32,16 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
   // Method to validate the form - can be called from parent
   bool validateForm() {
     final stepperState = ref.read(stepperProvider);
-    
+
     // Check if form is valid
     final isFormValid = widget.formkey?.currentState?.validate() ?? false;
-    
+
     // Check required fields from provider state
     final hasProductType = stepperState.selectedProductType != null;
     final hasCompanyName = (stepperState.companyName ?? '').trim().isNotEmpty;
-    final hasPhoneNumber = (stepperState.companyPhoneNumber ?? '').trim().isNotEmpty;
-    
+    final hasPhoneNumber =
+        (stepperState.companyPhoneNumber ?? '').trim().isNotEmpty;
+
     return isFormValid && hasProductType && hasCompanyName && hasPhoneNumber;
   }
 
@@ -48,7 +49,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
   List<String> getValidationErrors() {
     final stepperState = ref.read(stepperProvider);
     List<String> errors = [];
-    
+
     if (stepperState.selectedProductType == null) {
       errors.add('Please select a product type');
     }
@@ -58,7 +59,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
     if ((stepperState.companyPhoneNumber ?? '').trim().isEmpty) {
       errors.add('Please enter phone number');
     }
-    
+
     return errors;
   }
 
@@ -67,7 +68,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
     setState(() {
       companyNameTouched = true;
     });
-    
+
     // Trigger form validation
     widget.formkey?.currentState?.validate();
   }
@@ -144,6 +145,23 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
               isRequired: true,
             ),
             const SizedBox(height: 8),
+
+            Text('TIN', style: TextStyle(fontWeight: FontWeight.bold)),
+            ReusableTextFormField(
+              hintText: "TIN ",
+              controller: tinNumberController,
+              keyboardType: TextInputType.number,
+              errorMessage: "TIN cannot be empty",
+              leadingIcon: Icons.badge,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
+              isRequired: false,
+              onChanged: (value) {
+                notifier.updateCompanyTinNumber(value);
+              },
+            ),
             // Company Name
             Text('Company Name', style: TextStyle(fontWeight: FontWeight.bold)),
             ReusableTextFormField(
