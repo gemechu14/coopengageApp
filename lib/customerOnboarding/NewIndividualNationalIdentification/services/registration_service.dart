@@ -103,16 +103,6 @@ class RegistrationService {
       print("signatladdfdkfjkdkfkd");
       print(signature);
 
-      // if (signature != null && signature is Uint8List) {
-      //   request.files.add(
-      //     http.MultipartFile.fromBytes(
-      //       'customerInfo.signature',
-      //       signature,
-      //       filename: 'signature.png', // important: extension must match
-      //       contentType: MediaType('image', 'png'), // match actual format
-      //     ),
-      //   );
-      // }
 
       if (signature != null && signature is Uint8List) {
         try {
@@ -143,19 +133,7 @@ class RegistrationService {
             final jpgFile = File(jpgPath);
             await jpgFile.writeAsBytes(jpgBytes);
 
-            // You can switch to JPG if needed
-            // (Uncomment this block if server rejects PNG uploads)
-            /*
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'customerInfo.signature',
-          jpgFile.path,
-          filename: 'signature.jpg',
-          contentType: MediaType('image', 'jpeg'),
-        ),
-      );
-      print("✅ Signature also available as JPG");
-      */
+ 
           }
         } catch (e) {
           print("❌ Error saving signature: $e");
@@ -178,82 +156,6 @@ class RegistrationService {
           print("⚠️ Photo file not found: $photo");
         }
       }
-
-      // if (signature != null) {
-      //   print("Processing signature");
-      //   try {
-      //     final tempDir = Directory.systemTemp;
-      //     final tempFile = File('${tempDir.path}/signature.jpg');
-      //     await tempFile.writeAsBytes(signature);
-
-      //     // Check signature file size
-      //     final fileSize = await tempFile.length();
-      //     final fileSizeKB = fileSize / 1024;
-      //     print("Signature file size: ${fileSizeKB.toStringAsFixed(2)} KB");
-
-      //     // Check if signature is too large (common limit is 5MB)
-      //     if (fileSizeKB > 5120) {
-      //       print(
-      //           "Warning: Signature file is very large (${fileSizeKB.toStringAsFixed(2)} KB)");
-      //       print("This might cause server issues");
-      //     }
-
-      //     request.files.add(
-      //       await http.MultipartFile.fromPath(
-      //         'customerInfo.signature',
-      //         tempFile.path,
-      //         filename: 'signature.png',
-      //       ),
-      //     );
-      //     print("Signature added successfully to request");
-      //   } catch (e) {
-      //     print("Error adding signature to request: $e");
-      //     throw Exception("Failed to add signature to request: $e");
-      //   }
-      // } else {
-      //   print("No signature provided");
-      // }
-
-      // // Add photo file if available
-      // if (photo != null && photo.isNotEmpty) {
-      //   print("Processing photo: $photo");
-      //   final photoFile = File(photo);
-
-      //   if (await photoFile.exists()) {
-      //     print("Photo file exists, adding to request");
-
-      //     // Check file size
-      //     final fileSize = await photoFile.length();
-      //     final fileSizeMB = fileSize / (1024 * 1024);
-      //     print("Photo file size: ${fileSizeMB.toStringAsFixed(2)} MB");
-
-      //     // Check if file is too large (common limit is 10MB)
-      //     if (fileSizeMB > 10) {
-      //       print(
-      //           "Warning: Photo file is very large (${fileSizeMB.toStringAsFixed(2)} MB)");
-      //       print("This might cause server issues");
-      //     }
-
-      //     try {
-      //       request.files.add(
-      //         await http.MultipartFile.fromPath(
-      //           'customerInfo.photo',
-      //           photoFile.path,
-      //           filename:
-      //               photoFile.path.split('/').last, // Use original filename
-      //         ),
-      //       );
-      //       print("Photo added successfully to request");
-      //     } catch (e) {
-      //       print("Error adding photo to request: $e");
-      //       throw Exception("Failed to add photo to request: $e");
-      //     }
-      //   } else {
-      //     print("Warning: Photo file does not exist at path: $photo");
-      //   }
-      // } else {
-      //   print("No photo provided or photo path is empty");
-      // }
 
       // Log request details before sending
       print("=== REQUEST DETAILS ===");
@@ -316,14 +218,7 @@ class RegistrationService {
           throw Exception(extractedMessage);
         }
 
-        // catch (decodeError) {
-        //   // If response isn’t JSON, fallback to raw text
-        //   throw Exception(
-        //       'Registration failed (${response.statusCode}): $responseBody');
-        // }
-        // throw Exception(
-        //   'Registration failed with status: ${response.statusCode}. Response: $responseBody',
-        // );
+  
       }
     } catch (e) {
       print(e.toString());

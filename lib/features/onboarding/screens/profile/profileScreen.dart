@@ -420,7 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 const Text(
                   'Quick Actions',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: blackColor,
                   ),
@@ -562,7 +562,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: blackColor,
                       ),
@@ -726,7 +726,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       try {
         // Try to decode the token to get user details
         var decodedToken = JwtDecoder.decode(token);
-        print("ProfileScreen: JWT decoded successfully");
+        print("ProfileScreen: JWT decoded successfullyqq");
 
         setState(() {
           username = decodedToken['sub'] ?? "User";

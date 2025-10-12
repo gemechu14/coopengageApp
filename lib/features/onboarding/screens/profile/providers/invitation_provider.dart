@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../constants/config/config.dart';
+import '../../../../../constants/config/config.dart';
 import '../models/invitation_stats_model.dart';
 import '../models/invitation_model.dart';
 import '../services/invitation_service.dart';

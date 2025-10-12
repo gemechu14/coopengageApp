@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../constants/kconstant.dart';
-import '../../../../common_widgets/text/custom_nav_heading.dart';
+import '../../../../../constants/kconstant.dart';
+import '../../../../../common_widgets/text/custom_nav_heading.dart';
 import '../providers/invitation_provider.dart';
 
 class OverallStatsPage extends ConsumerWidget {
@@ -19,10 +19,10 @@ class OverallStatsPage extends ConsumerWidget {
           backgroundColor: whiteColor,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: blackColor),
+            icon: const Icon(Icons.arrow_back_ios, color: cyanblueColor),
             onPressed: () => Navigator.pop(context),
           ),
-          title:  CustomNavHeading(text: 'Overall Statistics'),
+          title: CustomNavHeading(text: 'Overall Statistics'),
         ),
       ),
       body: RefreshIndicator(
@@ -118,7 +118,7 @@ class OverallStatsPage extends ConsumerWidget {
                           const Text(
                             'Performance Rates',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: blackColor,
                             ),
@@ -186,7 +186,7 @@ class OverallStatsPage extends ConsumerWidget {
                           const Text(
                             'This Month',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: blackColor,
                             ),
@@ -333,18 +333,18 @@ class OverallStatsPage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(1),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Text(
             value,
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 25,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -379,7 +379,7 @@ class OverallStatsPage extends ConsumerWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: blackColor,
               fontWeight: FontWeight.w600,
             ),
@@ -388,7 +388,7 @@ class OverallStatsPage extends ConsumerWidget {
         Text(
           '${rate.toStringAsFixed(1)}%',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             color: color,
           ),
@@ -407,7 +407,7 @@ class OverallStatsPage extends ConsumerWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               color: Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
@@ -416,7 +416,7 @@ class OverallStatsPage extends ConsumerWidget {
         Text(
           value,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 14,
             fontWeight: FontWeight.bold,
             color: color,
           ),
@@ -425,4 +425,3 @@ class OverallStatsPage extends ConsumerWidget {
     );
   }
 }
-

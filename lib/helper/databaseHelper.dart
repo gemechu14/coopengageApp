@@ -1023,11 +1023,11 @@ CREATE TABLE selected_language  (
       whereArgs: [userId],
     );
 
-    // 2️⃣ Optionally, remove branches that are not linked to any user
-    // This ensures completely cleaning branches that might have been left behind
+    // 2️⃣ Delete branches not linked to any user OR with userId null
     await db.rawDelete('''
     DELETE FROM Branches
     WHERE id NOT IN (SELECT branchId FROM UserBranches)
+       OR userId IS NULL
   ''');
 
     // 3️⃣ Clear main branch info from Users table
@@ -1044,6 +1044,38 @@ CREATE TABLE selected_language  (
 
     print("✅ Cleared all branches and main branch info for userId=$userId");
   }
+
+  // Future<void> clearBranchesForUser(int userId) async {
+  //   final db = await database;
+
+  //   // 1️⃣ Delete all user-branch links
+  //   await db.delete(
+  //     'UserBranches',
+  //     where: 'userId = ?',
+  //     whereArgs: [userId],
+  //   );
+
+  //   // 2️⃣ Optionally, remove branches that are not linked to any user
+  //   // This ensures completely cleaning branches that might have been left behind
+  //   await db.rawDelete('''
+  //   DELETE FROM Branches
+  //   WHERE id NOT IN (SELECT branchId FROM UserBranches)
+  // ''');
+
+  //   // 3️⃣ Clear main branch info from Users table
+  //   await db.update(
+  //     'Users',
+  //     {
+  //       'mainBranchId': null,
+  //       'mainBranchName': '',
+  //       'mainBranchCode': '',
+  //     },
+  //     where: 'userId = ?',
+  //     whereArgs: [userId],
+  //   );
+
+  //   print("✅ Cleared all branches and main branch info for userId=$userId");
+  // }
 
 /////////////////////////////////////////////////////////////////////////
 

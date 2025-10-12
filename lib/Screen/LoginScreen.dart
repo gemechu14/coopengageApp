@@ -7,9 +7,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/NetworkHandler.dart';
 import 'package:coopengageplus/common_widgets/AlertDialog/dialog_helper.dart';
 import 'package:coopengageplus/constants/config/config.dart';
-// import 'package:coopengageplus/constants/config/environment_config.dart';
-// Certificate service removed for security - using standard HTTP client
-// import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/customerOnboarding/agent/agentRegistration.dart';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:coopengageplus/helper/databaseHelper.dart';
@@ -362,7 +359,7 @@ class _LoginscreenState extends State<Loginscreen> {
               print("🔍 DEBUG: Raw branches data from API: $branchesData");
               print("🔍 DEBUG: Processed branches list: $branches");
               print("🔍 DEBUG: Branches count: ${branches.length}");
-
+              await dbHelper.clearBranchesForUser(userId);
               // Validate and normalize branches data
               List<Map<String, dynamic>> normalizedBranches = [];
               for (int i = 0; i < branches.length; i++) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../constants/kconstant.dart';
-import '../../../../common_widgets/text/custom_nav_heading.dart';
+import '../../../../../constants/kconstant.dart';
+import '../../../../../common_widgets/text/custom_nav_heading.dart';
 import '../models/invitation_model.dart';
 import '../providers/invitation_provider.dart';
 
@@ -13,8 +13,7 @@ class RecentInvitationsPage extends ConsumerStatefulWidget {
       _RecentInvitationsPageState();
 }
 
-class _RecentInvitationsPageState
-    extends ConsumerState<RecentInvitationsPage> {
+class _RecentInvitationsPageState extends ConsumerState<RecentInvitationsPage> {
   final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
   final int _pageSize = 10;
@@ -118,10 +117,10 @@ class _RecentInvitationsPageState
           backgroundColor: whiteColor,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: blackColor),
+            icon: const Icon(Icons.arrow_back_ios, color: cyanblueColor),
             onPressed: () => Navigator.pop(context),
           ),
-          title:  CustomNavHeading(text: 'Recent Invitations'),
+          title: CustomNavHeading(text: 'Recent Invitations'),
         ),
       ),
       body: RefreshIndicator(
@@ -202,7 +201,8 @@ class _RecentInvitationsPageState
               const SizedBox(width: 8),
               // Status Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: _getStatusColor(invitation.status).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -480,4 +480,3 @@ class _RecentInvitationsPageState
     }
   }
 }
-

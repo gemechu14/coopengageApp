@@ -4,7 +4,7 @@ import 'package:coopengageplus/HomePage/AccountOpeningHomePage.dart';
 // import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
 import 'package:coopengageplus/customerOnboarding/agent/AgentPage.dart';
 // import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
-import 'package:coopengageplus/features/onboarding/screens/profileScreen.dart';
+import 'package:coopengageplus/features/onboarding/screens/profile/profileScreen.dart';
 import 'package:coopengageplus/pages/LoginPage.dart';
 import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
