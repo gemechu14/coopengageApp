@@ -1,7 +1,8 @@
 import 'dart:ui';
+import 'package:coopengageplus/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 const String English = 'en';
 const String Amharic = 'am';

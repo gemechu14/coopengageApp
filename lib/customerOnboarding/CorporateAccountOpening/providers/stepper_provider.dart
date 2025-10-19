@@ -39,6 +39,10 @@ class StepperState {
   final String? companyState;
   final String? companyZoneSubCity;
   final String? companyWoreda;
+  
+  // TIN Verification State
+  final bool isTinVerified;
+  final String? tinVerificationError;
 
   // National ID Authentication Data
   final int? authId;
@@ -93,6 +97,8 @@ class StepperState {
     this.companyState,
     this.companyZoneSubCity,
     this.companyWoreda,
+    this.isTinVerified = false,
+    this.tinVerificationError,
     this.authId,
     this.fullName,
     this.email,
@@ -146,6 +152,8 @@ class StepperState {
     String? companyState,
     String? companyZoneSubCity,
     String? companyWoreda,
+    bool? isTinVerified,
+    String? tinVerificationError,
     int? authId,
     String? fullName,
     String? email,
@@ -199,6 +207,8 @@ class StepperState {
       companyState: companyState ?? this.companyState,
       companyZoneSubCity: companyZoneSubCity ?? this.companyZoneSubCity,
       companyWoreda: companyWoreda ?? this.companyWoreda,
+      isTinVerified: isTinVerified ?? this.isTinVerified,
+      tinVerificationError: tinVerificationError ?? this.tinVerificationError,
       authId: authId ?? this.authId,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
@@ -471,6 +481,28 @@ class StepperNotifier extends StateNotifier<StepperState> {
   }
   void updateCompanyWoreda(String? value) {
     state = state.copyWith(companyWoreda: value);
+  }
+
+  // TIN Verification methods
+  void setTinVerified(bool verified) {
+    state = state.copyWith(
+      isTinVerified: verified,
+      tinVerificationError: verified ? null : state.tinVerificationError,
+    );
+  }
+
+  void setTinVerificationError(String? error) {
+    state = state.copyWith(
+      tinVerificationError: error,
+      isTinVerified: error == null ? state.isTinVerified : false,
+    );
+  }
+
+  void resetTinVerification() {
+    state = state.copyWith(
+      isTinVerified: false,
+      tinVerificationError: null,
+    );
   }
 
   void updateMemberZoneSubCity(int index, String? zoneSubCity) {
