@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coopengageplus/features/auth/data/auth_repository.dart';
-import 'package:coopengageplus/models/user.dart';
+import 'package:coopengageplus/shared/models/user.dart';
 
 import 'auth_state.dart';
 

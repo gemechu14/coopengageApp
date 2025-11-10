@@ -6,10 +6,10 @@
 // import 'package:flutter/widgets.dart';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:crm/helpers/NetworkHandler.dart';
-// // import 'package:coopengageplus/Screen/agentRegistration.dart';
-// // import 'package:coopengageplus/Screen/suuqpassLoginScreen.dart';
+// // import 'package:coopengageplus/features/screens/agentRegistration.dart';
+// // import 'package:coopengageplus/features/screens/suuqpassLoginScreen.dart';
 // import 'package:crm/helpers/databaseHelper.dart';
-// // import 'package:coopengageplus/pages/MainPage.dart';
+// // import 'package:coopengageplus/features/home/main_page.dart';
 // import 'package:snippet_coder_utils/FormHelper.dart';
 // import 'package:snippet_coder_utils/ProgressHUD.dart';
 // // import 'package:crm/services/GlobalData.dart';

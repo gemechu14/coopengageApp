@@ -1,5 +1,5 @@
 
-import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
 
 class HelpPage extends StatelessWidget {

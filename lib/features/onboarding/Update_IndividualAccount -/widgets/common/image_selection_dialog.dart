@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 
 class ImageSelectionDialog extends StatelessWidget {
   final String title;

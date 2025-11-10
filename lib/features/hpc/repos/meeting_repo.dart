@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/features/crm/data/model/meeting/meeting_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';

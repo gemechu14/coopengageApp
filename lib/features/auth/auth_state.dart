@@ -1,4 +1,4 @@
-import 'package:coopengageplus/models/user.dart';
+import 'package:coopengageplus/shared/models/user.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable

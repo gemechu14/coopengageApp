@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
 import 'package:coopengageplus/features/crm/presentation/dashboard/widgets/customer_segementation.dart';
 
 class SegementationSection extends StatelessWidget {

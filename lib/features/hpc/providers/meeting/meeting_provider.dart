@@ -1,5 +1,5 @@
 
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/features/crm/data/model/meeting/meeting_model.dart';
 import 'package:coopengageplus/features/crm/data/repo/meeting_repo.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

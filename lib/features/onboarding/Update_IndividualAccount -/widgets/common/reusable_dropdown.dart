@@ -1,4 +1,4 @@
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:flutter/material.dart';
 
 class ReusableDropdown extends StatelessWidget {

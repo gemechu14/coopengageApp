@@ -5,9 +5,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:coopengageplus/Screen/LoginScreen.dart';
-import 'package:coopengageplus/service/GlobalData.dart';
-import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/features/screens/LoginScreen.dart';
+import 'package:coopengageplus/shared/services/GlobalData.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
 // import 'package:crm/helpers/databaseHelper.dart';
 // import 'package:crm/pages/LoginPage.dart';
 

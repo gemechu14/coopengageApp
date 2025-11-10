@@ -1,21 +1,22 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/data/model/high_profile_clients/high_profile_clients.dart';
 import 'package:coopengageplus/features/hpc/providers/meeting/meeting_provider.dart';
-import 'package:coopengageplus/utils/language_store.dart';
-import 'package:coopengageplus/utils/time_utils.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
+import 'package:coopengageplus/core/utils/time_utils.dart';
+import 'package:coopengageplus/shared/widgets/button/btn_gradient.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
+import 'package:coopengageplus/shared/widgets/textField/reusable_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../common_widgets/button/btn_gradient.dart';
-import '../../../../common_widgets/text/custom_nav_heading.dart';
-import '../../../../common_widgets/textField/reusable_text_field.dart';
-import '../../../../constants/app_sizes.dart';
-import '../../../../constants/kconstant.dart';
-import '../../../../constants/text_styles.dart';
+
 import '../../../crm/providers/high_profile_clients.dart';
 
 

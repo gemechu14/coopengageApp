@@ -8,8 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signature/signature.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:coopengageplus/widget/ReusableTextFormField.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/shared/widgets/ReusableTextFormField.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 
 
 class SignatureStep extends ConsumerStatefulWidget {

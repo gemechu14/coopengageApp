@@ -1,5 +1,5 @@
 // import 'package:coopengageplus/features/auth/login/login_state.dart';
-// import 'package:coopengageplus/pages/MainPage.dart';
+// import 'package:coopengageplus/features/home/main_page.dart';
 // import 'package:flutter/material.dart';
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import '../../../common_widgets/AlertDialog/dialog_helper.dart';

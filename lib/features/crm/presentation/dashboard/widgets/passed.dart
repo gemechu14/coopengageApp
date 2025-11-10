@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/common_widgets/card/event_card.dart';
+import 'package:coopengageplus/shared/widgets/card/event_card.dart';
 
 class Passed extends StatelessWidget {
   const Passed({super.key, this.data});

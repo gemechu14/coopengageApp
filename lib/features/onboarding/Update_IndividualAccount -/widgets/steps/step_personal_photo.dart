@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import '../common/image_selection_dialog.dart';
 import '../../providers/registration_providers.dart';
 

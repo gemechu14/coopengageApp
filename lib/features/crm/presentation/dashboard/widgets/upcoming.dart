@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/common_widgets/card/event_card.dart';
+import 'package:coopengageplus/shared/widgets/card/event_card.dart';
 
 class Upcoming extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>> data;

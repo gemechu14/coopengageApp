@@ -1,4 +1,4 @@
-import 'package:coopengageplus/NetworkHandler.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
 import '../models/account_type.dart';
 
 class AccountTypeService {

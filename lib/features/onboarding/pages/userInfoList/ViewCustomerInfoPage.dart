@@ -2,9 +2,9 @@
 
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
 
 import 'package:snippet_coder_utils/FormHelper.dart';

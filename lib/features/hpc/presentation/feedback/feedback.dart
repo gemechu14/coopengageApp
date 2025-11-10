@@ -1,19 +1,20 @@
 // ignore_for_file: unused_local_variable, use_build_context_synchronously
 
-import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
-import 'package:coopengageplus/common_widgets/textField/reusable_text_field.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/shared/widgets/button/btn_gradient.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
+import 'package:coopengageplus/shared/widgets/textField/description_text_field.dart';
+import 'package:coopengageplus/shared/widgets/textField/reusable_text_field.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/crm/providers/high_profile_clients.dart';
 import 'package:coopengageplus/features/hpc/Dashboard/dashboard.dart';
 import 'package:coopengageplus/features/hpc/providers/meeting/meeting_provider.dart';
-import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 
-import '../../../../common_widgets/button/btn_gradient.dart';
-import '../../../../common_widgets/textField/description_text_field.dart';
-import '../../../../constants/app_sizes.dart';
+
 
 
 class HPCFeedback extends ConsumerStatefulWidget {

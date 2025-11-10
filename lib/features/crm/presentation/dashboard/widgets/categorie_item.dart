@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
 
 class CategoryItem extends StatelessWidget {
   const CategoryItem({super.key, required this.text});

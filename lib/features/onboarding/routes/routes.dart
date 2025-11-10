@@ -1,7 +1,7 @@
 // // lib/routes/routes.dart
 
 // import 'package:get/get.dart';
-// import 'package:coopengageplus/pages/MainPage.dart';
+// import 'package:coopengageplus/features/home/main_page.dart';
 
 // class AppRoutes {
 //   static const String home = '/home';

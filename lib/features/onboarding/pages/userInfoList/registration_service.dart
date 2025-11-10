@@ -1,8 +1,8 @@
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-// import 'package:coopengageplus/constants/kconstant.dart';
+// import 'package:coopengageplus/core/constants/kconstant.dart';
 
 class RegistrationService {
   final storage = const FlutterSecureStorage(

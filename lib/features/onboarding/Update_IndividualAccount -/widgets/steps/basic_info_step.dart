@@ -1,11 +1,11 @@
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/customerOnboarding/_IndividualAccount/widgets/common/reusable_dropdown.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/features/onboarding/customer/_IndividualAccount/widgets/common/reusable_dropdown.dart';
 // import 'package:coopengageplus/features/onboarding/corporate/corporateAccount.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/common_widgets/textField/PhoneNumberWidget.dart';
-import 'package:coopengageplus/common_widgets/textField/emailWidget.dart';
-import 'package:coopengageplus/constants/listConstants.dart';
+import 'package:coopengageplus/shared/widgets/textField/PhoneNumberWidget.dart';
+import 'package:coopengageplus/shared/widgets/textField/emailWidget.dart';
+import 'package:coopengageplus/core/constants/listConstants.dart';
 import '../../providers/registration_providers.dart';
 import '../../screens/registration_screen.dart';
 

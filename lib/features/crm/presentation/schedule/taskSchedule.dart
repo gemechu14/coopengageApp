@@ -1,23 +1,23 @@
 // ignore_for_file: use_build_context_synchronously, prefer_const_constructors, unused_local_variable, prefer_final_fields, non_constant_identifier_names
 
 import 'package:coopengageplus/features/crm/data/model/high_profile_clients/high_profile_clients.dart';
+import 'package:coopengageplus/shared/widgets/textField/textfield_with_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import "package:get/get.dart";
-import 'package:coopengageplus/common_widgets/button/btn_gradient.dart';
-import 'package:coopengageplus/common_widgets/textField/reusable_text_field.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/config/config.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/constants/text_styles.dart';
+import 'package:coopengageplus/shared/widgets/button/btn_gradient.dart';
+import 'package:coopengageplus/shared/widgets/textField/reusable_text_field.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/features/crm/providers/high_profile_clients.dart';
 import 'package:coopengageplus/features/crm/providers/task/task.dart';
-import 'package:coopengageplus/utils/language_store.dart';
-import 'package:coopengageplus/utils/time_utils.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
+import 'package:coopengageplus/core/utils/time_utils.dart';
 
-import '../../../../common_widgets/textField/textfield_with_icon.dart';
 
 class Taskschedule extends ConsumerStatefulWidget {
   const Taskschedule({super.key});

@@ -1,15 +1,15 @@
 // ignore_for_file: constant_identifier_names, use_build_context_synchronously, non_constant_identifier_names, use_super_parameters, library_private_types_in_public_api
-import 'package:coopengageplus/Screen/LoginScreen.dart';
-import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
+import 'package:coopengageplus/features/screens/LoginScreen.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/features/onboarding/pages/help.dart';
-import 'package:coopengageplus/service/GlobalData.dart';
-import 'package:coopengageplus/utils/language_store.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
+import 'package:coopengageplus/shared/services/GlobalData.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
 import 'dart:convert'; // Added for jsonDecode
 import 'pages/overall_stats_page.dart';
 import 'pages/recent_invitations_page.dart';

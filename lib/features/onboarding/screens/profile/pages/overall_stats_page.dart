@@ -1,7 +1,8 @@
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../constants/kconstant.dart';
-import '../../../../../common_widgets/text/custom_nav_heading.dart';
+
 import '../providers/invitation_provider.dart';
 
 class OverallStatsPage extends ConsumerWidget {

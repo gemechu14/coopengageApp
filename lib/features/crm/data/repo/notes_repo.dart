@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/features/crm/data/model/notes/note_model.dart';
 
 abstract class NoteRepo {

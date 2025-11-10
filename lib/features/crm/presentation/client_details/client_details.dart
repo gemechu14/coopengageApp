@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/constants/text_styles.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/presentation/client_details/widgets/client_detail_field.dart';
 import 'package:coopengageplus/features/crm/presentation/client_details/widgets/client_transaction_chart.dart';
 import 'package:coopengageplus/features/crm/presentation/client_details/widgets/recent_activities.dart';

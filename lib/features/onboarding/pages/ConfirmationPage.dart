@@ -1,9 +1,9 @@
 // ignore_for_file: must_be_immutable, deprecated_member_use, use_key_in_widget_constructors, avoid_print, use_build_context_synchronously
 import 'dart:typed_data';
-import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:coopengageplus/main.dart';
-import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
 

@@ -1,7 +1,7 @@
 // ignore_for_file: file_names, non_constant_identifier_names, deprecated_member_use, use_build_context_synchronously
 
-import 'package:coopengageplus/pages/LoginPage.dart';
-import 'package:coopengageplus/pages/UserListPage.dart';
+import 'package:coopengageplus/features/home/LoginPage.dart';
+import 'package:coopengageplus/features/home/UserListPage.dart';
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 

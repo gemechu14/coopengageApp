@@ -1,12 +1,12 @@
 import 'dart:convert';
-import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/pages/userInfoList/ViewCustomerInfoPage.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/screens/registration_screen.dart';
 import 'package:coopengageplus/features/onboarding/pages/userInfoList/OrganizationDetailPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/userInfoList/JointAccountDetailPage.dart';
 import 'package:coopengageplus/features/onboarding/pages/verifyCustomerInfo.dart';
-import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:coopengageplus/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

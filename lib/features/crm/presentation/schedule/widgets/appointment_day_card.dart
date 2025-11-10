@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:coopengageplus/common_widgets/text/CustomText.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
+import 'package:coopengageplus/shared/widgets/text/CustomText.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
 
 // class AppointmentDaysCard extends StatefulWidget {
 //   const AppointmentDaysCard({super.key, this.listDate});

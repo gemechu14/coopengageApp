@@ -1,11 +1,12 @@
 import 'package:coopengageplus/features/hpc/presentation/crmChangeRequest/crmChangeRequest.dart';
 import 'package:coopengageplus/features/hpc/presentation/feedback/feedback.dart';
 import 'package:coopengageplus/features/hpc/presentation/schedule/meetingSchedule.dart';
-import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../common_widgets/text/custom_nav_heading.dart';
+// import '../../../common_widgets/text/custom_nav_heading.dart';
 
 
 class HPCDashBoard extends StatefulWidget {

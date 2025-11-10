@@ -1,4 +1,4 @@
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/controllers/registration_controller.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/models/registration_data.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/providers/registration_providers.dart';
@@ -12,7 +12,7 @@ import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_personal_info.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_personal_photo.dart';
 import 'package:coopengageplus/features/onboarding/Update_IndividualAccount%20-/widgets/steps/step_terms_conditions.dart';
-import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

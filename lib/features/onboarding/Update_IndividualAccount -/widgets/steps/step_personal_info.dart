@@ -1,11 +1,11 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/widget/ReusableTextFormField.dart';
-import 'package:coopengageplus/common_widgets/dropDown/ReusableDropdown.dart';
-import 'package:coopengageplus/constants/listConstants.dart';
+import 'package:coopengageplus/shared/widgets/ReusableTextFormField.dart';
+import 'package:coopengageplus/shared/widgets/dropDown/ReusableDropdown.dart';
+import 'package:coopengageplus/core/constants/listConstants.dart';
 import 'package:intl/intl.dart';
 import '../../providers/registration_providers.dart';
 

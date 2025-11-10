@@ -1,3 +1,5 @@
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:coopengageplus/features/crm/presentation/dashboard/CRMDashboard.dart';
 import 'package:coopengageplus/features/crm/presentation/notes/noteScreen.dart';
 import 'package:coopengageplus/features/crm/presentation/profile/profileScreen.dart';
@@ -5,17 +7,15 @@ import 'package:coopengageplus/features/crm/presentation/schedule/Schedule.dart'
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
-import '../../constants/kconstant.dart';
-import '../../utils/language_store.dart';
 
 // ignore: unused_import
-// import 'package:coopengageplus/NetworkHandler.dart';
-// import 'package:coopengageplus/Screen/AgentPage.dart';
-// import 'package:coopengageplus/Screen/Dashboard.dart';
-// import 'package:coopengageplus/Screen/Schedule.dart';
-// import 'package:coopengageplus/Screen/noteScreen.dart';
-// import 'package:coopengageplus/Screen/profileScreen.dart';
-// import 'package:coopengageplus/pages/LoginPage.dart';
+// import 'package:coopengageplus/core/network/network_handler.dart';
+// import 'package:coopengageplus/features/screens/AgentPage.dart';
+// import 'package:coopengageplus/features/screens/Dashboard.dart';
+// import 'package:coopengageplus/features/screens/Schedule.dart';
+// import 'package:coopengageplus/features/screens/noteScreen.dart';
+// import 'package:coopengageplus/features/screens/profileScreen.dart';
+// import 'package:coopengageplus/features/home/LoginPage.dart';
 
 class CRMMainScreen extends StatefulWidget {
   final int initialIndex;

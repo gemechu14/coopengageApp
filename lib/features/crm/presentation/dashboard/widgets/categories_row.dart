@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
 import 'package:coopengageplus/features/crm/presentation/widgets/pie_chart.dart';
 
 class SegementationCategory extends ConsumerWidget {

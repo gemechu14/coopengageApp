@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import '../models/registration_data.dart';
 
 class RegistrationSummaryDialog extends StatelessWidget {

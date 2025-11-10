@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/text_styles.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/presentation/dashboard/line_chart.dart';
 
 class AnalyticsSection extends StatelessWidget {

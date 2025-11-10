@@ -1,6 +1,6 @@
 
 
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/features/crm/data/model/high_profile_clients/high_profile_clients.dart';
 import 'package:coopengageplus/features/crm/data/repo/high_profile_client_repo.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

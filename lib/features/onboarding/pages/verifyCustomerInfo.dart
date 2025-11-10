@@ -1,8 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:convert';
-import 'package:coopengageplus/constants/config/config.dart';
-import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;

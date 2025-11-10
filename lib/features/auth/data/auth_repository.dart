@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:coopengageplus/helper/databaseHelper.dart';
-import 'package:coopengageplus/models/user.dart';
+import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
+import 'package:coopengageplus/shared/models/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../../constants/config/config.dart';
-import '../../../NetworkHandler.dart';
+// import '../../../constants/config/config.dart';
+// import '../../../NetworkHandler.dart';
 
 final authRepositoryProvider = Provider((ref) => AuthRepository(ref));
 

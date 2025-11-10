@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/common_widgets/text/CustomText.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/shared/widgets/text/CustomText.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 
 class RecentActivities extends StatelessWidget {
   const RecentActivities({

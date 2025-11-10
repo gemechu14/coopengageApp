@@ -1,10 +1,10 @@
 // ignore_for_file: sort_child_properties_last, use_super_parameters, sized_box_for_whitespace, unused_local_variable
 
 import 'dart:convert';
-import 'package:coopengageplus/NetworkHandler.dart';
-import 'package:coopengageplus/helper/databaseHelper.dart';
-import 'package:coopengageplus/service/GlobalData.dart';
-import 'package:coopengageplus/service/UserService.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/shared/services/GlobalData.dart';
+import 'package:coopengageplus/shared/services/UserService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';

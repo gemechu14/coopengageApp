@@ -1,17 +1,16 @@
 import 'dart:convert';
 import 'dart:async';
 
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/providers/national_id_provider.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as ws_status;
 import 'package:http/http.dart' as http;
-import 'package:coopengageplus/constants/kconstant.dart';
-
-import '../providers/stepper_provider.dart';
-import '../providers/national_id_provider.dart';
 
 class NationalIdAuthWidget extends ConsumerStatefulWidget {
   const NationalIdAuthWidget({Key? key}) : super(key: key);

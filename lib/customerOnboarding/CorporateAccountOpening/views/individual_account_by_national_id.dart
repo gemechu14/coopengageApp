@@ -2,25 +2,31 @@
 
 import 'dart:io';
 
-import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/model/registration_data.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/providers/national_id_provider.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/providers/stepper_provider.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/services/registration_service.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/Signature.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/account_type_step.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/basic_info_step.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/branch_and_deposit_step.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/AttachDocuments.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/member_additional_info_step.dart';
+// import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
+// import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/model/registration_data.dart';
+// import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/providers/national_id_provider.dart';
+// import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/providers/stepper_provider.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/national_id_auth_widget.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/registration_summary_page.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/model/registration_data.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/providers/national_id_provider.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/providers/stepper_provider.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/services/registration_service.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/AttachDocuments.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/Signature.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/account_type_step.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/basic_info_step.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/branch_and_deposit_step.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/member_additional_info_step.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/registration_summary_page.dart';
+import 'package:coopengageplus/shared/widgets/AlertDialog/DialogHelper%20.dart';
 
-import 'package:coopengageplus/pages/MainPage.dart';
+// import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_stepper/easy_stepper.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+// import 'package:coopengageplus/constants/kconstant.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 

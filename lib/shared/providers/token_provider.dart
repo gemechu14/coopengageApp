@@ -1,0 +1,13 @@
+import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// Create a provider that fetches the token from the database
+final tokenProvider = FutureProvider<String?>((ref) async {
+  DatabaseHelper db = DatabaseHelper();
+  return await db.getAuthToken();
+  // final List<Map<String, dynamic>> result = await db.getAuthToken();
+  // if (result.isNotEmpty) {
+  //   return result.first['token'] as String?;
+  // }
+  // return null; // Return null if no token is found
+});

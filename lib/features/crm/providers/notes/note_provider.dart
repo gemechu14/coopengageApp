@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/features/crm/data/model/notes/note_model.dart';
 import 'package:coopengageplus/features/crm/data/repo/notes_repo.dart';
-import 'package:coopengageplus/features/providers/token_provider.dart';
+import 'package:coopengageplus/shared/providers/token_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'note_provider.g.dart';

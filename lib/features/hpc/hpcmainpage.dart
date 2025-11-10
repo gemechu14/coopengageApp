@@ -1,7 +1,7 @@
 import 'package:coopengageplus/features/hpc/Dashboard/dashboard.dart';
 import 'package:coopengageplus/features/hpc/presentation/profile/hpcProfile.dart';
-import 'package:coopengageplus/pages/LoginPage.dart';
-import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/features/home/LoginPage.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';

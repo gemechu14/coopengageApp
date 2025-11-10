@@ -1,9 +1,9 @@
 import 'package:coopengageplus/features/hpc/presentation/language/changeLanguage.dart';
-import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../common_widgets/text/custom_nav_heading.dart';
 
 class HighClientProfilePage extends StatelessWidget {
   const HighClientProfilePage({super.key});

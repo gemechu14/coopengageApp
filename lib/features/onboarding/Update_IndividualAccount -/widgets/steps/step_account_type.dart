@@ -1,11 +1,11 @@
-import 'package:coopengageplus/NetworkHandler.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import '../../providers/registration_providers.dart';
 import '../../services/registration_service.dart';
-import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/customerOnboarding/_IndividualAccount/widgets/common/reusable_dropdown.dart';
+import 'package:coopengageplus/core/constants/listConstants.dart';
+import 'package:coopengageplus/features/onboarding/customer/_IndividualAccount/widgets/common/reusable_dropdown.dart';
 
 class StepAccountType extends ConsumerStatefulWidget {
   const StepAccountType({super.key});

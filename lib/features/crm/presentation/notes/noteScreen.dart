@@ -3,19 +3,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:coopengageplus/common_widgets/textField/search_field.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'package:coopengageplus/shared/widgets/textField/search_field.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/crm/presentation/notes/TextNote.dart';
 import 'package:coopengageplus/features/crm/presentation/notes/VoiceNote.dart';
 
 import 'package:coopengageplus/features/crm/presentation/notes/widgets/notes_card.dart';
 import 'package:coopengageplus/features/crm/providers/notes/note_provider.dart';
-import 'package:coopengageplus/utils/language_store.dart';
-// import 'package:coopengageplus/Screen/TextNote.dart';
-// import 'package:coopengageplus/Screen/VoiceNote.dart';
-// import 'package:coopengageplus/Screen/meetingSchedule.dart';
-// import 'package:coopengageplus/Screen/taskSchedule.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
+// import 'package:coopengageplus/features/screens/TextNote.dart';
+// import 'package:coopengageplus/features/screens/VoiceNote.dart';
+// import 'package:coopengageplus/features/screens/meetingSchedule.dart';
+// import 'package:coopengageplus/features/screens/taskSchedule.dart';
 
 class Notescreen extends ConsumerStatefulWidget {
   const Notescreen({super.key});

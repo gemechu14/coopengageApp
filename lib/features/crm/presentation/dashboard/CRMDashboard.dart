@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/common_widgets/button/link_button.dart';
-import 'package:coopengageplus/common_widgets/text/custom_nav_heading.dart';
-import 'package:coopengageplus/common_widgets/textField/search_field.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/constants/text_styles.dart';
+import 'package:coopengageplus/shared/widgets/button/link_button.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
+import 'package:coopengageplus/shared/widgets/textField/search_field.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/presentation/dashboard/priority_client.dart';
 import 'package:coopengageplus/features/crm/presentation/dashboard/recent_activities.dart';
 import 'package:coopengageplus/features/crm/presentation/dashboard/segementation_section.dart';
-import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
 
 class CRMDashboard extends StatefulWidget {
   const CRMDashboard({super.key});

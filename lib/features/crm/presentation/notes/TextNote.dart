@@ -4,16 +4,16 @@ import 'package:coopengageplus/features/crm/data/model/high_profile_clients/high
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:coopengageplus/common_widgets/button/btn_gradient.dart';
-import 'package:coopengageplus/common_widgets/textField/reusable_text_field.dart';
-import 'package:coopengageplus/constants/app_sizes.dart';
-import 'package:coopengageplus/constants/config/config.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/constants/text_styles.dart';
+import 'package:coopengageplus/shared/widgets/button/btn_gradient.dart';
+import 'package:coopengageplus/shared/widgets/textField/reusable_text_field.dart';
+import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/features/crm/providers/high_profile_clients.dart';
 import 'package:coopengageplus/features/crm/providers/notes/note_provider.dart';
-import 'package:coopengageplus/utils/language_store.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
 
 class TextNote extends ConsumerStatefulWidget {
   const TextNote({super.key});

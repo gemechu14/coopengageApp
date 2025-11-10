@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:coopengageplus/constants/kconstant.dart';
-import 'package:coopengageplus/constants/listConstants.dart';
-import 'package:coopengageplus/widget/ReusableTextFormField.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/listConstants.dart';
+import 'package:coopengageplus/shared/widgets/ReusableTextFormField.dart';
 import '../../constants/reusable_dropdown.dart';
 import '../../providers/registration_providers.dart';
 import 'package:intl/intl.dart';

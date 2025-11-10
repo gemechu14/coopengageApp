@@ -1,11 +1,11 @@
 
 
-import 'package:coopengageplus/helper/databaseHelper.dart';
-import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/core/utils/language_store.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../utils/language_store.dart';
 
 class ChangeLanguagePage extends StatelessWidget {
   const ChangeLanguagePage({super.key});

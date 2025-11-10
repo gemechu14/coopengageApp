@@ -1,4 +1,4 @@
-import 'package:coopengageplus/constants/config/config.dart';
+import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/features/crm/data/model/task/task.dart';
 import 'package:coopengageplus/features/crm/data/repo/task.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

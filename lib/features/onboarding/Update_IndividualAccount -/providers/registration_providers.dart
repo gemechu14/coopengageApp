@@ -1,11 +1,11 @@
 import 'dart:typed_data';
-import 'package:coopengageplus/helper/databaseHelper.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import '../models/registration_data.dart';
 import '../services/registration_service.dart';
 import '../controllers/registration_controller.dart';
-import '../../../../NetworkHandler.dart';
 import '../../../../main.dart';
 
 // Database and Network Providers

@@ -2,11 +2,11 @@
 
 // import 'dart:io';
 
-// import 'package:coopengageplus/HttpOverrides.dart';
-// import 'package:coopengageplus/Screen/LoginScreen.dart';
-// import 'package:coopengageplus/Screen/SplashScreen.dart';
-// import 'package:coopengageplus/helper/databaseHelper.dart';
-// import 'package:coopengageplus/pages/MainPage.dart';
+// import 'package:coopengageplus/core/network/http_overrides.dart';
+// import 'package:coopengageplus/features/screens/LoginScreen.dart';
+// import 'package:coopengageplus/features/screens/SplashScreen.dart';
+// import 'package:coopengageplus/core/database/database_helper.dart';
+// import 'package:coopengageplus/features/home/main_page.dart';
 // import 'package:flutter_localizations/flutter_localizations.dart';
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:get/get.dart';
@@ -76,12 +76,12 @@
 
 import 'dart:io';
 
-import 'package:coopengageplus/HttpOverrides.dart';
-import 'package:coopengageplus/l10n/app_localizations.dart';
-import 'package:coopengageplus/pages/LoginPage.dart';
-import 'package:coopengageplus/Screen/SplashScreen.dart';
-import 'package:coopengageplus/helper/databaseHelper.dart';
-import 'package:coopengageplus/pages/MainPage.dart';
+import 'package:coopengageplus/core/network/http_overrides.dart';
+import 'package:coopengageplus/core/l10n/app_localizations.dart';
+import 'package:coopengageplus/features/home/LoginPage.dart';
+import 'package:coopengageplus/features/screens/SplashScreen.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';

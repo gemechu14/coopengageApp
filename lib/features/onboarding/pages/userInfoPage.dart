@@ -1,9 +1,9 @@
 // // ignore_for_file: library_private_types_in_public_api
 
 // import 'dart:convert';
-// import 'package:coopengageplus/NetworkHandler.dart';
+// import 'package:coopengageplus/core/network/network_handler.dart';
 // import 'package:coopengageplus/features/onboarding/Indivudualaccount/updateCustomerInfoScreen.dart';
-// import 'package:coopengageplus/helper/databaseHelper.dart';
+// import 'package:coopengageplus/core/database/database_helper.dart';
 // import 'package:coopengageplus/main.dart';
 // import 'package:flutter/material.dart';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
