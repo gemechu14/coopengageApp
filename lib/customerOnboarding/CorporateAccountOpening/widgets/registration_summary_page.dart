@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/model/account_type.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ class RegistrationSummaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    print("jdsjfdjhfjdjfjdjfd");
     print(registrationData.toMap());
     // Get the list of account types from the provider
     final accountTypes =
@@ -212,14 +212,35 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                                 member.issueDate ?? 'Not provided'),
                             _buildSummaryItem('Expiry Date',
                                 member.expirayDate ?? 'Not provided'),
-                            buildImageSummary(
-                                'Photo', member.profilePath, context),
-                            _buildSummaryItem('residentFront',
+                             _buildSummaryItem('State',
+                                member.state ?? 'Not provided'),
+                            _buildSummaryItem('Verified',
                                 member.isVerified ? 'Yes' : 'No'),
-                            buildImageSummary('Resident Card Front',
-                                member.residentPath, context),
-                            buildImageSummary('Resident Card Back',
-                                member.residentCardBackPath, context),
+                            
+                            // National ID Front Image - Extract from verifiedData if available
+                            _buildNationalIdImage(
+                              'National ID Front',
+                              member,
+                              'idFront', // Key in verifiedData for front image
+                              member.residentPath,
+                              context,
+                            ),
+                            
+                            // National ID Back Image - Extract from verifiedData if available
+                            _buildNationalIdImage(
+                              'National ID Back',
+                              member,
+                              'idBack', // Key in verifiedData for back image
+                              member.residentCardBackPath,
+                              context,
+                            ),
+                            
+                            // Profile Photo - Extract from verifiedData['picture'] if available
+                            _buildProfilePhoto(
+                              member,
+                              member.profilePath,
+                              context,
+                            ),
 
                             if (member.signature != null &&
                                 member.signature is Uint8List)
@@ -245,8 +266,7 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                               )
                             else
                               _buildSummaryItem('Signature', 'Not provided'),
-                            // buildImageSummary(
-                            //     'Signature', member.signature, context),
+                     
                           ],
                         );
                       }),
@@ -479,5 +499,184 @@ class RegistrationSummaryScreen extends ConsumerWidget {
     } else {
       return _buildSummaryItem(label, 'Not provided');
     }
+  }
+
+  // Helper method to extract base64 image bytes from verifiedData
+  Uint8List? _extractBase64Image(Map<String, dynamic>? verifiedData, String key) {
+    if (verifiedData == null || !verifiedData.containsKey(key)) {
+      return null;
+    }
+
+    final imageData = verifiedData[key];
+    if (imageData is! String || imageData.isEmpty) {
+      return null;
+    }
+
+    try {
+      // Check if it's base64 data URI
+      if (imageData.startsWith('data:image')) {
+        final base64String = imageData.split(',').last;
+        return base64Decode(base64String);
+      } else {
+        // Assume it's already base64 string
+        return base64Decode(imageData);
+      }
+    } catch (e) {
+      print('Error decoding $key from verifiedData: $e');
+      return null;
+    }
+  }
+
+  // Build National ID image (front or back) - checks verifiedData first, then file path
+  Widget _buildNationalIdImage(
+    String label,
+    JointMemberInfo member,
+    String verifiedDataKey,
+    String? filePath,
+    BuildContext context,
+  ) {
+    // Try to extract from verifiedData first - check multiple possible keys
+    Uint8List? imageBytes;
+    if (member.verifiedData != null) {
+      // Try the provided key first
+      imageBytes = _extractBase64Image(member.verifiedData, verifiedDataKey);
+      
+      // If not found, try alternative keys
+      if (imageBytes == null) {
+        // For front image, try: idFront, residenceCard, id_front, residence_card
+        if (verifiedDataKey == 'idFront') {
+          imageBytes = _extractBase64Image(member.verifiedData, 'residenceCard') ??
+                       _extractBase64Image(member.verifiedData, 'id_front') ??
+                       _extractBase64Image(member.verifiedData, 'residence_card');
+        }
+        // For back image, try: idBack, residenceCardBack, id_back, residence_card_back
+        else if (verifiedDataKey == 'idBack') {
+          imageBytes = _extractBase64Image(member.verifiedData, 'residenceCardBack') ??
+                       _extractBase64Image(member.verifiedData, 'id_back') ??
+                       _extractBase64Image(member.verifiedData, 'residence_card_back');
+        }
+      }
+    }
+    
+    // If not in verifiedData, try file path
+    if (imageBytes == null && filePath != null && filePath.isNotEmpty) {
+      final file = File(filePath);
+      if (file.existsSync()) {
+        return buildImageSummary(label, filePath, context);
+      }
+    }
+
+    // Display image from verifiedData
+    if (imageBytes != null) {
+      return _buildImageFromBytes(label, imageBytes, context);
+    }
+
+    // No image available
+    return _buildSummaryItem(label, 'Not provided');
+  }
+
+  // Build Profile Photo - extracts from verifiedData['picture'] first, then file path
+  Widget _buildProfilePhoto(
+    JointMemberInfo member,
+    String? filePath,
+    BuildContext context,
+  ) {
+    // Extract photo from verifiedData['picture'] (base64) if available
+    Uint8List? photoBytes;
+    if (member.verifiedData != null && member.verifiedData!.containsKey('picture')) {
+      final picture = member.verifiedData!['picture'];
+      if (picture is String && picture.isNotEmpty) {
+        try {
+          // Check if it's base64 data URI
+          if (picture.startsWith('data:image')) {
+            final base64String = picture.split(',').last;
+            photoBytes = base64Decode(base64String);
+          } else {
+            // Assume it's already base64 string
+            photoBytes = base64Decode(picture);
+          }
+        } catch (e) {
+          print('Error decoding picture: $e');
+        }
+      }
+    }
+
+    // If not in verifiedData, try file path
+    if (photoBytes == null && filePath != null && filePath.isNotEmpty) {
+      final file = File(filePath);
+      if (file.existsSync()) {
+        return buildImageSummary('Profiler', filePath, context);
+      }
+    }
+
+    // Display image from verifiedData
+    if (photoBytes != null) {
+      return _buildImageFromBytes(' Photo', photoBytes, context);
+    }
+
+    // No image available
+    return _buildSummaryItem(' Photo', 'Not provided');
+  }
+
+  // Build image widget from Uint8List bytes
+  Widget _buildImageFromBytes(
+    String label,
+    Uint8List imageBytes,
+    BuildContext context,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(1.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              // const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => Dialog(
+                      backgroundColor: Colors.transparent,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: InteractiveViewer(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.memory(
+                              imageBytes,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(
+                    imageBytes,
+                    width: MediaQuery.of(context).size.width * 0.70,
+                    height: 250,
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

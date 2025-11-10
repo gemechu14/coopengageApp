@@ -58,23 +58,41 @@ class _BranchSelectorState extends State<BranchSelector> {
         
         print("BranchSelector: Formatted branches: $formattedBranches");
         
-        // Get main branch from Users table if available
+        // Get main branch from the CURRENT logged-in user
         String? defaultBranchName;
         Map<String, dynamic>? mainBranchData;
         try {
-          final users = await dbHelper.getUsers();
-          if (users.isNotEmpty) {
-            final user = users.first;
-            if (user['mainBranchName'] != null) {
-              defaultBranchName = user['mainBranchName'];
-              mainBranchData = {
-                'id': user['mainBranchId'] ?? 0,
-                'name': user['mainBranchName'] ?? 'Main Branch',
-                'branchCode': user['mainBranchCode'] ?? '',
-                'companyName': user['mainBranchName'] ?? 'Main Branch',
-              };
-              print("BranchSelector: Main branch from user: $defaultBranchName");
+          // Get token to identify current user (matching profileScreen.dart logic)
+          String? token = await storage.read(key: "token");
+          print("BranchSelector: Token found: ${token != null ? 'Yes' : 'No'}");
+          
+          Map<String, dynamic>? currentUser;
+          
+          // Try to get user by token first
+          if (token != null && token.isNotEmpty) {
+            currentUser = await dbHelper.getUserByToken(token);
+            print("BranchSelector: User found by token: ${currentUser != null ? 'Yes' : 'No'}");
+          }
+          
+          // If no user found by token, try to get first user as fallback
+          if (currentUser == null) {
+            final users = await dbHelper.getUsers();
+            if (users.isNotEmpty) {
+              currentUser = users.first;
+              print("BranchSelector: Using first user from database as fallback");
             }
+          }
+          
+          // Set main branch from current user
+          if (currentUser != null && currentUser['mainBranchName'] != null) {
+            defaultBranchName = currentUser['mainBranchName'];
+            mainBranchData = {
+              'id': currentUser['mainBranchId'] ?? 0,
+              'name': currentUser['mainBranchName'] ?? 'Main Branch',
+              'branchCode': currentUser['mainBranchCode'] ?? '',
+              'companyName': currentUser['mainBranchName'] ?? 'Main Branch',
+            };
+            print("BranchSelector: Main branch from current user: $defaultBranchName");
           }
         } catch (e) {
           print("BranchSelector: Error getting main branch: $e");
@@ -82,22 +100,28 @@ class _BranchSelectorState extends State<BranchSelector> {
         
         // Create final branches list including main branch
         final List<Map<String, dynamic>> allBranchesList = [];
+        final Set<String> seenCompanyNames = {}; // Track unique company names
         
         // Add main branch first if it exists
         if (mainBranchData != null) {
+          final mainCompanyName = mainBranchData['companyName'] as String;
           allBranchesList.add(mainBranchData);
+          seenCompanyNames.add(mainCompanyName);
           print("BranchSelector: Added main branch to list: $mainBranchData");
         }
         
-        // Add other branches, excluding the main branch to avoid duplicates
+        // Add other branches, excluding duplicates by companyName
         for (var branch in formattedBranches) {
-          // Skip if this branch is the same as the main branch (by companyName)
-          if (mainBranchData != null && 
-              branch['companyName'] == mainBranchData['companyName']) {
-            print("BranchSelector: Skipping duplicate main branch: ${branch['companyName']}");
+          final companyName = branch['companyName'] as String;
+          
+          // Skip if we've already seen this companyName
+          if (seenCompanyNames.contains(companyName)) {
+            print("BranchSelector: Skipping duplicate branch: $companyName");
             continue;
           }
+          
           allBranchesList.add(branch);
+          seenCompanyNames.add(companyName);
         }
         print("BranchSelector: Final all branches list (${allBranchesList.length} branches): $allBranchesList");
         
@@ -105,9 +129,23 @@ class _BranchSelectorState extends State<BranchSelector> {
           allBranches = allBranchesList;
           
           // Priority: initialValue > mainBranch > first branch
-          selectedBranch = widget.initialValue ?? 
-                          defaultBranchName ?? 
-                          (allBranchesList.isNotEmpty ? allBranchesList.first['companyName'] : null);
+          String? proposedBranch = widget.initialValue ?? 
+                                   defaultBranchName ?? 
+                                   (allBranchesList.isNotEmpty ? allBranchesList.first['companyName'] : null);
+          
+          // Ensure the proposed branch actually exists in our list
+          if (proposedBranch != null) {
+            bool branchExists = allBranchesList.any((branch) => branch['companyName'] == proposedBranch);
+            if (branchExists) {
+              selectedBranch = proposedBranch;
+            } else {
+              // Fallback to first branch if proposed branch doesn't exist
+              selectedBranch = allBranchesList.isNotEmpty ? allBranchesList.first['companyName'] : null;
+              print("BranchSelector: Proposed branch '$proposedBranch' not found in list, using first branch: $selectedBranch");
+            }
+          } else {
+            selectedBranch = null;
+          }
           
           isLoading = false;
         });
@@ -135,15 +173,27 @@ class _BranchSelectorState extends State<BranchSelector> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
+    // Validate that selectedBranch exists in allBranches
+    String? validatedValue;
+    if (!isLoading && selectedBranch != null) {
+      bool exists = allBranches.any((branch) => branch['companyName'] == selectedBranch);
+      if (exists) {
+        validatedValue = selectedBranch;
+      } else {
+        // If selected branch doesn't exist, clear it
+        print("BranchSelector: Selected branch '$selectedBranch' not found in dropdown items, clearing selection");
+        validatedValue = null;
+      }
+    }
+    
     return Padding(
       padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DropdownButtonFormField<String>(
-            value: isLoading ? null : selectedBranch,
+            value: isLoading ? null : validatedValue,
             hint: isLoading
                 ? const Text('Loading branches...')
                 : const Text('Choose a branch'),

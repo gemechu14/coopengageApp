@@ -252,7 +252,12 @@ class RegistrationService {
             person["issueDate"] ?? "";
         request.fields["personalInfo[$i].expiryDate"] =
             person["expiryDate"] ?? "";
-
+        request.fields["personalInfo[$i].zoneSubCity"] =
+            person["zoneSubCity"] ?? "";
+  request.fields["personalInfo[$i].state"] =
+            person["state"] ?? "";
+            request.fields["personalInfo[$i].country"] =
+            person["country"] ?? "";
         // 🖼️ Attach images
         await _addImageFile(
           request: request,
@@ -320,6 +325,53 @@ class RegistrationService {
         ));
       }
 
+      // 📎 Other files (array of files)
+      if (requestData["otherFiles"] != null) {
+        List<dynamic> otherFiles = requestData["otherFiles"];
+        if (otherFiles.isNotEmpty) {
+          for (int i = 0; i < otherFiles.length; i++) {
+            var otherFile = otherFiles[i];
+            if (otherFile is Map<String, dynamic> && otherFile["file"] != null) {
+              Uint8List? fileBytes = otherFile["file"] is Uint8List
+                  ? otherFile["file"] as Uint8List
+                  : null;
+              
+              if (fileBytes != null && fileBytes.isNotEmpty) {
+                String description = otherFile["description"] ?? "Document ${i + 1}";
+                String filename = "other_file_$i.pdf";
+                
+                // Determine file extension based on content or default to PDF
+                if (fileBytes.length > 4) {
+                  // Check PDF magic number
+                  if (fileBytes[0] == 0x25 && fileBytes[1] == 0x50 && 
+                      fileBytes[2] == 0x44 && fileBytes[3] == 0x46) {
+                    filename = "other_file_$i.pdf";
+                  } else {
+                    // Default to PDF for other file types
+                    filename = "other_file_$i.pdf";
+                  }
+                }
+                
+                request.files.add(await http.MultipartFile.fromBytes(
+                  "otherFiles[$i].file",
+                  fileBytes,
+                  filename: filename,
+                  contentType: MediaType('application', 'pdf'),
+                ));
+                
+                // Add description if backend supports it
+                if (description.isNotEmpty) {
+                  request.fields["otherFiles[$i].description"] = description;
+                }
+                
+                print("✅ Added otherFiles[$i]: $filename (${fileBytes.length} bytes) - $description");
+              }
+            }
+          }
+        }
+      }
+
+
       // 🧾 Debug print
       print("📤 Final request payload:");
       print("Fields:");
@@ -331,7 +383,7 @@ class RegistrationService {
 
       // 🚀 Send request
       final response = await request.send().timeout(
-        const Duration(seconds: 90),
+        const Duration(seconds: 100),
         onTimeout: () {
           throw TimeoutException("Request timed out. Please try again.");
         },

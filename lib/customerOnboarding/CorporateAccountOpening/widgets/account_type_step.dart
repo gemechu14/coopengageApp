@@ -78,27 +78,67 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   }
 
   Future<void> _initializeStep() async {
-    print("dkfkdfkdkjfdkfkdfkdkjf");
+    print("🔧 [AccountType] Initializing step...");
     if (_disposed) return;
-    await ref.read(accountTypeStepProvider.notifier).initializeStep(
-          customerAge: widget.customerAge,
-          customerGender: widget.customerGender,
-          initialDeposit: widget.initialDeposit,
-          bankingType: widget.bankingType,
-        );
-    _filterAccountTypes();
+    
+    try {
+      await ref.read(accountTypeStepProvider.notifier).initializeStep(
+            customerAge: widget.customerAge,
+            customerGender: widget.customerGender,
+            initialDeposit: widget.initialDeposit,
+            bankingType: widget.bankingType,
+          );
+      
+      if (_disposed) return;
+      
+      // Wait a bit for state to update, then filter
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (mounted && !_disposed) {
+        _filterAccountTypes();
+        print("✅ [AccountType] Initialization complete");
+      }
+    } catch (e) {
+      print("❌ [AccountType] Error initializing: $e");
+    }
   }
 
   void _filterAccountTypes() {
+    if (_disposed) return;
+    
     final accountTypeStepState = ref.read(accountTypeStepProvider);
     final account_types = accountTypeStepState.availableAccountTypes;
     final stepper_state = ref.read(stepperProvider);
 
+    // Don't filter if still loading or no account types available
+    if (accountTypeStepState.isLoading) {
+      print("🔍 [AccountType] Still loading, skipping filter");
+      return;
+    }
+
+    if (account_types.isEmpty) {
+      print("🔍 [AccountType] No account types available, skipping filter");
+      if (mounted) {
+        setState(() {
+          filteredAccountTypes = [];
+        });
+      }
+      return;
+    }
+
     final String? product_type = stepper_state.selectedProductType;
     final double? initial_deposit = widget.initialDeposit;
 
+    print("🔍 [AccountType] Filtering account types:");
+    print("   - Total available: ${account_types.length}");
+    print("   - Product type: $product_type");
+    print("   - Initial deposit: $initial_deposit");
+    print("   - Customer age: ${widget.customerAge}");
+    print("   - Customer gender: ${widget.customerGender}");
+
     // Only filter if data has changed
     if (_lastProductType == product_type && _lastInitialDeposit == initial_deposit) {
+      print("   - No changes detected, skipping filter");
       return;
     }
 
@@ -121,9 +161,20 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
           final depositMatch = initial_deposit != null &&
               account_type.minAmount <= initial_deposit;
 
-          return categoryMatch && productTypeMatch && depositMatch;
+          final matches = categoryMatch && productTypeMatch && depositMatch;
+          
+          if (!matches) {
+            print("   - ❌ ${account_type.name}: categoryMatch=$categoryMatch (category: ${account_type.category}), productTypeMatch=$productTypeMatch, depositMatch=$depositMatch");
+          }
+
+          return matches;
         })
         .toList();
+
+    print("   - ✅ Filtered result: ${filtered.length} account types");
+    if (filtered.isNotEmpty) {
+      print("   - Matching types: ${filtered.map((t) => t.name).join(', ')}");
+    }
 
     setState(() {
       filteredAccountTypes = filtered;
@@ -134,15 +185,17 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   Widget build(BuildContext context) {
     if (_disposed) return const SizedBox.shrink();
     final accountTypeStepState = ref.watch(accountTypeStepProvider);
-    final stepperState = ref.watch(stepperProvider); // Watch stepper state for changes
-    
-    // Filter account types based on current state
-    _filterAccountTypes();
+    ref.watch(stepperProvider); // Watch stepper state for changes (triggers rebuild when it changes)
     
     if (accountTypeStepState.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
+    }
+    
+    // Filter account types based on current state (only after loading is complete)
+    if (!accountTypeStepState.isLoading && accountTypeStepState.availableAccountTypes.isNotEmpty) {
+      _filterAccountTypes();
     }
     void _onAccountTypeTap(AccountType account_type) {
       widget.onAccountTypeChanged(account_type.id.toString());
@@ -390,8 +443,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                   ),
           )
 
-          // _buildAccountTypeContent(accountTypeState),
-          // _buildAccountTypeDetails(accountTypeState),
+
         ],
       ),
     );

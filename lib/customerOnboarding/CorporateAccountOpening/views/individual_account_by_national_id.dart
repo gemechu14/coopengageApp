@@ -757,7 +757,6 @@ class _IndividualAccountByNationalIdState
       // Prepare members (personalInfo) with file data
       requestData["customers"] = await Future.wait(
         stepperState.members.map((m) async {
-          // Extract phone from verifiedData if not in member.phone
           String? phone = m.phone;
           if ((phone == null || phone.isEmpty) && m.verifiedData != null) {
             phone = m.verifiedData!['phone'] ?? 
@@ -783,7 +782,7 @@ class _IndividualAccountByNationalIdState
             state = m.verifiedData!['state']?.toString() ?? 
                     m.verifiedData!['region']?.toString();
           }
-
+       
           // Extract zoneSubCity from verifiedData
           String? zoneSubCity = m.zoneSubCity;
           if ((zoneSubCity == null || zoneSubCity.isEmpty) && m.verifiedData != null) {
@@ -805,7 +804,7 @@ class _IndividualAccountByNationalIdState
             "expiryDate": m.expirayDate ?? "",
             "issueAuthority": issueAuthority,
             "country": "ETHIOPIA",
-            "state": state ?? "",
+            "state": state ?? "ADDIS ",
             "zoneSubCity": zoneSubCity ?? "",
           };
 
@@ -899,11 +898,11 @@ class _IndividualAccountByNationalIdState
                   onPressed: () {
                     if (!_disposed) {
                       Navigator.pop(context);
-                      // Navigator.pushAndRemoveUntil(
-                      //   context,
-                      //   MaterialPageRoute(builder: (_) => const MainPage()),
-                      //   (route) => false,
-                      // );
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MainPage()),
+                        (route) => false,
+                      );
                     }
                   },
                   style: TextButton.styleFrom(
