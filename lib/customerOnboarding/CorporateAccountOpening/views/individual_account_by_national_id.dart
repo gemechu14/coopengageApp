@@ -182,7 +182,7 @@ class _IndividualAccountByNationalIdState
           .toList();
       return Scaffold(
         key: ValueKey('stepper_scaffold_ ${stepperState.activeStep}'),
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           elevation: 0,
@@ -638,10 +638,12 @@ class _IndividualAccountByNationalIdState
       return Container(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
             children: [
               _buildStepContent(stepperState.activeStep),
-              const SizedBox(height: 80), // Reduced space for keyboard
+              const SizedBox(height: 80), // Space for keyboard
             ],
           ),
         ),
