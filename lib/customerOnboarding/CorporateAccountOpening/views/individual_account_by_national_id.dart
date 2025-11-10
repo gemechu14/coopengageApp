@@ -12,6 +12,7 @@ import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widget
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/basic_info_step.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/branch_and_deposit_step.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/AttachDocuments.dart';
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/member_additional_info_step.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/registration_summary_page.dart';
 
@@ -21,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_stepper/easy_stepper.dart';
 import 'package:coopengageplus/constants/kconstant.dart';
 import 'dart:typed_data';
+import 'dart:convert';
 
 String? normalizeDate(String? input) {
   if (input == null || input.isEmpty) return null;
@@ -95,13 +97,18 @@ class _IndividualAccountByNationalIdState
         builder: (context, ref) => BranchAndDepositStep(formkey: formKeys[1]),
       ),
       StepConfig(
-        title: 'Detail Information',
+        title: 'National ID Auth',
         icon: Icon(Icons.fingerprint),
         builder: (context, ref) => NationalIdAuthStep(),
       ),
       StepConfig(
+        title: 'Additional Information',
+        icon: Icon(Icons.person_add),
+        builder: (context, ref) => const MemberAdditionalInfoStep(),
+      ),
+      StepConfig(
         title: 'Attach Files',
-        icon: Icon(Icons.info_outline),
+        icon: Icon(Icons.attach_file),
         builder: (context, ref) => AttachDocumentsStep(),
       ),
       StepConfig(
@@ -427,7 +434,7 @@ class _IndividualAccountByNationalIdState
                       //     ),
                       //   );
                       // }
-                    } else if (stepperState.activeStep == 1) {
+                    } else if (stepperState.activeStep == 1) {  
                       final stepperState = ref.read(stepperProvider);
 
                       final isValid =
@@ -459,27 +466,34 @@ class _IndividualAccountByNationalIdState
                         );
                       }
                     } else if (stepperState.activeStep == 2) {
-                      final allFullNamesFilled = stepperState.members
-                          .every((m) => (m.fullName ?? '').trim().isNotEmpty);
-                      print(allFullNamesFilled);
-
-                      if (!allFullNamesFilled) {
+                      // Step 2: National ID Auth - Check if at least one member is verified
+                      final verifiedMembers = stepperState.members.where((m) => m.isVerified).toList();
+                      if (verifiedMembers.isNotEmpty) {
+                        ref.read(stepperProvider.notifier).nextStep();
+                      } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                                'Full name and phone number are required for all members.'),
+                                'Please complete National ID authentication for at least one member first'),
                             backgroundColor: Colors.red,
                           ),
                         );
-                        return;
                       }
-
-                      ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 3) {
+                      // Step 3: Additional Information (member info) - Just proceed
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 4) {
+                      // Step 4: Attach Files
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 5) {
+                      // Step 5: Signature
+
+                      
+                      ref.read(stepperProvider.notifier).nextStep();
+                    } 
+                    
+                    else if (stepperState.activeStep == 6) {
+                      // Step 6: Account Type
                       if (stepperState.selectedAccountType == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -489,7 +503,7 @@ class _IndividualAccountByNationalIdState
                         );
                         return;
                       }
-                      final currentFormKey = formKeys[5];
+                      final currentFormKey = formKeys[6];
 
                       final registrationData = RegistrationData(
                         // Shared/joint account fields
@@ -557,7 +571,7 @@ class _IndividualAccountByNationalIdState
                       Builder(
                         builder: (context) {
                           final buttonText =
-                              stepperState.activeStep == 5 ? 'Submit' : 'Next';
+                              stepperState.activeStep == 6 ? 'Submit' : 'Next';
 
                           return Text(
                             buttonText,
@@ -570,7 +584,7 @@ class _IndividualAccountByNationalIdState
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        stepperState.activeStep == 5
+                        stepperState.activeStep == 6
                             ? Icons.check
                             : Icons.arrow_forward,
                         size: 20,
@@ -743,16 +757,84 @@ class _IndividualAccountByNationalIdState
       // Prepare members (personalInfo) with file data
       requestData["customers"] = await Future.wait(
         stepperState.members.map((m) async {
+          // Extract phone from verifiedData if not in member.phone
+          String? phone = m.phone;
+          if ((phone == null || phone.isEmpty) && m.verifiedData != null) {
+            phone = m.verifiedData!['phone'] ?? 
+                    m.verifiedData!['phone_number']?.toString();
+          }
+
+          // Extract email from verifiedData if not in member.email
+          String? email = m.email;
+          if ((email == null || email.isEmpty) && m.verifiedData != null) {
+            email = m.verifiedData!['email']?.toString();
+          }
+
+          // Extract legalId from verifiedData if not set
+          String? legalId = m.legalId;
+          if ((legalId == null || legalId.isEmpty) && m.verifiedData != null) {
+            legalId = m.verifiedData!['sub']?.toString() ?? 
+                      m.verifiedData!['legalId']?.toString();
+          }
+
+          // Extract state from verifiedData
+          String? state = m.state;
+          if ((state == null || state.isEmpty) && m.verifiedData != null) {
+            state = m.verifiedData!['state']?.toString() ?? 
+                    m.verifiedData!['region']?.toString();
+          }
+
+          // Extract zoneSubCity from verifiedData
+          String? zoneSubCity = m.zoneSubCity;
+          if ((zoneSubCity == null || zoneSubCity.isEmpty) && m.verifiedData != null) {
+            zoneSubCity = m.verifiedData!['zoneSubCity']?.toString() ?? 
+                          m.verifiedData!['zone']?.toString();
+          }
+
+          // Set default issueAuthority if not provided
+          String issueAuthority = m.issueAuthority ?? 'ET';
+
           Map<String, dynamic> memberData = {
             "fullName": m.fullName ?? "",
-            "legalId": m.legalId ?? "",
-            "email": m.email ?? "",
-            "phone": m.phone ?? "",
+            "legalId": legalId ?? "",
+            "email": email ?? "",
+            "phone": phone ?? "",
             "title": m.title ?? "",
-            "documentName": m.documentType ?? "",
+            "documentName": m.documentType ?? "NATIONALID",
             "issueDate": m.issueDate ?? "",
             "expiryDate": m.expirayDate ?? "",
+            "issueAuthority": issueAuthority,
+            "country": "ETHIOPIA",
+            "state": state ?? "",
+            "zoneSubCity": zoneSubCity ?? "",
           };
+
+          // Extract photo from verifiedData['picture'] (base64) if available
+          if (m.verifiedData != null && m.verifiedData!.containsKey('picture')) {
+            final picture = m.verifiedData!['picture'];
+            if (picture is String && picture.isNotEmpty) {
+              try {
+                // Check if it's base64 data URI
+                if (picture.startsWith('data:image')) {
+                  final base64String = picture.split(',').last;
+                  memberData["photo"] = base64Decode(base64String);
+                } else {
+                  // Assume it's already base64 string
+                  memberData["photo"] = base64Decode(picture);
+                }
+              } catch (e) {
+                print('Error decoding picture: $e');
+              }
+            }
+          }
+
+          // Add file data if available (profilePath takes precedence over verifiedData picture)
+          if (m.profilePath != null && m.profilePath!.isNotEmpty) {
+            final file = File(m.profilePath!);
+            if (await file.exists()) {
+              memberData["photo"] = await file.readAsBytes();
+            }
+          }
 
           // Add file data if available
           if (m.residentPath != null && m.residentPath!.isNotEmpty) {
@@ -767,13 +849,6 @@ class _IndividualAccountByNationalIdState
             final file = File(m.residentCardBackPath!);
             if (await file.exists()) {
               memberData["residenceCardBack"] = await file.readAsBytes();
-            }
-          }
-
-          if (m.profilePath != null && m.profilePath!.isNotEmpty) {
-            final file = File(m.profilePath!);
-            if (await file.exists()) {
-              memberData["photo"] = await file.readAsBytes();
             }
           }
 
@@ -824,11 +899,11 @@ class _IndividualAccountByNationalIdState
                   onPressed: () {
                     if (!_disposed) {
                       Navigator.pop(context);
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const MainPage()),
-                        (route) => false,
-                      );
+                      // Navigator.pushAndRemoveUntil(
+                      //   context,
+                      //   MaterialPageRoute(builder: (_) => const MainPage()),
+                      //   (route) => false,
+                      // );
                     }
                   },
                   style: TextButton.styleFrom(

@@ -201,6 +201,9 @@ class _BranchSelectorState extends State<BranchSelector> {
         Map<String, dynamic>? mainBranchData;
         try {
           final users = await dbHelper.getUsers();
+
+          print("dlfdlfjdfjkdkjkdfjdkfjkdjkkj");
+          print(users);
           if (users.isNotEmpty) {
             final user = users.first;
             if (user['mainBranchName'] != null) {

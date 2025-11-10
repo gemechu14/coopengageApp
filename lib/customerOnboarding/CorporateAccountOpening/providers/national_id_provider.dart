@@ -46,43 +46,59 @@ class NationalIdNotifier extends StateNotifier<NationalIdState> {
   NationalIdNotifier() : super(const NationalIdState());
 
   // API call for National ID authentication
-  Future<void> callEsignetApi() async {
-    print('NationalIdProvider: callEsignetApi called');
+  Future<void> callEsignetApi([String? clientId]) async {
+    print('NationalIdProvider: callEsignetApi called with clientId: $clientId');
     try {
       state = state.copyWith(
         isLoading: true,
         isError: false,
         errorMessage: null,
       );
-
+      
+      // Get token from storage
+      final token = await storage.read(key: "token");
+      
+      print("NationalIdProvider: Token retrieved: ${token != null ? 'Found' : 'Not found'}");
+      
       // Construct the API URL
       final String baseUrl = AppConstants.baseURL;
-
-      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url';
+      final String actualClientId = clientId ?? '12344'; // fallback to default if not provided
+      
+      final apiUrl = '$baseUrl/api/v1/fayda/authenticate-url-ws?clientId=$actualClientId';
+      
+      print('NationalIdProvider: Calling API URL: $apiUrl');
 
       final response = await http.get(
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // Add token here
         },
       ).timeout(const Duration(seconds: 400));
+
+      print('NationalIdProvider: Response status: ${response.statusCode}');
+      print('NationalIdProvider: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData.containsKey('url')) {
           final authUrl = responseData['url'];
+          print('NationalIdProvider: Extracted auth URL: $authUrl');
 
           state = state.copyWith(
             authUrl: authUrl,
             isLoading: false,
           );
         } else {
+          print('NationalIdProvider: No URL found in response data: $responseData');
           throw Exception('No URL found in response');
         }
       } else {
+        print('NationalIdProvider: API call failed with status: ${response.statusCode}');
         throw Exception('API call failed with status: ${response.statusCode}');
       }
     } catch (e) {
+      print('NationalIdProvider: Error in callEsignetApi: $e');
       if (e.toString().contains('SocketException')) {}
       state = state.copyWith(
         isError: true,

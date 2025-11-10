@@ -1,20 +1,17 @@
-import 'package:coopengageplus/constants/kconstant.dart';
+import 'dart:convert';
+import 'dart:async';
+
+import 'package:coopengageplus/constants/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as ws_status;
+import 'package:http/http.dart' as http;
+import 'package:coopengageplus/constants/kconstant.dart';
 
-import '../../../features/onboarding/Update_IndividualAccount -/widgets/common/button_upload_take_photo.dart';
-import '../providers/national_id_provider.dart';
 import '../providers/stepper_provider.dart';
-import 'dart:io';
-
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/personal_info_section.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/document_info_section.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/id_info_section.dart';
-import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/id_card_photo.dart';
+import '../providers/national_id_provider.dart';
 
 class NationalIdAuthWidget extends ConsumerStatefulWidget {
   const NationalIdAuthWidget({Key? key}) : super(key: key);
@@ -27,683 +24,1068 @@ class NationalIdAuthWidget extends ConsumerStatefulWidget {
 class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   WebViewController? _webViewController;
   bool _disposed = false;
+  bool _showingDialog = false;
+  bool _isWebViewLoading = true;
   String? _expectedFinalUrl;
   int? _selectedMemberIndex;
-  bool _isLoading = false;
-  int? expandedIndex;
-  int? _prevNumberOfMembers;
-  List<TextEditingController> fullNameControllers = [];
-  List<TextEditingController> phoneControllers = [];
-  List<TextEditingController> emailControllers = [];
-  List<String?> selectedGender = [];
-  List<String?> selectedTitle = [];
-  List<int?> expandedSubIndexList = [];
-  // Document Info
-  List<String?> selectedDocumentType = [];
-  List<TextEditingController> legalIDControllers = [];
-  List<TextEditingController> issueAuthorityControllers = [];
-  List<TextEditingController> cityControllers = [];
-  List<TextEditingController> woredaControllers = [];
-  List<TextEditingController> residenceControllers = [];
-  List<TextEditingController> issueDateControllers = [];
-  List<TextEditingController> expireDateControllers = [];
-  // Add more controllers as needed for photos, signatures, etc.
-  List<String> residentPaths = [];
-  List<String> residentCardBackPaths = [];
-  List<String> profilePaths = [];
+
+  // WebSocket auth state
+  static const String _wsUrl = AppConstants.webSocketUrl;
+  WebSocketChannel? _channel;
+  StreamSubscription? _wsSub;
+  String? _clientId;
+  String? _authUrl;
+  String? _errorMessage;
+  bool _wsConnecting = false;
+  bool _dialogShown = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_disposed) {
-        ref.read(nationalIdProvider.notifier).reset();
-
-        ref.read(nationalIdProvider.notifier).callEsignetApi();
-      }
-    });
-  }
-
-  void _initMemberControllers(int numberOfMembers) {
-    final members = ref.read(stepperProvider).members;
-    fullNameControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].fullName != null) {
-        controller.text = members[i].fullName!;
-      }
-      return controller;
-    });
-    phoneControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].phone != null) {
-        controller.text = members[i].phone!;
-      }
-      return controller;
-    });
-    emailControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].email != null) {
-        controller.text = members[i].email!;
-      }
-      return controller;
-    });
-    selectedGender = List.generate(
-        numberOfMembers, (i) => i < members.length ? members[i].sex : null);
-    selectedTitle = List.generate(
-        numberOfMembers, (i) => i < members.length ? members[i].title : null);
-    expandedIndex = 0;
-    expandedSubIndexList = List.generate(
-        numberOfMembers, (_) => 0); // 0: Personal, 1: Document, 2: ID
-    selectedDocumentType = List.generate(numberOfMembers, (_) => null);
-    legalIDControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].legalId != null) {
-        controller.text = members[i].legalId!;
-      }
-      controller.addListener(() {
-        ref
-            .read(stepperProvider.notifier)
-            .updateMemberLegalId(i, controller.text);
-      });
-      return controller;
-    });
-    issueAuthorityControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].issueAuthority != null) {
-        controller.text = members[i].issueAuthority!;
-      }
-      controller.addListener(() {
-        ref
-            .read(stepperProvider.notifier)
-            .updateMemberIssueAuthority(i, controller.text);
-      });
-      return controller;
-    });
-    cityControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].zoneSubCity != null) {
-        controller.text = members[i].zoneSubCity!;
-      }
-      return controller;
-    });
-    woredaControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].woreda != null) {
-        controller.text = members[i].woreda!;
-      }
-      return controller;
-    });
-    residenceControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      // Add if you have a residence field in JointMemberInfo
-      return controller;
-    });
-    issueDateControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].issueDate != null) {
-        controller.text = members[i].issueDate!;
-      }
-      controller.addListener(() {
-        ref
-            .read(stepperProvider.notifier)
-            .updateMemberIssueDate(i, controller.text);
-      });
-      return controller;
-    });
-    expireDateControllers = List.generate(numberOfMembers, (i) {
-      final controller = TextEditingController();
-      if (i < members.length && members[i].expirayDate != null) {
-        controller.text = members[i].expirayDate!;
-      }
-      controller.addListener(() {
-        ref
-            .read(stepperProvider.notifier)
-            .updateMemberExpirayDate(i, controller.text);
-      });
-      return controller;
-    });
-    residentPaths = List.generate(numberOfMembers, (_) => "");
-    residentCardBackPaths = List.generate(numberOfMembers, (_) => "");
-    profilePaths = List.generate(numberOfMembers, (_) => "");
+    _isWebViewLoading = false;
+    _webViewController = null;
   }
 
   @override
   void dispose() {
     _disposed = true;
-
-    for (final c in fullNameControllers) {
-      c.dispose();
-    }
-    for (final c in phoneControllers) {
-      c.dispose();
-    }
-    for (final c in emailControllers) {
-      c.dispose();
-    }
-    for (final c in legalIDControllers) {
-      c.dispose();
-    }
-    for (final c in issueAuthorityControllers) {
-      c.dispose();
-    }
-    for (final c in cityControllers) {
-      c.dispose();
-    }
-    for (final c in woredaControllers) {
-      c.dispose();
-    }
-    for (final c in residenceControllers) {
-      c.dispose();
-    }
-    for (final c in issueDateControllers) {
-      c.dispose();
-    }
-    for (final c in expireDateControllers) {
-      c.dispose();
-    }
+    _webViewController?.clearCache();
+    _webViewController?.clearLocalStorage();
+    _closeWebSocket();
     super.dispose();
+  }
+
+  void _resetWebView() {
+    if (_disposed) return;
+
+    try {
+      _authUrl = null;
+      _errorMessage = null;
+      _dialogShown = false;
+      _wsConnecting = false;
+      _clientId = null;
+      _closeWebSocket();
+      if (_selectedMemberIndex != null) {
+        _startWsAuth();
+      }
+    } catch (e) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final notifier = ref.read(stepperProvider.notifier);
     if (_disposed) return const SizedBox.shrink();
 
-    try {
+    return SingleChildScrollView(
+      child: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_disposed) return const SizedBox.shrink();
+
+    // Show member list first if no member is selected
+    if (_selectedMemberIndex == null) {
       final stepperState = ref.watch(stepperProvider);
-      final numberOfMembers = stepperState.numberOfMembers;
-
-      if (_prevNumberOfMembers != numberOfMembers) {
-        _initMemberControllers(numberOfMembers);
-        _prevNumberOfMembers = numberOfMembers;
+      final members = stepperState.members;
+      if (members.isEmpty) {
+        return const Center(child: Text('No members found.'));
       }
-      return SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              color: Colors.white,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  cardColor: whiteColor, // or any color you want
-                ),
-                child: ExpansionPanelList.radio(
-                  // backgroundColor: Colors.amber[100],
-
-                  expandedHeaderPadding: EdgeInsets.zero,
-                  initialOpenPanelValue: expandedIndex,
-                  children: List.generate(numberOfMembers, (i) {
-                    return ExpansionPanelRadio(
-                      value: i,
-                      headerBuilder: (context, isExpanded) => ListTile(
-                        title: Text('Person  ${i + 1}'),
-                      ),
-                      body: Container(
-                        color: Colors.white,
-                        child: Padding(
-                          padding: const EdgeInsets.all(5),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ExpansionPanelList.radio(
-                                expandedHeaderPadding: EdgeInsets.zero,
-                                initialOpenPanelValue: expandedSubIndexList[i],
-                                children: [
-                                  ExpansionPanelRadio(
-                                    value: 0,
-                                    headerBuilder: (context, isExpanded) =>
-                                        ListTile(
-                                            title:
-                                                Text('Personal Information')),
-                                    body: PersonalInfoSection(
-                                      fullNameController:
-                                          fullNameControllers[i],
-                                      phoneController: phoneControllers[i],
-                                      emailController: emailControllers[i],
-                                      selectedGender: selectedGender[i],
-                                      selectedTitle: selectedTitle[i],
-                                      onGenderChanged: (value) {
-                                        // setState(() {
-                                        //   selectedGender[i] = newStatus;
-                                        // });
-                                        notifier.updateMemberSex(i, value);
-                                      },
-                                      onTitleChanged: (value) {
-                                        //  notifier.upd(i, value);
-                                        notifier.updateMemberTitle(i, value);
-                                        // setState(() {
-                                        //   selectedTitle[i] = newStatus;
-                                        // });
-                                      },
-                                      onFullNameChanged: (value) {
-                                        fullNameControllers[i].text = value;
-                                        notifier.updateMemberFullName(i, value);
-                                        print(
-                                            'Updated member $i full name to $value');
-                                        print('Provider value: '
-                                            '${ref.read(stepperProvider).members.length > i ? ref.read(stepperProvider).members[i].fullName : "(no member)"}');
-                                      },
-                                      onPhoneChanged: (value) {
-                                        notifier.updateMemberPhone(i, value);
-                                      },
-                                      onEmailChanged: (value) {
-                                        emailControllers[i].text = value;
-                                        notifier.updateMemberEmail(i, value);
-                                      },
-                                    ),
-                                  ),
-                                  ExpansionPanelRadio(
-                                    value: 1,
-                                    headerBuilder: (context, isExpanded) =>
-                                        ListTile(
-                                            title:
-                                                Text('Document Information')),
-                                    body: DocumentInfoSection(
-                                      selectedDocumentType:
-                                          stepperState.members.length > i
-                                              ? stepperState
-                                                  .members[i].documentType
-                                              : null,
-                                      onDocumentTypeChanged: (value) {
-                                        notifier.updateMemberDocumentType(
-                                            i, value);
-                                      },
-                                      idCardPhotoWidget: IdCardPhoto(
-                                        index: i,
-                                        selectedDocumentType:
-                                            stepperState.members.length > i
-                                                ? stepperState
-                                                    .members[i].documentType
-                                                : null,
-                                        residentPath:
-                                            stepperState.members.length > i
-                                                ? stepperState.members[i]
-                                                        .residentPath ??
-                                                    ''
-                                                : '',
-                                        residentCardBackPath:
-                                            stepperState.members.length > i
-                                                ? stepperState.members[i]
-                                                        .residentCardBackPath ??
-                                                    ''
-                                                : '',
-                                        profilePath:
-                                            stepperState.members.length > i
-                                                ? stepperState.members[i]
-                                                        .profilePath ??
-                                                    ''
-                                                : '',
-                                        onUploadFront: () async {
-                                          final newPath = await _imgFromGallery(
-                                              i, "resident");
-                                          notifier.updateMemberResidentPath(
-                                              i, newPath);
-                                        },
-                                        onCaptureFront: () async {
-                                          final newPath = await _imgFromCamera(
-                                              i, "resident");
-                                          notifier.updateMemberResidentPath(
-                                              i, newPath);
-                                        },
-                                        onUploadBack: () async {
-                                          final newPath = await _imgFromGallery(
-                                              i, "residentCardBack");
-                                          notifier
-                                              .updateMemberResidentCardBackPath(
-                                                  i, newPath);
-                                        },
-                                        onCaptureBack: () async {
-                                          final newPath = await _imgFromCamera(
-                                              i, "residentCardBack");
-                                          notifier
-                                              .updateMemberResidentCardBackPath(
-                                                  i, newPath);
-                                        },
-                                        onUploadProfile: () async {
-                                          final newPath = await _imgFromGallery(
-                                              i, "profilePath");
-                                          notifier.updateMemberProfilePath(
-                                              i, newPath);
-                                        },
-                                        onCaptureProfile: () async {
-                                          final newPath = await _imgFromCamera(
-                                              i, "profilePath");
-                                          notifier.updateMemberProfilePath(
-                                              i, newPath);
-                                        },
-                                        showFullScreen: (path) =>
-                                            _showFullScreenImage(context, path),
-                                      ),
-                                      personalPhotoWidget: null,
-                                    ),
-                                  ),
-                                  ExpansionPanelRadio(
-                                    value: 2,
-                                    headerBuilder: (context, isExpanded) =>
-                                        ListTile(title: Text('ID Information')),
-                                    body: IDInfoSection(
-                                      legalIDController: legalIDControllers[i],
-                                      issueAuthorityController:
-                                          issueAuthorityControllers[i],
-                                      issueDateController:
-                                          issueDateControllers[i],
-                                      expireDateController:
-                                          expireDateControllers[i],
-                                      onLegalIdChanged: (value) => notifier
-                                          .updateMemberLegalId(i, value),
-                                      onIssueAuthorityChanged: (value) =>
-                                          notifier.updateMemberIssueAuthority(
-                                              i, value),
-                                      onIssueDateChanged: (value) => notifier
-                                          .updateMemberIssueDate(i, value),
-                                      onExpireDateChanged: (value) => notifier
-                                          .updateMemberExpirayDate(i, value),
-                                    ),
-                                  ),
-                                ],
-                                expansionCallback: (panelIndex, isExpanded) {
-                                  setState(() {
-                                    expandedSubIndexList[i] =
-                                        isExpanded ? null : panelIndex;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 50),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
+      return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: members.length,
+        itemBuilder: (context, index) {
+          final member = members[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            elevation: 2,
+            child: ListTile(
+              leading: Icon(
+                member.isVerified ? Icons.verified : Icons.person,
+                color: member.isVerified ? cyanblueColor : Colors.grey,
+                size: 32,
+              ),
+              title: Text(
+                'Member ${index + 1}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
               ),
+              subtitle: member.isVerified
+                  ? Text(
+                      member.fullName ?? 'Verified',
+                      style: const TextStyle(color: Colors.green),
+                    )
+                  : const Text('Not authenticated'),
+              trailing: member.isVerified
+                  ? ElevatedButton.icon(
+                      onPressed: () {
+                        _showMemberDetailsDialog(context, member);
+                      },
+                      icon: const Icon(Icons.info_outline, size: 18),
+                      label: const Text('Details'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cyanblueColor,
+                        foregroundColor: whiteColor,
+                      ),
+                    )
+                  : ElevatedButton(
+                      onPressed: () async {
+                        print('=== STARTING FRESH AUTHORIZATION FOR MEMBER ${index + 1} ===');
+                        await _forceCloseEverything();
+                        setState(() {
+                          _selectedMemberIndex = index;
+                          _errorMessage = null;
+                          _authUrl = null;
+                          _dialogShown = false;
+                          _clientId = null;
+                          _wsConnecting = false;
+                          _isWebViewLoading = false;
+                          _showingDialog = false;
+                        });
+                        _webViewController?.clearCache();
+                        _webViewController?.clearLocalStorage();
+                        _webViewController = null;
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        print('=== STARTING WEBSOCKET CONNECTION ===');
+                        _startWsAuth();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cyanblueColor,
+                        foregroundColor: whiteColor,
+                      ),
+                      child: const Text('Authorize'),
+                    ),
+            ),
+          );
+        },
+      );
+    }
+
+    // Show error if any
+    if (_errorMessage != null) {
+      return _buildWsError(_errorMessage!);
+    }
+
+    // Show loading while connecting
+    if (_wsConnecting) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Connecting to server...',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
       );
-    } catch (e) {
-      return const Center(
-        child: Text(
-          'Error loading authentication widget',
-          style: TextStyle(color: Colors.red),
-        ),
-      );
     }
+
+    // Show auth URL in dialog if available
+    if (_authUrl != null && _authUrl!.isNotEmpty && !_dialogShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed && !_dialogShown) {
+          _dialogShown = true;
+          _showWebViewDialog(_authUrl!);
+        }
+      });
+    }
+
+    // Return to member list
+    return const Center(
+      child: Text(
+        'Ready to authenticate',
+        style: TextStyle(fontSize: 16, color: Colors.grey),
+      ),
+    );
   }
 
-  // void _showFullScreenImage(BuildContext context, String imagePath) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (_) => Dialog(
-  //       child: Image.file(File(imagePath)),
-  //     ),
-  //   );
-  // }
-
-  void _showFullScreenImage(BuildContext context, String imagePath) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (_, __, ___) => Scaffold(
-          backgroundColor: Colors.black,
-          body: Stack(
-            children: [
-              Center(
-                child: Image.file(
-                  File(imagePath),
-                  fit: BoxFit.contain,
-                ),
+  Widget _buildWsError(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading authentication',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
               ),
-              Positioned(
-                top: 40,
-                left: 20,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    if (!_disposed) {
+                      print('=== RETRY BUTTON CLICKED ===');
+                      await _forceCloseEverything();
+                      await Future.delayed(const Duration(milliseconds: 300));
+                      _startWsAuth();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: cyanblueColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
+                  child: const Text('Retry'),
                 ),
-              ),
-            ],
-          ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (!_disposed) {
+                      _resetWebView();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Reset All'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Future<String?> _imgFromGallery(int i, String imageTypes) async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      File originalFile = File(pickedFile.path);
+  void _showWebViewDialog(String url) {
+    if (_disposed) return;
 
-      // Step 1: Check if the original file exists
-      bool originalExists = await originalFile.exists();
+    _expectedFinalUrl = url;
+    print('NationalIdAuthWidget: Showing WebView dialog with URL: $url');
 
-      if (!originalExists) {
-        return null;
-      }
-
-      // Step 2: Get the application's document directory
-      Directory appDir = await getApplicationDocumentsDirectory();
-      String newPath =
-          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      try {
-        // Step 3: Copy the file to the permanent directory
-        File newImage = await originalFile.copy(newPath);
-
-        // Step 4: Verify the new file exists
-        bool newFileExists = await newImage.exists();
-
-        if (newFileExists) {
-          setState(() {
-            if (imageTypes == 'resident') {
-              residentPaths[i] = newPath;
-            } else if (imageTypes == 'residentCardBack') {
-              residentCardBackPaths[i] = newPath;
-            } else if (imageTypes == 'profilePath') {
-              profilePaths[i] = newPath;
-            }
-            // Add other imageTypes as needed
-          });
-          return newPath; // Return the new path
-        } else {}
-      } catch (e) {
-        print("Error copying file: $e");
-      }
-    }
-    return null; // Return null if picking fails or file is not found
-  }
-
-  Future<String?> _imgFromCamera(int i, String imageTypes) async {
-    setState(() {
-      _isLoading = true;
-    });
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      final pickedFile =
-          await ImagePicker().pickImage(source: ImageSource.camera);
-      if (pickedFile == null) {
-        if (mounted) Navigator.of(context).pop(); // Hide loading
-        setState(() {
-          _isLoading = false;
-        });
-        return null;
-      }
-
-      final originalFile = File(pickedFile.path);
-      if (!await originalFile.exists()) {
-        if (mounted) Navigator.of(context).pop();
-        setState(() {
-          _isLoading = false;
-        });
-        return null;
-      }
-
-      final appDir = await getApplicationDocumentsDirectory();
-      final newPath =
-          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      final newImage = await originalFile.copy(newPath);
-      if (!await newImage.exists()) {
-        if (mounted) Navigator.of(context).pop();
-        setState(() {
-          _isLoading = false;
-        });
-        return null;
-      }
-
-      if (mounted) {
-        setState(() {
-          if (imageTypes == 'resident') {
-            residentPaths[i] = newPath;
-          } else if (imageTypes == 'residentCardBack') {
-            residentCardBackPaths[i] = newPath;
-          } else if (imageTypes == 'profilePath') {
-            profilePaths[i] = newPath;
-          }
-          _isLoading = false;
-        });
-        Navigator.of(context).pop(); // Hide loading
-      }
-      return newPath;
-    } catch (e) {
-      if (mounted) Navigator.of(context).pop();
-      setState(() {
-        _isLoading = false;
-      });
-      return null;
-    }
-  }
-  // Future<String?> _imgFromCamera(int i, String imageTypes) async {
-  //   final pickedFile =
-  //       await ImagePicker().pickImage(source: ImageSource.camera);
-  //   if (pickedFile != null) {
-  //     File originalFile = File(pickedFile.path);
-
-  //     bool originalExists = await originalFile.exists();
-
-  //     if (!originalExists) {
-  //       return null;
-  //     }
-
-  //     Directory appDir = await getApplicationDocumentsDirectory();
-  //     String newPath =
-  //         '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-  //     try {
-  //       File newImage = await originalFile.copy(newPath);
-  //       bool newFileExists = await newImage.exists();
-
-  //       if (newFileExists) {
-  //         setState(() {
-  //           if (imageTypes == 'resident') {
-  //             residentPaths[i] = newPath;
-  //           } else if (imageTypes == 'residentCardBack') {
-  //             residentCardBackPaths[i] = newPath;
-  //           } else if (imageTypes == 'profilePath') {
-  //             profilePaths[i] = newPath;
-  //           }
-  //           // Add other imageTypes as needed
-  //         });
-  //         return newPath;
-  //       } else {}
-  //     } catch (e) {
-  //       print("Error copying file: $e");
-  //     }
-  //   }
-  //   return null;
-  // }
-}
-
-class PersonalPhotoSection extends StatelessWidget {
-  final String profilePath;
-  final VoidCallback onUploadPressed;
-  final VoidCallback onCapturePressed;
-  final void Function(String path) showFullScreen;
-
-  const PersonalPhotoSection({
-    Key? key,
-    required this.profilePath,
-    required this.onUploadPressed,
-    required this.onCapturePressed,
-    required this.showFullScreen,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Center(
-          child: Column(
-            children: [
-              const SizedBox(height: 10.0),
-              Container(
-                height: 200.0,
-                width: MediaQuery.of(context).size.width * 0.8,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: Container(
+            width: double.maxFinite,
+            height: MediaQuery.of(context).size.height * 0.9,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
                     ),
-                  ],
-                ),
-                child: profilePath.isEmpty
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(20.0),
-                            child: Image.asset(
-                              'assets/photo1.png',
-                              height: 170.0,
-                              width: MediaQuery.of(context).size.width * 0.6,
-                              fit: BoxFit.fill,
-                            ),
-                          )
-                        ],
-                      )
-                    : GestureDetector(
-                        onTap: () => showFullScreen(profilePath),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20.0),
-                          child: Image.file(
-                            File(profilePath),
-                            height: 200,
-                            width: MediaQuery.of(context).size.width * 0.8,
-                            fit: BoxFit.fill,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.security, color: Colors.white, size: 24),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'National ID Authentication',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-              ),
-              const SizedBox(height: 40.0),
-              ButtonUploadTakePhoto(
-                onUploadPressed: onUploadPressed,
-                onCapturePressed: onCapturePressed,
+                      IconButton(
+                        onPressed: () async {
+                          print('=== WEBVIEW DIALOG CLOSE BUTTON CLICKED ===');
+                          Navigator.of(context).pop();
+                          await _forceCloseEverything();
+                          setState(() {
+                            _selectedMemberIndex = null;
+                            _authUrl = null;
+                          });
+                        },
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(12),
+                          bottomRight: Radius.circular(12),
+                        ),
+                        child: WebViewWidget(
+                          controller: _createWebViewController(url),
+                        ),
+                      ),
+                      if (_isWebViewLoading)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.white.withOpacity(0.9),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
+                                ),
+                                SizedBox(height: 20),
+                                Text(
+                                  'Loading Authentication Page...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black87,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  WebViewController _createWebViewController(String url) {
+    print('NationalIdAuthWidget: Creating WebView controller for URL: $url');
+
+    if (_disposed) {
+      print('NationalIdAuthWidget: Widget disposed, returning dummy controller');
+      return WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..loadRequest(Uri.parse('about:blank'));
+    }
+
+    if (_webViewController != null) {
+      print('NationalIdAuthWidget: Reusing existing WebView controller');
+      return _webViewController!;
+    }
+
+    print('NationalIdAuthWidget: Creating new WebView controller');
+    _expectedFinalUrl = url;
+
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.white)
+      ..enableZoom(false)
+      ..setUserAgent(
+          'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36')
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) {
+            if (_disposed) return NavigationDecision.prevent;
+            print('Navigating to: ${request.url}');
+            final isCallback = request.url.contains('callback') ||
+                request.url.contains('code=') ||
+                request.url.contains('state=');
+            if (isCallback) {
+              print('Callback detected: ${request.url}');
+              print('Callback parameters received - keeping WebSocket alive for result');
+            }
+            return NavigationDecision.navigate;
+          },
+          onPageStarted: (String url) {
+            if (_disposed) return;
+            print('Page started loading: $url');
+            setState(() {
+              _isWebViewLoading = true;
+            });
+          },
+          onPageFinished: (String url) {
+            if (_disposed) return;
+            print('Page finished loading: $url');
+            if (_expectedFinalUrl != null &&
+                Uri.parse(url).host == Uri.parse(_expectedFinalUrl!).host) {
+              print('Final auth page loaded — hiding loader');
+              setState(() {
+                _isWebViewLoading = false;
+              });
+            } else {
+              print('Intermediate redirect — keep showing loader');
+            }
+            _webViewController?.runJavaScript('''
+            var meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+            document.addEventListener('touchstart', function(event) {
+              if (event.touches.length > 1) {
+                event.preventDefault();
+              }
+            }, { passive: false });
+            document.addEventListener('gesturestart', function(event) {
+              event.preventDefault();
+            }, { passive: false });
+            var inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(function(input) {
+              input.style.fontSize = '16px';
+              input.addEventListener('focus', function() {
+                setTimeout(function() {
+                  input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+              });
+            });
+          ''');
+          },
+          onWebResourceError: (WebResourceError error) {
+            if (_disposed) return;
+            print('Web resource error: ${error.description}');
+            setState(() {
+              _errorMessage = 'WebView error: ${error.description}';
+            });
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(url));
+
+    print('NationalIdAuthWidget: WebView controller created successfully');
+    return _webViewController!;
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    if (_disposed || _showingDialog) return;
+
+    _showingDialog = true;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.red, size: 24),
+              const SizedBox(width: 8),
+              const Text(
+                'Error',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 40),
-      ],
+          content: Text(errorMessage),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showingDialog = false;
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
+
+  // ===== WebSocket-based flow =====
+  void _startWsAuth() async {
+    if (_disposed) return;
+
+    print('NationalIdAuthWidget: === STARTING WS AUTH ===');
+    print('NationalIdAuthWidget: Selected member index: $_selectedMemberIndex');
+
+    _closeWebSocket();
+
+    setState(() {
+      _wsConnecting = true;
+      _errorMessage = null;
+      _authUrl = null;
+      _clientId = null;
+      _dialogShown = false;
+      _showingDialog = false;
+      _isWebViewLoading = false;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (_disposed) return;
+
+    print('NationalIdAuthWidget: Starting WebSocket connection...');
+    await _connectWebSocket();
+  }
+
+  Future<void> _connectWebSocket() async {
+    try {
+      print('NationalIdAuthWidget: Connecting to WebSocket at $_wsUrl');
+      print('NationalIdAuthWidget: Current clientId before connection: $_clientId');
+      _closeWebSocket();
+
+      _channel = WebSocketChannel.connect(Uri.parse(_wsUrl));
+
+      Timer? connectionTimeout = Timer(const Duration(seconds: 30), () {
+        if (_wsConnecting && !_disposed) {
+          print('NationalIdAuthWidget: WebSocket connection timeout');
+          setState(() {
+            _errorMessage = 'Connection timeout. Please try again.';
+            _wsConnecting = false;
+          });
+          _closeWebSocket();
+        }
+      });
+
+      _wsSub = _channel!.stream.listen(
+        (event) {
+          connectionTimeout?.cancel();
+          _handleWsMessage(event);
+        },
+        onError: (err) {
+          connectionTimeout?.cancel();
+          print('NationalIdAuthWidget: WebSocket error: $err');
+          if (_disposed) return;
+          setState(() {
+            _errorMessage = 'WebSocket error: $err';
+            _wsConnecting = false;
+          });
+        },
+        onDone: () {
+          connectionTimeout?.cancel();
+          print('NationalIdAuthWidget: WebSocket connection done');
+          if (_disposed) return;
+          if (_authUrl == null && _selectedMemberIndex != null) {
+            setState(() {
+              _errorMessage ??= 'WebSocket disconnected unexpectedly';
+              _wsConnecting = false;
+            });
+          }
+        },
+      );
+
+      _registerClient();
+    } catch (e) {
+      print('NationalIdAuthWidget: Failed to connect to WebSocket: $e');
+      if (_disposed) return;
+      setState(() {
+        _errorMessage = 'Failed to connect to WebSocket: $e';
+        _wsConnecting = false;
+      });
+    }
+  }
+
+  void _registerClient() {
+    print("NationalIdAuthWidget: Starting client registration");
+    _clientId = _generateClientId();
+    final payload = {
+      'type': 'register_client',
+      'clientId': _clientId,
+    };
+    _channel?.sink.add(jsonEncode(payload));
+  }
+
+  Future<void> _fetchAuthUrl() async {
+    try {
+      await ref.read(nationalIdProvider.notifier).callEsignetApi(_clientId);
+
+      if (!mounted) return;
+      final nationalIdState = ref.read(nationalIdProvider);
+
+      if (nationalIdState.isError) {
+        setState(() {
+          _errorMessage = nationalIdState.errorMessage ?? 'Failed to get auth URL';
+          _wsConnecting = false;
+        });
+        return;
+      }
+
+      if (nationalIdState.authUrl != null && nationalIdState.authUrl!.isNotEmpty) {
+        print('NationalIdAuthWidget: Received auth URL: ${nationalIdState.authUrl}');
+        setState(() {
+          _authUrl = nationalIdState.authUrl;
+          _wsConnecting = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Empty auth URL received from provider';
+          _wsConnecting = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      print('NationalIdAuthWidget: Error in _fetchAuthUrl: $e');
+      setState(() {
+        _errorMessage = 'Error fetching auth URL: $e';
+        _wsConnecting = false;
+      });
+    }
+  }
+
+  void _handleWsMessage(dynamic event) {
+    if (_disposed) return;
+    try {
+      print('NationalIdAuthWidget: Received WebSocket message: $event');
+      final data = event is String ? jsonDecode(event) : event;
+      if (data is! Map) {
+        print('NationalIdAuthWidget: Message is not a Map: $data');
+        return;
+      }
+      final type = data['type'];
+      print('NationalIdAuthWidget: Message type: $type');
+
+      switch (type) {
+        case 'registration_success':
+          final serverClientId = data['clientId'];
+          print('NationalIdAuthWidget: Registration success, server clientId: $serverClientId');
+          if (serverClientId is String && serverClientId.isNotEmpty) {
+            _clientId = serverClientId;
+            print('NationalIdAuthWidget: Updated clientId to: $_clientId');
+          }
+          print('NationalIdAuthWidget: Fetching auth URL...');
+          _fetchAuthUrl();
+          break;
+        case 'authentication_result':
+          print('NationalIdAuthWidget: Authentication result received');
+          print('NationalIdAuthWidget: Result data: ${data['data']}');
+          _handleAuthenticationResult(data);
+          break;
+        case 'authentication_complete':
+          print('NationalIdAuthWidget: Authentication complete message received');
+          _handleAuthenticationResult(data);
+          break;
+        case 'error':
+          print('NationalIdAuthWidget: Server error: ${data['message']}');
+          setState(() {
+            _errorMessage = data['message']?.toString() ?? 'Server error';
+          });
+          break;
+        default:
+          print('NationalIdAuthWidget: Unknown message type: $type');
+          print('NationalIdAuthWidget: Full message data: $data');
+          if (data.containsKey('clientId') &&
+              (data.containsKey('data') || data.containsKey('result'))) {
+            print('NationalIdAuthWidget: Treating as authentication result with different structure');
+            _handleAuthenticationResult(data);
+          }
+          break;
+      }
+    } catch (e) {
+      print('NationalIdAuthWidget: Error handling WebSocket message: $e');
+      setState(() {
+        _errorMessage = 'Invalid message from server: $e';
+      });
+    }
+  }
+
+  void _closeWebSocket() {
+    try {
+      _wsSub?.cancel();
+      _wsSub = null;
+      _channel?.sink.close(ws_status.normalClosure);
+      _channel = null;
+    } catch (e) {}
+  }
+
+  Future<void> _forceCloseEverything() async {
+    try {
+      print('NationalIdAuthWidget: === FORCE CLOSING EVERYTHING ===');
+
+      _closeWebSocket();
+      Navigator.of(context).popUntil((route) => route.isFirst);
+
+      _webViewController?.clearCache();
+      _webViewController?.clearLocalStorage();
+      _webViewController = null;
+
+      _authUrl = null;
+      _errorMessage = null;
+      _wsConnecting = false;
+      _dialogShown = false;
+      _showingDialog = false;
+      _isWebViewLoading = false;
+      _selectedMemberIndex = null;
+      _clientId = null;
+
+      print('NationalIdAuthWidget: === FORCE CLOSE COMPLETE ===');
+    } catch (e) {
+      print('NationalIdAuthWidget: Error in force close: $e');
+    }
+  }
+
+  String _generateClientId() {
+    return DateTime.now().microsecondsSinceEpoch.toString();
+  }
+
+  Future<void> _handleAuthenticationResult(Map result) async {
+    print('NationalIdAuthWidget: Processing authentication result');
+    try {
+      final clientId = result['clientId'];
+      print('NationalIdAuthWidget: Client ID from result: $clientId');
+
+      dynamic payload;
+      if (result.containsKey('data')) {
+        payload = result['data'];
+      } else if (result.containsKey('result')) {
+        payload = result['result'];
+      } else {
+        payload = result;
+      }
+
+      print('NationalIdAuthWidget: Payload to process: $payload');
+
+      if (payload is Map<String, dynamic>) {
+        final mapped = _mapAuthenticationData(payload);
+        print('NationalIdAuthWidget: Mapped data: $mapped');
+
+        if (_selectedMemberIndex != null) {
+          _onMemberVerified(_selectedMemberIndex!, mapped);
+          print('NationalIdAuthWidget: Member verified successfully');
+        }
+      } else {
+        print('NationalIdAuthWidget: Payload is not a Map: $payload');
+      }
+    } catch (e) {
+      print('NationalIdAuthWidget: Error processing authentication result: $e');
+    } finally {
+      _closeWebSocket();
+
+      if (!_disposed) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        _showAuthenticationSuccessDialog();
+
+        setState(() {
+          _authUrl = null;
+          _dialogShown = false;
+          _webViewController?.clearCache();
+          _webViewController?.clearLocalStorage();
+          _webViewController = null;
+          _selectedMemberIndex = null;
+          _isWebViewLoading = false;
+          _clientId = null;
+          _wsConnecting = false;
+          _errorMessage = null;
+        });
+      }
+    }
+  }
+
+  Map<String, dynamic> _mapAuthenticationData(Map<String, dynamic> data) {
+    print('NationalIdAuthWidget: Raw authentication data: $data');
+
+    String? base64Picture;
+    final picture = data['picture'];
+    if (picture is String && picture.isNotEmpty) {
+      base64Picture = picture;
+      print('NationalIdAuthWidget: Picture data found: ${picture.length} chars');
+    }
+
+    String? country;
+    String? state;
+    String? city;
+    String? zone;
+    String? woreda;
+    String? region;
+
+    final address = data['address'];
+    if (address is Map<String, dynamic>) {
+      print('NationalIdAuthWidget: Processing address data: $address');
+      country = address['country']?.toString()?.trim();
+      zone = address['zone']?.toString()?.trim();
+      woreda = address['woreda']?.toString()?.trim();
+      region = address['region']?.toString()?.trim();
+
+      state = region ?? zone;
+      city = woreda;
+
+      print('NationalIdAuthWidget: Extracted address - Country: $country, State: $state, City: $city, Zone: $zone, Woreda: $woreda');
+    } else if (address is String) {
+      country = address;
+      print('NationalIdAuthWidget: Address is string: $country');
+    }
+
+    String? fullName = data['name'] ?? data['full_name'] ?? data['fullName'];
+    print('NationalIdAuthWidget: Full name: $fullName');
+
+    String? gender = data['gender'] ?? data['sex'];
+    print('NationalIdAuthWidget: Gender: $gender');
+
+    String? dateOfBirth = data['birthdate'] ?? data['dateOfBirth'] ?? data['dob'];
+    print('NationalIdAuthWidget: Date of birth: $dateOfBirth');
+
+    String? email = data['email']?.toString();
+    String? sub = data['sub']?.toString();
+    String? phone = data['phone']?.toString() ?? data['phone_number']?.toString();
+    print('NationalIdAuthWidget: Email: $email, Sub: $sub, Phone: $phone');
+
+    final mapped = <String, dynamic>{
+      'fullName': fullName,
+      'email': email,
+      'sub': sub,
+      'phone': phone,
+      'phone_number': phone,
+      'sex': gender,
+      'gender': gender,
+      'dateOfBirth': dateOfBirth,
+      'birthdate': dateOfBirth,
+      'picture': base64Picture,
+      'country': country,
+      'state': state,
+      'region': region,
+      'city': city,
+      'zone': zone,
+      'woreda': woreda,
+      'zoneSubCity': zone,
+      'streetAddress': woreda,
+      'address': address,
+    };
+
+    print('NationalIdAuthWidget: Mapped authentication data: $mapped');
+    return mapped;
+  }
+
+  void _onMemberVerified(int memberIndex, Map<String, dynamic> data) {
+    final stepperNotifier = ref.read(stepperProvider.notifier);
+    final stepperState = ref.read(stepperProvider);
+    
+    // Extract phone from verifiedData (phone_number or phone)
+    String? phone = data['phone'] ?? data['phone_number'];
+    
+    // Extract email from verifiedData
+    String? email = data['email'];
+    
+    // Extract state and zoneSubCity from verifiedData
+    String? state = data['state'] ?? data['region'];
+    String? zoneSubCity = data['zoneSubCity'] ?? data['zone'];
+    
+    final updatedMember = stepperState.members[memberIndex].copyWith(
+      isVerified: true,
+      verifiedData: data,
+      fullName: data['fullName'] ?? stepperState.members[memberIndex].fullName,
+      phone: phone ?? stepperState.members[memberIndex].phone,
+      email: email ?? stepperState.members[memberIndex].email,
+      motherName: data['motherName'] ?? stepperState.members[memberIndex].motherName,
+      title: data['title'] ?? stepperState.members[memberIndex].title,
+      sex: data['sex'] ?? stepperState.members[memberIndex].sex,
+      dateOfBirth: data['dateOfBirth'] ?? stepperState.members[memberIndex].dateOfBirth,
+      maritalStatus: data['maritalStatus'] ?? stepperState.members[memberIndex].maritalStatus,
+      legalId: data['sub'] ?? data['legalId'] ?? stepperState.members[memberIndex].legalId,
+      state: state ?? stepperState.members[memberIndex].state,
+      zoneSubCity: zoneSubCity ?? stepperState.members[memberIndex].zoneSubCity,
+      documentType: stepperState.members[memberIndex].documentType ?? 'NATIONALID',
+      issueAuthority: stepperState.members[memberIndex].issueAuthority ?? 'ET',
+    );
+    stepperNotifier.updateMember(memberIndex, updatedMember);
+  }
+
+  void _showAuthenticationSuccessDialog() {
+    if (_disposed || _showingDialog) return;
+
+    _showingDialog = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 60),
+              const SizedBox(height: 16),
+              const Text(
+                'Authentication Complete!',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'National ID verification was successful.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.left,
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showingDialog = false;
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Continue'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showMemberDetailsDialog(BuildContext context, dynamic member) {
+    final data = member.verifiedData as Map<String, dynamic>?;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(member.fullName ?? 'Member Details'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: data == null
+                ? const Text('No details available.')
+                : SingleChildScrollView(
+                    child: _buildKeyValueWidgets(_filterPreferredFields(data)),
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Map<String, dynamic> _filterPreferredFields(Map<String, dynamic> original) {
+    final preferenceGroups = [
+      ['full_name', 'name'],
+      ['phone_number', 'phone'],
+      ['gender', 'sex'],
+    ];
+
+    final filtered = <String, dynamic>{};
+    final lowerKeys = original.map((k, v) => MapEntry(k.toLowerCase(), k));
+
+    for (var group in preferenceGroups) {
+      for (var key in group) {
+        final match = lowerKeys[key];
+        if (match != null) {
+          filtered[group[0]] = original[match];
+          break;
+        }
+      }
+    }
+
+    final allExcludedKeys = preferenceGroups.expand((g) => g).toSet();
+
+    for (var entry in original.entries) {
+      final keyLower = entry.key.toLowerCase();
+      final alreadyAdded = filtered.containsValue(entry.value);
+
+      if (!allExcludedKeys.contains(keyLower) && !alreadyAdded) {
+        filtered[entry.key] = entry.value;
+      }
+    }
+
+    return filtered;
+  }
+
+  Widget _buildKeyValueWidgets(Map<String, dynamic> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: data.entries.map<Widget>((entry) {
+        final key = entry.key;
+        final value = entry.value;
+
+        if (value is String && value.startsWith('data:image')) {
+          try {
+            final base64String = value.split(',').last;
+            final imageBytes = base64Decode(base64String);
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${key.replaceAll('_', ' ').toUpperCase()}:',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(
+                      imageBytes,
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } catch (e) {
+            return Text(
+              '${key.toUpperCase()}: [Invalid image]',
+              style: const TextStyle(color: Colors.red),
+            );
+          }
+        }
+
+        if (value is Map<String, dynamic>) {
+          final filteredMap = _filterPreferredFields(value);
+          return Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${key.replaceAll('_', ' ').toUpperCase()}: ',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Expanded(child: Text(value.toString())),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
 }

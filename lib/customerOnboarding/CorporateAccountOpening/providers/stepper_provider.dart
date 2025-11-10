@@ -748,6 +748,6 @@ class StepperNotifier extends StateNotifier<StepperState> {
 // Provider
 final stepperProvider =
     StateNotifierProvider<StepperNotifier, StepperState>((ref) {
-  // Set maxStep to 3 for 4 steps (0-based)
-  return StepperNotifier(maxStep: 5);
+  // Set maxStep to 6 for 7 steps (0-based)
+  return StepperNotifier(maxStep: 6);
 });

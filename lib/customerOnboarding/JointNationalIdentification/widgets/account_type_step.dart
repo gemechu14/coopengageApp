@@ -59,7 +59,11 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
   @override
   void didUpdateWidget(covariant AccountTypeStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _filterAccountTypes();
+    // Only filter if data is already loaded
+    final accountTypeStepState = ref.read(accountTypeStepProvider);
+    if (!accountTypeStepState.isLoading && accountTypeStepState.availableAccountTypes.isNotEmpty) {
+      _filterAccountTypes();
+    }
   }
 
   @override
@@ -78,11 +82,22 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
           initialDeposit: widget.initialDeposit,
           bankingType: widget.bankingType,
         );
-    _filterAccountTypes();
+    // Filter after data is loaded
+    if (mounted && !_disposed) {
+      _filterAccountTypes();
+    }
   }
 
   void _filterAccountTypes() {
+    if (_disposed) return;
+    
     final accountTypeStepState = ref.read(accountTypeStepProvider);
+    
+    // Don't filter if still loading or no data available
+    if (accountTypeStepState.isLoading || accountTypeStepState.availableAccountTypes.isEmpty) {
+      return;
+    }
+    
     final account_types = accountTypeStepState.availableAccountTypes;
     final stepper_state = ref.read(stepperProvider);
 
@@ -108,9 +123,11 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
           .toList();
     }
 
-    setState(() {
-      filteredAccountTypes = filtered;
-    });
+    if (mounted && !_disposed) {
+      setState(() {
+        filteredAccountTypes = filtered;
+      });
+    }
   }
   // void _filterAccountTypes() {
   //   final accountTypeStepState = ref.read(accountTypeStepProvider);
@@ -176,8 +193,28 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     // Show loading indicator while fetching account types
     if (accountTypeStepState.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Loading account types...',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
       );
+    }
+
+    // Filter account types when data becomes available
+    if (accountTypeStepState.availableAccountTypes.isNotEmpty && 
+        filteredAccountTypes.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_disposed) {
+          _filterAccountTypes();
+        }
+      });
     }
 
     // Helper to handle selection and notify parent
@@ -192,6 +229,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       });
     }
 
+    // Use filtered types if available, otherwise use all available types
     final allAccountTypes = filteredAccountTypes.isNotEmpty
         ? filteredAccountTypes
         : accountTypeStepState.availableAccountTypes;

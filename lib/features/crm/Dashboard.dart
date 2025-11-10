@@ -399,6 +399,9 @@ class _DashboardState extends State<Dashboard> {
           var response = await networkHandler.fetchData(url);
           if (response.statusCode == 200 || response.statusCode == 201) {
             final data = jsonDecode(response.body);
+
+            print("dkfjkdfjkdjfjkdkfjdjkkfjdjkkffdjkdfjkdfjkfdjk");
+            print(data);
             setState(() {
               totalUsers = data['APPROVED'] + data["PENDING"] + data["INITIAL"];
               approvedUsers = data['APPROVED'];

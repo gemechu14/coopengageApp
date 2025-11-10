@@ -60,7 +60,13 @@ class DashboardRepository {
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+
+
+     
         final data = jsonDecode(response.body);
+
+           print("kdjksjkdsjkjkdjkssjkdjksjksd");
+        print(data);
 
         // Group 1: New Applicants (INITIAL + REGISTERED)
         final newApplicants = (data['INITIAL'] ?? 0) + (data['REGISTERED'] ?? 0);
@@ -68,7 +74,7 @@ class DashboardRepository {
         // Group 2: Awaiting Action (UNAUTHORIZED + UNSETTLED + AUTHORIZED)
         final awaitingAction = (data['UNAUTHORIZED'] ?? 0) +
             (data['UNSETTLED'] ?? 0) +
-            (data['AUTHORIZED'] ?? 0);
+            (data['AUTHORIZED'] ?? 0)+     (data['PENDING'] ?? 0);;
 
         // Group 3: Approved
         final approved = data['APPROVED'] ?? 0;

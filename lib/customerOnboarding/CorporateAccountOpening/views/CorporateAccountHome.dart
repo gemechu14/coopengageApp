@@ -8,6 +8,7 @@ import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/servic
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/Signature.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/account_type_step.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/additional_information.dart';
+import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/member_additional_info_step.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/customerOnboarding/CorporateAccountOpening/widgets/registration_summary_page.dart';
 
@@ -44,7 +45,7 @@ class _CorporateAccountOpeningState
   @override
   void initState() {
     super.initState();
-    formKeys = List.generate(4, (index) => GlobalKey<FormState>());
+    formKeys = List.generate(5, (index) => GlobalKey<FormState>());
     stepConfigs = [
       StepConfig(
         title: 'National ID Auth',
@@ -53,7 +54,12 @@ class _CorporateAccountOpeningState
       ),
       StepConfig(
         title: 'Additional Information',
-        icon: Icon(Icons.info_outline),
+        icon: Icon(Icons.person_add),
+        builder: (context, ref) => const MemberAdditionalInfoStep(),
+      ),
+      StepConfig(
+        title: 'Company Information',
+        icon: Icon(Icons.business),
         builder: (context, ref) => const PhoneFanWidget(),
       ),
       StepConfig(
@@ -70,7 +76,7 @@ class _CorporateAccountOpeningState
             ref.read(stepperProvider.notifier).updateAccountType(value);
           },
           onAccountTypeSelected: (accountType) {},
-          formKey: formKeys[3],
+          formKey: formKeys[4],
           customerAge: ref.watch(stepperProvider).customerAge,
           customerGender: ref.watch(stepperProvider).customerGender,
           initialDeposit: ref.watch(stepperProvider).initialDeposit,
@@ -248,14 +254,14 @@ class _CorporateAccountOpeningState
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: stepperState.activeStep > 1
+                  onPressed: stepperState.activeStep > 0
                       ? () {
                           ref.read(stepperProvider.notifier).previousStep();
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: stepperState.activeStep > 1
+                    foregroundColor: stepperState.activeStep > 0
                         ? Colors.grey.shade700
                         : Colors.grey.shade400,
                     padding: const EdgeInsets.symmetric(
@@ -305,26 +311,24 @@ class _CorporateAccountOpeningState
 
 
                     if (stepperState.activeStep == 0) {
-                      if (nationalIdState.isAuthCompleted) {
-                        if (nationalIdState.authResult != null) {
-                          ref
-                              .read(stepperProvider.notifier)
-                              .saveAuthenticationData(
-                                  nationalIdState.authResult!);
-
-                          final updatedState = ref.read(stepperProvider);
-                        } else {}
+                      // Step 0: National ID Auth - Check if at least one member is verified
+                      final verifiedMembers = stepperState.members.where((m) => m.isVerified).toList();
+                      if (verifiedMembers.isNotEmpty) {
                         ref.read(stepperProvider.notifier).nextStep();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                                'Please complete National ID authentication first'),
+                                'Please complete National ID authentication for at least one member first'),
                             backgroundColor: Colors.red,
                           ),
                         );
                       }
                     } else if (stepperState.activeStep == 1) {
+                      // Step 1: Member Additional Info - No validation needed, just proceed
+                      ref.read(stepperProvider.notifier).nextStep();
+                    } else if (stepperState.activeStep == 2) {
+                      // Step 2: Additional Information (was step 1)
                       final stepperState = ref.read(stepperProvider);
                       if (stepperState.initialDeposit == null ||
                           stepperState.selectedProductType == null ||
@@ -338,25 +342,23 @@ class _CorporateAccountOpeningState
                         );
                         return;
                       }
-                      if (
-
-                          // stepperState.selectedProductType != null &&
-                          stepperState.selectedBranch == null) {
+                      if (stepperState.selectedBranch == null) {
                         ref.read(stepperProvider.notifier).nextStep();
-                        final newStep = ref.read(stepperProvider).activeStep;
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content:
-                                Text('Please fill in all required fields11'),
+                                Text('Please fill in all required fields'),
                             backgroundColor: Colors.red,
                           ),
                         );
                       }
-                    } else if (stepperState.activeStep == 2) {
-                      ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 3) {
-                      final currentFormKey = formKeys[3];
+                      // Step 3: Signature
+                      ref.read(stepperProvider.notifier).nextStep();
+                    } else if (stepperState.activeStep == 4) {
+                      // Step 4: Account Type
+                      final currentFormKey = formKeys[4];
                       if (currentFormKey.currentState?.validate() ?? false) {
                         // Build RegistrationData from stepperState
                         final registrationData = RegistrationData(
@@ -418,7 +420,7 @@ class _CorporateAccountOpeningState
                       Builder(
                         builder: (context) {
                           final buttonText =
-                              stepperState.activeStep == 3 ? 'Submit' : 'Next';
+                              stepperState.activeStep == 4 ? 'Submit' : 'Next';
                    
                           return Text(
                             buttonText,
@@ -431,7 +433,7 @@ class _CorporateAccountOpeningState
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        stepperState.activeStep == 3
+                        stepperState.activeStep == 4
                             ? Icons.check
                             : Icons.arrow_forward,
                         size: 20,

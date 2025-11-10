@@ -89,9 +89,17 @@ class _BranchSelectorState extends State<BranchSelector> {
           print("BranchSelector: Added main branch to list: $mainBranchData");
         }
         
-        // Add other branches
-        allBranchesList.addAll(formattedBranches);
-        print("BranchSelector: Final all branches list: $allBranchesList");
+        // Add other branches, excluding the main branch to avoid duplicates
+        for (var branch in formattedBranches) {
+          // Skip if this branch is the same as the main branch (by companyName)
+          if (mainBranchData != null && 
+              branch['companyName'] == mainBranchData['companyName']) {
+            print("BranchSelector: Skipping duplicate main branch: ${branch['companyName']}");
+            continue;
+          }
+          allBranchesList.add(branch);
+        }
+        print("BranchSelector: Final all branches list (${allBranchesList.length} branches): $allBranchesList");
         
         setState(() {
           allBranches = allBranchesList;
