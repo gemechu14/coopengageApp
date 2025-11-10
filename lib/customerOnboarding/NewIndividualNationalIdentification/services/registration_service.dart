@@ -49,7 +49,7 @@ class RegistrationService {
       print(token);
       print(expirayDate);
       print(initialDeposit);
-      print("dfhkdfhdkfdkdkfhkdkhdkhdkhfkhdhkfkd");
+      print("dfhkdfhdkfdkdkfhkdkhdkhdffdfdfdfkhfkhdhkfkd");
       // Create multipart request
       final request = http.MultipartRequest(
         'POST',
@@ -76,7 +76,7 @@ class RegistrationService {
       request.fields['customerInfo.motherName'] = motherName ?? '';
 
       request.fields['customerInfo.issueDate'] = issueDate ?? '';
-      request.fields['customerInfo.issueAuthority'] = issueAuthority ?? '';
+      request.fields['customerInfo.issueAuthority'] = issueAuthority ?? 'ET';
       request.fields['customerInfo.expiryDate'] = expirayDate ?? '';
 
       request.fields['customerInfo.documentName'] = 'NATIONALID';
@@ -102,7 +102,6 @@ class RegistrationService {
       print(photo);
       print("signatladdfdkfjkdkfkd");
       print(signature);
-
 
       if (signature != null && signature is Uint8List) {
         try {
@@ -132,8 +131,6 @@ class RegistrationService {
             final jpgPath = '${appDir.path}/signature.jpg';
             final jpgFile = File(jpgPath);
             await jpgFile.writeAsBytes(jpgBytes);
-
- 
           }
         } catch (e) {
           print("❌ Error saving signature: $e");
@@ -197,6 +194,15 @@ class RegistrationService {
       print('Response body: $responseBody');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print("dfjkdjfdkfjkdkjfjdkfjieeireirieirieirieirieir");
+        // print(responseBody);
+        var decoded = json.decode(responseBody);
+        // print(decoded['accountNumber']);
+        print('Full Name: ${decoded['fullName']}');
+        print('Phone: ${decoded['phone']}');
+        print('Account Number: ${decoded['accountNumber']}');
+        print('Branch: ${decoded['branch']}');
+        print('Currency: ${decoded['IssuedAuthorithy']}');
         return json.decode(responseBody);
       } else {
         try {
@@ -217,8 +223,6 @@ class RegistrationService {
               : 'Registration failed (${response.statusCode}): $responseBody';
           throw Exception(extractedMessage);
         }
-
-  
       }
     } catch (e) {
       print(e.toString());

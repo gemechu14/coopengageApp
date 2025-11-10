@@ -1017,29 +1017,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     return filtered;
   }
 
-//  Map<String, dynamic> _filterPreferredFields(Map<String, dynamic> original) {
-//   final filtered = <String, dynamic>{};
-
-//   // Set mandatory preferred fields with fallback logic
-//   filtered['email'] = original['email'];
-//   filtered['sub'] = original['sub'];
-//   filtered['sex'] = original['sex'] ?? original['gender'];
-//   filtered['dateOfBirth'] = original['dateOfBirth'] ?? original['dob'];
-//   // filtered['picture'] = base64Picture;
-
-//   // Optional: add any other fields not already included
-//   final excludedKeys = {'email', 'sub', 'sex', 'gender', 'dateOfBirth', 'dob', 'picture'};
-
-//   for (var entry in original.entries) {
-//     final keyLower = entry.key.toLowerCase();
-//     if (!excludedKeys.contains(keyLower) && !filtered.containsKey(entry.key)) {
-//       filtered[entry.key] = entry.value;
-//     }
-//   }
-
-//   return filtered;
-// }
-
   Widget _buildKeyValueWidgets(Map<String, dynamic> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1080,29 +1057,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           }
         }
 
-        // if (value is Map<String, dynamic>) {
-        //   return Padding(
-        //     padding: const EdgeInsets.only(top: 8.0),
-        //     child: Column(
-        //       crossAxisAlignment: CrossAxisAlignment.start,
-        //       children: [
-        //         Text(
-        //           '${key.replaceAll('_', ' ').toUpperCase()}:',
-        //           style: const TextStyle(fontWeight: FontWeight.bold),
-        //         ),
-        //         Padding(
-        //           padding: const EdgeInsets.only(left: 16.0),
-        //           child: Column(
-        //             crossAxisAlignment: CrossAxisAlignment.start,
-        //             children: value.entries.map<Widget>((subEntry) {
-        //               return Text('${subEntry.key}: ${subEntry.value}');
-        //             }).toList(),
-        //           ),
-        //         ),
-        //       ],
-        //     ),
-        //   );
-        // }
+   
         if (value is Map<String, dynamic>) {
           final filteredMap = _filterPreferredFields(value); // use your filter
           return Padding(
@@ -1110,20 +1065,7 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Text(
-                //   '${key.replaceAll('_', ' ').toUpperCase()}:',
-                //   style: const TextStyle(fontWeight: FontWeight.bold),
-                // ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 16.0),
-                //   child: Column(
-                //     crossAxisAlignment: CrossAxisAlignment.start,
-                //     children: filteredMap.entries.map<Widget>((subEntry) {
-                //       return Text(
-                //           '${subEntry.key.replaceAll('_', ' ').toUpperCase()}: ${subEntry.value}');
-                //     }).toList(),
-                //   ),
-                // ),
+              
               ],
             ),
           );
@@ -1226,7 +1168,6 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       );
 
       // Register client once connection is open
-      print('NationalIdAuthWidget: WebSocket connected, registering client...');
       _registerClient();
     } catch (e) {
       print('NationalIdAuthWidget: Failed to connect to WebSocket: $e');
@@ -1242,27 +1183,19 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     print("NationalIdAuthWidget: Starting client registration");
     // Generate a fresh client id; server may confirm/override in response
     _clientId = _generateClientId();
-    print('NationalIdAuthWidget: Generated new clientId: $_clientId');
     final payload = {
       'type': 'register_client',
       'clientId': _clientId,
     };
-    print('NationalIdAuthWidget: Registering client with payload: $payload');
     _channel?.sink.add(jsonEncode(payload));
-    print('NationalIdAuthWidget: Client registration message sent');
   }
 
   Future<void> _fetchAuthUrl() async {
     try {
-      print(
-          'NationalIdAuthWidget: Fetching auth URL with clientId: $_clientId');
-
       // Use the provider to fetch the auth URL with the correct clientId
       await ref.read(nationalIdProvider.notifier).callEsignetApi(_clientId);
 
       if (!mounted) return;
-
-      // Get the state from the provider
       final nationalIdState = ref.read(nationalIdProvider);
 
       if (nationalIdState.isError) {
@@ -1364,15 +1297,12 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
 
   void _closeWebSocket() {
     try {
-      print('NationalIdAuthWidget: Closing WebSocket connection');
-      print('NationalIdAuthWidget: Current clientId being closed: $_clientId');
+ 
       _wsSub?.cancel();
       _wsSub = null;
       _channel?.sink.close(ws_status.normalClosure);
       _channel = null;
-      print('NationalIdAuthWidget: WebSocket closed successfully');
     } catch (e) {
-      print('NationalIdAuthWidget: Error closing WebSocket: $e');
     }
   }
 

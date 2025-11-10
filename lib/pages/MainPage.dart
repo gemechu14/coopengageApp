@@ -6,6 +6,8 @@ import 'package:coopengageplus/customerOnboarding/agent/AgentPage.dart';
 // import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
 import 'package:coopengageplus/features/onboarding/screens/profile/profileScreen.dart';
 import 'package:coopengageplus/pages/LoginPage.dart';
+import 'package:coopengageplus/common_widgets/BeautifulLoadingScreen.dart';
+
 import 'package:coopengageplus/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -32,6 +34,7 @@ class _MainPageState extends State<MainPage> {
   );
 
   bool isLoading = true;
+  bool isInitializing = true; // New state for preventing immediate component loading
   String role = '';
   late PageController _pageController;
 
@@ -120,6 +123,14 @@ class _MainPageState extends State<MainPage> {
     }
     
     print("MainPage: Final role set to: $role");
+    
+    // Add a delay to prevent immediate component loading
+    await Future.delayed(const Duration(milliseconds: 2000));
+    if (mounted) {
+      setState(() {
+        isInitializing = false;
+      });
+    }
   }
 
   Widget _getCurrentWidget(int index) {
@@ -158,7 +169,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: isLoading
+      bottomNavigationBar: (isLoading || isInitializing)
           ? null // Hide bottom navigation bar while loading
           : Container(
               decoration: BoxDecoration(
@@ -214,8 +225,13 @@ class _MainPageState extends State<MainPage> {
               ),
             ),
       body: SafeArea(
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
+        child: (isLoading || isInitializing)
+            ? const BeautifulLoadingScreenV2(
+                message: 'Loading dashboard...',
+                primaryColor: Color(0xFF2196F3),
+                secondaryColor: Color(0xFF1976D2),
+                size: 20.0,
+              )
             : LayoutBuilder(
                 builder: (context, constraints) {
                   return PageView(

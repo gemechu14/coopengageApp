@@ -2,6 +2,7 @@
 
 import 'package:coopengageplus/Screen/LoginScreen.dart';
 import 'package:coopengageplus/common_widgets/AlertDialog/DialogHelper%20.dart';
+import 'package:coopengageplus/common_widgets/BeautifulLoadingScreen.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/model/registration_data.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/fayda_provider.dart';
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/providers/national_id_provider.dart';
@@ -17,6 +18,7 @@ import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentific
 import 'package:coopengageplus/customerOnboarding/NewIndividualNationalIdentification/widgets/id_information_step.dart';
 import 'package:coopengageplus/pages/MainPage.dart';
 import 'package:coopengageplus/utils/checkToken.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_stepper/easy_stepper.dart';
@@ -415,27 +417,7 @@ class _IndividualAccountByNationalIdState
                         );
                         return;
                       }
-                      // if (stepperState.fanNumber.isEmpty) {
-                      //   ScaffoldMessenger.of(context).showSnackBar(
-                      //     const SnackBar(
-                      //       content: Text('FAN number is required'),
-                      //       backgroundColor: Colors.red,
-                      //     ),
-                      //   );
-                      //   return;
-                      // }
-                      // if (stepperState.fanNumber.length != 16 ||
-                      //     !RegExp(r'^\d{16}$')
-                      //         .hasMatch(stepperState.fanNumber)) {
-                      //   ScaffoldMessenger.of(context).showSnackBar(
-                      //     const SnackBar(
-                      //       content:
-                      //           Text('FAN number must be exactly 16 digits'),
-                      //       backgroundColor: Colors.red,
-                      //     ),
-                      //   );
-                      //   return;
-                      // }
+
                       ref.read(stepperProvider.notifier).nextStep();
                     } else if (stepperState.activeStep == 3) {
                       print("step 3 - signature");
@@ -447,30 +429,6 @@ class _IndividualAccountByNationalIdState
                         // Get National ID data from SimpleFaydaService
                         final faydaState = ref.read(simpleNationalIdProvider);
 
-                        // Debug logging for National ID data
-                        print('🎯 [Registration] Using National ID data:');
-                        print(
-                            '🎯 [Registration] Name: ${faydaState.userData?.name}');
-                        print(
-                            '🎯 [Registration] Email: ${faydaState.userData?.email}');
-                        print(
-                            '🎯 [Registration] Phone: ${faydaState.userData?.phoneNumber}');
-                        print(
-                            '🎯 [Registration] Birthdate: ${faydaState.userData?.birthdate}');
-                        print(
-                            '🎯 [Registration] Gender: ${faydaState.userData?.gender}');
-                        print(
-                            '🎯 [Registration] Country: ${faydaState.userData?.address?.country}');
-                        print(
-                            '🎯 [Registration] Region: ${faydaState.userData?.address?.region}');
-                        print(
-                            '🎯 [Registration] Zone: ${faydaState.userData?.address?.zone}');
-                        print(
-                            '🎯 [Registration] Woreda: ${faydaState.userData?.address?.woreda}');
-                        print(
-                            '🎯 [Registration] Picture: ${faydaState.userData?.picture}');
-
-                        // Build RegistrationData with National ID data
                         final registrationData = RegistrationData(
                             fullName: faydaState.userData?.name ??
                                 stepperState.fullName ??
@@ -913,16 +871,34 @@ class _IndividualAccountByNationalIdState
         Navigator.pop(context);
       }
 
-      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      String errorMessage = "Registration failed, please try again later.";
+
+      // If e is a FormatException, it's probably HTML or invalid JSON
+      if (e is FormatException) {
+        print("⚠️ FormatException caught: ${e.message}");
+        errorMessage =
+            "Server returned an unexpected response. Please try again later.";
+      }
+      // If using Dio or HTTP client, handle HTTP errors
+      else if (e is DioError) {
+        final responseData = e.response?.data?.toString() ?? '';
+        if (responseData.startsWith('<html>')) {
+          errorMessage =
+              "Server rejected the request. Please check your input or try again later.";
+        } else if (responseData.isNotEmpty) {
+          errorMessage = responseData;
+        }
+      }
+      // fallback for other exceptions
+      else {
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        if (msg.isNotEmpty) errorMessage = msg;
+      }
+
       print("⚠️ Registration Error: $errorMessage");
 
       if (!_disposed) {
-        DialogHelper.showErrorDialog(
-          context,
-          errorMessage.isNotEmpty
-              ? errorMessage
-              : "Registration failed, please try again later.",
-        );
+        DialogHelper.showErrorDialog(context, errorMessage);
       }
     }
 

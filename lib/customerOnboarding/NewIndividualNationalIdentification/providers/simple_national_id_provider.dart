@@ -3,92 +3,86 @@ import '../model/national_id_models.dart';
 import '../services/simple_fayda_service.dart';
 import 'package:coopengageplus/constants/config/config.dart';
 
+/// Clean provider for National ID authentication
+/// Manages state and ensures WebSocket stays open until data arrives
 class SimpleNationalIdNotifier extends StateNotifier<NationalIdState> {
   SimpleNationalIdNotifier() : super(const NationalIdState());
   
   SimpleFaydaService? _service;
   
-  /// Complete authentication flow
+  /// Start authentication flow (4 steps)
   Future<void> startAuthentication() async {
     try {
-      print('🚀 Starting National ID authentication...');
       state = state.copyWith(isLoading: true, error: null);
-      
       _service = SimpleFaydaService();
       
-      // Step 1: Connect to WebSocket
+      // Step 1: Connect
       await _service!.connectWebSocket();
       state = state.copyWith(isConnected: true);
       
-      // Step 2: Register client (keep open)
+      // Step 2: Register
       await _service!.registerClient();
       state = state.copyWith(isRegistered: true);
       
-      // Step 3: Get auth URL (keep open)
+      // Step 3: Get auth URL
       final authUrl = await _service!.getAuthUrl(AppConstants.baseURL);
       state = state.copyWith(authUrl: authUrl, isLoading: false);
       
-      // Step 4 will be called when callback is detected
+      // Step 4: Wait for result (WebSocket stays open)
       _waitForResult();
       
     } catch (e) {
-      print('❌ Authentication error: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
-        isConnected: false,
+        isConnected: true, // Keep WebSocket connected even on error
       );
-      _service?.close();
+      // DON'T close service - keep WebSocket alive
     }
   }
   
-  /// Wait for authentication result (Step 4)
+  /// Wait for authentication result (WebSocket remains open until data arrives)
   void _waitForResult() async {
     try {
       print('⏳ Waiting for authentication result...');
       final userData = await _service!.waitForAuthResult();
       
-      state = state.copyWith(
-        userData: userData,
-        isCompleted: true,
-        isLoading: false,
-        error: null,
-        isConnected: false, // WebSocket closed after completion
-      );
+      print('✅ Received user data: ${userData.name}');
       
-      print('✅ Authentication completed for: ${userData.name}');
-      
+      // Only update state if we haven't already completed
+      if (!state.isCompleted) {
+        state = state.copyWith(
+          userData: userData,
+          isCompleted: true,
+          isLoading: false,
+          error: null,
+          isConnected: true, // Keep WebSocket connected
+        );
+        print('✅ Authentication completed: ${userData.name}');
+      }
     } catch (e) {
       print('❌ Error waiting for result: $e');
       
-      // Don't immediately close WebSocket on error - let reconnection handle it
-      // Only close if it's a final error (not a connection issue)
-      if (e.toString().contains('timeout') || e.toString().contains('authentication')) {
+      // Only set error if we haven't already completed successfully
+      if (!state.isCompleted) {
         state = state.copyWith(
           error: e.toString(),
           isLoading: false,
-          isConnected: false, // WebSocket closed on final error
-        );
-      } else {
-        // Keep WebSocket alive for reconnection attempts
-        state = state.copyWith(
-          error: e.toString(),
-          isLoading: false,
-          // Keep isConnected as true to allow reconnection
+          isConnected: true, // Keep WebSocket connected even on error
         );
       }
     }
   }
   
-  /// Check if WebSocket is connected
-  bool get isWebSocketConnected {
-    return _service?.isConnected ?? false;
-  }
-  
-  /// Close WebSocket connection
-  void closeWebSocket() {
-    print('🔌 [Provider] Closing WebSocket connection');
-    _service?.close();
+  /// Restore user data (for navigation back)
+  void restoreUserData(FaydaUserData userData) {
+    state = state.copyWith(
+      userData: userData,
+      isCompleted: true,
+      isLoading: false,
+      error: null,
+      isConnected: false,
+    );
   }
   
   /// Reset state
@@ -97,18 +91,11 @@ class SimpleNationalIdNotifier extends StateNotifier<NationalIdState> {
     _service = null;
     state = const NationalIdState();
   }
-
-  /// Restore user data from stepper provider
-  void restoreUserData(FaydaUserData userData) {
-    print('🔄 [Provider] Restoring user data: ${userData.name}');
-    state = state.copyWith(
-      userData: userData,
-      isCompleted: true,
-      isLoading: false,
-      error: null,
-      isConnected: false,
-    );
-    print('🔄 [Provider] User data restored successfully');
+  
+  /// Close WebSocket (only when absolutely necessary)
+  void closeWebSocket() {
+    print('⚠️ Manual WebSocket close requested - this should be avoided');
+    _service?.close();
   }
   
   @override
@@ -118,7 +105,7 @@ class SimpleNationalIdNotifier extends StateNotifier<NationalIdState> {
   }
 }
 
-// Provider
-final simpleNationalIdProvider = StateNotifierProvider<SimpleNationalIdNotifier, NationalIdState>((ref) {
+final simpleNationalIdProvider = 
+    StateNotifierProvider<SimpleNationalIdNotifier, NationalIdState>((ref) {
   return SimpleNationalIdNotifier();
 }); 
