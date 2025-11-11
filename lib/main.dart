@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
 
       home: const SplashScreen(),
-
+//
       routes: {
         '/home': (context) => const MainPage(),
         '/login': (context) => const LoginPage(),
