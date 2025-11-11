@@ -355,3 +355,4 @@ If you encounter any issues during migration:
 2. Use your IDE's "Go to Definition" to find moved files
 3. Run `flutter analyze` to identify remaining issues
 
+

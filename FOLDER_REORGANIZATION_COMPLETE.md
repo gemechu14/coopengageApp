@@ -219,3 +219,4 @@ If you encounter issues:
 
 The project structure has been successfully reorganized to follow Flutter Riverpod best practices!
 
+
