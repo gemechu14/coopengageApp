@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, use_key_in_widget_constructors, curly_braces_in_flow_control_structures
 
 import 'dart:io';
-
 import 'package:coopengageplus/shared/widgets/AlertDialog/DialogHelper%20.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/model/registration_data.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/providers/national_id_provider.dart';
@@ -15,7 +14,6 @@ import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpen
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/member_additional_info_step.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/national_id_auth_widget.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/widgets/registration_summary_page.dart';
-
 import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,13 +21,10 @@ import 'package:easy_stepper/easy_stepper.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'dart:typed_data';
 import 'dart:convert';
-
 String? normalizeDate(String? input) {
   if (input == null || input.isEmpty) return null;
   return input.replaceAll('/', '-');
 }
-
-// 1. Add StepConfig class at the top
 class StepConfig {
   final String title;
   final Icon icon;
@@ -45,8 +40,6 @@ class MemberVerificationStep extends ConsumerWidget {
     return Text('Verify Member ${memberIndex + 1} by National ID');
   }
 }
-
-// Placeholder widgets for new steps
 class NationalIdAuthStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -80,8 +73,6 @@ class _IndividualAccountByNationalIdState
     extends ConsumerState<CorporateAccountOpening> {
   List<GlobalKey<FormState>> formKeys = [];
   bool _disposed = false;
-
-  // 2. Replace the static steps list with a dynamic one using StepConfig
   late List<StepConfig> stepConfigs;
 
   void buildStepConfigs() {

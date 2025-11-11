@@ -1,5 +1,5 @@
 import 'package:coopengageplus/core/constants/kconstant.dart';
-import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/views/individual_account_by_national_id.dart';
+import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/views/CorporateAccountOpening.dart';
 import 'package:coopengageplus/features/onboarding/customer/JointNationalIdentification/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/customer/SendLink/link_generator_page.dart';
 

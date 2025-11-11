@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -243,7 +245,7 @@ class RegistrationService {
         var person = personalInfo[i];
         request.fields["personalInfo[$i].fullName"] = person["fullName"] ?? "";
         request.fields["personalInfo[$i].email"] = person["email"] ?? "";
-        request.fields["personalInfo[$i].phone"] = '0${person["phone"] ?? ""}';
+        request.fields["personalInfo[$i].phone"] = person["phone"] ?? "";
         request.fields["personalInfo[$i].title"] = person["title"] ?? "";
         request.fields["personalInfo[$i].legalId"] = person["legalId"] ?? "";
         request.fields["personalInfo[$i].documentName"] =
