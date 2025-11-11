@@ -26,13 +26,7 @@ class LoginController extends StateNotifier<LoginState> {
         _ref.read(authControllerProvider.notifier).onLoginSuccess(user);
         state = const LoginSuccess();
       } else {
-        // OFFLINE LOGIN
-        // bool isValid = await _ref.read(authRepositoryProvider).offlineLogin(loginData);
-        // if (isValid) {
-        //   state = const LoginSuccess();
-        // } else {
-        //   state = const LoginError("User Not Registered for Offline Usage");
-        // }
+      
         state = const LoginError("No internet connection");
       }
     } on TimeoutException {

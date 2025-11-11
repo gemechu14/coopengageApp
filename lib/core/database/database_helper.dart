@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages, unused_import, unused_local_variable
+
 import 'dart:typed_data';
 import 'package:coopengageplus/core/config/config.dart';
 import 'package:sqflite/sqflite.dart';
@@ -302,13 +304,8 @@ CREATE TABLE selected_language  (
       )
       ''');
 
-      print('Table "Customers" created.');
     } else {
-      print("Table 'Customers' already exists.");
     }
-
-    // Print the customer data being inserted to confirm it's correct
-    print("Inserting customer data: $customer");
 
     // Attempt to insert the customer data into the Customers table
     try {
@@ -414,9 +411,7 @@ CREATE TABLE selected_language  (
             body: requestBody,
           )
           .timeout(const Duration(seconds: 7));
-      print(requestBody);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("Customers synced successfully.");
         // Delete synced customers from local database
         for (var customer in customers) {
           await deleteCustomer(customer['id']);
@@ -502,18 +497,8 @@ CREATE TABLE selected_language  (
     print(result);
   }
 
-  // // Method to check if the Customers table exists
-  // Future<bool> isTableCreated(String tableName) async {
-  //   final db = await database;
-  //   var result = await db.rawQuery(
-  //       "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-  //       [tableName]);
-  //   return result.isNotEmpty;
-  // }
-
   Future<bool> isTableCreated(String tableName) async {
-    print('dkkdkdkkdkdkddkdkdkk');
-    print(tableName);
+
     final db = await database;
     final result = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
@@ -523,10 +508,7 @@ CREATE TABLE selected_language  (
       return true;
     }
 
-    // If the table is 'Customers' and it doesn't exist, create it
     if (tableName == 'Customers') {
-      print("Customers table not found. Creating now...");
-
       await db.execute('''
       CREATE TABLE IF NOT EXISTS Customers(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -579,12 +561,8 @@ CREATE TABLE selected_language  (
         userId TEXT
       )
     ''');
-
-      print("Customers table created.");
       return true;
     }
-    print("returned false as obious");
-    print('not availab;l');
     return false;
   }
 
@@ -601,30 +579,6 @@ CREATE TABLE selected_language  (
       'password': password,
     });
   }
-
-  ///////////////////////
-  ///INSERT
-  // Future<void> insertAuthToken(String token) async {
-  //   final db = await _initDB();
-
-  //   await db.insert('auth_tokens', {
-  //     'token': token,
-  //   });
-  // }
-
-  // Future<void> insertAuthToken({
-  //   required String token,
-  // }) async {
-  //   final db = await database;
-
-  //   await db.insert(
-  //     'auth_tokens',
-  //     {
-  //       'token': token,
-  //     },
-  //     conflictAlgorithm: ConflictAlgorithm.replace,
-  //   );
-  // }
 
   Future<void> insertAuthToken(String token) async {
     final db = await database;
@@ -654,12 +608,11 @@ CREATE TABLE selected_language  (
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } else {
-      // If a record exists, update it
       await db.update(
         'selected_language',
         {'language_code': languageCode},
-        where: 'id = ?', // We know there's only one row
-        whereArgs: [existingLanguage.first['id']], // Get the first row's id
+        where: 'id = ?', 
+        whereArgs: [existingLanguage.first['id']], 
       );
     }
   }
@@ -667,19 +620,17 @@ CREATE TABLE selected_language  (
   Future<void> ensureLanguageSet() async {
     final db = await database;
 
-    // Query the table to check if any record exists
     final List<Map<String, dynamic>> existingLanguage =
         await db.query('selected_language');
 
     if (existingLanguage.isEmpty) {
-      // If the table is empty, insert the default language ('eng')
       await db.insert(
         'selected_language',
         {
           'language_code': 'eng',
         },
         conflictAlgorithm: ConflictAlgorithm
-            .replace, // Replace if the record exists (although it won't in this case)
+            .replace, 
       );
     }
   }
@@ -689,11 +640,9 @@ CREATE TABLE selected_language  (
     final List<Map<String, dynamic>> result =
         await db.query('selected_language');
 
-    // Check if there is any result, then return the language code, else return a default value
     if (result.isNotEmpty) {
       return result.first['language_code'] as String;
     } else {
-      // Default to English if no language is set
       return 'en';
     }
   }
@@ -710,12 +659,6 @@ CREATE TABLE selected_language  (
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
-
-////GET
-  // Future<List<Map<String, dynamic>>> getAuthToken() async {
-  //   final db = await _initDB();
-  //   return await db.query('auth_tokens');
-  // }
 
   Future<String?> getAuthToken() async {
     final db = await _initDB();
@@ -859,17 +802,10 @@ CREATE TABLE selected_language  (
       final storedBranches = await db.query('Branches');
       final userBranches = await db
           .query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
-      print(
-          "🔍 DEBUG: insertUser1 - Total stored branches: ${storedBranches.length}");
-      print(
-          "🔍 DEBUG: insertUser1 - User branches relationships: ${userBranches.length}");
-      print("🔍 DEBUG: insertUser1 - Stored branches: $storedBranches");
-      print("🔍 DEBUG: insertUser1 - User branch relationships: $userBranches");
     } else {
       print("🔍 DEBUG: insertUser1 - No branches data provided");
     }
   }
-
 //// delete old branches
   Future<void> clearUserBranches(int userId) async {
     final db = await database;
@@ -937,9 +873,6 @@ CREATE TABLE selected_language  (
 
     // Update branches if provided
     if (branches != null) {
-      print("🔍 DEBUG: updateUser - Processing ${branches.length} branches");
-
-      // First, remove existing user-branch relationships
       await db.delete(
         'UserBranches',
         where: 'userId = ?',
@@ -951,9 +884,6 @@ CREATE TABLE selected_language  (
       // Insert new branches and relationships
       for (int i = 0; i < branches.length; i++) {
         final branch = branches[i];
-        print("🔍 DEBUG: updateUser - Branch $i data: $branch");
-
-        // Prepare branch data with proper field mapping
         final branchData = {
           'id': branch['id'],
           'userId': branch['userId'],
@@ -967,10 +897,6 @@ CREATE TABLE selected_language  (
               branch['branchName'] ??
               'Unknown Branch',
         };
-
-        print("🔍 DEBUG: updateUser - Inserting branch data: $branchData");
-
-        // Insert branch if it doesn't exist
         try {
           final branchId = await db.insert(
             'Branches',
@@ -978,9 +904,6 @@ CREATE TABLE selected_language  (
             conflictAlgorithm: ConflictAlgorithm
                 .replace, // Use replace to update existing branches
           );
-
-          print("🔍 DEBUG: updateUser - Branch inserted with ID: $branchId");
-
           // Link user with branch in UserBranches table
           await db.insert(
             'UserBranches',
@@ -990,9 +913,6 @@ CREATE TABLE selected_language  (
             },
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
-
-          print(
-              "🔍 DEBUG: updateUser - UserBranch relationship created: userId=$userId, branchId=${branch['id']}");
         } catch (e) {
           print("❌ DEBUG: updateUser - Error inserting branch $i: $e");
         }
@@ -1002,12 +922,6 @@ CREATE TABLE selected_language  (
       final storedBranches = await db.query('Branches');
       final userBranches = await db
           .query('UserBranches', where: 'userId = ?', whereArgs: [userId]);
-      print(
-          "🔍 DEBUG: updateUser - Total stored branches: ${storedBranches.length}");
-      print(
-          "🔍 DEBUG: updateUser - User branches relationships: ${userBranches.length}");
-      print("🔍 DEBUG: updateUser - Stored branches: $storedBranches");
-      print("🔍 DEBUG: updateUser - User branch relationships: $userBranches");
     } else {
       print("🔍 DEBUG: updateUser - No branches data provided");
     }
@@ -1042,45 +956,7 @@ CREATE TABLE selected_language  (
       whereArgs: [userId],
     );
 
-    print("✅ Cleared all branches and main branch info for userId=$userId");
   }
-
-  // Future<void> clearBranchesForUser(int userId) async {
-  //   final db = await database;
-
-  //   // 1️⃣ Delete all user-branch links
-  //   await db.delete(
-  //     'UserBranches',
-  //     where: 'userId = ?',
-  //     whereArgs: [userId],
-  //   );
-
-  //   // 2️⃣ Optionally, remove branches that are not linked to any user
-  //   // This ensures completely cleaning branches that might have been left behind
-  //   await db.rawDelete('''
-  //   DELETE FROM Branches
-  //   WHERE id NOT IN (SELECT branchId FROM UserBranches)
-  // ''');
-
-  //   // 3️⃣ Clear main branch info from Users table
-  //   await db.update(
-  //     'Users',
-  //     {
-  //       'mainBranchId': null,
-  //       'mainBranchName': '',
-  //       'mainBranchCode': '',
-  //     },
-  //     where: 'userId = ?',
-  //     whereArgs: [userId],
-  //   );
-
-  //   print("✅ Cleared all branches and main branch info for userId=$userId");
-  // }
-
-/////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////
-
   Future<List<Map<String, dynamic>>> getCustomers(int userId) async {
     final db = await _initDB();
 
@@ -1115,57 +991,24 @@ CREATE TABLE selected_language  (
 
   Future<List<Map<String, dynamic>>> getCustomersByStatus(
       String status, int userId) async {
-    print("Fetching customers with status: $status for userId: $userId");
     final db = await database;
 
     if (status == "Total") {
-      print("Querying for all customers with userId: $userId");
-
       final List<Map<String, dynamic>> result = await db.query(
         'Customers', // Ensure correct case for your table
         where: 'userId = ?',
         whereArgs: [userId],
       );
-
-      print("Query result: $result");
       return result;
     } else {
-      print("Querying for customers with status: $status and userId: $userId");
-
       final List<Map<String, dynamic>> result = await db.query(
         'Customers', // Ensure correct case for your table
         where: 'status = ? AND userId = ?',
         whereArgs: [status, userId],
       );
-
-      print("Query result: $result");
       return result;
     }
   }
-
-  // Future<List<Map<String, dynamic>>> getCustomersByStatus(
-  //     String status, int userId) async {
-  //   print("data12");
-  //   print(userId);
-  //   final db = await database;
-
-  //   if (status == "Total") {
-  //     final List<Map<String, dynamic>> result = await db.query(
-  //       'customers',
-  //       where: 'userId = ? ',
-  //       whereArgs: [userId],
-  //     );
-
-  //     return result;
-  //   } else {
-  //     final List<Map<String, dynamic>> result = await db.query(
-  //       'customers', // Replace with your actual table name
-  //       where: 'status = ? AND userId = ?',
-  //       whereArgs: [status, userId],
-  //     );
-  //     return result;
-  //   }
-  // }
 
   Future<void> _createCustomersTable(Database db) async {
     await db.execute('''
@@ -1222,9 +1065,6 @@ CREATE TABLE selected_language  (
     ''');
   }
 
-//////////////////////////////////////////////////////
-  ///
-  ///
   Future<int> getAccountTypeCount() async {
     final db = await database;
     final result = Sqflite.firstIntValue(

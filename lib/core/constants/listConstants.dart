@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 class ListContants {
   // List of marital statuses
   static const List<String> maritalStatuses = [

@@ -1,8 +1,6 @@
 import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-// import 'package:jwt_decoder/jwt_decoder.dart';
-// import 'package:coopengageplus/helper/databaseHelper.dart';
 
 class BranchSelector extends StatefulWidget {
   final Function(String?) onChanged;
@@ -38,16 +36,13 @@ class _BranchSelectorState extends State<BranchSelector> {
     try {
       print("BranchSelector: Initializing branches from database...");
       
-      // Get branches from local database
       final dbHelper = DatabaseHelper();
       final db = await dbHelper.database;
       
-      // Get all branches from Branches table
       final List<Map<String, dynamic>> branchResults = await db.query('Branches');
       print("BranchSelector: Raw branches from database: $branchResults");
       
       if (branchResults.isNotEmpty) {
-        // Convert database results to the expected format
         final List<Map<String, dynamic>> formattedBranches = branchResults.map((branch) {
           return {
             'id': branch['id'],
@@ -59,23 +54,19 @@ class _BranchSelectorState extends State<BranchSelector> {
         
         print("BranchSelector: Formatted branches: $formattedBranches");
         
-        // Get main branch from the CURRENT logged-in user
         String? defaultBranchName;
         Map<String, dynamic>? mainBranchData;
         try {
-          // Get token to identify current user (matching profileScreen.dart logic)
           String? token = await storage.read(key: "token");
           print("BranchSelector: Token found: ${token != null ? 'Yes' : 'No'}");
           
           Map<String, dynamic>? currentUser;
           
-          // Try to get user by token first
           if (token != null && token.isNotEmpty) {
             currentUser = await dbHelper.getUserByToken(token);
             print("BranchSelector: User found by token: ${currentUser != null ? 'Yes' : 'No'}");
           }
           
-          // If no user found by token, try to get first user as fallback
           if (currentUser == null) {
             final users = await dbHelper.getUsers();
             if (users.isNotEmpty) {
@@ -266,67 +257,4 @@ class _BranchSelectorState extends State<BranchSelector> {
       ),
     );
   }
-
-  // Widget build(BuildContext context) {
-  //   if (isLoading) {
-  //     return const CircularProgressIndicator(); // or SizedBox.shrink()
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         DropdownButtonFormField<String>(
-  //           value: selectedBranch,
-  //           hint: const Text('Choose a branch'),
-  //           onChanged: (String? newValue) {
-  //             setState(() {
-  //               selectedBranch = newValue;
-  //             });
-  //             widget.onChanged(newValue);
-  //           },
-  //           validator: (value) {
-  //             if (value == null || value.isEmpty) {
-  //               return 'Branch is required';
-  //             }
-  //             return null;
-  //           },
-  //           items: allBranches.map<DropdownMenuItem<String>>((branch) {
-  //             final companyName = branch['companyName'] ?? '';
-  //             return DropdownMenuItem<String>(
-  //               value: companyName,
-  //               child: Text(companyName),
-  //             );
-  //           }).toList(),
-  //           decoration: const InputDecoration(
-  //             isDense: true,
-  //             contentPadding:
-  //                 EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-  //             border: OutlineInputBorder(
-  //               borderRadius: BorderRadius.all(Radius.circular(10)),
-  //             ),
-  //             enabledBorder: OutlineInputBorder(
-  //               borderRadius: BorderRadius.all(Radius.circular(10)),
-  //               borderSide: BorderSide(color: Colors.black),
-  //             ),
-  //             focusedBorder: OutlineInputBorder(
-  //               borderRadius: BorderRadius.all(Radius.circular(10)),
-  //               borderSide: BorderSide(color: Colors.blue),
-  //             ),
-  //             errorBorder: OutlineInputBorder(
-  //               borderRadius: BorderRadius.all(Radius.circular(10)),
-  //               borderSide: BorderSide(color: Colors.red),
-  //             ),
-  //             focusedErrorBorder: OutlineInputBorder(
-  //               borderRadius: BorderRadius.all(Radius.circular(10)),
-  //               borderSide: BorderSide(color: Colors.red),
-  //             ),
-  //             prefixIcon: Icon(Icons.location_city),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

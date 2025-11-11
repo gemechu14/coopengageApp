@@ -15,32 +15,19 @@ final dashboardProvider =
   return DashboardNotifier(repository);
 });
 
-/// Dashboard State Notifier
-/// Manages all dashboard state and business logic
-///
-/// Loading Sequence:
-/// 1. Widget builds with initial state (isLoadingCount all true, showing "-")
-/// 2. After first frame, initialize() is called
-/// 3. 100ms delay ensures loading UI is visible
-/// 4. Data is fetched from API/DB
-/// 5. State updates with real values
-/// 6. AnimatedSwitcher smoothly transitions from "-" to values
+
 class DashboardNotifier extends StateNotifier<DashboardState> {
   final DashboardRepository _repository;
   bool _initialized = false;
 
   DashboardNotifier(this._repository) : super(const DashboardState()) {
-    // Don't initialize here - let the widget control initialization
-    // This ensures the UI renders the loading state first
-  }
 
-  /// Reset to loading state (clears any cached values)
+  }
   void resetToLoadingState() {
     print("DashboardNotifier: Resetting to loading state");
     state = const DashboardState(); // Reset to initial state with all loading=true and counts=0
     _initialized = false; // Allow re-initialization
   }
-
   /// Initialize dashboard data
   Future<void> initialize() async {
     // Prevent multiple initializations
@@ -51,11 +38,7 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
     _initialized = true;
 
     try {
-      print("DashboardNotifier: Starting initialization");
-      // The initial state already has loading=true and isLoadingCount all true
-      // Wait a bit to ensure UI renders the loading state first
       await Future.delayed(const Duration(milliseconds: 200));
-
       // Fetch user ID first
       await fetchUserId();
 
@@ -126,8 +109,6 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         counts = await _repository.fetchUserCountsFromDatabase(state.userId!);
       }
 
-      print("fetchUserCounts: Data fetched - New: ${counts.newApplicants}, Awaiting: ${counts.awaitingAction}, Approved: ${counts.approved}, Rejected: ${counts.rejected}");
-
       // Update state with fetched counts
       state = state.copyWith(
         userCounts: counts,
@@ -139,9 +120,7 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         },
       );
       
-      print("fetchUserCounts: State updated successfully");
     } catch (e) {
-      print("Error fetching user counts: $e");
       // Set loading to false on error
       state = state.copyWith(
         isLoadingCount: {

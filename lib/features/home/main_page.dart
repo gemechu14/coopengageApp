@@ -1,20 +1,16 @@
 // ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, use_build_context_synchronously, deprecated_member_use, use_super_parameters
 import 'package:coopengageplus/features/home/Dashboard/Dashboard.dart';
 import 'package:coopengageplus/features/home/AccountOpeningHomePage.dart';
-// import 'package:coopengageplus/features/onboarding/_IndividualAccount/screens/registration_screen.dart';
 import 'package:coopengageplus/features/onboarding/customer/agent/AgentPage.dart';
-// import 'package:coopengageplus/features/onboarding/HomePage/homepage.dart';
 import 'package:coopengageplus/features/onboarding/screens/profile/profileScreen.dart';
 import 'package:coopengageplus/features/home/LoginPage.dart';
 import 'package:coopengageplus/shared/widgets/BeautifulLoadingScreen.dart';
-
 import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:coopengageplus/shared/services/token_service.dart';
-
 import 'package:google_nav_bar/google_nav_bar.dart';
 
 class MainPage extends StatefulWidget {
@@ -48,67 +44,46 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<void> _initializeTokenService() async {
-    // Initialize token service for automatic logout on expiration
     await TokenService.initialize(context);
   }
 
   Future<void> _fetchToken() async {
     String? token = await storage.read(key: "token");
 
-
-    print("MainPage: Token found: ${token != null ? 'Yes' : 'No'}");
-
-    print(token);
-    
     if (token != null && token.isNotEmpty) {
       try {
         var decodedToken = JwtDecoder.decode(token);
-        print("MainPage: JWT decoded successfully, role: ${decodedToken['role']}");
         setState(() {
           role = decodedToken['role'][0];
           isLoading = false;
         });
       } catch (e) {
-        print("MainPage: JWT decoding failed: $e");
-        // If JWT decoding fails, try to get user data from local database
         final dbHelper = DatabaseHelper();
         final user = await dbHelper.getUserByToken(token);
-        print("MainPage: User found by token: ${user != null ? 'Yes' : 'No'}");
-        
         if (user != null && user['role'] != null) {
-          print("MainPage: Role from database: ${user['role']}");
           setState(() {
             role = user['role'];
             isLoading = false;
           });
         } else {
-          // If no user found by token, try to get the first user from database
           final users = await dbHelper.getUsers();
-          print("MainPage: Total users in database: ${users.length}");
-          
           if (users.isNotEmpty && users.first['role'] != null) {
-            print("MainPage: Role from first user: ${users.first['role']}");
             setState(() {
               role = users.first['role'];
               isLoading = false;
             });
           } else {
-            print("MainPage: No role found in database");
             setState(() {
               isLoading = false;
             });
-            // No valid token or role found, redirect to login
             _redirectToLogin();
           }
         }
       }
     } else {
-      print("MainPage: No token found, checking database for any user");
-      // If no token, try to get any user from database
       final dbHelper = DatabaseHelper();
       final users = await dbHelper.getUsers();
       if (users.isNotEmpty && users.first['role'] != null) {
-        print("MainPage: Using role from first user in database: ${users.first['role']}");
         setState(() {
           role = users.first['role'];
           isLoading = false;
@@ -121,10 +96,6 @@ class _MainPageState extends State<MainPage> {
         _redirectToLogin();
       }
     }
-    
-    print("MainPage: Final role set to: $role");
-    
-    // Add a delay to prevent immediate component loading
     await Future.delayed(const Duration(milliseconds: 2000));
     if (mounted) {
       setState(() {
@@ -143,8 +114,6 @@ class _MainPageState extends State<MainPage> {
           });
         });
       case 1:
-        // return AccountOpeningHomePage();
-        // return RegistrationScreen();
 
         return AccountOnboardingScreen();
       case 2:

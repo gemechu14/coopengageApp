@@ -1,5 +1,3 @@
-// import 'package:crm/src/constants/config/config.dart';
-
 import 'package:coopengageplus/core/config/config.dart';
 
 class ApiPaths {

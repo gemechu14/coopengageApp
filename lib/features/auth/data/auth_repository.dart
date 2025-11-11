@@ -7,10 +7,6 @@ import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:coopengageplus/shared/models/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-// import '../../../constants/config/config.dart';
-// import '../../../NetworkHandler.dart';
-
 final authRepositoryProvider = Provider((ref) => AuthRepository(ref));
 
 class AuthRepository {

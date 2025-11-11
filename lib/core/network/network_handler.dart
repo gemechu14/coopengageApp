@@ -9,12 +9,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
-// Certificate service removed for security - using standard HTTP client
-
 class NetworkHandler {
-  // String baseurl = "http://10.2.125.41:9061";
-  // String baseurl = "http://10.8.100.111:9061";
-  // String baseurl
+ 
   String baseurl = AppConstants.baseURL;
   var log = Logger();
   FlutterSecureStorage storage = const FlutterSecureStorage(
@@ -47,33 +43,10 @@ class NetworkHandler {
       return null;
     }
   }
-  // Future get(String url) async {
-  //   String? token = await storage.read(key: "token");
-  //   url = formater(url);
-  //   var uri = Uri.parse(url);
-
-  //   print("dfjkdjfdjfdkkjfjdjkfjdkjfkjdjkkjdfjkfdjk");
-  //   print(uri);
-  //   // /user/register
-  //   var response = await http.get(
-  //     uri,
-  //     // headers: {"Authorization": "Bearer $token"},
-  //   );
-  //   if (response.statusCode == 200 || response.statusCode == 201) {
-  //     // log.i(response.body);
-
-  //     return json.decode(response.body);
-  //   }
-  //   // log.i(response.body);
-  //   log.i(response.statusCode);
-  // }
 
   Future getData(String url, String token) async {
-    // url = formater(url);
-    // var uri = Uri.parse(url);
 
     var uri = Uri.parse(url);
-    // /user/register
     var response = await http.get(
       uri,
       headers: {"Authorization": "Bearer $token"},
@@ -127,12 +100,8 @@ class NetworkHandler {
   ) async {
     // Use standard HTTP client for security
     url = formater(url);
-    print("kdfjdkjfkdjfkdddddddddddddddddddddddkdfjdkjfkdjfkddddddddddddddddddddddd");
-    print(url);
     var uri = Uri.parse(url);
     log.d(body);
-    print("Request URL:");
-    print(uri);
 
     var response = await http.post(
       uri,
@@ -156,39 +125,15 @@ class NetworkHandler {
     return response;
   }
 
-  // Future<http.Response> post(
-  //   String url,
-  //   Map<String, dynamic> body,
-  // ) async {
-  //   // String? token = await storage.read(key: "token");
-  //   var uri = Uri.parse(url); // The complete URL is passed directly
-  //   log.d(body);
-  //   print("base urlre");
-  //   print(uri);
-  //   var response = await http.post(
-  //     uri,
-  //     headers: {
-  //       "Content-type": "application/json",
-  //       // Uncomment the Authorization header if you need to pass the token
-  //       // "Authorization": "Bearer $token"
-  //     },
-  //     body: json.encode(body),
-  //   );
-
-  //   return response;
-  // }
-
   Future<http.Response> postData(
       String url, Map<String, dynamic> body, String token) async {
-    // String? token = await storage.read(key: "token");
-    var uri = Uri.parse(url); // The complete URL is passed directly
+    var uri = Uri.parse(url); 
     log.d(body);
 
     var response = await http.post(
       uri,
       headers: {
         "Content-type": "application/json",
-        // Uncomment the Authorization header if you need to pass the token
         "Authorization": "Bearer $token"
       },
       body: json.encode(body),
@@ -204,10 +149,8 @@ class NetworkHandler {
     var request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token';
 
-    // Iterate over the body map and handle fields and files
     body.forEach((key, value) {
       if (value is Uint8List) {
-        // Handling file uploads
         final httpFile = http.MultipartFile.fromBytes(
           key,
           value,
@@ -216,11 +159,9 @@ class NetworkHandler {
         );
         request.files.add(httpFile);
       } else if (value is String) {
-        // Handling regular form fields
         request.fields[key] = value;
       }
     });
-
     // Send the request
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);
@@ -245,11 +186,9 @@ class NetworkHandler {
 
   Future<http.Response> postWithFormData(
       String qrcodeUrl, Map<String, dynamic> body) async {
-    // Convert the URL string to a Uri object
     var uri = Uri.parse(qrcodeUrl);
     var request = http.MultipartRequest('POST', uri);
 
-    // Add the fields and files from the original body
     body.forEach((key, value) {
       if (value is String) {
         request.fields[key] = value;
@@ -272,9 +211,6 @@ class NetworkHandler {
     if (response.statusCode == 307) {
       // Get the new URL from the Location header
       String redirectUrl = response.headers['location']!;
-      print("Redirected to: $redirectUrl");
-
-      // Prepare the redirected request with the same body
       var redirectRequest =
           http.MultipartRequest('POST', Uri.parse(redirectUrl));
       body.forEach((key, value) {
@@ -282,11 +218,11 @@ class NetworkHandler {
           redirectRequest.fields[key] = value;
         } else if (value is Uint8List) {
           redirectRequest.files.add(http.MultipartFile.fromBytes(
-            key, // The key for the file field (e.g., 'qr_code')
-            value, // The byte data of the image
-            filename: '$key.jpg', // You can customize the filename here
+            key, 
+            value, 
+            filename: '$key.jpg', 
             contentType:
-                MediaType('image', 'jpeg'), // Content type for JPEG image
+                MediaType('image', 'jpeg'),
           ));
         }
       });
@@ -298,13 +234,11 @@ class NetworkHandler {
 
       // Convert the response stream to a regular response object
       final responseData = await http.Response.fromStream(redirectResponse);
-      print("Redirect Response Data: ${responseData.statusCode}");
 
       return responseData;
     } else {
       // Convert the response stream to a regular response object if no redirect
       final responseData = await http.Response.fromStream(response);
-      print("Response Data: ${responseData.statusCode}");
       return responseData;
     }
   }
@@ -312,16 +246,12 @@ class NetworkHandler {
   Future<http.Response> post1(String url, Map<String, dynamic> data) async {
     String? token = await storage.read(key: "token");
 
-    print("kdsfjdjjdjfjd");
-    print(token);
     if (token == null) {
       throw Exception("Token not found");
     }
 
     url = formater(url);
     var uri = Uri.parse(url);
-
-    print(url);
     var request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token';
 
@@ -378,14 +308,7 @@ class NetworkHandler {
   }
 
   Future<http.Response> put1(String url, Map<String, dynamic> data) async {
-    print("888888888888888888888888888888888888888888888888888888888888888888888888");
-    print(data);
     String? token = await storage.read(key: "token");
-
-    print("ddddddddddkfkdfjkdfjdkfjddddddddddkfkdddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdffjkdf");
-    print(data);
-    print(url);
-    print(token);
 
     if (token == null) {
       throw Exception("Token not found");
@@ -513,10 +436,6 @@ class NetworkHandler {
     try {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      print("kfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjddddddddddkfkdfjkdfjdkfjdddddddddd");
-      print(response.statusCode);
-
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw Exception(
             "Failed to update data. Status code: ${response.statusCode}");
@@ -582,12 +501,9 @@ class NetworkHandler {
     }
     
     url = formater(url);
-    print("fhdfhdhjfhdhfjdj");
-    print(url);
 
     var uri = Uri.parse(url);
 
-    print(uri);
     var response = await http.get(
       uri,
       headers: {
@@ -595,8 +511,6 @@ class NetworkHandler {
         "Authorization": "Bearer $token"
       },
     );
-    print(token);
-    print(response.body);
     return response;
   }
 
@@ -605,14 +519,10 @@ class NetworkHandler {
       // Create an instance of DatabaseHelper
       DatabaseHelper dbHelper = DatabaseHelper();
 
-      // Fetch all account types from the local database
       List<Map<String, dynamic>> accountTypes =
           await dbHelper.getAllAccountTypes();
-      print("All accountTYPE infrormatino");
-      print(accountTypes);
       return accountTypes; // Return the list of account types
     } catch (error) {
-      print("Error fetching account types: $error");
       return []; // Return an empty list in case of an error
     }
   }

@@ -32,18 +32,9 @@ const Color redColor = Colors.red;
 const double KiconSize = 30;
 const double kiconSize2 = 25;
 const double kPadding1 = 15;
-// Color(0xffF7AA12);
-//Color(0xff3D9A52);
-//52A933
-
-//#ffeecc appbar bt #fff9ee
-//card #ffeecc
-// const Color secondaryColorLight = Color(0xff77bb62);
 
 const Color primaryBlue = Color(0xFF2196F3); // Blue 500
-// const Color lightBlue = Color(0xFFBBDEFB); // Blue 100
 const Color darkBlue = Color(0xFF1565C0); // Blue 800
-// Color lightBlue = Colors.blue[200]!; // Lightest shade
 Color lightBlue =
     Colors.blue[200] ?? Colors.blue[100]!; // fallback to another color
 
