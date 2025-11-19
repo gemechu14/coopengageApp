@@ -36,7 +36,7 @@ class RegistrationService {
       String? legalId,
       required String issueAuthority,
       required String expirayDate,
-      required String issueDate}) async {
+      required String issueDate, required String currency, required String surname}) async {
     print("dfkdfdkfhdhkfdkhkdddfddfdfdfddfk");
     print(photo);
     try {
@@ -49,7 +49,7 @@ class RegistrationService {
       print(token);
       print(expirayDate);
       print(initialDeposit);
-      print("dfhkdfhdkfdkdkfhkdkhdkhdffdfdfdfkhfkhdhkfkd");
+      print("dfhkdfhdkfdkdkfhkdkhdkhdffdfdfdfkhfkhdhkfkddfhkdfhdkfdkdkfhkdkhdkhdffdfdfdfkhfkhdhkfkd");
       // Create multipart request
       final request = http.MultipartRequest(
         'POST',
@@ -62,6 +62,8 @@ class RegistrationService {
       request.fields['accountType'] = accountType;
       request.fields['initialDeposit'] = initialDeposit;
       request.fields['branch'] = branch;
+      request.fields['currency'] = 'ETB';
+      request.fields['customerInfo.surname'] = surname;
       request.fields['customerInfo.state'] = state;
       request.fields['customerInfo.initialdeposit'] = initialDeposit;
       request.fields['customerInfo.phone'] = phone;
@@ -194,7 +196,7 @@ class RegistrationService {
       print('Response body: $responseBody');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("dfjkdjfdkfjkdkjfjdkfjieeireirieirieirieirieir");
+        print("dfjkdjfdkfjkdkjfjdkfjieeireirieirieirieirieirdfjkdjfdkfjkdkjfjdkfjieeireirieirieirieirieir");
         // print(responseBody);
         var decoded = json.decode(responseBody);
         // print(decoded['accountNumber']);

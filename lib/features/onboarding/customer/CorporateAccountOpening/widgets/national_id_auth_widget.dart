@@ -71,6 +71,12 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     } catch (e) {}
   }
 
+  bool _isValidEmail(String email) {
+    if (email.isEmpty) return false;
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegex.hasMatch(email);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_disposed) return const SizedBox.shrink();
@@ -96,67 +102,144 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
         itemCount: members.length,
         itemBuilder: (context, index) {
           final member = members[index];
+          final hasValidEmail = member.email != null && _isValidEmail(member.email!);
+          
+          // Determine icon based on state
+          IconData iconData;
+          Color iconColor;
+          if (member.isVerified && hasValidEmail) {
+            iconData = Icons.verified_user;
+            iconColor = Colors.green;
+          } else if (hasValidEmail) {
+            iconData = Icons.email;
+            iconColor = cyanblueColor;
+          } else {
+            iconData = Icons.warning_amber_rounded;
+            iconColor = Colors.orange;
+          }
+
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             elevation: 2,
-            child: ListTile(
-              leading: Icon(
-                member.isVerified ? Icons.verified : Icons.person,
-                color: member.isVerified ? cyanblueColor : Colors.grey,
-                size: 32,
-              ),
-              title: Text(
-                'Member ${index + 1}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              subtitle: member.isVerified
-                  ? Text(
-                      member.fullName ?? 'Verified',
-                      style: const TextStyle(color: Colors.green),
-                    )
-                  : const Text('Not authenticated'),
-              trailing: member.isVerified
-                  ? ElevatedButton.icon(
-                      onPressed: () {
-                        _showMemberDetailsDialog(context, member);
-                      },
-                      icon: const Icon(Icons.info_outline, size: 18),
-                      label: const Text('Details'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: cyanblueColor,
-                        foregroundColor: whiteColor,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(iconData, color: iconColor, size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Member ${index + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            if (member.isVerified)
+                              Text(
+                                member.fullName ?? 'Verified',
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    )
-                  : ElevatedButton(
-                      onPressed: () async {
-                        print('=== STARTING FRESH AUTHORIZATION FOR MEMBER ${index + 1} ===');
-                        await _forceCloseEverything();
-                        setState(() {
-                          _selectedMemberIndex = index;
-                          _errorMessage = null;
-                          _authUrl = null;
-                          _dialogShown = false;
-                          _clientId = null;
-                          _wsConnecting = false;
-                          _isWebViewLoading = false;
-                          _showingDialog = false;
-                        });
-                        _webViewController?.clearCache();
-                        _webViewController?.clearLocalStorage();
-                        _webViewController = null;
-                        await Future.delayed(const Duration(milliseconds: 500));
-                        print('=== STARTING WEBSOCKET CONNECTION ===');
-                        _startWsAuth();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: cyanblueColor,
-                        foregroundColor: whiteColor,
+                      if (member.isVerified)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _showMemberDetailsDialog(context, member);
+                          },
+                          icon: const Icon(Icons.info_outline, size: 18),
+                          label: const Text('Details'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: cyanblueColor,
+                            foregroundColor: whiteColor,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    initialValue: member.email ?? '',
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email Address *',
+                      hintText: 'Enter email address',
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      suffixIcon: hasValidEmail
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : null,
+                      errorText: member.email != null && 
+                                 member.email!.isNotEmpty && 
+                                 !_isValidEmail(member.email!)
+                          ? 'Invalid email format'
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text('Authorize'),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                     ),
+                    onChanged: (value) {
+                      ref.read(stepperProvider.notifier).updateMemberEmail(index, value);
+                    },
+                  ),
+                  if (hasValidEmail) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              print('=== STARTING FRESH AUTHORIZATION FOR MEMBER ${index + 1} ===');
+                              await _forceCloseEverything();
+                              setState(() {
+                                _selectedMemberIndex = index;
+                                _errorMessage = null;
+                                _authUrl = null;
+                                _dialogShown = false;
+                                _clientId = null;
+                                _wsConnecting = false;
+                                _isWebViewLoading = false;
+                                _showingDialog = false;
+                              });
+                              _webViewController?.clearCache();
+                              _webViewController?.clearLocalStorage();
+                              _webViewController = null;
+                              await Future.delayed(const Duration(milliseconds: 500));
+                              print('=== STARTING WEBSOCKET CONNECTION ===');
+                              _startWsAuth();
+                            },
+                            icon: const Icon(Icons.verified_user_outlined, size: 18),
+                            label: Text(
+                              member.isVerified 
+                                  ? 'Re-verify National ID' 
+                                  : 'Optional: Verify with National ID',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: cyanblueColor,
+                              side: BorderSide(
+                                color: member.isVerified ? Colors.green : cyanblueColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
           );
         },

@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../providers/simple_national_id_provider.dart';
 import '../model/national_id_models.dart';
-
+import 'dart:convert';
 /// Clean and simple National ID authentication widget
 /// WebSocket stays open until authentication data is received
 class UltraSimpleNationalIdWidget extends ConsumerStatefulWidget {
@@ -474,5 +474,8 @@ class _UltraSimpleNationalIdWidgetState
     stepperNotifier.updateFullName(userData.name);
     stepperNotifier.updateEmail(userData.email);
     print('💾 Data saved to stepper: ${userData.name}');
+    // print('ALL Data": $userData');
+    // print('ALL Data: ${userData.}');
+
   }
 }

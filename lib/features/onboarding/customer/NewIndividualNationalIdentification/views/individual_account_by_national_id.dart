@@ -451,14 +451,24 @@ class _IndividualAccountByNationalIdState
                             signature: stepperState.signature,
                             sex:
                                 faydaState.userData?.gender ?? stepperState.sex,
-                            country: faydaState.userData?.address?.country ??
-                                stepperState.country,
-                            state: faydaState.userData?.address?.region ??
-                                stepperState.state,
-                            zoneSubCity: faydaState
-                                .userData?.address?.zone, // Add zone data
-                            streetAddress: faydaState
-                                .userData?.address?.woreda, // Add woreda data
+                            // country: faydaState.userData?.address?.country ??
+                            //     stepperState.country ?? "ETHIOPIA",
+
+
+                              
+
+                            // state: faydaState.userData?.address?.region ??
+                            //     stepperState.state  ?? "Addis Ababa",
+                            // zoneSubCity: faydaState
+                            //     .userData?.address?.zone ?? "Addis Ababa", // Add zone data
+                            // streetAddress: faydaState
+                            //     .userData?.address?.woreda ?? "Addis Ababa", // Add woreda data
+
+                            country: getValue(faydaState.userData?.address?.country, stepperState.country, "ETHIOPIA"),
+                              state: getValue(faydaState.userData?.address?.region, stepperState.state, "Addis Ababa"),
+                              zoneSubCity: getValue(faydaState.userData?.address?.zone, null, "Addis Ababa"),
+                              streetAddress: getValue(faydaState.userData?.address?.woreda, null, "Addis Ababa"),
+
                             // legalId: stepperState.legalId,
                             bankShare: stepperState.bankShare,
                             customerShare: stepperState.customerShare,
@@ -570,6 +580,11 @@ class _IndividualAccountByNationalIdState
     }
   }
 
+String getValue(String? primary, String? fallback, String defaultValue) {
+  if (primary != null && primary.isNotEmpty) return primary;
+  if (fallback != null && fallback.isNotEmpty) return fallback;
+  return defaultValue;
+}
   Widget _buildContentArea(
       StepperState stepperState, NationalIdState nationalIdState) {
     if (_disposed) return const SizedBox.shrink();
@@ -763,16 +778,24 @@ class _IndividualAccountByNationalIdState
           email: faydaState.userData?.email ?? stepperState.email ?? '',
           dateOfBirth:
               faydaState.userData?.birthdate ?? stepperState.dateOfBirth ?? '',
-          country: faydaState.userData?.address?.country ??
-              stepperState.country ??
-              '',
-          zoneSubCity: faydaState.userData?.address?.zone ?? '',
-          streetAddress: faydaState.userData?.address?.woreda ?? '',
+          // country: faydaState.userData?.address?.country ??
+          //     stepperState.country ??
+          //     '',
+          // zoneSubCity: faydaState.userData?.address?.zone ?? '',
+          // streetAddress: faydaState.userData?.address?.woreda ?? '',
+
+          country: getValue(faydaState.userData?.address?.country, stepperState.country, "ETHIOPIA"),
+      // state: getValue(faydaState.userData?.address?.region, stepperState.state, "Addis Ababa"),
+           zoneSubCity: getValue(faydaState.userData?.address?.zone, null, "Addis Ababa"),
+       streetAddress: getValue(faydaState.userData?.address?.woreda, null, "Addis Ababa"),
           photo: faydaState.userData?.picture ?? '',
           // legalId: faydaState.userData?.sub ?? '',
-
+        
+          currency:"ETB",
+          surname: getSurname(faydaState.userData?.name ?? stepperState.fullName ?? ''),
+          
           legalId: stepperState.legalId ?? '',
-          issueAuthority: stepperState.issueAuthority ?? '',
+          issueAuthority: stepperState.issueAuthority ?? 'ET',
           expirayDate: stepperState.expireDate ?? '',
           issueDate: stepperState.issueDate ?? '');
 
@@ -914,4 +937,15 @@ class _IndividualAccountByNationalIdState
     //   }
     // }
   }
+  
+// String getSurname(String fullName) {
+//   if (fullName.trim().isEmpty) return '';
+//   List<String> parts = fullName.trim().split(' ');
+//   return parts.isNotEmpty ? parts.last : '';
+// }
+
+String getSurname(String fullName) {
+  List<String> parts = fullName.trim().split(' ');
+  return parts.length > 1 ? parts[1] : ''; // second word is the father’s name
+}
 }

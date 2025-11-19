@@ -196,9 +196,11 @@ class _MemberAdditionalInfoStepState
             ),
             const SizedBox(height: 8),
             const Text(
-              'Please complete National ID authentication for at least one member before proceeding.',
+              // 'Please complete National ID authentication for at least one member before proceeding.',
+              'There are no verified members yet. You can either go back to complete the verification process now, '
+                  'or finish the registration — we’ll send a verification link to your email so you can complete the process later.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(fontSize: 15, color: Color.fromARGB(255, 80, 79, 79)),
             ),
           ],
         ),

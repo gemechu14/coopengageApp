@@ -208,6 +208,9 @@ class RegistrationService {
     }
 
     try {
+
+
+
       print("📩 Preparing organizational registration data......");
       String? token = await storage.read(key: "token");
 

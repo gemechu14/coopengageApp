@@ -458,18 +458,38 @@ class _IndividualAccountByNationalIdState
                       }
                     } else if (stepperState.activeStep == 2) {
                       // Step 2: National ID Auth - Check if at least one member is verified
-                      final verifiedMembers = stepperState.members.where((m) => m.isVerified).toList();
-                      if (verifiedMembers.isNotEmpty) {
-                        ref.read(stepperProvider.notifier).nextStep();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Please complete National ID authentication for at least one member first'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+                      // final verifiedMembers = stepperState.members.where((m) => m.isVerified).toList();
+                      // if (verifiedMembers.isNotEmpty) {
+                      //   ref.read(stepperProvider.notifier).nextStep();
+                      // } else {
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     const SnackBar(
+                      //       content: Text(
+                      //           'Please complete National ID authentication for at least one member first'),
+                      //       backgroundColor: Colors.red,
+                      //     ),
+                      //   );
+                      // }
+                      
+                      final allMembersHaveEmail = (stepperState?.members?.isNotEmpty ?? false) &&
+    stepperState!.members!.every((m) => m.email != null && m.email!.isNotEmpty);
+
+                  if (allMembersHaveEmail) {
+                    ref.read(stepperProvider.notifier).nextStep();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please make sure all members have a valid email address first',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+
+
+
+
                     } else if (stepperState.activeStep == 3) {
                       // Step 3: Additional Information (member info) - Just proceed
                       ref.read(stepperProvider.notifier).nextStep();
@@ -668,6 +688,7 @@ class _IndividualAccountByNationalIdState
     if (_disposed) return;
     final stepperState = ref.read(stepperProvider);
     final registrationService = RegistrationService();
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -960,4 +981,6 @@ class _IndividualAccountByNationalIdState
       }
     }
   }
+
+
 }

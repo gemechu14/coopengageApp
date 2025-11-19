@@ -476,6 +476,8 @@ class NetworkHandler {
 
   Future<http.Response> fetchData(String url) async {
     String? token = await storage.read(key: "token");
+
+    print(token);
     if (token == null) {
       throw Exception("Token not found - please login again");
     }
