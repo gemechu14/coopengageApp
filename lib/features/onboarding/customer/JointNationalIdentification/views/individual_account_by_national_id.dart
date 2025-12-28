@@ -754,11 +754,11 @@ class _IndividualAccountByNationalIdState
                 onPressed: () {
                   if (!_disposed) {
                     Navigator.pop(context);
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainPage()),
-                      (route) => false,
-                    );
+                    // Navigator.pushAndRemoveUntil(
+                    //   context,
+                    //   MaterialPageRoute(builder: (_) => const MainPage()),
+                    //   (route) => false,
+                    // );
                   }
                 },
                 style: TextButton.styleFrom(
@@ -775,11 +775,11 @@ class _IndividualAccountByNationalIdState
           ),
         ).then((_) {
           if (!_disposed) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const MainPage()),
-              (route) => false,
-            );
+            // Navigator.pushAndRemoveUntil(
+            //   context,
+            //   MaterialPageRoute(builder: (_) => const MainPage()),
+            //   (route) => false,
+            // );
           }
         });
       }

@@ -45,6 +45,7 @@ class _IndividualAccountByNationalIdState
     extends ConsumerState<NationalIdentificationWebSocket> {
   List<GlobalKey<FormState>> formKeys = [];
   bool _disposed = false;
+  final RegistrationService _registrationService = RegistrationService();
 
   // 2. Replace the static steps list with a dynamic one using StepConfig
   late final List<StepConfig> stepConfigs;
@@ -364,6 +365,41 @@ class _IndividualAccountByNationalIdState
                       }
 
                       if (isAuthenticated) {
+                        final phoneNumber =
+                            faydaState.userData?.phoneNumber ??
+                                stepperState.authPhone ??
+                                '';
+                        final sanitizedPhone = phoneNumber.trim();
+
+                        if (sanitizedPhone.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Phone number is missing. Unable to check existing accounts.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
+                        final accountResponse =
+                            await _fetchExistingAccountData(sanitizedPhone);
+                        if (accountResponse == null) {
+                          return;
+                        }
+
+                        final userInfo = accountResponse['userInfo'];
+                        final accounts =
+                            userInfo is Map<String, dynamic> ? userInfo['accounts'] : null;
+                        final hasAccount =
+                            accounts is List && accounts.isNotEmpty;
+
+                        if (hasAccount) {
+                          await _showExistingAccountDialog(
+                              sanitizedPhone, accountResponse);
+                          return;
+                        }
+
                         ref.read(stepperProvider.notifier).nextStep();
                       } else {
                         //  print(faydaAuthData);
@@ -633,6 +669,116 @@ String getValue(String? primary, String? fallback, String defaultValue) {
       stepConfigs.add(config);
       formKeys.add(GlobalKey<FormState>());
     });
+  }
+
+  Future<Map<String, dynamic>?> _fetchExistingAccountData(
+      String phoneNumber) async {
+    if (_disposed) return null;
+
+    bool loaderVisible = false;
+
+    if (mounted) {
+      loaderVisible = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const BeautifulLoadingScreen(
+          message: 'Checking existing account...',
+          primaryColor: cyanblueColor,
+        ),
+      );
+    }
+
+    try {
+      final result =
+          await _registrationService.checkAccountExist(phoneNumber);
+      return result;
+    } catch (e) {
+      if (!_disposed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                "Unable to verify existing account. ${e.toString().replaceFirst('Exception: ', '')}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return null;
+    } finally {
+      if (loaderVisible && !_disposed && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+  }
+
+  Future<void> _showExistingAccountDialog(
+      String phoneNumber, Map<String, dynamic> response) async {
+    if (_disposed) return;
+
+    final userInfo =
+        (response['userInfo'] as Map<String, dynamic>?) ?? const {};
+    final accounts = userInfo['accounts'];
+    final firstAccount = accounts is List && accounts.isNotEmpty
+        ? (accounts.first as Map<String, dynamic>?)
+        : null;
+
+    final accountTitle = firstAccount?['accountTitle']?.toString() ?? 'N/A';
+    final accountNumber = firstAccount?['accountNumber']?.toString() ?? 'N/A';
+    final branchName = firstAccount?['branchName']?.toString() ?? 'N/A';
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => WillPopScope(
+        onWillPop: () async {
+          _navigateToMainPage();
+          return false;
+        },
+        child: AlertDialog(
+          title: const Text(
+            'Existing Account Found',
+            style: TextStyle(
+              color: cyanblueColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Phone: $phoneNumber'),
+              const SizedBox(height: 8),
+              Text('Account Title: $accountTitle'),
+              Text('Account Number: $accountNumber'),
+              Text('Branch: $branchName'),
+              const SizedBox(height: 12),
+              const Text(
+                'Please visit the main page to manage the existing account.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _navigateToMainPage();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToMainPage() {
+    if (_disposed) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => MainPage()),
+      (route) => false,
+    );
   }
 
   // Submit registration

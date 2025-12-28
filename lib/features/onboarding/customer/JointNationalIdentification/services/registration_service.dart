@@ -189,7 +189,7 @@ class RegistrationService {
     BuildContext? context, // Add context parameter for error handling
   }) async {
     try {
-      print("Gemechu Bultidddddfdfdfdfdfdfdf");
+      print("BultidddddfdfdfdfdfdfdfBultidddddfdfdfdfdfdfdfBultidddddfdfdfdfdfdfdf");
 
       print(members);
       // Check token validity first
@@ -299,6 +299,7 @@ class RegistrationService {
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       if (response.statusCode == 200 || response.statusCode == 201) {
+        
         return json.decode(responseBody);
       } else {
         // Check for token expiration

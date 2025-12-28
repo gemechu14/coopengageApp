@@ -200,7 +200,7 @@ class _UltraSimpleNationalIdWidgetState
                 Text(
                   'Fayda Information',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
@@ -212,7 +212,7 @@ class _UltraSimpleNationalIdWidgetState
           // Blue card with profile picture and name
           Container(
             margin: EdgeInsets.symmetric(horizontal: 20),
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(7),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF1565C0), Color(0xFF1976D2)],

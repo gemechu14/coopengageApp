@@ -233,6 +233,49 @@ class RegistrationService {
     }
   }
 
+  Future<Map<String, dynamic>> checkAccountExist(String phoneNumber) async {
+    final sanitizedPhone = phoneNumber.trim();
+    if (sanitizedPhone.isEmpty) {
+      throw Exception("Phone number is required to check account existence");
+    }
+
+    final token = await storage.read(key: "token");
+    if (token == null) {
+      throw Exception("Token not found");
+    }
+
+    final uri = Uri.parse(
+        '$baseUrl/api/v1/accounts/checkAccountExist/$sanitizedPhone');
+    final response = await http.get(
+      uri,
+      headers: {
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+        HttpHeaders.contentTypeHeader: 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final body = response.body.trim();
+      if (body.isEmpty) {
+        return {};
+      }
+
+      try {
+        final decoded = json.decode(body);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+        return {};
+      } catch (_) {
+        // Backend responds with {} even when no account, fallback to empty map
+        return {};
+      }
+    }
+
+    throw Exception(
+        "Failed to check account existence (${response.statusCode})");
+  }
+
   MediaType _getMediaType(String filePath) {
     final ext = filePath.split('.').last.toLowerCase();
     switch (ext) {
