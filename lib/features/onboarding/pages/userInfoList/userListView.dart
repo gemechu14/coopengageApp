@@ -22,7 +22,7 @@ class UserListPage extends StatefulWidget {
   _UserInfoPageState createState() => _UserInfoPageState();
 }
 
-enum SampleItem { view, edit, verify }
+enum SampleItem { view, verify }
 
 class _UserInfoPageState extends State<UserListPage> {
   final NetworkHandler networkHandler = NetworkHandler();
@@ -273,18 +273,20 @@ class _UserInfoPageState extends State<UserListPage> {
                                                         (SampleItem item) {
                                                       setState(() {
                                                         selectedItem = item;
-                                                        if (item ==
-                                                            SampleItem.edit) {
-                                                          Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  UpdateUserRegistrationScreen(
-                                                                      userInfo:
-                                                                          user),
-                                                            ),
-                                                          );
-                                                        } else if (item ==
+                                                        // if (item ==
+                                                        //     SampleItem.edit) {
+                                                        //   Navigator.push(
+                                                        //     context,
+                                                        //     MaterialPageRoute(
+                                                        //       builder: (context) =>
+                                                        //           UpdateUserRegistrationScreen(
+                                                        //               userInfo:
+                                                        //                   user),
+                                                        //     ),
+                                                        //   );
+                                                        // } 
+                                                        
+                                                         if (item ==
                                                             SampleItem.view) {
                                                           Navigator.push(
                                                             context,
@@ -323,16 +325,16 @@ class _UserInfoPageState extends State<UserListPage> {
                                                         value: SampleItem.view,
                                                         child: Text('View'),
                                                       ),
-                                                      if (widget.title ==
-                                                              'New Applicants' &&
-                                                          selectedCategory ==
-                                                              'INITIAL')
-                                                        const PopupMenuItem<
-                                                            SampleItem>(
-                                                          value:
-                                                              SampleItem.edit,
-                                                          child: Text('Edit'),
-                                                        ),
+                                                      // if (widget.title ==
+                                                      //         'New Applicants' &&
+                                                      //     selectedCategory ==
+                                                      //         'INITIAL')
+                                                      //   const PopupMenuItem<
+                                                      //       SampleItem>(
+                                                      //     value:
+                                                      //         SampleItem.edit,
+                                                      //     child: Text('Edit'),
+                                                      //   ),
                                                       if (isOnline &&
                                                           widget.title ==
                                                               'New Applicants' &&

@@ -1,6 +1,7 @@
 import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/views/CorporateAccountOpening.dart';
 import 'package:coopengageplus/features/onboarding/customer/JointNationalIdentification/views/individual_account_by_national_id.dart';
+import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/customer/SendLink/link_generator_page.dart';
 
 import 'package:flutter/material.dart';
@@ -64,13 +65,22 @@ class AccountOnboardingScreen extends StatelessWidget {
                         // const Color(0xFF1E40AF),
                         cyanblueColor
                       ],
+
+                      
                       onTap: () {
-                        Navigator.of(context).push(
+                            Navigator.pushAndRemoveUntil(
+                          context,
                           MaterialPageRoute(
                               builder: (context) =>
-                                  const IndividualAccountTypeSelection()),
-                          // const RegistrationScreen()),
+                                  NationalIdentificationWebSocket()),
+                          (route) => false,
                         );
+                        // Navigator.of(context).push(
+                        //   MaterialPageRoute(
+                        //       builder: (context) =>
+                        //           const IndividualAccountTypeSelection()),
+                        //   // const RegistrationScreen()),
+                        // );
                       },
                     ),
                     _buildAccountCard(

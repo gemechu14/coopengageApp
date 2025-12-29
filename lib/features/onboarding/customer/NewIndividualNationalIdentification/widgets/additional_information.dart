@@ -73,9 +73,31 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
   Widget build(BuildContext context) {
     final stepperState = ref.watch(stepperProvider);
 
+    // Set CONVENTIONAL as default if not already set
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (stepperState.selectedProductType == null || stepperState.selectedProductType!.isEmpty) {
+        ref.read(stepperProvider.notifier).updateProductType('CONVENTIONAL');
+      }
+    });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Product Type - moved to top
+        textLabel("Product Type"),
+        ReusableDropdown(
+          selectedValue: stepperState.selectedProductType ?? 'CONVENTIONAL',
+          items: ListContants.productType,
+          hintText: 'Select Product Type',
+          onChanged: (newStatus) {
+            if (newStatus != null) {
+              ref.read(stepperProvider.notifier).updateProductType(newStatus);
+            }
+          },
+          prefixIcon: Icons.business,
+          errorMessage: 'Please select a product type',
+          isRequired: true,
+        ),
         textLabel("Mother Name"),
         ReusableTextFormField(
           hintText: "Mother Name",
@@ -110,20 +132,6 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
                 .read(stepperProvider.notifier)
                 .updateInitialDeposit(double.tryParse(value));
           },
-        ),
-        textLabel("Product Type"),
-        ReusableDropdown(
-          selectedValue: stepperState.selectedProductType,
-          items: ListContants.productType,
-          hintText: 'Select Product Type',
-          onChanged: (newStatus) {
-            if (newStatus != null) {
-              ref.read(stepperProvider.notifier).updateProductType(newStatus);
-            }
-          },
-          prefixIcon: Icons.business,
-          errorMessage: 'Please select a product type',
-          isRequired: true,
         ),
         textLabel("Title"),
         ReusableDropdown(
