@@ -48,6 +48,8 @@ class SimpleNationalIdNotifier extends StateNotifier<NationalIdState> {
       final userData = await _service!.waitForAuthResult();
       
       print('✅ Received user data: ${userData.name}');
+      // print("kfkdkfjkdjkfd": ${userData})
+       print('✅ Received user data: ${userData.address}');
       
       // Only update state if we haven't already completed
       if (!state.isCompleted) {

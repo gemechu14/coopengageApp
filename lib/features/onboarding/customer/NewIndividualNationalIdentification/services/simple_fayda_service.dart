@@ -193,7 +193,8 @@ class SimpleFaydaService {
   /// Parse address data
   FaydaAddress? _parseAddress(dynamic addressData) {
     if (addressData == null) return null;
-
+print("fkdfkdkfjdkfjdjkfkjdjkfjkdkjfkjdjkfkjdkjfkjdk");
+print(addressData);
     return FaydaAddress(
       country: addressData['country']?.toString(),
       region: addressData['region']?.toString(),

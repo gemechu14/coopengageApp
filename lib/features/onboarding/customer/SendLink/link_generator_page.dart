@@ -47,9 +47,32 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
         return 'Phone number is required for ${_selectedPlatform.displayName}';
       }
       final trimmed = value.trim();
-      final regex = RegExp(r'^(09|07)\d{8}$');
-      if (!regex.hasMatch(trimmed)) {
-        return 'Must start with 09 or 07 and be exactly 10 digits';
+      
+      // During typing: only validate prefix, allow incomplete input
+      if (trimmed.isNotEmpty && trimmed.length < 10) {
+        // Check if first character is valid
+        if (trimmed.length == 1 && trimmed != '0') {
+          return 'Must start with 09 or 07';
+        }
+        // Check if first two characters are valid
+        if (trimmed.length >= 2) {
+          final prefix = trimmed.substring(0, 2);
+          if (prefix != '09' && prefix != '07') {
+            return 'Must start with 09 or 07';
+          }
+        }
+        // If prefix is valid but not complete, allow it (will validate on submit)
+        return null;
+      }
+      
+      // Full validation for complete input (10 digits)
+      if (trimmed.length == 10) {
+        final regex = RegExp(r'^(09|07)\d{8}$');
+        if (!regex.hasMatch(trimmed)) {
+          return 'Must start with 09 or 07 and be exactly 10 digits';
+        }
+      } else if (trimmed.length > 10) {
+        return 'Phone number must be exactly 10 digits';
       }
     }
     return null;
@@ -194,7 +217,8 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
       } else if (state.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(state.errorMessage ?? 'Failed to generate link'),
+            // content: Text(state.errorMessage ?? 'Failed to generate link'),
+            content: Text('Failed to generate or link already generated'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
