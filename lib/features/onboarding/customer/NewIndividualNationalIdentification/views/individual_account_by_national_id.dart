@@ -12,7 +12,6 @@ import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationa
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/widgets/Signature.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/widgets/account_type_step.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/widgets/additional_information.dart';
-
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/widgets/registration_summary_page.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/widgets/ultra_simple_national_id_widget.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/widgets/id_information_step.dart';
@@ -932,8 +931,8 @@ String getValue(String? primary, String? fallback, String defaultValue) {
 
           country: getValue(faydaState.userData?.address?.country, stepperState.country, "ETHIOPIA"),
       // state: getValue(faydaState.userData?.address?.region, stepperState.state, "Addis Ababa"),
-           zoneSubCity: getValue(faydaState.userData?.address?.zone, null, "Addis Ababa"),
-       streetAddress: getValue(faydaState.userData?.address?.woreda, null, "Addis Ababa"),
+           zoneSubCity: getValue(faydaState.userData?.address?.zone, null, ""),
+       streetAddress: getValue(faydaState.userData?.address?.woreda, null, ""),
           photo: faydaState.userData?.picture ?? '',
           // legalId: faydaState.userData?.sub ?? '',
         
@@ -989,21 +988,7 @@ String getValue(String? primary, String? fallback, String defaultValue) {
                   // ),
                   SizedBox(height: 10),
                 ]),
-            // Column(
-            //   mainAxisSize: MainAxisSize.min,
-            //   crossAxisAlignment: CrossAxisAlignment.start,
-            //   children: const [
-            //     Text(
-            //       'Are you sure you want to submit your registration?',
-            //       style: TextStyle(fontSize: 16),
-            //     ),
-            //     SizedBox(height: 10),
-            //     Text(
-            //       'Once submitted, your information will be sent for review.',
-            //       style: TextStyle(fontSize: 16),
-            //     ),
-            //   ],
-            // ),
+        
             actionsPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             actions: [
@@ -1071,24 +1056,10 @@ String getValue(String? primary, String? fallback, String defaultValue) {
       }
     }
 
-    // catch (e) {
-    //   if (!_disposed && Navigator.canPop(context)) {
-    //     Navigator.pop(context);
-    //   }
-    //   print("kdfdkfkdhkfkdfkdfkd");
-    //   print(e);
-    //   if (!_disposed) {
-    //     DialogHelper.showErrorDialog(
-    //         context, "Registration Failed, please try later");
-    //   }
-    // }
+
   }
   
-// String getSurname(String fullName) {
-//   if (fullName.trim().isEmpty) return '';
-//   List<String> parts = fullName.trim().split(' ');
-//   return parts.isNotEmpty ? parts.last : '';
-// }
+
 
 String getSurname(String fullName) {
   List<String> parts = fullName.trim().split(' ');

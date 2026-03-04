@@ -104,8 +104,8 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                       [
                         _buildSummaryItem('Full Name',
                             registrationData.fullName ?? 'Not provided'),
-                        _buildSummaryItem('Surname',
-                            registrationData.surname ?? 'Not provided'),
+                        // _buildSummaryItem('Surname',
+                        //     registrationData.surname ?? 'Not provided'),
                         _buildSummaryItem('Mother Name',
                             registrationData.motherName ?? 'Not provided'),
                         _buildSummaryItem(
@@ -127,16 +127,16 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                             registrationData.branch ?? 'Not provided'),
                         _buildSummaryItem('Document Name',
                             registrationData.documentName ?? 'Not provided'),
-                        _buildSummaryItem(
-                            'Residence Card',
-                            registrationData.residenceCard != null
-                                ? 'Uploaded'
-                                : 'Not uploaded'),
-                        _buildSummaryItem(
-                            'Residence Card Back',
-                            registrationData.residenceCardBack != null
-                                ? 'Uploaded'
-                                : 'Not uploaded'),
+                        // _buildSummaryItem(
+                        //     'Residence Card',
+                        //     registrationData.residenceCard != null
+                        //         ? 'Uploaded'
+                        //         : 'Not uploaded'),
+                        // _buildSummaryItem(
+                        //     'Residence Card Back',
+                        //     registrationData.residenceCardBack != null
+                        //         ? 'Uploaded'
+                        //         : 'Not uploaded'),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -224,7 +224,7 @@ class RegistrationSummaryScreen extends ConsumerWidget {
                             'Terms Accepted',
                             registrationData.termsAccepted == true
                                 ? 'Yes'
-                                : 'No'),
+                                : 'Yes'),
                       ],
                     ),
                   ],
