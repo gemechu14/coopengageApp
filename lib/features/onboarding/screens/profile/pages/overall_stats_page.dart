@@ -311,59 +311,121 @@ class OverallStatsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(1),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+  // Widget _buildStatCard({
+  //   required String title,
+  //   required String value,
+  //   required IconData icon,
+  //   required Color color,
+  // }) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: whiteColor,
+  //       borderRadius: BorderRadius.circular(16),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 10,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.all(1),
+  //           decoration: BoxDecoration(
+  //             color: color.withOpacity(0.1),
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           child: Icon(icon, color: color, size: 20),
+  //         ),
+  //         const SizedBox(height: 10),
+  //         Text(
+  //           value,
+  //           style: TextStyle(
+  //             fontSize: 25,
+  //             fontWeight: FontWeight.bold,
+  //             color: color,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 4),
+  //         Text(
+  //           title,
+  //           style: TextStyle(
+  //             fontSize: 14,
+  //             color: Colors.grey[600],
+  //             fontWeight: FontWeight.w500,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+Widget _buildStatCard({
+  required String title,
+  required String value,
+  required IconData icon,
+  required Color color,
+}) {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.06),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Top row: icon left, value right
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+             Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-              color: color,
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 15),
             ),
+           
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Bottom: title
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+        ),
+      ],
+    ),
+  );
+}
   Widget _buildRateRow(String label, double rate, IconData icon, Color color) {
     return Row(
       children: [
