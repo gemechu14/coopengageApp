@@ -285,14 +285,14 @@ class OverallStatsPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    error.toString(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                  // Text(
+                  //   error.toString(),
+                  //   style: TextStyle(
+                  //     fontSize: 12,
+                  //     color: Colors.grey[500],
+                  //   ),
+                  //   textAlign: TextAlign.center,
+                  // ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () => ref.refresh(invitationStatsProvider),

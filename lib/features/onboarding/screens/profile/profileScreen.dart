@@ -518,10 +518,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             title: "Help",
             subtitle: "Get support and assistance",
             onTap: () {
-              Navigator.pushAndRemoveUntil(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => HelpPage()),
-                (route) => false,
               );
             },
           ),

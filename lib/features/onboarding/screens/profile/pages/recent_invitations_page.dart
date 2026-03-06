@@ -739,10 +739,10 @@ class _RecentInvitationsPageState extends ConsumerState<RecentInvitationsPage> {
         child: Padding(
           padding: const EdgeInsets.all(40.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.red[50],
                   shape: BoxShape.circle,
@@ -757,39 +757,39 @@ class _RecentInvitationsPageState extends ConsumerState<RecentInvitationsPage> {
                 child: Icon(
                   Icons.error_outline_rounded,
                   color: Colors.red[300],
-                  size: 80,
+                  size: 35,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 5),
               Text(
                 'Failed to load invitations',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey[800],
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey[200]!,
-                  ),
-                ),
-                child: Text(
-                  error.toString(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+              // const SizedBox(height: 12),
+              // Container(
+              //   padding: const EdgeInsets.all(16),
+              //   decoration: BoxDecoration(
+              //     color: Colors.grey[50],
+              //     borderRadius: BorderRadius.circular(12),
+              //     border: Border.all(
+              //       color: Colors.grey[200]!,
+              //     ),
+              //   ),
+              //   child: Text(
+              //     error.toString(),
+              //     style: TextStyle(
+              //       fontSize: 13,
+              //       color: Colors.grey[600],
+              //       height: 1.4,
+              //     ),
+              //     textAlign: TextAlign.center,
+              //   ),
+              // ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 onPressed: () => ref.refresh(myInvitationsProvider),
@@ -797,7 +797,7 @@ class _RecentInvitationsPageState extends ConsumerState<RecentInvitationsPage> {
                 label: const Text(
                   'Retry',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
