@@ -123,7 +123,7 @@ class AccountOnboardingScreen extends StatelessWidget {
                     _buildAccountCard(
                       title: 'Send a Link',
                       description:
-                          'Send an link to account creation individual, joint and organization',
+                          'Share a link for a users to create an account.',
                       icon: Icons.business_outlined,
                       gradientColors: [
                         // const Color.fromARGB(255, 11, 11, 11),

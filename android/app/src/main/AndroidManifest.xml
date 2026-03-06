@@ -8,6 +8,9 @@
     <!-- Camera Permission -->
     <uses-permission android:name="android.permission.CAMERA"/>
     
+    <!-- Contacts Permission -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    
     <!-- Storage Permissions - Modern Security Approach -->
     <!-- For Android < 13: Limited to READ_EXTERNAL_STORAGE with maxSdkVersion for security -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>

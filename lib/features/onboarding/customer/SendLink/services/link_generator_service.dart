@@ -1,10 +1,8 @@
-/// Service layer for Link Generator
-/// Handles API calls and business logic
 
 import 'dart:convert';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/link_generator_models.dart';
 
 
@@ -242,8 +240,7 @@ class LinkGeneratorService {
           originalError: e,
         );
       case DioExceptionType.unknown:
-      default:
-        return LinkGenerationException(
+      return LinkGenerationException(
           'Network error: ${e.message ?? "Unknown error"}',
           originalError: e,
         );
