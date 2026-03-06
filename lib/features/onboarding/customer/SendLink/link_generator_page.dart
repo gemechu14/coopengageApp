@@ -2,9 +2,12 @@
 /// Main UI for generating and sharing invitation links
 
 import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'models/link_generator_models.dart';
 import 'providers/link_generator_provider.dart';
@@ -22,9 +25,108 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  final FlutterNativeContactPicker _contactPicker = FlutterNativeContactPicker();
 
   AccountType _selectedAccountType = AccountType.individual;
   SharePlatform _selectedPlatform = SharePlatform.whatsapp;
+
+  // Compact form styling to match smaller button sizing
+  static const double _fieldFontSize = 13;
+  static const EdgeInsets _fieldContentPadding =
+      EdgeInsets.symmetric(horizontal: 12, vertical: 10);
+  static const TextStyle _fieldLabelStyle = TextStyle(fontSize: _fieldFontSize);
+  static const TextStyle _fieldHintStyle = TextStyle(fontSize: _fieldFontSize);
+
+  String _normalizeToLocalPhone(String? raw) {
+    if (raw == null) return '';
+    // Keep digits only
+    var digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+
+    // Convert +251 / 251 to local 0XXXXXXXXX
+    if (digits.startsWith('251') && digits.length >= 12) {
+      digits = '0${digits.substring(3)}';
+    }
+
+    // Ensure local prefix
+    if (digits.startsWith('9') && digits.length == 9) {
+      digits = '0$digits';
+    }
+    if (digits.startsWith('7') && digits.length == 9) {
+      digits = '0$digits';
+    }
+
+    return digits;
+  }
+
+  Future<void> _pickPhoneFromContacts() async {
+    try {
+      // Ask permission (Android). iOS also needs Info.plist usage string.
+      var status = await Permission.contacts.status;
+
+      if (!status.isGranted) {
+        // First time / not yet decided → show system permission dialog
+        status = await Permission.contacts.request();
+      }
+
+      if (!status.isGranted) {
+        if (mounted) {
+          final message = status.isPermanentlyDenied
+              ? 'Please enable Contacts permission in Settings to pick a phone number.'
+              : 'Contacts permission is required to pick a phone number.';
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              behavior: SnackBarBehavior.floating,
+              action: status.isPermanentlyDenied
+                  ? SnackBarAction(
+                      label: 'OPEN SETTINGS',
+                      onPressed: () {
+                        openAppSettings();
+                      },
+                    )
+                  : null,
+            ),
+          );
+        }
+        return;
+      }
+
+      final contact = await _contactPicker.selectPhoneNumber();
+      if (contact == null) return;
+
+      final picked = contact.selectedPhoneNumber ??
+          (contact.phoneNumbers != null && contact.phoneNumbers!.isNotEmpty
+              ? contact.phoneNumbers!.first
+              : null);
+
+      final normalized = _normalizeToLocalPhone(picked);
+      if (normalized.isNotEmpty) {
+        _phoneController.text = normalized;
+      }
+
+      // Optionally populate recipient name if empty
+      final name = contact.fullName?.trim();
+      if ((_nameController.text.trim().isEmpty) &&
+          name != null &&
+          name.isNotEmpty) {
+        _nameController.text = name;
+      }
+
+      // Revalidate after autofill
+      _formKey.currentState?.validate();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick contact: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
 
   // Track if link has been generated to lock fields
   bool _isLinkGenerated = false;
@@ -283,16 +385,13 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
         }
       },
       child: Scaffold(
+        backgroundColor: whiteColor,
         appBar: AppBar(
-          title: const Text(
-            'Generate Link',
-            style: TextStyle(
-              color: cyanblueColor,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          backgroundColor: whiteColor,
+          elevation: 0,
+          title:  CustomNavHeading(
+            text: 'Generate Link',
           ),
-          // centerTitle: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: cyanblueColor),
             onPressed: () => Navigator.pop(context),
@@ -324,10 +423,17 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
 
   /// Build form card
   Widget _buildFormCard(LinkGeneratorState state) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: whiteColor,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -336,12 +442,31 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Title
-              Text(
-                'Link Generation Details',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+              // Title (styled similar to profile cards)
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: cyanblueColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: const Icon(
+                      Icons.link_rounded,
+                      color: cyanblueColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Link Generation Details',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: blackColor,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
@@ -350,6 +475,9 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                 value: _selectedAccountType,
                 decoration: InputDecoration(
                   labelText: 'Account Type',
+                  isDense: true,
+                  contentPadding: _fieldContentPadding,
+                  labelStyle: _fieldLabelStyle,
                   prefixIcon: const Icon(Icons.account_circle_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -357,9 +485,15 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   filled: false,
                 ),
                 items: AccountType.values.map((type) {
+                  final displayName = type == AccountType.organization
+                      ? 'CORPORATE'
+                      : type.displayName;
                   return DropdownMenuItem(
                     value: type,
-                    child: Text(type.displayName),
+                    child: Text(
+                      displayName,
+                      style: const TextStyle(fontSize: _fieldFontSize),
+                    ),
                   );
                 }).toList(),
                 onChanged: (state.isLoading || _isLinkGenerated)
@@ -377,6 +511,9 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                 value: _selectedPlatform,
                 decoration: InputDecoration(
                   labelText: 'Platform',
+                  isDense: true,
+                  contentPadding: _fieldContentPadding,
+                  labelStyle: _fieldLabelStyle,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -390,7 +527,10 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                         Icon(platform.iconData,
                             color: platform.color, size: 20),
                         const SizedBox(width: 12),
-                        Text(platform.displayName),
+                        Text(
+                          platform.displayName,
+                          style: const TextStyle(fontSize: _fieldFontSize),
+                        ),
                       ],
                     ),
                   );
@@ -422,6 +562,10 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                       ? 'Recipient Name *'
                       : 'Recipient Name (Optional)',
                   hintText: 'Enter recipient name',
+                  isDense: true,
+                  contentPadding: _fieldContentPadding,
+                  labelStyle: _fieldLabelStyle,
+                  hintStyle: _fieldHintStyle,
                   prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -448,7 +592,22 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   decoration: InputDecoration(
                     labelText: 'Phone Number*',
                     hintText: '09xxxxxxxx or 07xxxxxxxx',
+                    isDense: true,
+                    contentPadding: _fieldContentPadding,
+                    labelStyle: _fieldLabelStyle,
+                    hintStyle: _fieldHintStyle,
                     prefixIcon: const Icon(Icons.phone_outlined),
+                    suffixIcon: IconButton(
+                      tooltip: 'Pick from contacts',
+                      onPressed: (state.isLoading || _isLinkGenerated)
+                          ? null
+                          : _pickPhoneFromContacts,
+                      icon: const Icon(
+                        Icons.contacts_rounded,
+                        color: cyanblueColor,
+                        size: 20,
+                      ),
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -467,6 +626,10 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   decoration: InputDecoration(
                     labelText: 'Email Address *',
                     hintText: 'example@email.com',
+                    isDense: true,
+                    contentPadding: _fieldContentPadding,
+                    labelStyle: _fieldLabelStyle,
+                    hintStyle: _fieldHintStyle,
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -486,6 +649,10 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                   decoration: InputDecoration(
                     labelText: 'Notes (Optional)',
                     hintText: 'e.g., High potential customer',
+                    isDense: true,
+                    contentPadding: _fieldContentPadding,
+                    labelStyle: _fieldLabelStyle,
+                    hintStyle: _fieldHintStyle,
                     // prefixIcon: const Icon(Icons.note_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -521,12 +688,13 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
                           : (_selectedPlatform == SharePlatform.email
                               ? 'Send Invitation'
                               : 'Generate Link'),
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 13),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor:
                       _isLinkGenerated ? Colors.grey : cyanblueColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -546,10 +714,17 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
         result.platformSpecificUrl != null &&
         result.platformSpecificUrl!.isNotEmpty;
 
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: whiteColor,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -746,10 +921,17 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
 
   /// Build email success card
   Widget _buildEmailSuccessCard() {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: whiteColor,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
