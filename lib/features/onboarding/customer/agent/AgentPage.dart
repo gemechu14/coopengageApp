@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:coopengageplus/shared/widgets/textField/CustomTextFormField.dart';
+import 'package:coopengageplus/shared/widgets/textField/small_form_widgets.dart';
 import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
@@ -138,107 +139,117 @@ class _AgentPageState extends State<AgentPage> {
       NetworkHandler networkHandler,
       FlutterSecureStorage storage,
       BuildContext context) {
-    return SizedBox(
-      // height: height - (MediaQuery.of(context).padding.top + 200),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-        ),
-        child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(
-                height: 20,
-              ),
-              // branchWidget(),
-              // branchesWidget(width),
-              TextLabel("Full Name"),
-              SizedBox(
-                height: 8,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15, right: 15),
-                child: CustomTextFormField(
-                  hintText: "",
-                  controller: fullNameController,
-                  errorMessage: "Full Name cannot be empty",
-
-                  // leadingIcon: Icons.person,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        children: [
+          // ── Profile-style Form Card ──────────────────────────────────
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.08),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 6),
                 ),
-              ),
-              SizedBox(
-                height: 8,
-              ),
-              TextLabel("PhoneNumber or Email"),
-              SizedBox(
-                height: 8,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15, right: 15),
-                child: CustomTextFormField(
-                  // hintText: "Enter phonenumber or email",
-                  controller: phoneNumberController,
-                  isPhoneOrEmail: true, // validate phone OR email
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                        RegExp(r'[0-9a-zA-Z@._-]')),
-                    LengthLimitingTextInputFormatter(50), // optional max length
-                  ],
-                  errorMessage: "PhoneNumber empty", hintText: '',
-
-                  // leadingIcon: Icons.person,
-                ),
-              ),
-              SizedBox(
-                height: 8,
-              ),
-              TextLabel("Business Name"),
-              SizedBox(
-                height: 8,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15, right: 15),
-                child: CustomTextFormField(
-                  // hintText: "Enter Business Name",
-                  controller: businessNameController,
-                  errorMessage: "Business Name empty",
-                  isRequired: false, hintText: '',
-
-                  // leadingIcon: Icons.person,
-                ),
-              ),
-              SizedBox(
-                height: 8,
-              ),
-              TextLabel("TIN"),
-              SizedBox(
-                height: 8,
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-                child: Container(
-                  width: width < 600 ? double.infinity : width * 0.5,
-                  child: CustomTextFormField(
-                    hintText: "Enter TIN",
-                    keyboardType: TextInputType.number,
-                    controller: tinController,
-                    errorMessage: "TIN cannot be empty",
-                    isRequired: true,
-                    exactLength: 10, // 🔑 Enforce exactly 10 digits
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(
-                          10), // Prevent typing > 10
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Card header with avatar
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.6), width: 2),
+                        ),
+                        child: const Icon(Icons.person,
+                            size: 25, color: Colors.white),
+                      ),
+                      const SizedBox(height: 5),
+                      const Text(
+                        "New Agent",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Fill in  details below",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                 ),
+
+                const SizedBox(height: 14),
+              // branchWidget(),
+              // branchesWidget(width),
+              SmallLabel(text: "Full Name"),
+              SmallTextFormField(
+                controller: fullNameController,
+                errorMessage: "Full Name cannot be empty",
+                hintText: "",
+              ),
+              SmallLabel(text: "PhoneNumber or Email"),
+              SmallTextFormField(
+                controller: phoneNumberController,
+                isPhoneOrEmail: true,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                      RegExp(r'[0-9a-zA-Z@._-]')),
+                  LengthLimitingTextInputFormatter(50),
+                ],
+                errorMessage: "PhoneNumber empty",
+                hintText: '',
+              ),
+              SmallLabel(text: "Business Name"),
+              SmallTextFormField(
+                controller: businessNameController,
+                errorMessage: "Business Name empty",
+                isRequired: false,
+                hintText: '',
+              ),
+              SmallLabel(text: "TIN"),
+              SmallTextFormField(
+                controller: tinController,
+                keyboardType: TextInputType.number,
+                errorMessage: "TIN cannot be empty",
+                isRequired: true,
+                exactLength: 10,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                hintText: "Enter TIN",
               ),
               // Padding(
               //   padding: const EdgeInsets.only(left: 15, right: 15),
@@ -292,126 +303,30 @@ class _AgentPageState extends State<AgentPage> {
 
               // TextLabel("Additional Branches"),
               // branchesWidget(width),
-              SizedBox(
-                height: 8,
+              SmallLabel(text: "Password"),
+              SmallPasswordField(
+                controller: _password,
+                hidePassword: hidePassword,
+                togglePasswordVisibility: () => togglePasswordVisibility(true),
+                hintText: '',
               ),
-              TextLabel("Password"),
-              SizedBox(
-                height: 8,
-              ),
-              // Password Field
-              Padding(
-                padding: const EdgeInsets.only(left: 15, right: 15),
-                child: SizedBox(
-                  width: width < 600
-                      ? double.infinity
-                      : width * 0.5, // Adjust width for tablet
-                  child: TextFormField(
-                    obscureText: hidePassword,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      // hintText: "Password",
-                      hintText: '',
-                      hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
-                      suffixIcon: IconButton(
-                        icon: Icon(hidePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () =>
-                            togglePasswordVisibility(true), // Toggle Password
-                      ),
-                      labelStyle: const TextStyle(fontSize: 20),
-                      contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                      errorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                        borderSide: BorderSide(color: Colors.red),
-                      ),
-                      // prefixIcon: const Icon(Icons.lock), // Leading icon
-                    ),
-                    controller: _password,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password cannot be empty';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 7,
-              ),
-              TextLabel("Confirm Password"),
-              SizedBox(
-                height: 8,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 15, right: 15),
-                child: SizedBox(
-                  width: width < 600 ? double.infinity : width * 0.5,
-                  child: TextFormField(
-                    obscureText: hideConfirmPassword,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      // hintText: "Confirm Password",
-                      hintText: '',
-                      hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
-                      suffixIcon: IconButton(
-                        icon: Icon(hideConfirmPassword
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () => togglePasswordVisibility(false),
-                      ),
-                      labelStyle: const TextStyle(fontSize: 20),
-                      contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                      errorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                        borderSide: BorderSide(color: Colors.red),
-                      ),
-                      // prefixIcon: const Icon(Icons.lock), // Leading icon
-                    ),
-                    controller: _confirmPassword,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Confirm Password cannot be empty';
-                      }
-                      if (value != _password.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
+              SmallLabel(text: "Confirm Password"),
+              SmallConfirmPasswordField(
+                controller: _confirmPassword,
+                passwordController: _password,
+                hidePassword: hideConfirmPassword,
+                togglePasswordVisibility: () => togglePasswordVisibility(false),
+                hintText: '',
               ),
 
               const SizedBox(
-                height: 24,
+                height: 16,
               ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 1),
-                child: SizedBox(
-                  width: width < 600 ? double.infinity : width * 0.5,
-                  child: FormHelper.submitButton("Submit",
-                      btnColor: Colors.blue,
-                      txtColor: Colors.white,
-                      borderColor: Colors.blueAccent, () async {
+              SmallButton(
+                text: "Submit",
+                backgroundColor: Colors.blue,
+                textColor: Colors.white,
+                onPressed: () async {
                     if (validateAndSave()) {
                       setState(() {
                         isApiCallProcess = true;
@@ -537,14 +452,123 @@ class _AgentPageState extends State<AgentPage> {
                         }
                       }
                     }
-                  }),
-                ),
+                },
               ),
-              const SizedBox(height: 5),
-            ],
+                const SizedBox(height: 36),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // ── Info Card below the form card ────────────────────────────
+          // _buildInfoCard(),
+          // const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // Widget _buildInfoCard() {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 15),
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //         gradient: const LinearGradient(
+  //           colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+  //           begin: Alignment.topLeft,
+  //           end: Alignment.bottomRight,
+  //         ),
+  //         borderRadius: BorderRadius.circular(16),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: Colors.blue.withOpacity(0.25),
+  //             blurRadius: 12,
+  //             offset: const Offset(0, 6),
+  //           ),
+  //         ],
+  //       ),
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(16),
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Row(
+  //               children: [
+  //                 Container(
+  //                   padding: const EdgeInsets.all(8),
+  //                   decoration: BoxDecoration(
+  //                     color: Colors.white.withOpacity(0.2),
+  //                     borderRadius: BorderRadius.circular(10),
+  //                   ),
+  //                   child: const Icon(Icons.info_outline,
+  //                       color: Colors.white, size: 18),
+  //                 ),
+  //                 const SizedBox(width: 10),
+  //                 const Text(
+  //                   "Registration Requirements",
+  //                   style: TextStyle(
+  //                     color: Colors.white,
+  //                     fontSize: 13,
+  //                     fontWeight: FontWeight.bold,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //             // const SizedBox(height: 14),
+  //             // _infoRow(Icons.check_circle_outline, "Full name must match your national ID"),
+  //             // const SizedBox(height: 8),
+  //             // _infoRow(Icons.check_circle_outline, "TIN must be exactly 10 digits"),
+  //             // const SizedBox(height: 8),
+  //             // _infoRow(Icons.check_circle_outline, "Phone number must be 10 digits or a valid email"),
+  //             // const SizedBox(height: 8),
+  //             // _infoRow(Icons.check_circle_outline, "Password must be kept confidential"),
+  //             // const SizedBox(height: 14),
+  //             // Container(
+  //             //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  //             //   decoration: BoxDecoration(
+  //             //     color: Colors.white.withOpacity(0.15),
+  //             //     borderRadius: BorderRadius.circular(8),
+  //             //   ),
+  //             //   child: Row(
+  //             //     children: const [
+  //             //       Icon(Icons.support_agent, color: Colors.white, size: 16),
+  //             //       SizedBox(width: 8),
+  //             //       Expanded(
+  //             //         child: Text(
+  //             //           "Need help? Contact support at support@coopengageplus.com",
+  //             //           style: TextStyle(
+  //             //             color: Colors.white70,
+  //             //             fontSize: 11,
+  //             //           ),
+  //             //         ),
+  //             //       ),
+  //             //     ],
+  //             //   ),
+  //             // ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Colors.greenAccent, size: 15),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11.5,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
