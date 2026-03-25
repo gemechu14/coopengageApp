@@ -88,21 +88,21 @@ class BeautifulLoadingScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Progress dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                  ),
-                );
-              }),
-            ),
+            // // Progress dots
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: List.generate(3, (index) {
+            //     return Container(
+            //       margin: const EdgeInsets.symmetric(horizontal: 4),
+            //       width: 10,
+            //       height: 10,
+            //       decoration: BoxDecoration(
+            //         color: primaryColor.withOpacity(0.6),
+            //         shape: BoxShape.circle,
+            //       ),
+            //     );
+            //   }),
+            // ),
           ],
         ),
       ),
