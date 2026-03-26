@@ -5,12 +5,12 @@ import 'package:coopengageplus/features/onboarding/pages/help.dart';
 import 'package:coopengageplus/shared/services/GlobalData.dart';
 import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
-import 'package:coopengageplus/core/constants/app_sizes.dart';
+import 'package:coopengageplus/features/home/pages/mycard_link_stats_page.dart';
+import 'package:coopengageplus/shared/widgets/mycard_share_fab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:coopengageplus/core/database/database_helper.dart';
-import 'dart:convert'; // Added for jsonDecode
 import 'pages/overall_stats_page.dart';
 import 'pages/recent_invitations_page.dart';
 
@@ -104,23 +104,16 @@ class _ProfileScreenState extends State<ProfileScreen>
         color: primaryBlue,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile Card
               _buildProfileCard(),
-              const SizedBox(height: 20),
-
-              // Branch Information Card
+              const SizedBox(height: 10),
               _buildBranchInfoCard(),
-              const SizedBox(height: 20),
-
-              // Quick Actions Card
+              const SizedBox(height: 10),
               _buildQuickActionsCard(),
-              const SizedBox(height: 20),
-
-              // Settings Section
+              const SizedBox(height: 10),
               _buildSettingsCard(),
             ],
           ),
@@ -131,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildProfileCard() {
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: whiteColor,
         borderRadius: BorderRadius.circular(16),
@@ -149,8 +142,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               // Profile Avatar with gradient background
               Container(
-                height: 80,
-                width: 80,
+                height: 64,
+                width: 64,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [primaryBlue, Colors.blue],
@@ -167,19 +160,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ],
                 ),
                 child: isProfileLoading
-                    ? _buildShimmerContainer(80, 80, 20)
+                    ? _buildShimmerContainer(64, 64, 16)
                     : Center(
                         child: Text(
                           firstLetter,
                           style: const TextStyle(
-                            fontSize: 32,
+                            fontSize: 26,
                             fontWeight: FontWeight.bold,
                             color: whiteColor,
                           ),
                         ),
                       ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 14),
 
               // User Info
               Expanded(
@@ -192,19 +185,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Text(
                         username,
                         style: const TextStyle(
-                          fontSize: 17,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: blackColor,
                         ),
                       ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     if (isProfileLoading)
                       _buildShimmerContainer(100, 16, 4)
                     else
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 10,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: primaryBlue.withOpacity(0.1),
@@ -213,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Text(
                           role,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: FontWeight.w500,
                             color: primaryBlue,
                           ),
@@ -231,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildBranchInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(14.0),
       decoration: BoxDecoration(
         color: whiteColor,
         borderRadius: BorderRadius.circular(16),
@@ -257,21 +250,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: const Icon(
                   Icons.business_rounded,
                   color: secondaryBlue,
-                  size: 20,
+                  size: 18,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               const Text(
                 'Branch Information',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: blackColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
 
           // Main Branch
           _buildBranchSection(
@@ -282,9 +275,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
 
           if (branches != null && branches!.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
+            const Divider(height: 1),
+            const SizedBox(height: 10),
 
             // Other Branches
             _buildBranchSection(
@@ -323,9 +316,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         if (isProfileLoading)
-          _buildShimmerContainer(200, 16, 4)
+          _buildShimmerContainer(200, 14, 4)
         else if (isMain)
           _buildBranchTile(branchName ?? "No main branch available")
         else if (branches != null && branches.isNotEmpty)
@@ -342,8 +335,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildBranchTile(String name,
       {bool isSubBranch = false, bool isEmpty = false}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: isEmpty
             ? Colors.grey[50]
@@ -401,11 +394,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: cyanblueColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -413,14 +406,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                   child: const Icon(
                     Icons.dashboard_outlined,
                     color: cyanblueColor,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 const Text(
                   'Quick Actions',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: blackColor,
                   ),
@@ -431,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _buildActionTile(
             icon: Icons.analytics_outlined,
             title: 'Overall Statistics',
-            subtitle: 'View your invitation performance',
+            subtitle: 'Invitation performance',
             color: primaryBlue,
             onTap: () {
               Navigator.push(
@@ -445,7 +438,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _buildActionTile(
             icon: Icons.history_outlined,
             title: 'Recent Invitations',
-            subtitle: 'View all sent invitations',
+            subtitle: 'Sent invitations',
             color: secondaryBlue,
             onTap: () {
               Navigator.push(
@@ -455,6 +448,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               );
             },
+          ),
+          _buildActionTile(
+            icon: Icons.insights_rounded,
+            title: 'MyCard link stats',
+            subtitle: 'Local & server link metrics',
+            color: primaryBlue,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MycardLinkStatsPage(),
+                ),
+              );
+            },
+          ),
+          _buildActionTile(
+            icon: Icons.add_card_rounded,
+            title: 'Share MyCard link',
+            subtitle: 'WhatsApp, Telegram, email…',
+            color: cyanblueColor,
+            onTap: () => showMycardShareSheet(context),
           ),
         ],
       ),
@@ -478,11 +492,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: yellowColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -490,14 +504,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                   child: const Icon(
                     Icons.settings_rounded,
                     color: yellowColor,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 const Text(
                   "Settings",
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: blackColor,
                   ),
@@ -542,18 +556,18 @@ class _ProfileScreenState extends State<ProfileScreen>
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: color, size: 22),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -566,11 +580,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                         color: blackColor,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.grey[600],
                       ),
                     ),
@@ -579,7 +593,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 16,
+                size: 14,
                 color: Colors.grey[400],
               ),
             ],
@@ -601,7 +615,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
             children: [
               Container(
@@ -612,7 +626,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
                 child: Icon(icon, color: primaryBlue, size: 20),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -620,16 +634,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: blackColor,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.grey[600],
                       ),
                     ),
@@ -638,7 +652,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 16,
+                size: 14,
                 color: Colors.grey[400],
               ),
             ],

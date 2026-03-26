@@ -11,6 +11,18 @@ rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+// androidx.core 1.16+ requires AGP 8.6; this project uses 8.1.1. Apply to every
+// subproject (Flutter plugins) so checkDebugAarMetadata sees 1.15.x.
+subprojects { subproject ->
+    subproject.afterEvaluate {
+        subproject.configurations.configureEach { configuration ->
+            configuration.resolutionStrategy {
+                force "androidx.core:core:1.15.0"
+                force "androidx.core:core-ktx:1.15.0"
+            }
+        }
+    }
+}
 subprojects {
     project.evaluationDependsOn(":app")
 }

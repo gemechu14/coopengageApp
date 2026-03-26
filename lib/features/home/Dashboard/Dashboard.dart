@@ -8,6 +8,7 @@ import 'package:coopengageplus/shared/services/token_service.dart';
 import 'constants/dashboard_constants.dart';
 import 'providers/dashboard_provider.dart';
 import 'widgets/dashboard_banner.dart';
+import 'widgets/dashboard_mycard_share_card.dart';
 import 'widgets/stats_grid.dart';
 import 'widgets/sync_alert_card.dart';
 
@@ -104,8 +105,10 @@ class _DashboardState extends ConsumerState<Dashboard> {
                   screenWidth: screenWidth,
                 ),
                 const SizedBox(height: DashboardConstants.verticalSpacing),
-                const DashboardBanner(),
-                if (state.localCustomers > 0) _buildSyncAlert(state),
+                const DashboardMycardShareCard(),
+                const SizedBox(height: DashboardConstants.verticalSpacing),
+                // const DashboardBanner(),
+                // if (state.localCustomers > 0) _buildSyncAlert(state),
               ],
             ),
           ),

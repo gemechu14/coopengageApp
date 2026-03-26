@@ -12,6 +12,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:coopengageplus/shared/services/token_service.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+// import 'package:coopengageplus/shared/widgets/mycard_share_fab.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -138,6 +139,9 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // floatingActionButton:
+      //     (isLoading || isInitializing) ? null : const MycardShareFab(),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: (isLoading || isInitializing)
           ? null // Hide bottom navigation bar while loading
           : Container(

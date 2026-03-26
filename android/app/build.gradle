@@ -58,3 +58,13 @@ android {
 flutter {
     source = "../.."
 }
+
+// Fix for `share_plus` pulling `androidx.core:core:1.16.0` which requires
+// a newer Android Gradle Plugin than this project currently uses.
+// Force a compatible androidx.core version so the build metadata check passes.
+configurations.all {
+    resolutionStrategy {
+        force "androidx.core:core:1.15.0"
+        force "androidx.core:core-ktx:1.15.0"
+    }
+}
