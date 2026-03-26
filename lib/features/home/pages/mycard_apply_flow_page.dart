@@ -1,22 +1,22 @@
 import 'dart:async';
 
-import 'package:coopengageplus/core/constants/mycard_link_constants.dart';
+import 'package:coopengageplus/features/home/mycard/presentation/mycard_flow_controller.dart';
 import 'package:coopengageplus/features/home/widgets/mycard_registration/horizontal_registration_stepper.dart';
-import 'package:coopengageplus/features/home/widgets/mycard_registration/mycard_flow_actions.dart';
 import 'package:coopengageplus/features/home/widgets/mycard_registration/mycard_registration_step_panel.dart';
 import 'package:coopengageplus/features/home/widgets/mycard_registration/mycard_user_branches_loader.dart';
 import 'package:coopengageplus/shared/widgets/mycard_share_fab.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// **MyCard** registration for **branch staff** assisting customers (COOP × Visa).
-class MycardApplyFlowPage extends StatefulWidget {
+class MycardApplyFlowPage extends ConsumerStatefulWidget {
   const MycardApplyFlowPage({super.key});
 
   @override
-  State<MycardApplyFlowPage> createState() => _MycardApplyFlowPageState();
+  ConsumerState<MycardApplyFlowPage> createState() => _MycardApplyFlowPageState();
 }
 
-class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
+class _MycardApplyFlowPageState extends ConsumerState<MycardApplyFlowPage> {
   static const Color _coopCyan = Color(0xFF00AEEF);
   static const Color _coopBlue = Color(0xFF0D47A1);
   static const Color _bannerFill = Color(0xFFE8F7FD);
@@ -35,12 +35,8 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
   final TextEditingController _accountController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
 
-  int _step = 0;
-  bool _sendingOtp = false;
-  bool _verifyingOtp = false;
   Timer? _otpTimer;
   int _otpSecondsLeft = 0;
-  Map<String, dynamic>? _selectedBranch;
 
   List<Map<String, dynamic>> _branches = [];
   bool _loadingBranches = false;
@@ -117,19 +113,13 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
       );
       return;
     }
-    setState(() => _sendingOtp = true);
     try {
-      await MycardFlowActions.sendOtp(digits);
+      await ref.read(mycardFlowControllerProvider.notifier).sendOtp(digits);
       if (!mounted) return;
-      setState(() {
-        _sendingOtp = false;
-        _step = 1;
-      });
       _otpController.clear();
       _startOtpTimer();
     } catch (e) {
       if (mounted) {
-        setState(() => _sendingOtp = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not send OTP: $e')),
         );
@@ -138,7 +128,16 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
   }
 
   Future<void> _onVerifyOtp() async {
-    if (_otpSecondsLeft <= 0) return;
+    if (_otpSecondsLeft <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP timer expired. Tap resend on the account step or send OTP again.'),
+          ),
+        );
+      }
+      return;
+    }
     final digits = _otpController.text.replaceAll(RegExp(r'\D'), '');
     if (digits.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,32 +145,17 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
       );
       return;
     }
-    setState(() => _verifyingOtp = true);
     try {
       final account = _accountController.text.trim();
-      final ok = await MycardFlowActions.verifyOtp(
-        accountNumber: account,
-        otp: _otpController.text,
-      );
+      await ref.read(mycardFlowControllerProvider.notifier).verifyOtpAndLoadCustomer(
+            accountNumber: account,
+            otp: _otpController.text,
+          );
       if (!mounted) return;
-      if (!ok) {
-        setState(() => _verifyingOtp = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid OTP. Try again.')),
-        );
-        return;
-      }
       _cancelOtpTimer();
       await _loadBranches();
-      if (!mounted) return;
-      setState(() {
-        _verifyingOtp = false;
-        _step = 2;
-        _selectedBranch = null;
-      });
     } catch (e) {
       if (mounted) {
-        setState(() => _verifyingOtp = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Verification failed: $e')),
         );
@@ -179,20 +163,22 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
     }
   }
 
-  void _onBranchChosen(Map<String, dynamic> branch) {
-    setState(() {
-      _selectedBranch = branch;
-      _step = 3;
-    });
+  Future<void> _onBranchChosen(Map<String, dynamic> branch) async {
+    try {
+      await ref.read(mycardFlowControllerProvider.notifier).submitRequestForBranch(branch);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
   }
 
   void _resetFlow() {
     _cancelOtpTimer();
+    ref.read(mycardFlowControllerProvider.notifier).reset();
     setState(() {
-      _step = 0;
-      _sendingOtp = false;
-      _verifyingOtp = false;
-      _selectedBranch = null;
       _otpSecondsLeft = 0;
       _accountController.clear();
       _otpController.clear();
@@ -201,9 +187,11 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
 
   @override
   Widget build(BuildContext context) {
+    final flow = ref.watch(mycardFlowControllerProvider);
     final bottom = MediaQuery.paddingOf(context).bottom;
     final w = MediaQuery.sizeOf(context).width;
     final compact = w < 360;
+    final step = flow.step;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -256,30 +244,30 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
                     steps: _steps,
                     accentColor: _coopCyan,
                     mutedColor: _muted,
-                    currentIndex: _step,
+                    currentIndex: step,
                     compact: compact,
                   ),
                   const SizedBox(height: 14),
-                  if (_step == 0)
+                  if (step == 0)
                     MycardAccountStepPanel(
                       accentColor: _coopCyan,
                       mutedColor: _muted,
                       controller: _accountController,
-                      sending: _sendingOtp,
+                      sending: flow.sendingOtp,
                       canSendOtp: _canSendOtp,
                       onSendOtp: _onSendOtp,
                     ),
-                  if (_step == 1)
+                  if (step == 1)
                     MycardOtpStepPanel(
                       accentColor: _coopCyan,
                       mutedColor: _muted,
                       controller: _otpController,
                       otpSecondsLeft: _otpSecondsLeft,
-                      verifying: _verifyingOtp,
+                      verifying: flow.verifyingOtp,
                       canVerifyOtp: _canVerifyOtp,
                       onVerify: _onVerifyOtp,
                     ),
-                  if (_step == 2)
+                  if (step == 2)
                     _loadingBranches
                         ? Padding(
                             padding: const EdgeInsets.symmetric(vertical: 32),
@@ -296,32 +284,47 @@ class _MycardApplyFlowPageState extends State<MycardApplyFlowPage> {
                               ),
                             ),
                           )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                        : Stack(
                             children: [
-                              MycardBranchStepPanel(
-                                accentColor: _coopCyan,
-                                mutedColor: _muted,
-                                branches: _branches,
-                                selected: _selectedBranch,
-                                onSelect: _onBranchChosen,
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  MycardBranchStepPanel(
+                                    accentColor: _coopCyan,
+                                    mutedColor: _muted,
+                                    branches: _branches,
+                                    selected: flow.selectedBranch,
+                                    onSelect: flow.submittingCard
+                                        ? (_) {}
+                                        : _onBranchChosen,
+                                  ),
+                                  if (_branches.isEmpty) ...[
+                                    const SizedBox(height: 12),
+                                    OutlinedButton.icon(
+                                      onPressed: _loadBranches,
+                                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                                      label: const Text('Reload branches'),
+                                    ),
+                                  ],
+                                ],
                               ),
-                              if (_branches.isEmpty) ...[
-                                const SizedBox(height: 12),
-                                OutlinedButton.icon(
-                                  onPressed: _loadBranches,
-                                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                                  label: const Text('Reload branches'),
+                              if (flow.submittingCard)
+                                Positioned.fill(
+                                  child: ColoredBox(
+                                    color: Colors.white.withOpacity(0.65),
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
                                 ),
-                              ],
                             ],
                           ),
-                  if (_step == 3)
+                  if (step == 3)
                     MycardSuccessStepPanel(
                       accentColor: _coopCyan,
                       mutedColor: _muted,
                       branchName: MycardBranchStepPanel.branchLabel(
-                        _selectedBranch ?? {},
+                        flow.selectedBranch ?? {},
                       ),
                       accountNumber: _accountController.text.trim(),
                       onStartAgain: _resetFlow,
