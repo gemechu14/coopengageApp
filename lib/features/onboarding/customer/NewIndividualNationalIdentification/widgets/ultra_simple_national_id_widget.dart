@@ -1,12 +1,11 @@
-import 'dart:async';
 import 'dart:io';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/providers/stepper_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../providers/simple_national_id_provider.dart';
 import '../model/national_id_models.dart';
-import 'dart:convert';
 /// Clean and simple National ID authentication widget
 /// WebSocket stays open until authentication data is received
 class UltraSimpleNationalIdWidget extends ConsumerStatefulWidget {
@@ -19,14 +18,16 @@ class UltraSimpleNationalIdWidget extends ConsumerStatefulWidget {
 
 class _UltraSimpleNationalIdWidgetState
     extends ConsumerState<UltraSimpleNationalIdWidget> {
+  bool _startedAuth = false;
   bool _showWebView = false;
+  bool _isAuthDialogOpen = false;
+  BuildContext? _authDialogContext;
   WebViewController? _webViewController;
 
   @override
   void initState() {
     super.initState();
     _initializeWebView();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startAuthFlow());
   }
 
   /// Initialize WebView controller
@@ -91,6 +92,12 @@ class _UltraSimpleNationalIdWidgetState
     });
   }
 
+  void _onContinuePressed() {
+    if (_startedAuth) return;
+    setState(() => _startedAuth = true);
+    _startAuthFlow();
+  }
+
   /// Restore data from stepper
   void _restoreFromStepper(StepperState stepperState) {
     final userData = FaydaUserData(
@@ -112,42 +119,50 @@ class _UltraSimpleNationalIdWidgetState
 
     // Listen for state changes
     ref.listen(simpleNationalIdProvider, (previous, next) {
-      // Show WebView when auth URL is ready
+      // Open authentication WebView in a popup dialog when URL is ready.
       if (next.authUrl != null &&
           !next.isCompleted &&
           next.error == null &&
-          !_showWebView) {
-        print('🌐 Loading WebView with auth URL');
-        setState(() => _showWebView = true);
+          !_isAuthDialogOpen) {
+        print('🌐 Opening auth dialog with URL');
+        if (mounted) {
+          setState(() => _showWebView = true);
+        }
         _webViewController?.loadRequest(Uri.parse(next.authUrl!));
+        _showAuthDialog();
       }
 
-      // Close WebView when authentication completes
-      if (next.isCompleted && next.userData != null && _showWebView) {
-        print('✅ Authentication completed - closing WebView and showing data');
+      // Close popup dialog when authentication completes
+      if (next.isCompleted && next.userData != null && _isAuthDialogOpen) {
+        print('✅ Authentication completed - closing popup and showing data');
         // Add small delay to ensure state is properly set
         Future.delayed(Duration(milliseconds: 100), () {
           if (mounted) {
+            _closeAuthDialog();
             setState(() => _showWebView = false);
             _saveToStepper(next.userData!);
           }
         });
       }
 
-      // Close WebView when WebSocket disconnects (backup)
+      // Close popup when WebSocket disconnects (backup)
       if (previous?.isConnected == true &&
           next.isConnected == false &&
-          _showWebView) {
-        print('🔌 WebSocket closed - closing WebView');
-        setState(() => _showWebView = false);
+          _isAuthDialogOpen) {
+        print('🔌 WebSocket closed - closing auth popup');
+        _closeAuthDialog();
+        if (mounted) {
+          setState(() => _showWebView = false);
+        }
       }
     });
 
-    // FORCE close WebView if authentication is completed
-    if (state.isCompleted && state.userData != null && _showWebView) {
-      print('🔄 Force closing WebView in build method');
+    // FORCE close auth popup if authentication is completed
+    if (state.isCompleted && state.userData != null && _isAuthDialogOpen) {
+      print('🔄 Force closing auth popup in build method');
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _showWebView) {
+        if (mounted && _isAuthDialogOpen) {
+          _closeAuthDialog();
           setState(() => _showWebView = false);
         }
       });
@@ -158,9 +173,18 @@ class _UltraSimpleNationalIdWidgetState
       return _buildSuccessScreen(state.userData!);
     }
 
-    // Show WebView during authentication
-    if (_showWebView) {
-      return _buildWebView();
+    // Keep background stable while popup auth flow is active.
+    if (_isAuthDialogOpen || (_startedAuth && _showWebView)) {
+      return _buildIntroScreen(
+        isLocked: true,
+        subtitle:
+            'Verification window is open. Please complete the process in the popup.',
+      );
+    }
+
+    // Show intro screen before starting authentication.
+    if (!_startedAuth) {
+      return _buildIntroScreen();
     }
 
     // Show error
@@ -185,186 +209,355 @@ class _UltraSimpleNationalIdWidgetState
     );
   }
 
-  /// Build beautiful success screen (like the image you showed)
-  Widget _buildSuccessScreen(FaydaUserData userData) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(24),
+  void _showAuthDialog() {
+    if (!mounted || _isAuthDialogOpen || _webViewController == null) return;
+
+    _isAuthDialogOpen = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        _authDialogContext = dialogContext;
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: double.maxFinite,
+            height: MediaQuery.of(dialogContext).size.height * 0.88,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Fayda Information',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: const BoxDecoration(
+                    color: cyanblueColor,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
                   ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.security, color: Colors.white),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'National ID Authentication',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          _closeAuthDialog();
+                        },
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      )
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: WebViewWidget(controller: _webViewController!),
                 ),
               ],
             ),
           ),
+        );
+      },
+    ).then((_) {
+      _isAuthDialogOpen = false;
+      _authDialogContext = null;
+    });
+  }
 
-          // Blue card with profile picture and name
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 20),
-            padding: EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+  void _closeAuthDialog() {
+    if (!_isAuthDialogOpen) return;
+    final dialogContext = _authDialogContext;
+    if (dialogContext != null) {
+      Navigator.of(dialogContext).pop();
+    }
+    _isAuthDialogOpen = false;
+    _authDialogContext = null;
+  }
+
+  Widget _buildIntroScreen({
+    bool isLocked = false,
+    String subtitle =
+        'Verify customer identity securely before moving to the next account opening steps.',
+  }) {
+    Widget benefitRow(IconData icon, String text) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: cyanblueColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              borderRadius: BorderRadius.circular(16),
+              child: Icon(icon, size: 14, color: cyanblueColor),
             ),
-            child: Column(
-              children: [
-                // Verified badge
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    padding: EdgeInsets.all(8),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF4F9FF), Color(0xFFEAF5FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cyanblueColor.withOpacity(0.15)),
+          boxShadow: [
+            BoxShadow(
+              color: cyanblueColor.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/fayda.webp',
+                height: 96,
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'National ID Verification',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: blueColor,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: textInfoColor,
+              ),
+            ),
+            const SizedBox(height: 10),
+            benefitRow(Icons.verified_user_outlined, 'Instant identity verification'),
+            benefitRow(Icons.badge_outlined, 'Pre-filled personal information'),
+            benefitRow(Icons.speed_outlined, 'Faster account activation'),
+            benefitRow(Icons.lock_outline, 'Enhanced security and compliance'),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: isLocked ? null : _onContinuePressed,
+                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                label: Text(
+                  isLocked
+                      ? 'Verification In Progress'
+                      : 'Start National ID Verification',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cyanblueColor,
+                  foregroundColor: whiteColor,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build beautiful success screen (like the image you showed)
+  Widget _buildSuccessScreen(FaydaUserData userData) {
+    Widget compactRow(String label, String value) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 112,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: textInfoColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget sectionCard(String title, List<Widget> children) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: blueColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...children,
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cyanblueColor, cyanblueColor.withOpacity(0.85)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: Icon(
-                      Icons.verified_user,
-                      // color: Color(0xFF1565C0),
-                      // size: 24,
+                    child: ClipOval(
+                      child: userData.picture != null &&
+                              userData.picture!.isNotEmpty
+                          ? Image.file(
+                              File(userData.picture!),
+                              fit: BoxFit.cover,
+                            )
+                          : const Icon(Icons.person, color: cyanblueColor),
                     ),
                   ),
-                ),
-
-                // SizedBox(height: 16),
-
-                // Profile picture
-                if (userData.picture != null && userData.picture!.isNotEmpty)
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.verified, color: Colors.white, size: 18),
+                            SizedBox(width: 6),
+                            Text(
+                              'Identity Verified',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          userData.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundImage: FileImage(File(userData.picture!)),
-                    ),
-                  )
-                else
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
-                    ),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.person,
-                          size: 60, color: Color(0xFF1565C0)),
-                    ),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
-
-          SizedBox(height: 5),
-
-          // Details card
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 20),
-            padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Detail Info.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-                Divider(height: 32),
-                // SizedBox(height: 20),
-
-                // Full Name
-                _buildDetailRow('Full Name', userData.name),
-
-                // Phone Number
-                if (userData.phoneNumber != null)
-                  _buildDetailRow('Phone Number', userData.phoneNumber!),
-
-                if (userData.gender != null)
-                  _buildDetailRow('Gender', userData.gender!),
-
-                if (userData.birthdate != null)
-                  _buildDetailRow('Date of Birth', userData.birthdate!),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 5),
-
-          // Details card
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 20),
-            padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Address Information.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-                Divider(height: 32),
-                // SizedBox(height: 20),
-
-                // Full Name
+            sectionCard('Personal Information', [
+              compactRow('Full Name', userData.name),
+              if (userData.phoneNumber != null)
+                compactRow('Phone Number', userData.phoneNumber!),
+              if (userData.gender != null) compactRow('Gender', userData.gender!),
+              if (userData.birthdate != null)
+                compactRow('Date of Birth', userData.birthdate!),
+            ]),
+            if (userData.address != null)
+              sectionCard('Address Information', [
                 if (userData.address?.country != null)
-                  _buildDetailRow('Country', userData?.address?.country ?? ''),
-
-                // Phone Number
-                if (userData?.address?.region != null)
-                  _buildDetailRow('Region', userData?.address?.region ?? ''),
-
-                if (userData?.address?.zone != null)
-                  _buildDetailRow(
-                      'Zone/ Subcity', userData?.address?.zone ?? ''),
-
-                if (userData?.address?.woreda != null)
-                  _buildDetailRow('Woreda', userData?.address?.woreda ?? ''),
-              ],
-            ),
-          ),
-          SizedBox(height: 24),
-
-          // Continue button
-
-          SizedBox(height: 24),
-        ],
+                  compactRow('Country', userData.address?.country ?? ''),
+                if (userData.address?.region != null)
+                  compactRow('Region', userData.address?.region ?? ''),
+                if (userData.address?.zone != null)
+                  compactRow('Zone/Subcity', userData.address?.zone ?? ''),
+                if (userData.address?.woreda != null)
+                  compactRow('Woreda', userData.address?.woreda ?? ''),
+              ]),
+          ],
+        ),
       ),
     );
   }
@@ -446,14 +639,8 @@ class _UltraSimpleNationalIdWidgetState
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
+                setState(() => _startedAuth = false);
                 ref.read(simpleNationalIdProvider.notifier).reset();
-                Future.delayed(Duration(milliseconds: 500), () {
-                  if (mounted) {
-                    ref
-                        .read(simpleNationalIdProvider.notifier)
-                        .startAuthentication();
-                  }
-                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,

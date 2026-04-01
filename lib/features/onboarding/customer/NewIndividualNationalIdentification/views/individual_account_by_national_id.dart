@@ -2,7 +2,7 @@
 
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/shared/widgets/AlertDialog/DialogHelper%20.dart';
-import 'package:coopengageplus/shared/widgets/BeautifulLoadingScreen.dart';
+import 'package:coopengageplus/shared/widgets/simple_page_loading.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/model/registration_data.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/providers/fayda_provider.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/providers/national_id_provider.dart';
@@ -19,6 +19,7 @@ import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:coopengageplus/core/utils/checkToken.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_stepper/easy_stepper.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
@@ -44,6 +45,8 @@ class _IndividualAccountByNationalIdState
     extends ConsumerState<NationalIdentificationWebSocket> {
   List<GlobalKey<FormState>> formKeys = [];
   bool _disposed = false;
+  bool _existingAccountChecked = false;
+  String? _lastCheckedPhone;
   final RegistrationService _registrationService = RegistrationService();
 
   // 2. Replace the static steps list with a dynamic one using StepConfig
@@ -98,6 +101,9 @@ class _IndividualAccountByNationalIdState
       if (!_disposed) {
         ref.read(stepperProvider.notifier).reset();
         ref.read(nationalIdProvider.notifier).reset();
+        ref.read(simpleNationalIdProvider.notifier).reset();
+        _existingAccountChecked = false;
+        _lastCheckedPhone = null;
       }
     });
   }
@@ -133,7 +139,14 @@ class _IndividualAccountByNationalIdState
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          scrolledUnderElevation: 0,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: cyanblueColor),
             onPressed: () => Navigator.pushAndRemoveUntil(
@@ -231,7 +244,17 @@ class _IndividualAccountByNationalIdState
             ],
           ),
         ),
-        bottomNavigationBar: Container(
+        bottomNavigationBar: Builder(builder: (context) {
+          final faydaState = ref.watch(simpleNationalIdProvider);
+          final bool step0Authenticated = nationalIdState.isAuthCompleted ||
+              (faydaState.isCompleted && faydaState.userData != null);
+
+          // Step 0: hide Previous/Next until correct authentication data is received.
+          if (stepperState.activeStep == 0 && !step0Authenticated) {
+            return const SizedBox.shrink();
+          }
+
+          return Container(
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [
@@ -250,13 +273,12 @@ class _IndividualAccountByNationalIdState
               // Previous Button
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      spreadRadius: 1,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -272,9 +294,10 @@ class _IndividualAccountByNationalIdState
                         ? Colors.grey.shade700
                         : Colors.grey.shade400,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 35, vertical: 18),
+                        horizontal: 20, vertical: 12),
+                    minimumSize: const Size(118, 42),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(14),
                       side: BorderSide(
                           color: stepperState.activeStep > 1
                               ? Colors.grey.shade300
@@ -285,10 +308,11 @@ class _IndividualAccountByNationalIdState
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.arrow_back, size: 20),
-                      SizedBox(width: 8),
+                      Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                      SizedBox(width: 6),
                       Text('Previous',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13)),
                     ],
                   ),
                 ),
@@ -297,7 +321,7 @@ class _IndividualAccountByNationalIdState
               // Next/Submit Button
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(14),
                   gradient: LinearGradient(
                     colors: [cyanblueColor, cyanblueColor.withOpacity(0.8)],
                     begin: Alignment.topLeft,
@@ -305,10 +329,9 @@ class _IndividualAccountByNationalIdState
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: cyanblueColor.withOpacity(0.3),
-                      spreadRadius: 1,
+                      color: cyanblueColor.withOpacity(0.22),
                       blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -381,22 +404,32 @@ class _IndividualAccountByNationalIdState
                           return;
                         }
 
-                        final accountResponse =
-                            await _fetchExistingAccountData(sanitizedPhone);
-                        if (accountResponse == null) {
-                          return;
-                        }
+                        final shouldCheckExistingAccount =
+                            !_existingAccountChecked ||
+                                _lastCheckedPhone != sanitizedPhone;
 
-                        final userInfo = accountResponse['userInfo'];
-                        final accounts =
-                            userInfo is Map<String, dynamic> ? userInfo['accounts'] : null;
-                        final hasAccount =
-                            accounts is List && accounts.isNotEmpty;
+                        if (shouldCheckExistingAccount) {
+                          final accountResponse =
+                              await _fetchExistingAccountData(sanitizedPhone);
+                          if (accountResponse == null) {
+                            return;
+                          }
 
-                        if (hasAccount) {
-                          await _showExistingAccountDialog(
-                              sanitizedPhone, accountResponse);
-                          return;
+                          final userInfo = accountResponse['userInfo'];
+                          final accounts = userInfo is Map<String, dynamic>
+                              ? userInfo['accounts']
+                              : null;
+                          final hasAccount =
+                              accounts is List && accounts.isNotEmpty;
+
+                          // if (hasAccount) {
+                          //   await _showExistingAccountDialog(
+                          //       sanitizedPhone, accountResponse);
+                          //   return;
+                          // }
+
+                          _existingAccountChecked = true;
+                          _lastCheckedPhone = sanitizedPhone;
                         }
 
                         ref.read(stepperProvider.notifier).nextStep();
@@ -543,9 +576,10 @@ class _IndividualAccountByNationalIdState
                     backgroundColor: Colors.transparent,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 18),
+                        horizontal: 22, vertical: 12),
+                    minimumSize: const Size(118, 42),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     elevation: 0,
                   ),
@@ -562,17 +596,17 @@ class _IndividualAccountByNationalIdState
                             buttonText,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                              fontSize: 13,
                             ),
                           );
                         },
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Icon(
                         stepperState.activeStep == 4
                             ? Icons.check
-                            : Icons.arrow_forward,
-                        size: 20,
+                            : Icons.arrow_forward_ios_rounded,
+                        size: 14,
                       ),
                     ],
                   ),
@@ -580,7 +614,8 @@ class _IndividualAccountByNationalIdState
               ),
             ],
           ),
-        ),
+        );
+        }),
       );
     } catch (e) {
       return Scaffold(
@@ -681,9 +716,14 @@ String getValue(String? primary, String? fallback, String defaultValue) {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const BeautifulLoadingScreen(
-          message: 'Checking existing account...',
-          primaryColor: cyanblueColor,
+        builder: (context) => const Dialog(
+          insetPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child: SimplePageLoading(
+            title: 'Checking Existing Account',
+            subtitle:
+                'Please wait while we verify whether this phone number already has an account.',
+          ),
         ),
       );
     }
@@ -725,6 +765,48 @@ String getValue(String? primary, String? fallback, String defaultValue) {
     final accountNumber = firstAccount?['accountNumber']?.toString() ?? 'N/A';
     final branchName = firstAccount?['branchName']?.toString() ?? 'N/A';
 
+    Widget infoRow(String label, String value, {IconData? icon}) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon ?? Icons.info_outline, size: 16, color: cyanblueColor),
+            const SizedBox(width: 8),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  children: [
+                    TextSpan(
+                      text: '$label: ',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: textInfoColor,
+                      ),
+                    ),
+                    TextSpan(
+                      text: value,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: blueColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -733,39 +815,159 @@ String getValue(String? primary, String? fallback, String defaultValue) {
           _navigateToMainPage();
           return false;
         },
-        child: AlertDialog(
-          title: const Text(
-            'Existing Account Found',
-            style: TextStyle(
-              color: cyanblueColor,
-              fontWeight: FontWeight.w600,
-            ),
+        child: Dialog(
+          insetPadding: EdgeInsets.zero,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Phone: $phoneNumber'),
-              const SizedBox(height: 8),
-              Text('Account Title: $accountTitle'),
-              Text('Account Number: $accountNumber'),
-              Text('Branch: $branchName'),
-              const SizedBox(height: 12),
-              const Text(
-                'Please visit the main page to manage the existing account.',
-                style: TextStyle(fontSize: 13),
+          child: SizedBox(
+            width: MediaQuery.of(dialogContext).size.width,
+            height: MediaQuery.of(dialogContext).size.height,
+            child: Scaffold(
+              backgroundColor: const Color(0xFFF4F8FF),
+              body: SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            cyanblueColor,
+                            cyanblueColor.withOpacity(0.88),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: cyanblueColor.withOpacity(0.25),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet_outlined,
+                              color: Colors.white, size: 24),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Existing Account Found',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: const Text(
+                                'A customer account already exists with this phone number. Please review the details below.',
+                                style: TextStyle(
+                                  color: textInfoColor,
+                                  fontSize: 13.5,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            infoRow('Phone', phoneNumber,
+                                icon: Icons.phone_outlined),
+                            infoRow('Account Title', accountTitle,
+                                icon: Icons.person_outline),
+                            infoRow('Account Number', accountNumber,
+                                icon: Icons.credit_card_outlined),
+                            infoRow('Branch', branchName,
+                                icon: Icons.location_on_outlined),
+                            const SizedBox(height: 10),
+                            // Container(
+                            //   padding: const EdgeInsets.all(12),
+                            //   decoration: BoxDecoration(
+                            //     color: Colors.orange.withOpacity(0.1),
+                            //     borderRadius: BorderRadius.circular(12),
+                            //   ),
+                            //   child: const Row(
+                            //     crossAxisAlignment: CrossAxisAlignment.start,
+                            //     children: [
+                            //       Icon(Icons.info_outline,
+                            //           color: Colors.orange, size: 18),
+                            //       SizedBox(width: 8),
+                            //       Expanded(
+                            //         child: Text(
+                            //           'Please visit the main page to manage the existing account.',
+                            //           style: TextStyle(
+                            //             fontSize: 13,
+                            //             color: textInfoColor,
+                            //             height: 1.35,
+                            //           ),
+                            //         ),
+                            //       ),
+                            //     ],
+                            //   ),
+                            // ),
+                          
+                          
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                          _navigateToMainPage();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: cyanblueColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text(
+                          'Go to Main Page',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _navigateToMainPage();
-              },
-              child: const Text('OK'),
             ),
-          ],
+          ),
         ),
       ),
     );
