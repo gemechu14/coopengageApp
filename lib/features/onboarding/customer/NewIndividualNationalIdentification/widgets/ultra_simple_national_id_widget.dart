@@ -23,6 +23,8 @@ class _UltraSimpleNationalIdWidgetState
   bool _isAuthDialogOpen = false;
   BuildContext? _authDialogContext;
   WebViewController? _webViewController;
+  ValueNotifier<bool>? _authDialogPageLoading;
+  bool _authWebViewInitialLoadDone = false;
 
   @override
   void initState() {
@@ -34,15 +36,27 @@ class _UltraSimpleNationalIdWidgetState
   void _initializeWebView() {
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0xFFF4F8FF))
       ..setNavigationDelegate(NavigationDelegate(
         onPageStarted: (url) {
           print('🌐 WebView loading: $url');
+          if (_isAuthDialogOpen && !_authWebViewInitialLoadDone) {
+            _authDialogPageLoading?.value = true;
+          }
         },
         onPageFinished: (url) {
           print('✅ WebView loaded: $url');
+          if (_isAuthDialogOpen && !_authWebViewInitialLoadDone) {
+            _authWebViewInitialLoadDone = true;
+            _authDialogPageLoading?.value = false;
+          }
         },
         onWebResourceError: (error) {
           print('❌ WebView error: ${error.description}');
+          if (_isAuthDialogOpen) {
+            _authWebViewInitialLoadDone = true;
+            _authDialogPageLoading?.value = false;
+          }
         },
       ));
   }
@@ -212,55 +226,113 @@ class _UltraSimpleNationalIdWidgetState
   void _showAuthDialog() {
     if (!mounted || _isAuthDialogOpen || _webViewController == null) return;
 
+    _authDialogPageLoading?.dispose();
+    _authDialogPageLoading = ValueNotifier<bool>(true);
+    _authWebViewInitialLoadDone = false;
+
     _isAuthDialogOpen = true;
     showDialog(
       context: context,
       barrierDismissible: false,
+      useSafeArea: false,
       builder: (dialogContext) {
         _authDialogContext = dialogContext;
+        final size = MediaQuery.sizeOf(dialogContext);
         return Dialog(
-          insetPadding: const EdgeInsets.all(16),
+          insetPadding: EdgeInsets.zero,
+          backgroundColor: Colors.transparent,
           child: SizedBox(
-            width: double.maxFinite,
-            height: MediaQuery.of(dialogContext).size.height * 0.88,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: const BoxDecoration(
-                    color: cyanblueColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(12),
+            width: size.width,
+            height: size.height,
+            child: Material(
+              color: const Color(0xFFF4F8FF),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SafeArea(
+                    bottom: false,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: const BoxDecoration(
+                        color: cyanblueColor,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.security, color: Colors.white),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'National ID Authentication',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _closeAuthDialog,
+                            icon: const Icon(Icons.close, color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.security, color: Colors.white),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'National ID Authentication',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  Expanded(
+                    child: SafeArea(
+                      top: false,
+                      child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        WebViewWidget(controller: _webViewController!),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _authDialogPageLoading!,
+                          builder: (context, loading, _) {
+                            if (!loading) return const SizedBox.shrink();
+                            return ColoredBox(
+                              color: const Color(0xFFF4F8FF),
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(
+                                      width: 36,
+                                      height: 36,
+                                      child: CircularProgressIndicator(
+                                        color: cyanblueColor,
+                                        strokeWidth: 3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Opening secure verification…',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: blueColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    const Text(
+                                      'This may take a few seconds',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: textInfoColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          _closeAuthDialog();
-                        },
-                        icon: const Icon(Icons.close, color: Colors.white),
-                      )
-                    ],
+                      ],
+                    ),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: WebViewWidget(controller: _webViewController!),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -268,6 +340,8 @@ class _UltraSimpleNationalIdWidgetState
     ).then((_) {
       _isAuthDialogOpen = false;
       _authDialogContext = null;
+      _authDialogPageLoading?.dispose();
+      _authDialogPageLoading = null;
     });
   }
 
@@ -279,6 +353,8 @@ class _UltraSimpleNationalIdWidgetState
     }
     _isAuthDialogOpen = false;
     _authDialogContext = null;
+    _authDialogPageLoading?.dispose();
+    _authDialogPageLoading = null;
   }
 
   Widget _buildIntroScreen({

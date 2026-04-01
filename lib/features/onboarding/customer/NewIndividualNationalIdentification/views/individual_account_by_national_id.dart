@@ -114,6 +114,23 @@ class _IndividualAccountByNationalIdState
     super.dispose();
   }
 
+  /// This flow is often opened with [pushAndRemoveUntil] clearing the stack, so
+  /// the system back button would otherwise close the app. Match sensible back:
+  /// pop if a route exists, else previous stepper step, else same as AppBar → MainPage.
+  void _handleSystemBack() {
+    if (_disposed || !mounted) return;
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final step = ref.read(stepperProvider).activeStep;
+    if (step > 0) {
+      ref.read(stepperProvider.notifier).previousStep();
+      return;
+    }
+    _navigateToMainPage();
+  }
+
   // 3. Refactor the steps and stepper to use stepConfigs
   List<EasyStep> steps = [];
 
@@ -133,7 +150,13 @@ class _IndividualAccountByNationalIdState
       steps = stepConfigs
           .map((config) => EasyStep(title: config.title, icon: config.icon))
           .toList();
-      return Scaffold(
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, Object? result) {
+          if (didPop) return;
+          _handleSystemBack();
+        },
+        child: Scaffold(
         key: ValueKey('stepper_scaffold_ ${stepperState.activeStep}'),
         resizeToAvoidBottomInset: false,
         backgroundColor: const Color(0xFFF8FAFC),
@@ -172,7 +195,7 @@ class _IndividualAccountByNationalIdState
               // Stepper Header - Reduced Height
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+                    const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   boxShadow: [
@@ -210,7 +233,7 @@ class _IndividualAccountByNationalIdState
                     (index) => EasyStep(
                       icon: steps[index].icon,
                       title: index == stepperState.activeStep
-                          ? steps[index].title
+                          ? (steps[index].title ?? '')
                           : '',
                     ),
                   ),
@@ -266,76 +289,114 @@ class _IndividualAccountByNationalIdState
               ),
             ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          // Base inset with content card; extra margin on Previous (left) / Next (right); room below buttons
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Previous Button
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: stepperState.activeStep > 0
-                      ? () {
-                          ref.read(stepperProvider.notifier).previousStep();
-                        }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: stepperState.activeStep > 1
-                        ? Colors.grey.shade700
-                        : Colors.grey.shade400,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                    minimumSize: const Size(118, 42),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(
-                          color: stepperState.activeStep > 1
-                              ? Colors.grey.shade300
-                              : Colors.grey.shade200),
-                    ),
-                    elevation: 0,
+              // Previous — same outer shell (14 + 1.5 ring + inner 12.5) for disabled & enabled; ring grey vs cyan
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    color: stepperState.activeStep > 0
+                        ? null
+                        : Colors.grey.shade300,
+                    gradient: stepperState.activeStep > 0
+                        ? LinearGradient(
+                            colors: [
+                              cyanblueColor,
+                              cyanblueColor.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    boxShadow: stepperState.activeStep > 0
+                        ? [
+                            BoxShadow(
+                              color: cyanblueColor.withOpacity(0.18),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.arrow_back_ios_new_rounded, size: 14),
-                      SizedBox(width: 6),
-                      Text('Previous',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
-                    ],
+                  padding: const EdgeInsets.all(1.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.5),
+                    ),
+                    child: ElevatedButton(
+                      onPressed: stepperState.activeStep > 0
+                          ? () {
+                              ref
+                                  .read(stepperProvider.notifier)
+                                  .previousStep();
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.white,
+                        foregroundColor: Colors.transparent,
+                        disabledForegroundColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        minimumSize: const Size(118, 42),
+                        maximumSize: const Size(double.infinity, 42),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.5),
+                        ),
+                        elevation: 0,
+                        splashFactory: InkRipple.splashFactory,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _gradientIconOrMuted(
+                            stepperState.activeStep > 0,
+                            Icons.arrow_back_ios_new_rounded,
+                            14,
+                          ),
+                          const SizedBox(width: 6),
+                          _gradientLabelOrMuted(
+                            stepperState.activeStep > 0,
+                            'Previous',
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
 
-              // Next/Submit Button
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  gradient: LinearGradient(
-                    colors: [cyanblueColor, cyanblueColor.withOpacity(0.8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cyanblueColor.withOpacity(0.22),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+              // Next / Submit — extra margin from screen / bar right
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      colors: [
+                        cyanblueColor,
+                        cyanblueColor.withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: ElevatedButton(
+                    boxShadow: [
+                      BoxShadow(
+                        color: cyanblueColor.withOpacity(0.22),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
                   onPressed: () async {
                     if (_disposed) return;
 
@@ -576,7 +637,7 @@ class _IndividualAccountByNationalIdState
                     backgroundColor: Colors.transparent,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 22, vertical: 12),
+                        horizontal: 20, vertical: 12),
                     minimumSize: const Size(118, 42),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -611,11 +672,13 @@ class _IndividualAccountByNationalIdState
                     ],
                   ),
                 ),
+                ),
               ),
             ],
           ),
         );
         }),
+      ),
       );
     } catch (e) {
       return Scaffold(
@@ -970,6 +1033,56 @@ String getValue(String? primary, String? fallback, String defaultValue) {
           ),
         ),
       ),
+    );
+  }
+
+  /// Matches Next button fill gradient (border + text on Previous).
+  LinearGradient get _stepperCyanGradient => LinearGradient(
+        colors: [
+          cyanblueColor,
+          cyanblueColor.withOpacity(0.8),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  Widget _gradientLabelOrMuted(bool enabled, String text) {
+    if (!enabled) {
+      return Text(
+        text,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+          color: cyanblueColor.withOpacity(0.38),
+        ),
+      );
+    }
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) => _stepperCyanGradient.createShader(bounds),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _gradientIconOrMuted(bool enabled, IconData icon, double size) {
+    if (!enabled) {
+      return Icon(
+        icon,
+        size: size,
+        color: cyanblueColor.withOpacity(0.38),
+      );
+    }
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) => _stepperCyanGradient.createShader(bounds),
+      child: Icon(icon, size: size, color: Colors.white),
     );
   }
 
