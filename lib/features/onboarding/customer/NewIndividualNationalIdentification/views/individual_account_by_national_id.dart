@@ -192,10 +192,9 @@ class _IndividualAccountByNationalIdState
         body: SafeArea(
           child: Column(
             children: [
-              // Stepper Header - Reduced Height
+              // Stepper header (package default title under active step — matches original UX).
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+                padding: const EdgeInsets.fromLTRB(1, 1, 1, 0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   boxShadow: [
@@ -212,16 +211,17 @@ class _IndividualAccountByNationalIdState
                   lineStyle: LineStyle(
                     lineLength: 30,
                     lineSpace: 0,
+                   
                     lineType: LineType.normal,
                     defaultLineColor: Colors.grey.shade300,
                     finishedLineColor: cyanblueColor,
                     lineThickness: 2,
                   ),
                   stepShape: StepShape.circle,
+                   disableScroll :true,
                   stepBorderRadius: 15,
                   borderThickness: 2,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  // padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
                   stepRadius: 15,
                   finishedStepTextColor: Colors.white,
                   finishedStepBackgroundColor: cyanblueColor,
