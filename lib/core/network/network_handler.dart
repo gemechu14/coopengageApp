@@ -94,6 +94,47 @@ class NetworkHandler {
     }
   }
 
+  /// Agent signup at `/api/v1/agents` only. Does not change [postAgent] used elsewhere.
+  /// Uses explicit UTF-8, Accept header, and omits null map entries so the body matches strict APIs.
+  Future<http.Response> postAgentRegistration(
+    String url,
+    Map<String, dynamic> data,
+  ) async {
+    String? token = await storage.read(key: "token");
+    url = formater(url);
+    final uri = Uri.parse(url);
+
+    final payload = Map<String, dynamic>.fromEntries(
+      data.entries.where((e) => e.value != null),
+    );
+    final bodyStr = json.encode(payload);
+
+    final headers = <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    // Debug: exact payload sent to `/api/v1/agents` (check Android Studio / VS Code debug console).
+    print('========== postAgentRegistration ==========');
+    print('URL: $uri');
+    print('Input map: $data');
+    print('After omitting nulls: $payload');
+    print('JSON body string: $bodyStr');
+    print(
+        'Authorization: ${headers.containsKey('Authorization') ? 'Bearer <token len=${token?.length ?? 0}>' : 'none'}');
+    print('==========================================');
+
+    return http.post(
+      uri,
+      headers: headers,
+      body: bodyStr,
+      encoding: utf8,
+    );
+  }
+
   Future<http.Response> post(
     String url,
     Map<String, dynamic> body,

@@ -9,6 +9,7 @@ import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/shared/widgets/textField/ConfirmPasswordTextField.dart';
 import 'package:coopengageplus/shared/widgets/textField/CustomTextFormField.dart';
 import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:coopengageplus/features/onboarding/pages/home/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -37,7 +38,6 @@ class _LoginscreenState extends State<AgentRegistration> {
   Set<String> selectedBranches = {};
   List<MultiSelectItem<String>> branchItems = [];
   List<dynamic> branches = [];
-  int? selectedBranchId;
   List<dynamic> filteredBranches = [];
   int? selectedBrancId;
   bool isApiCallProcess = false;
@@ -233,8 +233,6 @@ class _LoginscreenState extends State<AgentRegistration> {
               togglePasswordVisibility: _togglePasswordVisibility,
               passwordController: _password,
             ),
-            TextLabel("Main Branch"),
-            branchSelectorWidget(width),
             TextLabel("Additional Branches"),
             branchesWidget(width),
             Padding(
@@ -253,35 +251,34 @@ class _LoginscreenState extends State<AgentRegistration> {
                     });
 
                     // Retrieve the text from the controllers
-                    String username = _username.text.trim();
                     String password = _password.text.trim();
-                    print("Selected Branches: $selectedBranches");
-                    // List<int> branchIdsList = selectedBranches
-                    //     .map((branch) => int.parse(branch))
-                    //     .toList();
 
-                    // Convert the list to a List<String>
-                    List<String> branchIdsList = selectedBranches.toList();
-                    print("branchIdsList");
-                    print(branchIdsList);
-                    // Login Logic start here
-                    // Declare the map to accept dynamic types
-                    Map<String, dynamic> data = {
-                      "fullName": fullNameController.text.toString(),
-                      "phone": phoneNumberController.text.toString(),
-                      "business_name": businessNameController.text.toString(),
-                      "tin_number": tinController.text.toString(),
+                    final int? mainBranchId =
+                        await _loggedInUserMainBranchId(storage);
 
-                      "branchIds":
-                          branchIdsList, // Directly assign the List<String>
-                      "mainBranchId": selectedBranchId.toString(),
-                      "password": _password.text
+                    final List<int> branchIdsInts = selectedBranches
+                        .map((e) => int.tryParse(e))
+                        .whereType<int>()
+                        .toList();
+                    // API rejects empty branchIds; default to logged-in user's main branch.
+                    final List<int> branchIdsForApi = branchIdsInts.isNotEmpty
+                        ? branchIdsInts
+                        : (mainBranchId != null ? <int>[mainBranchId!] : <int>[]);
+
+                    final Map<String, dynamic> data = {
+                      "fullName": fullNameController.text.trim(),
+                      "phone": phoneNumberController.text.trim(),
+                      "business_name": businessNameController.text.trim(),
+                      "tin_number": tinController.text.trim(),
+                      "branchIds": branchIdsForApi,
+                      "password": password,
                     };
-
-                    print(data);
+                    if (mainBranchId != null) {
+                      data["mainBranchId"] = mainBranchId;
+                    }
                     try {
                       var response = await networkHandler
-                          .postAgent("/api/v1/agents", data)
+                          .postAgentRegistration("/api/v1/agents", data)
                           .timeout(const Duration(seconds: 20));
 
                       print('response');
@@ -367,65 +364,6 @@ class _LoginscreenState extends State<AgentRegistration> {
           ],
         ),
       ),
-    );
-  }
-
-  Padding branchSelectorWidget(double width) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 1),
-      child: Container(
-          width: width < 600 ? double.infinity : width * 0.5,
-          child: DropdownButtonFormField<int>(
-              value: selectedBranchId,
-              hint: const Text(
-                "Select Branch",
-                style: TextStyle(fontSize: 14),
-              ),
-              items: branches.map((branch) {
-                return DropdownMenuItem<int>(
-                  value: branch['id'],
-                  child: Text(branch['companyName'],
-                      style: TextStyle(fontSize: 14)),
-                );
-              }).toList(),
-              isDense: true,
-              onChanged: (value) {
-                setState(() {
-                  selectedBranchId = value;
-                  print(selectedBranchId);
-                });
-              },
-              validator: (value) {
-                // Check if value is null or 0 (or whatever indicates no selection)
-                if (value == null || value == 0) {
-                  return 'Please select a branch';
-                }
-                return null; // Return null if valid
-              },
-              decoration: const InputDecoration(
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.blue),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.red),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.red),
-                ),
-                // prefixIcon: Icon(Icons.business_center)),
-              ))),
     );
   }
 
@@ -531,6 +469,34 @@ class _LoginscreenState extends State<AgentRegistration> {
         ),
       ),
     );
+  }
+
+  int? _coerceStoredBranchId(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw.toString());
+  }
+
+  /// Logged-in user's [Users.mainBranchId] from SQLite (ProfileScreen DB path).
+  Future<int?> _loggedInUserMainBranchId(FlutterSecureStorage storage) async {
+    final String? token = await storage.read(key: "token");
+    if (token != null && token.isNotEmpty) {
+      final dbHelper = DatabaseHelper();
+      final user = await dbHelper.getUserByToken(token);
+      if (user != null) {
+        return _coerceStoredBranchId(user['mainBranchId']);
+      }
+      final users = await dbHelper.getUsers();
+      if (users.isNotEmpty) {
+        return _coerceStoredBranchId(users.first['mainBranchId']);
+      }
+      return null;
+    }
+
+    final users = await DatabaseHelper().getUsers();
+    if (users.isEmpty) return null;
+    return _coerceStoredBranchId(users.first['mainBranchId']);
   }
 
   bool validateAndSave() {

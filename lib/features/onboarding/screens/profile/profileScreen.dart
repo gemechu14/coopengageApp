@@ -449,27 +449,27 @@ class _ProfileScreenState extends State<ProfileScreen>
               );
             },
           ),
-          _buildActionTile(
-            icon: Icons.insights_rounded,
-            title: 'MyCard link stats',
-            subtitle: 'Local & server link metrics',
-            color: primaryBlue,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MycardLinkStatsPage(),
-                ),
-              );
-            },
-          ),
-          _buildActionTile(
-            icon: Icons.add_card_rounded,
-            title: 'Share MyCard link',
-            subtitle: 'WhatsApp, Telegram, email…',
-            color: cyanblueColor,
-            onTap: () => showMycardShareSheet(context),
-          ),
+          // _buildActionTile(
+          //   icon: Icons.insights_rounded,
+          //   title: 'MyCard link stats',
+          //   subtitle: 'Local & server link metrics',
+          //   color: primaryBlue,
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const MycardLinkStatsPage(),
+          //       ),
+          //     );
+          //   },
+          // ),
+          // _buildActionTile(
+          //   icon: Icons.add_card_rounded,
+          //   title: 'Share MyCard link',
+          //   subtitle: 'WhatsApp, Telegram, email…',
+          //   color: cyanblueColor,
+          //   onTap: () => showMycardShareSheet(context),
+          // ),
         ],
       ),
     );

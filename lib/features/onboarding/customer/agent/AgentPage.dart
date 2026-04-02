@@ -9,6 +9,7 @@ import 'package:coopengageplus/shared/widgets/textField/CustomTextFormField.dart
 import 'package:coopengageplus/shared/widgets/textField/small_form_widgets.dart';
 import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/core/constants/text_styles.dart';
+import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:flutter/material.dart';
@@ -39,9 +40,7 @@ class _AgentPageState extends State<AgentPage> {
   Set<String> selectedBranches = {};
   List<MultiSelectItem<String>> branchItems = [];
   List<dynamic> branches = []; // Store the fetched branches
-  int? selectedBranchId;
   List<dynamic> filteredBranches = [];
-  int? selectedBrancId; // To hold the selected branch ID
   bool isApiCallProcess = false;
   bool hidePassword = true;
   bool hideConfirmPassword = true; // For Confirm Password
@@ -333,25 +332,37 @@ class _AgentPageState extends State<AgentPage> {
                       });
 
                       // Retrieve the text from the controllers
-                      String username = _username.text.trim();
                       String password = _password.text.trim();
 
-                      List<String> branchIdsList = selectedBranches.toList();
+                      final int? mainBranchId =
+                          await _loggedInUserMainBranchId(storage);
 
-                      Map<String, dynamic> data = {
-                        "fullName": fullNameController.text,
-                        "phone": phoneNumberController.text,
-                        "business_name": businessNameController.text.toString(),
-                        "tin_number": tinController.text.toString(),
-                        // "branchIds":
-                        //     branchIdsList, // Directly assign the List<String>
-                        // "mainBranchId": selectedBranchId.toString(),
+                      final List<int> branchIdsInts = selectedBranches
+                          .map((e) => int.tryParse(e))
+                          .whereType<int>()
+                          .toList();
+                      // API rejects empty branchIds; default to logged-in user's main branch.
+                      final List<int> branchIdsForApi = branchIdsInts.isNotEmpty
+                          ? branchIdsInts
+                          : (mainBranchId != null
+                              ? <int>[mainBranchId!]
+                              : <int>[]);
+
+                      final Map<String, dynamic> data = {
+                        "fullName": fullNameController.text.trim(),
+                        "phone": phoneNumberController.text.trim(),
+                        "business_name": businessNameController.text.trim(),
+                        "tin_number": tinController.text.trim(),
+                        "branchIds": branchIdsForApi,
                         "password": password,
                       };
+                      if (mainBranchId != null) {
+                        data["mainBranchId"] = mainBranchId;
+                      }
 
                       try {
                         var response = await networkHandler
-                            .postAgent("/api/v1/agents", data)
+                            .postAgentRegistration("/api/v1/agents", data)
                             .timeout(const Duration(seconds: 50));
 
                         if (response.statusCode == 200 ||
@@ -572,60 +583,6 @@ class _AgentPageState extends State<AgentPage> {
     );
   }
 
-  Padding branchSelectorWidget(double width) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 1),
-      child: SizedBox(
-        width: width < 600 ? double.infinity : width * 0.5,
-        child: DropdownButtonFormField<int>(
-          value: selectedBranchId, // Set the currently selected branch ID
-          hint: const Text(
-            "Select Branch",
-            style: TextStyle(fontSize: 14),
-          ),
-
-          items: branches.map((branch) {
-            return DropdownMenuItem<int>(
-              value: branch['id'], // Use branch ID as the value
-              child: Text(branch['companyName'],
-                  style:
-                      TextStyle(fontSize: 14)), // Show company name in dropdown
-            );
-          }).toList(),
-          isDense: true,
-          onChanged: (value) {
-            setState(() {
-              selectedBranchId = value; // Update selected branch ID
-            });
-          },
-
-          decoration: const InputDecoration(
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              prefixIcon: Icon(Icons.business_center)),
-        ),
-      ),
-    );
-  }
-
   Padding passwordWidget(double width) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
@@ -787,6 +744,34 @@ class _AgentPageState extends State<AgentPage> {
         ),
       ),
     );
+  }
+
+  int? _coerceStoredBranchId(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw.toString());
+  }
+
+  /// Logged-in user's [Users.mainBranchId] from SQLite (ProfileScreen DB path).
+  Future<int?> _loggedInUserMainBranchId(FlutterSecureStorage storage) async {
+    final String? token = await storage.read(key: "token");
+    if (token != null && token.isNotEmpty) {
+      final dbHelper = DatabaseHelper();
+      final user = await dbHelper.getUserByToken(token);
+      if (user != null) {
+        return _coerceStoredBranchId(user['mainBranchId']);
+      }
+      final users = await dbHelper.getUsers();
+      if (users.isNotEmpty) {
+        return _coerceStoredBranchId(users.first['mainBranchId']);
+      }
+      return null;
+    }
+
+    final users = await DatabaseHelper().getUsers();
+    if (users.isEmpty) return null;
+    return _coerceStoredBranchId(users.first['mainBranchId']);
   }
 
   bool validateAndSave() {
