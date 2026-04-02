@@ -143,8 +143,7 @@ class JointAccountDetailPage extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 3),
                             decoration: BoxDecoration(
-                              color:
-                                  _getStatusColor(status).withOpacity(0.25),
+                              color: Colors.white.withOpacity(0.22),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -234,8 +233,6 @@ class JointAccountDetailPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
             child: Column(
               children: validItems.map((item) {
-                final bool isStatus =
-                    item.label == 'Status' && item.value != null;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5),
                   child: Row(
@@ -253,29 +250,22 @@ class JointAccountDetailPage extends StatelessWidget {
                         ),
                       ),
                       Expanded(
-                        child: isStatus
-                            ? Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(
-                                              item.value.toString())
-                                          .withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      item.value.toString(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: _getStatusColor(
-                                            item.value.toString()),
-                                      ),
-                                    ),
+                        child: item.label == 'Status' && item.value != null
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: cyanblueColor.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  item.value.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: cyanblueColor,
                                   ),
-                                ],
+                                ),
                               )
                             : Text(
                                 item.value.toString(),
@@ -727,28 +717,6 @@ class JointAccountDetailPage extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toUpperCase()) {
-      case 'APPROVED':
-        return const Color(0xFF43A047);
-      case 'PENDING':
-        return const Color(0xFFFB8C00);
-      case 'REJECTED':
-        return const Color(0xFFE53935);
-      case 'INITIAL':
-        return const Color(0xFF1E88E5);
-      case 'REGISTERED':
-        return cyanblueColor;
-      case 'UNAUTHORIZED':
-        return const Color(0xFFC62828);
-      case 'AUTHORIZED':
-        return const Color(0xFF1565C0);
-      case 'UNSETTLED':
-        return const Color(0xFFFF8F00);
-      default:
-        return Colors.grey;
-    }
-  }
 }
 
 class _InfoItem {

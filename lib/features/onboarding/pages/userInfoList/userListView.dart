@@ -407,11 +407,13 @@ class _UserInfoPageState extends State<UserListPage> {
   }
 
   Widget _buildEmptyState({required IconData icon, required String message}) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
+    return Align(
+      alignment: Alignment.topCenter,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               width: 80,
