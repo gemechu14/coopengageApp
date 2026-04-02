@@ -92,14 +92,11 @@ class AccountOnboardingScreen extends StatelessWidget {
                         const Color(0xFF059669),
                       ],
                       onTap: () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
+                        Navigator.of(context).push(
                           MaterialPageRoute(
-                              builder: (context) =>
-                                  JointNationalIdentification()
-                              //JointAccountStepperPage(),
-                              ),
-                          (route) => false,
+                            builder: (context) =>
+                                JointNationalIdentification(),
+                          ),
                         );
                       },
                     ),
@@ -112,11 +109,10 @@ class AccountOnboardingScreen extends StatelessWidget {
                         const Color(0xFFD97706),
                       ],
                       onTap: () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
+                        Navigator.of(context).push(
                           MaterialPageRoute(
-                              builder: (context) => CorporateAccountOpening()),
-                          (route) => false,
+                            builder: (context) => CorporateAccountOpening(),
+                          ),
                         );
                       },
                     ),
