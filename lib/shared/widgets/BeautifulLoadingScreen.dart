@@ -225,75 +225,7 @@ class _BeautifulLoadingScreenV2State extends State<BeautifulLoadingScreenV2>
                 );
               },
             ),
-            // const SizedBox(height: 40),
-
-            // // Beautiful animated spinner with custom colors
-            // Container(
-            //   padding: const EdgeInsets.all(20),
-            //   decoration: BoxDecoration(
-            //     color: Colors.white,
-            //     borderRadius: BorderRadius.circular(20),
-            //     boxShadow: [
-            //       BoxShadow(
-            //         color: primary.withOpacity(0.1),
-            //         blurRadius: 20,
-            //         offset: const Offset(0, 8),
-            //       ),
-            //     ],
-            //   ),
-            //   child: SpinKitWave(
-            //     color: primary,
-            //     size: loadingSize,
-            //     type: SpinKitWaveType.start,
-            //   ),
-            // ),
-            // const SizedBox(height: 30),
-
-            // // Loading message with pulse animation
-            // AnimatedBuilder(
-            //   animation: _pulseAnimation,
-            //   builder: (context, child) {
-            //     return Opacity(
-            //       opacity: 0.7 + (0.3 * _pulseAnimation.value),
-            //       child: Text(
-            //         loadingMessage,
-            //         style: TextStyle(
-            //           fontSize: 18,
-            //           fontWeight: FontWeight.w600,
-            //           color: Colors.grey.shade700,
-            //           letterSpacing: 0.5,
-            //         ),
-            //         textAlign: TextAlign.center,
-            //       ),
-            //     );
-            //   },
-            // ),
-            // const SizedBox(height: 20),
-
-            // // Animated progress dots
-            // AnimatedBuilder(
-            //   animation: _dotsAnimation,
-            //   builder: (context, child) {
-            //     return Row(
-            //       mainAxisAlignment: MainAxisAlignment.center,
-            //       children: List.generate(3, (index) {
-            //         final delay = index * 0.2;
-            //         final progress = (_dotsAnimation.value - delay).clamp(0.0, 1.0);
-            //         final opacity = (1.0 - progress).clamp(0.3, 1.0);
-
-            //         return Container(
-            //           margin: const EdgeInsets.symmetric(horizontal: 4),
-            //           width: 10,
-            //           height: 10,
-            //           decoration: BoxDecoration(
-            //             color: primary.withOpacity(opacity),
-            //             shape: BoxShape.circle,
-            //           ),
-            //         );
-            //       }),
-            //     );
-            //   },
-            // ),
+          
           ],
         ),
       ),
