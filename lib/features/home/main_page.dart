@@ -29,10 +29,13 @@ class _MainPageState extends State<MainPage> {
   );
 
   bool isLoading = true;
-  bool isInitializing = true; // New state for preventing immediate component loading
+  bool isInitializing = true;
   String role = '';
-  // Tab bodies built once per index; IndexedStack keeps them mounted (no Home dispose on tab switch).
   final List<Widget?> _cachedTabWidgets = List<Widget?>.filled(4, null);
+
+  /// Maps GNav's sequential tap index to our internal page index.
+  /// Rebuilt whenever role changes.
+  List<int> _tabIndexMap = [0, 1, 2, 3];
 
   @override
   void initState() {
@@ -56,6 +59,10 @@ class _MainPageState extends State<MainPage> {
         print("MainPage: JWT decode error: $e");
       }
     }
+
+    _tabIndexMap = role != 'AGENT'
+        ? [0, 1, 2, 3]   // Home, Customer, Agent, Profile
+        : [0, 1, 3];     // Home, Customer, Profile (no Agent tab)
 
     if (mounted) {
       setState(() {
@@ -102,11 +109,19 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  /// Converts our internal page index to GNav's sequential index.
+  int _pageIndexToGNavIndex(int pageIndex) {
+    final gnavIdx = _tabIndexMap.indexOf(pageIndex);
+    return gnavIdx == -1 ? 0 : gnavIdx;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       bottomNavigationBar: (isLoading || isInitializing)
-          ? null // Hide bottom navigation bar while loading
+          ? null
           : Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -117,45 +132,47 @@ class _MainPageState extends State<MainPage> {
                   )
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    double screenWidth = constraints.maxWidth;
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(10, 10, 10, bottomPadding > 0 ? 4 : 10),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      double screenWidth = constraints.maxWidth;
+                      final isSmall = screenWidth < 360;
+                      final isMedium = screenWidth < 400;
 
-                    return GNav(
-                      rippleColor: Colors.grey[300]!,
-                      hoverColor: Colors.grey[100]!,
-                      gap: 3,
-                      activeColor: Color(0xFF2196F3),
-                      iconSize: screenWidth < 400 ? 26 : 29, // Adjust icon size
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth < 400 ? 9 : 18,
-                        vertical: screenWidth < 400 ? 8 : 12,
-                      ),
-                      duration: const Duration(milliseconds: 400),
-                      tabBackgroundColor: Color(0xffD4F1F4),
-                      color: Colors.black,
-                      selectedIndex: currentState,
-                      onTabChange: (index) {
-                        setState(() {
-                          _cachedTabWidgets[index] ??= _getCurrentWidget(index);
-                          currentState = index;
-                        });
-                      },
-                      tabs: [
-                        _buildGNavItem(
-                            Icons.home, translation(context).home, 0),
-                        _buildGNavItem(
-                            Icons.assignment, translation(context).customer, 1),
-                        // _buildGNavItem(
-                        //     Icons.store, translation(context).merchant, 2),
-                        if (role != 'AGENT')
-                          _buildGNavItem(Icons.group, 'Agent', 2),
-                        _buildGNavItem(Icons.person_2, 'Profile', 3),
-                      ],
-                    );
-                  },
+                      return GNav(
+                        rippleColor: Colors.grey[300]!,
+                        hoverColor: Colors.grey[100]!,
+                        gap: isSmall ? 2 : 3,
+                        activeColor: Color(0xFF2196F3),
+                        iconSize: isSmall ? 22 : (isMedium ? 26 : 29),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isSmall ? 6 : (isMedium ? 9 : 18),
+                          vertical: isSmall ? 6 : (isMedium ? 8 : 12),
+                        ),
+                        duration: const Duration(milliseconds: 400),
+                        tabBackgroundColor: Color(0xffD4F1F4),
+                        color: Colors.black,
+                        selectedIndex: _pageIndexToGNavIndex(currentState),
+                        onTabChange: (gnavIndex) {
+                          final pageIndex = _tabIndexMap[gnavIndex];
+                          setState(() {
+                            _cachedTabWidgets[pageIndex] ??= _getCurrentWidget(pageIndex);
+                            currentState = pageIndex;
+                          });
+                        },
+                        tabs: [
+                          GButton(icon: Icons.home, text: translation(context).home),
+                          GButton(icon: Icons.assignment, text: translation(context).customer),
+                          if (role != 'AGENT')
+                            GButton(icon: Icons.group, text: 'Agent'),
+                          GButton(icon: Icons.person_2, text: 'Profile'),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -183,19 +200,6 @@ class _MainPageState extends State<MainPage> {
                 },
               ),
       ),
-    );
-  }
-
-  GButton _buildGNavItem(IconData icon, String label, int index) {
-    return GButton(
-      icon: icon,
-      text: label,
-      onPressed: () {
-        setState(() {
-          _cachedTabWidgets[index] ??= _getCurrentWidget(index);
-          currentState = index;
-        });
-      },
     );
   }
 
