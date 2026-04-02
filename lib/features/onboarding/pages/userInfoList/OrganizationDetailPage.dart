@@ -19,7 +19,7 @@ class OrganizationDetailPage extends StatelessWidget {
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    final accountId = org['id']?.toString() ?? org['id']?.toString() ?? '';
+    final accountId = org['id']?.toString() ?? '';
     String message;
     try {
       final result =
@@ -35,8 +35,7 @@ class OrganizationDetailPage extends StatelessWidget {
           message: message,
         );
       } else {
-        Navigator.of(parentContext, rootNavigator: true)
-            .pop(); // Remove loading
+        Navigator.of(parentContext, rootNavigator: true).pop();
         DialogHelper.show(
           context,
           title: "Coopengageplus",
@@ -44,7 +43,7 @@ class OrganizationDetailPage extends StatelessWidget {
         );
       }
     } catch (e) {
-      Navigator.of(parentContext, rootNavigator: true).pop(); // Remove loading
+      Navigator.of(parentContext, rootNavigator: true).pop();
       message = 'An error occurred: $e';
       DialogHelper.show(
         context,
@@ -60,156 +59,484 @@ class OrganizationDetailPage extends StatelessWidget {
             (org['customersInfo'] as List).isNotEmpty)
         ? org['customersInfo']
         : (org['personalInfo'] ?? []);
-    return SafeArea(
+    final String companyName = org['companyName'] ?? 'Organization';
+    final String status = org['status'] ?? '';
+    final String initials = companyName
+        .split(' ')
+        .map((w) => w.isNotEmpty ? w[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF5F6FA),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       child: DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.95,
+        initialChildSize: 0.93,
         minChildSize: 0.5,
-        maxChildSize: 0.98,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        maxChildSize: 0.96,
+        builder: (context, scrollController) => Column(
+          children: [
+            _buildSheetHeader(companyName, initials, status),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildSection(
+                      'Company Information',
+                      Icons.business_outlined,
+                      [
+                        _InfoItem('Company Name', org['companyName']),
+                        _InfoItem('TIN Number', org['tinNumber']),
+                        _InfoItem('Date of Establishment',
+                            org['dateOfEstablishment']),
+                        _InfoItem('Target', org['target']),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSection(
+                      'Location',
+                      Icons.location_on_outlined,
+                      [
+                        _InfoItem('Residence', org['residence']),
+                        _InfoItem('State', org['state']),
+                        _InfoItem('Zone', org['zone']),
+                        _InfoItem('Sub City', org['subCity']),
+                        _InfoItem('Woreda', org['woreda']),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSection(
+                      'Account Details',
+                      Icons.account_balance_outlined,
+                      [
+                        _InfoItem('Branch', org['branch']),
+                        _InfoItem('Currency', org['currency']),
+                        _InfoItem(
+                            'Account Type', org['accountType']?.toString()),
+                        _InfoItem('Initial Deposit',
+                            org['initialDeposit']?.toString()),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSignersSection(personalInfo),
+                    const SizedBox(height: 20),
+                    _buildSendEmailButton(context),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSheetHeader(
+      String companyName, String initials, String status) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cyanblueColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: Colors.white.withOpacity(0.3), width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-              Text(
-                org['companyName'] ??
-                    org['companyName'] ??
-                    'Organization Details',
-                style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue),
-              ),
-              const SizedBox(height: 16),
-              _infoRow('Company Name', org['companyName']),
-              _infoRow('TIN Number', org['tinNumber']),
-              _infoRow('Date of Establishment', org['dateOfEstablishment']),
-              _infoRow('Target', org['target']),
-              _infoRow('Residence', org['residence']),
-              _infoRow('State', org['state']),
-              _infoRow('Zone', org['zone']),
-              _infoRow('Sub City', org['subCity']),
-              _infoRow('Woreda', org['woreda']),
-              _infoRow('Branch', org['branch']),
-              _infoRow('Currency', org['currency']),
-              _infoRow('Account Type', org['accountType']?.toString()),
-              _infoRow('Initial Deposit', org['initialDeposit']?.toString()),
-              // _infoRow('Percentage Completed',
-              //     org['percentageCompleted']?.toString()),
-              // _infoRow('Letter of Request', org['letterOfRequest']),
-              // _infoRow('Trade License', org['tradeLicense']),
-              // _infoRow('Articles of Association', org['articlesOfAssociation']),
-              const SizedBox(height: 24),
-              Text('Authorized Signers( ${personalInfo.length})',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.blue)),
-              const SizedBox(height: 8),
-              if (personalInfo.isEmpty)
-                Text('No authorized signers found')
-              else
-                ...personalInfo
-                    .map<Widget>((person) => _personalInfoCard(person))
-                    .toList(),
-              const SizedBox(height: 32),
-              Center(
-                child: ElevatedButton.icon(
-                  icon: Icon(
-                    Icons.email,
-                    color: whiteColor,
-                  ),
-                  label: Text('Send Email'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 16),
-                    textStyle: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  onPressed: () => sendEmailToAuthorizedSigners(context),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      companyName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    if (status.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.22),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          status[0] + status.substring(1).toLowerCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, IconData icon, List<_InfoItem> items) {
+    final validItems =
+        items.where((i) => i.value != null && i.value!.toString().isNotEmpty).toList();
+    if (validItems.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 16, color: cyanblueColor),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: cyanblueColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+            child: Column(
+              children: validItems.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 130,
+                        child: Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.value.toString(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1A2E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignersSection(List personalInfo) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.people_outline, size: 16, color: cyanblueColor),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Authorized Signers',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: cyanblueColor,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${personalInfo.length}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: cyanblueColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          if (personalInfo.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                'No authorized signers found',
+                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              ),
+            )
+          else
+            ...personalInfo.asMap().entries.map((entry) {
+              return _buildSignerCard(entry.value, entry.key + 1);
+            }).toList(),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignerCard(Map person, int number) {
+    final String name = person['fullName'] ?? 'Unknown';
+    final String initials = name
+        .split(' ')
+        .map((w) => w.isNotEmpty ? w[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
+
+    final items = <_InfoItem>[
+      _InfoItem('Full Name', person['fullName']),
+      _InfoItem('Surname', person['surname']),
+      _InfoItem('Mother\'s Name', person['motherName']),
+      _InfoItem('Email', person['email']),
+      _InfoItem('Phone', person['phone']),
+      _InfoItem('Date of Birth', person['dateOfBirth']),
+      _InfoItem('Gender', person['sex']),
+      _InfoItem('Country', person['country']),
+      _InfoItem('State', person['state']),
+      _InfoItem('City', person['city']),
+      _InfoItem('Zone / Sub City', person['zoneSubCity']),
+      _InfoItem('House No', person['houseNo']),
+      _InfoItem('Zip Code', person['zipCode']),
+      _InfoItem('Occupation', person['occupation']),
+      _InfoItem('Title', person['title']),
+      _InfoItem('Marital Status', person['maritalStatus']),
+      _InfoItem('Document Name', person['documentName']),
+      _InfoItem('Issue Authority', person['issueAuthority']),
+      _InfoItem('Issue Date', person['issueDate']),
+      _InfoItem('Expiry Date', person['expiryDate']),
+      _InfoItem('Legal ID', person['legalId']),
+      _InfoItem('Sector', person['sector']),
+      _InfoItem('Industry', person['industry']),
+      _InfoItem('Employer', person['employerName']),
+      _InfoItem('Salary', person['salary']?.toString()),
+      _InfoItem('Monthly Income', person['monthlyIncome']?.toString()),
+    ];
+
+    final validItems =
+        items.where((i) => i.value != null && i.value!.toString().isNotEmpty).toList();
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+      ),
+      child: Theme(
+        data: ThemeData(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cyanblueColor, cyanblueColor.withOpacity(0.7)],
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+          title: Text(
+            name,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1A2E),
+            ),
+          ),
+          subtitle: Text(
+            person['email'] ?? person['phone'] ?? '',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              child: Column(
+                children: validItems.map((item) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          child: Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            item.value.toString(),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSendEmailButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton.icon(
+        onPressed: () => sendEmailToAuthorizedSigners(context),
+        icon: const Icon(Icons.email_outlined, size: 20),
+        label: const Text(
+          'Send Email to Signers',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cyanblueColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
       ),
     );
   }
 
-  Widget _infoRow(String label, dynamic value) {
-    if (value == null || value.toString().isEmpty) return SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('$label: ', style: TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value.toString())),
-        ],
-      ),
-    );
-  }
+}
 
-  Widget _personalInfoCard(Map person) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Text(person['fullName'] ?? '',
-            //     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-
-            _infoRow("Name:", person['fullName']),
-            _infoRow('Surname', person['surname']),
-            _infoRow('Mother Name', person['motherName']),
-            _infoRow('Email', person['email']),
-            _infoRow('Phone', person['phone']),
-            _infoRow('Date of Birth', person['dateOfBirth']),
-            _infoRow('Country', person['country']),
-            _infoRow('State', person['state']),
-            _infoRow('City', person['city']),
-            _infoRow('Street Address', person['streetAddress']),
-            _infoRow('Zip Code', person['zipCode']),
-            _infoRow('Occupation', person['occupation']),
-            _infoRow('Title', person['title']),
-            _infoRow('Marital Status', person['maritalStatus']),
-            _infoRow('Post Code', person['postCode']),
-            _infoRow('Zone/SubCity', person['zoneSubCity']),
-            _infoRow('House No', person['houseNo']),
-            _infoRow('Document Name', person['documentName']),
-            _infoRow('Issue Authority', person['issueAuthority']),
-            _infoRow('Issue Date', person['issueDate']),
-            _infoRow('Expiry Date', person['expiryDate']),
-            _infoRow('Employee Status', person['employeeStatus']),
-            _infoRow('Legal ID', person['legalId']),
-            _infoRow('Salary', person['salary']),
-            _infoRow('Sector', person['sector']),
-            _infoRow('Industry', person['industry']),
-            _infoRow('Employer Name', person['employerName']),
-            _infoRow('Monthly Income', person['monthlyIncome']),
-            _infoRow('Sex', person['sex']),
-            // You can add more fields as needed
-          ],
-        ),
-      ),
-    );
-  }
+class _InfoItem {
+  final String label;
+  final dynamic value;
+  _InfoItem(this.label, this.value);
 }

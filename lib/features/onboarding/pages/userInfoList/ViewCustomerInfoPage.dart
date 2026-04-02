@@ -6,8 +6,7 @@ import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
-
-import 'package:snippet_coder_utils/FormHelper.dart';
+import 'package:flutter/services.dart';
 
 class ViewCustomerInfo extends StatefulWidget {
   final Map<String, dynamic> registrationData;
@@ -29,328 +28,534 @@ class ViewCustomerInfo extends StatefulWidget {
 
 class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
   NetworkHandler networkHandler = NetworkHandler();
-
-  // @override
-  // void initState() {
-  //   _initializeGlobal();
-  // }
-
   List<Map<String, dynamic>> accountTypes = [];
+  bool _navigatingToHome = false;
+
+  String _getStatusFromTitle(String title) {
+    if (title.contains('Approved')) return 'APPROVED';
+    if (title.contains('Rejected')) return 'REJECTED';
+    if (title.contains('Awaiting')) return 'PENDING';
+    return 'NEW';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        SystemChrome.setSystemUIOverlayStyle(systemUiForCyanAppBar);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    if (!_navigatingToHome) {
+      SystemChrome.setSystemUIOverlayStyle(systemUiForCyanAppBar);
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final dynamic signatureBytes = widget.registrationData['signature'];
-    final dynamic photoData = widget.registrationData['photo'];
-    final dynamic residenceCardData = widget.registrationData['residenceCard'];
-    final dynamic residenceCardBackData =
-        widget.registrationData['residenceCardBack'];
+    final data = widget.registrationData;
+    final dynamic signatureBytes = data['signature'];
+    final dynamic photoData = data['photo'];
+    final dynamic residenceCardData = data['residenceCard'];
+    final dynamic residenceCardBackData = data['residenceCardBack'];
+    final String fullName = data['fullName'] ?? 'Customer';
+    final String status = data['status'] ?? _getStatusFromTitle(widget.title);
+    final String initials = fullName
+        .split(' ')
+        .map((w) => w.isNotEmpty ? w[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
 
-    final List<String> fieldsToShow = [
-      'fullName',
-      'surname',
-      'motherName',
-      'sex',
-      'dateOfBirth',
-      'phone',
-      'branch',
-      'customerType',
-      'email',
-      'country',
-      'state',
-      'city',
-      "zoneSubCity",
-      'zipCode',
-      'occupation',
-      'monthlyIncome',
-      "documentName",
-      // 'streetAddress': 'Woreda',
-      'currency',
-      "issueDate",
-      "expirayDate",
-      // 'percentageCompleted',
-      'accountType',
-      'accountNumber'
-    ];
-
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.pop(context);
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: whiteColor,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: const Text(
-            'Customer Information',
-            style: TextStyle(
-                color: Colors.blue, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_outlined,
-              size: 25,
-              color: Colors.blue,
-            ),
-          ),
-        ),
-        body: SingleChildScrollView(
-          child: Center(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(fullName, initials, status),
+          SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 5),
-                  Card(
-                    elevation: 5,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(30.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Personal Information',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const Divider(thickness: 1.5),
-                          const SizedBox(height: 15),
-                          ...fieldsToShow.map((field) {
-                            if (widget.registrationData.containsKey(field) &&
-                                widget.registrationData[field] != null) {
-                              String displayValue;
-                              if (field == 'phone') {
-                                displayValue = getFormattedPhoneNumber(
-                                    widget.registrationData[field]);
-                              } else if (field == 'dateOfBirth') {
-                                displayValue = formatDateOfBirth(
-                                    widget.registrationData[field]);
-                              }
-                              //else if (field == 'accountType') {
-                              //   displayValue = accountTypeName;
-                              // }
-                              else {
-                                displayValue =
-                                    widget.registrationData[field].toString();
-                              }
-
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '${formatFieldName(field)}: ',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: displayValue,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }
-
-                            return const SizedBox.shrink();
-                          }),
-                        ],
-                      ),
-                    ),
+                  const SizedBox(height: 16),
+                  _buildSection(
+                    'Personal Information',
+                    Icons.person_outline,
+                    [
+                      _InfoItem('Full Name', data['fullName']),
+                      _InfoItem('Surname', data['surname']),
+                      _InfoItem('Mother\'s Name', data['motherName']),
+                      _InfoItem('Gender', data['sex']),
+                      _InfoItem('Date of Birth', _formatDate(data['dateOfBirth'])),
+                      _InfoItem('Phone', _formatPhone(data['phone'])),
+                      _InfoItem('Email', data['email']),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 5, right: 5),
-                    child: Card(
-                      elevation: 5,
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Documents & Photos',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                            const Divider(thickness: 1.5),
-                            _buildImageSection(
-                                context, 'Signature', signatureBytes),
-                            _buildImageSection(context, 'Photo', photoData),
-                            _buildImageSection(
-                                context, 'Residence Card', residenceCardData),
-                            _buildImageSection(context, 'Residence Card Back',
-                                residenceCardBackData),
-                          ],
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: 12),
+                  _buildSection(
+                    'Address Details',
+                    Icons.location_on_outlined,
+                    [
+                      _InfoItem('Country', data['country']),
+                      _InfoItem('State / Region', data['state']),
+                      _InfoItem('City', data['city']),
+                      _InfoItem('Zone / Sub City', data['zoneSubCity']),
+                      _InfoItem('Zip Code', data['zipCode']),
+                    ],
                   ),
+                  const SizedBox(height: 12),
+                  _buildSection(
+                    'Account Information',
+                    Icons.account_balance_outlined,
+                    [
+                      _InfoItem('Branch', data['branch']),
+                      _InfoItem('Customer Type', data['customerType']),
+                      _InfoItem('Account Type', data['accountType']?.toString()),
+                      _InfoItem('Account Number', data['accountNumber']),
+                      _InfoItem('Currency', data['currency']),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSection(
+                    'Employment & Income',
+                    Icons.work_outline,
+                    [
+                      _InfoItem('Occupation', data['occupation']),
+                      _InfoItem('Monthly Income', data['monthlyIncome']?.toString()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSection(
+                    'Identification',
+                    Icons.badge_outlined,
+                    [
+                      _InfoItem('Document Name', data['documentName']),
+                      _InfoItem('Issue Date', _formatDate(data['issueDate'])),
+                      _InfoItem('Expiry Date', _formatDate(data['expirayDate'] ?? data['expiryDate'])),
+                    ],
+                  ),
+                  if (_hasAnyImage(signatureBytes, photoData,
+                      residenceCardData, residenceCardBackData)) ...[
+                    const SizedBox(height: 12),
+                    _buildDocumentsSection(
+                      signatureBytes,
+                      photoData,
+                      residenceCardData,
+                      residenceCardBackData,
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  _buildHomeButton(),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
           ),
-        ),
-        bottomNavigationBar: BottomAppBar(
-          color: Colors.transparent,
-          shape: const CircularNotchedRectangle(),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 26.0, vertical: 5.0),
-            child: FormHelper.submitButton(
-              "Go to Home",
-              fontSize: 19,
-              width: MediaQuery.of(context).size.width * 0.5,
-              btnColor: Colors.blue,
-              borderColor: Colors.blue,
-              () async {
-                Future.delayed(const Duration(seconds: 1), () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const MainPage(),
-                    ),
-                    (route) => false,
-                  );
-                });
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String formatFieldName(String fieldName) {
-    final RegExp regex = RegExp(r'(?<=[a-z])[A-Z]');
-    return fieldName
-        .replaceAllMapped(regex, (match) => ' ${match.group(0)}')
-        .toUpperCase();
-  }
-
-  String getFormattedPhoneNumber(String? phoneNumber) {
-    if (phoneNumber != null && !phoneNumber.startsWith('+251')) {
-      return '$phoneNumber';
-    }
-    return phoneNumber ?? '';
-  }
-
-  String formatDateOfBirth(String? dateOfBirth) {
-    if (dateOfBirth == null) return '';
-    try {
-      final date = DateTime.parse(dateOfBirth);
-      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return dateOfBirth;
-    }
-  }
-
-  Widget _buildImageSection(
-      BuildContext context, String title, dynamic imageData) {
-    if (imageData == null) {
-      return const SizedBox.shrink();
-    }
-
-    try {
-      if (imageData is Uint8List) {
-        return _buildImageWidget(
-          title,
-          Image.memory(
-            imageData,
-            height: 150,
-            width: double.infinity,
-            fit: BoxFit.contain,
-          ),
-        );
-      }
-
-      if (imageData is String &&
-          (imageData.startsWith('http') || imageData.startsWith('https'))) {
-        return _buildImageWidget(
-          title,
-          Image.network(
-            imageData,
-            height: 200,
-            width: double.infinity,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) =>
-                const Text('Failed to load image'),
-          ),
-        );
-      }
-
-      if (imageData is String &&
-          (imageData.startsWith('/9j/') ||
-              imageData.startsWith('data:image/jpeg;base64,'))) {
-        final base64Str = imageData.startsWith('data:image/jpeg;base64,')
-            ? imageData.replaceFirst('data:image/jpeg;base64,', '')
-            : imageData;
-        final imageBytes = base64Decode(base64Str);
-
-        return _buildImageWidget(
-          title,
-          Image.memory(
-            imageBytes,
-            height: 200,
-            width: MediaQuery.of(context).size.width,
-            fit: BoxFit.contain,
-          ),
-        );
-      }
-    } catch (e) {
-      print("Error processing image data for '$title': $e");
-    }
-
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildImageWidget(String title, Widget imageWidget) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20.0, left: 15, right: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: TextStyle(fontSize: 15, color: Colors.blue),
-          ),
-          const SizedBox(height: 10),
-          imageWidget,
         ],
       ),
     );
   }
 
+  Widget _buildSliverAppBar(String fullName, String initials, String status) {
+    return SliverAppBar(
+      expandedHeight: 180,
+      pinned: true,
+      backgroundColor: cyanblueColor,
+      systemOverlayStyle: systemUiForCyanAppBar,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios, size: 20, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cyanblueColor, cyanblueColor.withOpacity(0.85)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: Colors.white.withOpacity(0.3), width: 2),
+                  ),
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  fullName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.22),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: Colors.white.withOpacity(0.45)),
+                  ),
+                  child: Text(
+                    status[0] + status.substring(1).toLowerCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, IconData icon, List<_InfoItem> items) {
+    final validItems =
+        items.where((i) => i.value != null && i.value!.isNotEmpty).toList();
+    if (validItems.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 18, color: cyanblueColor),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: cyanblueColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              children: validItems.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 130,
+                        child: Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.value!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1A2E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _hasAnyImage(dynamic sig, dynamic photo, dynamic front, dynamic back) {
+    return sig != null || photo != null || front != null || back != null;
+  }
+
+  Widget _buildDocumentsSection(
+    dynamic signatureBytes,
+    dynamic photoData,
+    dynamic residenceCardData,
+    dynamic residenceCardBackData,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child:
+                      Icon(Icons.photo_library_outlined, size: 18, color: cyanblueColor),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Documents & Photos',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: cyanblueColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildImageTile('Photo', photoData),
+                _buildImageTile('Signature', signatureBytes),
+                _buildImageTile('ID Card (Front)', residenceCardData),
+                _buildImageTile('ID Card (Back)', residenceCardBackData),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageTile(String title, dynamic imageData) {
+    if (imageData == null) return const SizedBox.shrink();
+
+    Widget? imageWidget;
+    try {
+      if (imageData is Uint8List) {
+        imageWidget = Image.memory(imageData, fit: BoxFit.cover);
+      } else if (imageData is String &&
+          (imageData.startsWith('http') || imageData.startsWith('https'))) {
+        imageWidget = Image.network(
+          imageData,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) =>
+              Icon(Icons.broken_image, color: Colors.grey[400]),
+        );
+      } else if (imageData is String &&
+          (imageData.startsWith('/9j/') ||
+              imageData.startsWith('data:image/'))) {
+        final base64Str = imageData.startsWith('data:image/')
+            ? imageData.replaceFirst(RegExp(r'data:image/[^;]+;base64,'), '')
+            : imageData;
+        imageWidget = Image.memory(base64Decode(base64Str), fit: BoxFit.cover);
+      }
+    } catch (e) {
+      print("Error processing image for '$title': $e");
+    }
+
+    if (imageWidget == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _showFullImage(title, imageWidget!),
+            child: Container(
+              height: 160,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: imageWidget,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFullImage(String title, Widget imageWidget) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 16)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                constraints:
+                    const BoxConstraints(maxHeight: 400, maxWidth: 350),
+                padding: const EdgeInsets.all(16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: imageWidget,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          _navigatingToHome = true;
+          SystemChrome.setSystemUIOverlayStyle(systemUiForLightBackground);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MainPage()),
+            (route) => false,
+          );
+        },
+        icon: const Icon(Icons.home_outlined, size: 20),
+        label: const Text(
+          'Go to Home',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cyanblueColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatPhone(String? phone) {
+    if (phone == null) return '';
+    return phone;
+  }
+
+  String _formatDate(String? date) {
+    if (date == null || date.isEmpty) return '';
+    try {
+      final d = DateTime.parse(date);
+      return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return date;
+    }
+  }
+
   Future<void> _initializeGlobal() async {
     List<Map<String, dynamic>> fetchedAccountTypes =
         await networkHandler.fetchAccountTypesFromDatabase();
-
     setState(() {
       accountTypes = fetchedAccountTypes;
     });
   }
+}
+
+class _InfoItem {
+  final String label;
+  final String? value;
+  _InfoItem(this.label, this.value);
 }

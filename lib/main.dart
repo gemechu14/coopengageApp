@@ -6,6 +6,7 @@ import 'package:coopengageplus/core/l10n/app_localizations.dart';
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/features/screens/SplashScreen.dart';
 // import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,10 +37,7 @@ void main() async {
   // } catch (e) {
   //   print("Error initializing the database: $e");
   // }
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(systemUiForLightBackground);
   runApp(
     ProviderScope(
       child: MyApp(initialLanguage: initialLanguage),

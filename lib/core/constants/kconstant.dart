@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 const Color primaryColor = Color(0xff01136f);
 const Color primaryColorBg = Color(0xfffff4dd);
@@ -40,3 +41,17 @@ Color lightBlue =
 
 const graybackgroundColor = Color(0xFFF5F6FA);
 const cyanblueColor = (Color.fromARGB(255, 33, 150, 243));
+
+/// Home / Dashboard — dark status bar icons on light content.
+const SystemUiOverlayStyle systemUiForLightBackground = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light,
+);
+
+/// Cyan app bars (customer list, detail) — light status bar icons.
+const SystemUiOverlayStyle systemUiForCyanAppBar = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark,
+);
