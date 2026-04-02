@@ -1,8 +1,8 @@
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/providers/account_type_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/account_type.dart';
-// import '../providers/account_type_provider.dart';
 import '../providers/stepper_provider.dart';
 
 class AccountTypeStep extends ConsumerStatefulWidget {
@@ -266,42 +266,30 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: cyanblueColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        border: Border.all(color: cyanblueColor.withOpacity(0.20)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.2),
+              color: cyanblueColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child:
-                const Icon(Icons.account_balance, color: Colors.blue, size: 24),
+            child: const Icon(Icons.account_balance,
+                color: cyanblueColor, size: 24),
           ),
-          // const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Account Type Selection',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-                // Text(
-                //   'Choose an account type that matches your profile (Age: $_calculatedAge)',
-                //   style: TextStyle(
-                //     fontSize: 14,
-                //     color: Colors.grey[600],
-                //   ),
-                // ),
-              ],
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Account Type Selection',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: cyanblueColor,
+              ),
             ),
           ),
         ],
@@ -347,7 +335,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
         padding: EdgeInsets.all(40),
         child: Column(
           children: [
-            CircularProgressIndicator(),
+            CircularProgressIndicator(color: cyanblueColor),
             SizedBox(height: 16),
             Text(
               'Loading account types...',
@@ -454,16 +442,16 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.blue : Colors.white,
+            color: isSelected ? cyanblueColor : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? Colors.blue : Colors.grey[300]!,
+              color: isSelected ? cyanblueColor : Colors.grey[300]!,
               width: isSelected ? 2 : 1,
             ),
             boxShadow: [
               BoxShadow(
                 color: isSelected
-                    ? Colors.blue.withOpacity(0.2)
+                    ? cyanblueColor.withOpacity(0.2)
                     : Colors.grey.withOpacity(0.1),
                 blurRadius: isSelected ? 12 : 4,
                 offset: const Offset(0, 2),
@@ -479,7 +467,7 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
                 child: _buildCardContent(accountType, isSelected),
               ),
               if (isSelected)
-                Icon(
+                const Icon(
                   Icons.check_circle,
                   color: Colors.white,
                   size: 24,
@@ -498,12 +486,12 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       decoration: BoxDecoration(
         color: isSelected
             ? Colors.white.withOpacity(0.2)
-            : Colors.blue.withOpacity(0.1),
+            : cyanblueColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(
         _getAccountTypeIcon(accountType.type),
-        color: isSelected ? Colors.white : Colors.blue,
+        color: isSelected ? Colors.white : cyanblueColor,
         size: 24,
       ),
     );
@@ -592,23 +580,24 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: cyanblueColor.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: cyanblueColor.withOpacity(0.20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.pie_chart, color: Colors.orange[700], size: 20),
+              Icon(Icons.pie_chart,
+                  color: cyanblueColor.withOpacity(0.85), size: 20),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'Profit Sharing Configuration',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.orange[700],
+                  color: cyanblueColor,
                 ),
               ),
             ],
@@ -646,29 +635,67 @@ class _AccountTypeStepState extends ConsumerState<AccountTypeStep> {
     bool readOnly = false,
     String? hint,
   }) {
+    final mutedColor = Colors.blueGrey.shade400;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
+          style: TextStyle(
+            fontSize: 13.5,
             fontWeight: FontWeight.w600,
+            color: Colors.blueGrey.shade800,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         TextFormField(
           controller: controller,
           keyboardType: TextInputType.number,
           readOnly: readOnly,
           onChanged: onChanged,
+          style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade900),
           decoration: InputDecoration(
             hintText: hint ?? 'Enter percentage (0-100)',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+            hintStyle: TextStyle(
+              fontSize: 13,
+              color: mutedColor.withOpacity(0.7),
             ),
+            isDense: true,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            filled: true,
+            fillColor:
+                readOnly ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  BorderSide(color: cyanblueColor.withOpacity(0.30)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  BorderSide(color: cyanblueColor.withOpacity(0.30)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: cyanblueColor, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Colors.redAccent, width: 1.3),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Colors.redAccent, width: 1.5),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.blueGrey.shade100),
+            ),
           ),
           validator: readOnly ? null : _validateBankShare,
         ),

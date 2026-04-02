@@ -1,12 +1,13 @@
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/providers/national_id_provider.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/providers/fayda_provider.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/providers/simple_national_id_provider.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/shared/widgets/app_label.dart';
 import 'package:coopengageplus/shared/widgets/ReusableTextFormField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/stepper_provider.dart';
-// import '../../../widget/ReusableTextFormField.dart';
 
 class IdInformationStep extends ConsumerStatefulWidget {
   const IdInformationStep({Key? key}) : super(key: key);
@@ -60,12 +61,11 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
   }
 
   Future<void> _selectIssueDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await _showStyledDatePicker(
       context: context,
-      initialDate: DateTime.now()
-          .subtract(const Duration(days: 365)), // Default to 1 year ago
-      firstDate: DateTime(1900), // Allow dates from 1900
-      lastDate: DateTime.now(), // Last date is today
+      initialDate: DateTime.now().subtract(const Duration(days: 365)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
     );
     if (picked != null) {
       setState(() {
@@ -81,13 +81,11 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
   }
 
   Future<void> _selectExpireDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await _showStyledDatePicker(
       context: context,
-      initialDate: DateTime.now()
-          .add(const Duration(days: 365 * 5)), // Default to 5 years from now
-      firstDate: DateTime.now(), // First date is today
-      lastDate: DateTime.now()
-          .add(const Duration(days: 365 * 12)), // 12 years from today
+      initialDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 12)),
     );
     if (picked != null) {
       setState(() {
@@ -108,19 +106,38 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
     });
   }
 
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
-        ),
-      ),
+  Future<DateTime?> _showStyledDatePicker({
+    required BuildContext context,
+    required DateTime initialDate,
+    required DateTime firstDate,
+    required DateTime lastDate,
+  }) {
+    return showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      builder: (ctx, child) {
+        final baseTheme = Theme.of(ctx);
+        return Theme(
+          data: baseTheme.copyWith(
+            colorScheme: baseTheme.colorScheme.copyWith(
+              primary: cyanblueColor,
+              onPrimary: Colors.white,
+              secondary: cyanblueColor,
+            ),
+            dialogTheme: baseTheme.dialogTheme.copyWith(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
+
 
   Widget _buildErrorDisplay(String field) {
     if (validationErrors[field] != null &&
@@ -194,10 +211,9 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
           //     color: Colors.grey,
           //   ),
           // ),
-          const SizedBox(height: 24),
+          // const SizedBox(height: 24),
 
-          // Legal ID
-          _buildLabel("Legal ID *"),
+          const AppLabel("Legal ID", isRequired: true),
           ReusableTextFormField(
             hintText: "Legal ID",
             controller: legalIdController,
@@ -217,8 +233,7 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
           _buildErrorDisplay('legalId'),
           const SizedBox(height: 16),
 
-          // Issue Authority
-          _buildLabel("Issue Authority"),
+          const AppLabel("Issue Authority"),
           ReusableTextFormField(
             hintText: "Issue Authority",
             controller: issueAuthorityController,
@@ -238,8 +253,7 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
           _buildErrorDisplay('issueAuthority'),
           const SizedBox(height: 16),
 
-          // Issue Date
-          _buildLabel("Issue Date"),
+          const AppLabel("Issue Date"),
           GestureDetector(
             onTap: () => _selectIssueDate(context),
             child: AbsorbPointer(
@@ -256,8 +270,7 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
           _buildErrorDisplay('issueDate'),
           const SizedBox(height: 16),
 
-          // Expire Date
-          _buildLabel("Expire Date"),
+          const AppLabel("Expire Date"),
           GestureDetector(
             onTap: () => _selectExpireDate(context),
             child: AbsorbPointer(

@@ -1,14 +1,13 @@
 import 'dart:typed_data';
 
+import 'package:coopengageplus/shared/widgets/app_label.dart';
 import 'package:coopengageplus/shared/widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/shared/widgets/dropDown/branch_selector.dart';
 import 'package:coopengageplus/core/constants/listConstants.dart';
-// import 'package:coopengageplus/features/onboarding/_IndividualAccount/widgets/common/signature_pad.dart';
 import 'package:coopengageplus/shared/widgets/ReusableTextFormField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-// import 'package:permission_handler/permission_handler.dart';
 import 'package:signature/signature.dart';
 import '../providers/stepper_provider.dart';
 
@@ -83,8 +82,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Product Type - moved to top
-        textLabel("Product Type"),
+        const AppLabel("Product Type", isRequired: true),
         ReusableDropdown(
           selectedValue: stepperState.selectedProductType ?? 'CONVENTIONAL',
           items: ListContants.productType,
@@ -98,7 +96,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
           errorMessage: 'Please select a product type',
           isRequired: true,
         ),
-        textLabel("Mother Name"),
+        const AppLabel("Mother Name"),
         ReusableTextFormField(
           hintText: "Mother Name",
           controller: motherNameController,
@@ -107,18 +105,17 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
           leadingIcon: Icons.person,
           isRequired: false,
           onChanged: (value) {
-            // Save to stepper state
             ref.read(stepperProvider.notifier).updateMotherName(value);
           },
         ),
-        textLabel("Branch"),
+        const AppLabel("Branch", isRequired: true),
         BranchSelector(
           initialValue: stepperState.selectedBranch,
           onChanged: (value) {
             ref.read(stepperProvider.notifier).updateBranch(value);
           },
         ),
-        textLabel("Initial Amount"),
+        const AppLabel("Initial Amount", isRequired: true),
         ReusableTextFormField(
           hintText: "Initial Amount",
           controller: initialdepositController,
@@ -127,13 +124,12 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
           leadingIcon: Icons.wallet,
           isRequired: true,
           onChanged: (value) {
-            // Save to stepper state
             ref
                 .read(stepperProvider.notifier)
                 .updateInitialDeposit(double.tryParse(value));
           },
         ),
-        textLabel("Title"),
+        const AppLabel("Title", isRequired: true),
         ReusableDropdown(
           selectedValue: stepperState.selectedTitle,
           items: ListContants.title,
@@ -147,7 +143,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
           errorMessage: 'Please select a title',
           isRequired: true,
         ),
-        textLabel("Marital Status"),
+        const AppLabel("Marital Status", isRequired: true),
         ReusableDropdown(
           selectedValue: stepperState.selectedMaritalStatus,
           items: ListContants.maritalStatuses,
@@ -165,16 +161,4 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
     );
   }
 
-  Padding textLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 10, right: 3),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
 }

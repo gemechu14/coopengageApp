@@ -1,7 +1,6 @@
-// ignore_for_file: use_super_parameters
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 
 class ReusableTextFormField extends StatelessWidget {
   final String hintText;
@@ -10,12 +9,14 @@ class ReusableTextFormField extends StatelessWidget {
   final IconData? leadingIcon;
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
-  final bool isRequired; // New parameter to handle required validation
+  final bool isRequired;
   final bool isEnabled;
-  final bool readOnly; // New parameter for read-only mode
-  final Function(String)? onChanged; // Add onChanged callback
+  final bool readOnly;
+  final Function(String)? onChanged;
+  final Color accentColor;
+
   const ReusableTextFormField({
-    Key? key,
+    super.key,
     required this.hintText,
     required this.controller,
     this.errorMessage,
@@ -24,60 +25,75 @@ class ReusableTextFormField extends StatelessWidget {
     this.inputFormatters,
     this.isEnabled = true,
     this.readOnly = false,
-    this.isRequired = true, // Defaults to required
-    this.onChanged, // Add onChanged parameter
-  }) : super(key: key);
+    this.isRequired = true,
+    this.onChanged,
+    this.accentColor = cyanblueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
-      child: TextFormField(
-        // textAlign: TextAlign.start,
+    final mutedColor = Colors.blueGrey.shade400;
+    final bool editable = isEnabled && !readOnly;
 
-        
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, left: 3, right: 3),
+      child: TextFormField(
         controller: controller,
         inputFormatters: inputFormatters,
         keyboardType: keyboardType,
         readOnly: readOnly,
-        onChanged: onChanged, // Add onChanged callback
+        enabled: isEnabled,
+        onChanged: onChanged,
+        style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade900),
         decoration: InputDecoration(
-          // fillColor: Colors.white,
-          enabled: isEnabled,
-          filled: readOnly,
-          fillColor: readOnly ? Colors.grey[100] : null,
           hintText: hintText,
-          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+          hintStyle: TextStyle(
+            fontSize: 13,
+            color: mutedColor.withOpacity(0.7),
+          ),
           isDense: true,
           contentPadding:
-              const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          filled: true,
+          fillColor:
+              editable ? const Color(0xFFF8FAFC) : const Color(0xFFF1F5F9),
+          prefixIcon: leadingIcon != null
+              ? Icon(
+                  leadingIcon,
+                  size: 20,
+                  color: editable ? accentColor.withOpacity(0.7) : Colors.blueGrey.shade300,
+                )
+              : null,
           border: OutlineInputBorder(
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : Colors.black),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: accentColor.withOpacity(0.30)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : Colors.black),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: accentColor.withOpacity(0.30)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: readOnly ? Colors.grey[300]! : Colors.blue),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: accentColor, width: 1.5),
           ),
-          errorBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.red),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 1.3),
           ),
-          focusedErrorBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(color: Colors.red),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
           ),
-          prefixIcon: leadingIcon != null ? Icon(leadingIcon, color: readOnly ? Colors.grey : null) : null,
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.blueGrey.shade100),
+          ),
         ),
         validator: (value) {
           if (isRequired && (value == null || value.isEmpty)) {
             return errorMessage ?? 'This field is required';
           }
-          return null; // Return null if validation passes
+          return null;
         },
       ),
     );

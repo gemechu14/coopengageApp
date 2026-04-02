@@ -62,17 +62,12 @@ class _NationalIdRegistrationState
     });
   }
 
-  // ── Navigation ──────────────────────────────────────────────────────────
+  bool _disposed = false;
 
-  void _handleBack(int currentStep) {
-    if (!mounted) return;
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    } else if (currentStep > 0) {
-      ref.read(stepperProvider.notifier).previousStep();
-    } else {
-      _goToMainPage();
-    }
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   void _goToMainPage() {
@@ -81,6 +76,14 @@ class _NationalIdRegistrationState
       MaterialPageRoute(builder: (_) => MainPage()),
       (route) => false,
     );
+  }
+
+  void _handleBack(int activeStep) {
+    if (activeStep > 0) {
+      ref.read(stepperProvider.notifier).previousStep();
+    } else {
+      _goToMainPage();
+    }
   }
 
   // ── Step action handlers ────────────────────────────────────────────────

@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/core/database/database_helper.dart';
 
 class BranchSelector extends StatefulWidget {
@@ -355,16 +356,29 @@ class _BranchSelectorState extends State<BranchSelector> {
       }
     }
     
+    final mutedColor = Colors.blueGrey.shade400;
+
     return Padding(
-      padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
+      padding: const EdgeInsets.only(top: 4, left: 3, right: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DropdownButtonFormField<String>(
             value: isLoading ? null : validatedValue,
-            hint: isLoading
-                ? const Text('Loading branches...')
-                : const Text('Choose a branch'),
+            isExpanded: true,
+            icon: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: cyanblueColor.withOpacity(0.7),
+            ),
+            dropdownColor: Colors.white,
+            style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade900),
+            hint: Text(
+              isLoading ? 'Loading branches...' : 'Choose a branch',
+              style: TextStyle(
+                fontSize: 13,
+                color: mutedColor.withOpacity(0.7),
+              ),
+            ),
             onChanged: isLoading
                 ? null
                 : (String? newValue) {
@@ -381,17 +395,26 @@ class _BranchSelectorState extends State<BranchSelector> {
             },
             items: isLoading
                 ? [
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
                       value: null,
                       child: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cyanblueColor,
+                            ),
                           ),
-                          SizedBox(width: 10),
-                          Text('Loading...')
+                          const SizedBox(width: 10),
+                          Text(
+                            'Loading...',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: mutedColor.withOpacity(0.7),
+                            ),
+                          ),
                         ],
                       ),
                     )
@@ -400,33 +423,52 @@ class _BranchSelectorState extends State<BranchSelector> {
                     final companyName = branch['companyName'] ?? '';
                     return DropdownMenuItem<String>(
                       value: companyName,
-                      child: Text(companyName),
+                      child: Text(
+                        companyName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blueGrey.shade900,
+                        ),
+                      ),
                     );
                   }).toList(),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
               contentPadding:
-                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              prefixIcon: Icon(
+                Icons.location_city,
+                size: 20,
+                color: cyanblueColor.withOpacity(0.7),
+              ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: cyanblueColor.withOpacity(0.30)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.black),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: cyanblueColor.withOpacity(0.30)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.blue),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: cyanblueColor, width: 1.5),
               ),
               errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
+                borderRadius: BorderRadius.circular(10),
+                borderSide:
+                    const BorderSide(color: Colors.redAccent, width: 1.3),
               ),
               focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Colors.red),
+                borderRadius: BorderRadius.circular(10),
+                borderSide:
+                    const BorderSide(color: Colors.redAccent, width: 1.5),
               ),
-              prefixIcon: Icon(Icons.location_city),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.blueGrey.shade100),
+              ),
             ),
           ),
         ],
