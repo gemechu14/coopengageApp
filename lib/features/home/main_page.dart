@@ -31,12 +31,12 @@ class _MainPageState extends State<MainPage> {
   bool isLoading = true;
   bool isInitializing = true; // New state for preventing immediate component loading
   String role = '';
-  late PageController _pageController;
+  // Tab bodies built once per index; IndexedStack keeps them mounted (no Home dispose on tab switch).
+  final List<Widget?> _cachedTabWidgets = List<Widget?>.filled(4, null);
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
 
     if (!SessionManager.instance.isActive) {
       SessionManager.instance.startSession();
@@ -76,8 +76,8 @@ class _MainPageState extends State<MainPage> {
       case 0:
         return Dashboard(onSettingsTap: () {
           setState(() {
+            _cachedTabWidgets[2] ??= _getCurrentWidget(2);
             currentState = 2;
-            _pageController.jumpToPage(2);
           });
         });
       case 1:
@@ -95,8 +95,8 @@ class _MainPageState extends State<MainPage> {
       default:
         return Dashboard(onSettingsTap: () {
           setState(() {
+            _cachedTabWidgets[2] ??= _getCurrentWidget(2);
             currentState = 2;
-            _pageController.jumpToPage(2); // Navigate to Agent Page
           });
         });
     }
@@ -139,10 +139,9 @@ class _MainPageState extends State<MainPage> {
                       selectedIndex: currentState,
                       onTabChange: (index) {
                         setState(() {
+                          _cachedTabWidgets[index] ??= _getCurrentWidget(index);
                           currentState = index;
                         });
-                        _pageController.jumpToPage(
-                            index); // Move to the corresponding page
                       },
                       tabs: [
                         _buildGNavItem(
@@ -170,21 +169,16 @@ class _MainPageState extends State<MainPage> {
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
-                  return PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        currentState = index;
-                      });
-                    },
-                    physics: NeverScrollableScrollPhysics(),
-                    children: [
-                      _getCurrentWidget(0),
-                      _getCurrentWidget(1),
-                      _getCurrentWidget(2),
-                      _getCurrentWidget(3),
-                      // _getCurrentWidget(4),
-                    ],
+                  _cachedTabWidgets[currentState] ??=
+                      _getCurrentWidget(currentState);
+                  return IndexedStack(
+                    index: currentState,
+                    sizing: StackFit.expand,
+                    children: List<Widget>.generate(
+                      4,
+                      (i) =>
+                          _cachedTabWidgets[i] ?? const SizedBox.shrink(),
+                    ),
                   );
                 },
               ),
@@ -198,9 +192,9 @@ class _MainPageState extends State<MainPage> {
       text: label,
       onPressed: () {
         setState(() {
+          _cachedTabWidgets[index] ??= _getCurrentWidget(index);
           currentState = index;
         });
-        _pageController.jumpToPage(index);
       },
     );
   }
