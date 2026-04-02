@@ -2,15 +2,13 @@
 
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-// import 'package:coopengageplus/features/auth/login/login_screen.dart';
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/features/crm/CRMMainScreen.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
+import 'package:coopengageplus/shared/services/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
-// import '../features/auth/login/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -37,13 +35,17 @@ class _SplashScreenState extends State<SplashScreen> {
       String? token = await storage.read(key: "token");
       var connectivityResult = await Connectivity().checkConnectivity();
       bool isOnline = connectivityResult != ConnectivityResult.none;
-      if (token != null) {
+
+      if (token != null && token.isNotEmpty) {
         if (isOnline && JwtDecoder.isExpired(token)) {
+          await SessionManager.instance.endSession();
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const Loginscreen()),
           );
           return;
         }
+
+        SessionManager.instance.startSession();
 
         Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
         List<dynamic> roles = decodedToken['role'] ?? [];

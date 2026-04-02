@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
+import 'package:coopengageplus/shared/services/session_manager.dart';
 import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/features/onboarding/pages/help.dart';
 import 'package:coopengageplus/shared/services/GlobalData.dart';
@@ -717,7 +718,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void logout() async {
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -736,10 +736,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
 
-    await storage.delete(key: "token");
+    await SessionManager.instance.endSession();
 
     if (mounted) {
-      Navigator.of(context).pop(); // Close loading dialog
+      Navigator.of(context).pop();
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const Loginscreen()),

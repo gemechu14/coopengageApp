@@ -4,15 +4,13 @@ import 'package:coopengageplus/features/home/AccountOpeningHomePage.dart';
 import 'package:coopengageplus/features/onboarding/customer/agent/AgentPage.dart';
 import 'package:coopengageplus/features/onboarding/screens/profile/profileScreen.dart';
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
+import 'package:coopengageplus/shared/services/session_manager.dart';
 import 'package:coopengageplus/shared/widgets/BeautifulLoadingScreen.dart';
 import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-// import 'package:coopengageplus/core/database/database_helper.dart';
-// import 'package:coopengageplus/shared/services/token_service.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-// import 'package:coopengageplus/shared/widgets/mycard_share_fab.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -39,6 +37,11 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _pageController = PageController();
+
+    if (!SessionManager.instance.isActive) {
+      SessionManager.instance.startSession();
+    }
+
     _fetchToken();
   }
 
@@ -102,9 +105,6 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // floatingActionButton:
-      //     (isLoading || isInitializing) ? null : const MycardShareFab(),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: (isLoading || isInitializing)
           ? null // Hide bottom navigation bar while loading
           : Container(
@@ -206,7 +206,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   void logout() async {
-    await storage.delete(key: "token");
+    await SessionManager.instance.endSession();
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,

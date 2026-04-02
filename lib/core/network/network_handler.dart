@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:coopengageplus/core/config/config.dart';
 // import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/shared/services/session_manager.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,15 +21,33 @@ class NetworkHandler {
         storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
   );
 
+  /// Read token, verify it hasn't expired, and return it.
+  /// Returns null only for unauthenticated endpoints.
+  Future<String?> _getValidToken() async {
+    final token = await storage.read(key: 'token');
+    if (token == null || token.isEmpty) return null;
+    if (JwtDecoder.isExpired(token)) {
+      await SessionManager.instance.onUnauthorizedResponse();
+      return null;
+    }
+    return token;
+  }
+
+  /// Call after every authenticated HTTP response.
+  /// If the server returns 401, trigger auto-logout.
+  Future<void> _handleResponseStatus(http.BaseResponse response) async {
+    if (response.statusCode == 401) {
+      await SessionManager.instance.onUnauthorizedResponse();
+    }
+  }
+
   Future get(String url) async {
-    String? token = await storage.read(key: "token");
+    String? token = await _getValidToken();
+    if (token == null) return null;
+
     url = formater(url);
     var uri = Uri.parse(url);
 
-    print(" ");
-    print(uri);
-
-    // Use standard HTTP client for security
     var response = await http.get(
       uri,
       headers: {
@@ -35,6 +55,8 @@ class NetworkHandler {
         "Content-Type": "application/json"
       },
     );
+
+    await _handleResponseStatus(response);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
@@ -56,42 +78,25 @@ class NetworkHandler {
 
   ///AGENT REGISTRATION
   Future<http.Response> postAgent(String url, Map<String, dynamic> data) async {
-    String? token = await storage.read(key: "token");
+    String? token = await _getValidToken();
+    url = formater(url);
+    var uri = Uri.parse(url);
 
-    if (token == null) {
-      url = formater(url);
-      var uri = Uri.parse(url);
-
-      var headers = {
-        'Content-Type': 'application/json',
-      };
-
-      // Send JSON-encoded body in the request
-      var response = await http.post(
-        uri,
-        headers: headers,
-        body: jsonEncode(data), // JSON encode the map directly
-      );
-
-      return response;
-    } else {
-      url = formater(url);
-      var uri = Uri.parse(url);
-
-      var headers = {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      };
-
-      // Send JSON-encoded body in the request
-      var response = await http.post(
-        uri,
-        headers: headers,
-        body: jsonEncode(data),
-      );
-
-      return response;
+    var headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
     }
+
+    var response = await http.post(
+      uri,
+      headers: headers,
+      body: jsonEncode(data),
+    );
+
+    await _handleResponseStatus(response);
+    return response;
   }
 
   /// Agent signup at `/api/v1/agents` only. Does not change [postAgent] used elsewhere.
@@ -100,7 +105,7 @@ class NetworkHandler {
     String url,
     Map<String, dynamic> data,
   ) async {
-    String? token = await storage.read(key: "token");
+    String? token = await _getValidToken();
     url = formater(url);
     final uri = Uri.parse(url);
 
@@ -117,22 +122,15 @@ class NetworkHandler {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    // Debug: exact payload sent to `/api/v1/agents` (check Android Studio / VS Code debug console).
-    print('========== postAgentRegistration ==========');
-    print('URL: $uri');
-    print('Input map: $data');
-    print('After omitting nulls: $payload');
-    print('JSON body string: $bodyStr');
-    print(
-        'Authorization: ${headers.containsKey('Authorization') ? 'Bearer <token len=${token?.length ?? 0}>' : 'none'}');
-    print('==========================================');
-
-    return http.post(
+    final response = await http.post(
       uri,
       headers: headers,
       body: bodyStr,
       encoding: utf8,
     );
+
+    await _handleResponseStatus(response);
+    return response;
   }
 
   Future<http.Response> post(
@@ -285,10 +283,10 @@ class NetworkHandler {
   }
 
   Future<http.Response> post1(String url, Map<String, dynamic> data) async {
-    String? token = await storage.read(key: "token");
+    String? token = await _getValidToken();
 
     if (token == null) {
-      throw Exception("Token not found");
+      throw Exception("Token not found or expired");
     }
 
     url = formater(url);
@@ -345,14 +343,15 @@ class NetworkHandler {
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);
 
+    await _handleResponseStatus(response);
     return response;
   }
 
   Future<http.Response> put1(String url, Map<String, dynamic> data) async {
-    String? token = await storage.read(key: "token");
+    String? token = await _getValidToken();
 
     if (token == null) {
-      throw Exception("Token not found");
+      throw Exception("Token not found or expired");
     }
 
     url = formater(url);
@@ -490,9 +489,9 @@ class NetworkHandler {
   }
 
   Future<http.StreamedResponse> patchImage(String url, String filepath) async {
-    String? token = await storage.read(key: "token");
+    String? token = await _getValidToken();
     if (token == null) {
-      throw Exception("Token not found - please login again");
+      throw Exception("Token not found or expired - please login again");
     }
     
     url = formater(url);
@@ -516,11 +515,9 @@ class NetworkHandler {
   }
 
   Future<http.Response> fetchData(String url) async {
-    String? token = await storage.read(key: "token");
-
-    print(token);
+    String? token = await _getValidToken();
     if (token == null) {
-      throw Exception("Token not found - please login again");
+      throw Exception("Token not found or expired - please login again");
     }
     
     url = formater(url);
@@ -534,13 +531,14 @@ class NetworkHandler {
       },
     );
 
+    await _handleResponseStatus(response);
     return response;
   }
 
   Future<http.Response> getUserData(String url) async {
-    String? token = await storage.read(key: "token");
+    String? token = await _getValidToken();
     if (token == null) {
-      throw Exception("Token not found - please login again");
+      throw Exception("Token not found or expired - please login again");
     }
     
     url = formater(url);
@@ -554,6 +552,8 @@ class NetworkHandler {
         "Authorization": "Bearer $token"
       },
     );
+
+    await _handleResponseStatus(response);
     return response;
   }
 

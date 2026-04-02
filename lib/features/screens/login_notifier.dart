@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:coopengageplus/core/network/network_handler.dart';
+import 'package:coopengageplus/shared/services/session_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -114,6 +115,8 @@ class LoginNotifier extends StateNotifier<LoginScreenState> {
     final output = json.decode(response.body);
     final token = output['access_token'] as String;
     await _storage.write(key: 'token', value: token);
+
+    SessionManager.instance.startSession();
 
     state = state.copyWith(isLoading: false, shouldNavigate: true);
   }

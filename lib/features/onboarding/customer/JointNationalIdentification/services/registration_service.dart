@@ -5,7 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:coopengageplus/core/config/config.dart';
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/shared/services/token_service.dart';
+import 'package:coopengageplus/shared/services/session_manager.dart';
 import 'package:http_parser/http_parser.dart';
 
 class RegistrationService {
@@ -58,8 +58,7 @@ class RegistrationService {
         // Wait a moment for user to see the message
         await Future.delayed(Duration(seconds: 2));
 
-        // Force logout and redirect to login
-        await TokenService.forceLogoutWithContext(context);
+        await SessionManager.instance.onUnauthorizedResponse();
       } else {
         // If no context, just clear data and let the app handle it
         print('RegistrationService: No context available, clearing data only');
@@ -77,8 +76,7 @@ class RegistrationService {
         return false;
       }
 
-      // Use TokenService to check validity
-      return await TokenService.isTokenValid();
+      return await SessionManager.instance.isSessionValid();
     } catch (e) {
       print('RegistrationService: Error checking token validity: $e');
       return false;
