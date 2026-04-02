@@ -1,4 +1,7 @@
 // ignore_for_file: constant_identifier_names, use_build_context_synchronously, non_constant_identifier_names, use_super_parameters, library_private_types_in_public_api
+import 'dart:convert';
+
+import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/features/onboarding/pages/help.dart';
@@ -10,7 +13,7 @@ import 'package:coopengageplus/shared/widgets/mycard_share_fab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:coopengageplus/core/database/database_helper.dart';
+// import 'package:coopengageplus/core/database/database_helper.dart';
 import 'pages/overall_stats_page.dart';
 import 'pages/recent_invitations_page.dart';
 
@@ -29,10 +32,12 @@ class _ProfileScreenState extends State<ProfileScreen>
       storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
     ),
   );
+  final NetworkHandler _networkHandler = NetworkHandler();
 
   String username = "";
   String firstLetter = "";
   String role = '';
+  String? userEmail;
   bool isProfileLoading = true;
   bool isBranchesLoading = true;
 
@@ -183,17 +188,29 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildShimmerContainer(150, 20, 4)
                     else
                       Text(
-                        username,
+                        username.isNotEmpty ? username : 'User',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: blackColor,
                         ),
                       ),
+                    if (!isProfileLoading &&
+                        userEmail != null &&
+                        userEmail!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        userEmail!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     if (isProfileLoading)
                       _buildShimmerContainer(100, 16, 4)
-                    else
+                    else if (role.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -731,182 +748,210 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  Future<void> _fetchToken() async {
-    String? token = await storage.read(key: "token");
-    print("ProfileScreen: Token found: ${token != null ? 'Yes' : 'No'}");
+  String _roleFromUserPayload(Map<String, dynamic> m) {
+    final r = m['role'];
+    if (r is List && r.isNotEmpty) return r.first.toString();
+    if (r is String && r.isNotEmpty) return r;
+    final roles = m['roles'];
+    if (roles is List && roles.isNotEmpty) return roles.first.toString();
+    return '';
+  }
 
-    if (token != null && token.isNotEmpty) {
-      try {
-        // Try to decode the token to get user details
-        var decodedToken = JwtDecoder.decode(token);
-        print("ProfileScreen: JWT decoded successfullyqq");
+  int? _coerceInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    return int.tryParse(v.toString());
+  }
 
-        setState(() {
-          username = decodedToken['sub'] ?? "User";
-          firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
-          role = decodedToken['role'][0];
-          UserID = decodedToken['userId'];
+  Map<String, dynamic> _branchTileMap(Map<String, dynamic> b) {
+    final name = b['name']?.toString() ?? b['companyName']?.toString();
+    return {
+      'id': b['id'],
+      'name': name ?? 'Unnamed Branch',
+      'branchCode': b['branchCode']?.toString() ?? '',
+      'companyName': name ?? 'Unnamed Branch',
+    };
+  }
 
-          // Don't get branches from token, we'll get them from database
-          branches = [];
-
-          isProfileLoading = false;
-          isBranchesLoading = false;
-        });
-
-        // After setting basic info, fetch branches from database
-        await _fetchBranchesFromDatabase();
-      } catch (e) {
-        print("ProfileScreen: JWT decoding failed: $e");
-        // If JWT decoding fails, try to get user data from local database
-        final dbHelper = DatabaseHelper();
-        final user = await dbHelper.getUserByToken(token);
+  /// Loads profile from `/api/v1/users/me` (same source as [BranchSelector]).
+  Future<bool> _loadProfileFromApi() async {
+    try {
+      final response =
+          await _networkHandler.fetchData('/api/v1/users/me');
+      if (response.statusCode != 200 && response.statusCode != 201) {
         print(
-            "ProfileScreen: User found by token: ${user != null ? 'Yes' : 'No'}");
+            'ProfileScreen: /users/me HTTP ${response.statusCode}');
+        return false;
+      }
+      final userData = jsonDecode(response.body) as Map<String, dynamic>;
 
-        if (user != null) {
-          print("ProfileScreen: Using data from databasesds");
-          setState(() {
-            print(user['mainBranchName']);
-            username = user['username'] ?? user['fullName'] ?? "User";
-            firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
-            role = user['role'] ?? '';
-            UserID = user['userId'];
+      String displayName = userData['username']?.toString() ??
+          userData['fullName']?.toString() ??
+          userData['name']?.toString() ??
+          userData['email']?.toString() ??
+          '';
+      if (displayName.isEmpty) {
+        displayName = 'User';
+      }
 
-            // Set main branch from database
-            mainBranchCode = user['mainBranchCode'];
-            mainBranchCompanyName = user['mainBranchName'];
-            mainBranchId = user['mainBranchId'];
+      final roleStr = _roleFromUserPayload(userData);
+      final email = userData['email']?.toString();
 
-            isProfileLoading = false;
-            isBranchesLoading = false;
-          });
+      int? mbId;
+      String? mbName;
+      String? mbCode;
 
-          // Fetch branches from database
-          await _fetchBranchesFromDatabase();
-        } else {
-          // If no user found by token, try to get the first user from database
-          final users = await dbHelper.getUsers();
-          print("ProfileScreen: Total users in database: ${users.length}");
+      if (userData['mainBranch'] != null &&
+          userData['mainBranch'] is Map<String, dynamic>) {
+        final mb = userData['mainBranch'] as Map<String, dynamic>;
+        mbId = _coerceInt(mb['id']);
+        mbName = mb['name']?.toString() ?? mb['companyName']?.toString();
+        mbCode = mb['branchCode']?.toString();
+      }
 
-          if (users.isNotEmpty) {
-            final firstUser = users.first;
-            print("ProfileScreen: Using first user from database");
-            setState(() {
-              username =
-                  firstUser['username'] ?? firstUser['fullName'] ?? "User";
-              firstLetter =
-                  username.isNotEmpty ? username[0].toUpperCase() : '';
-              role = firstUser['role'] ?? '';
-              UserID = firstUser['userId'];
+      List<Map<String, dynamic>> otherBranches = [];
+      if (userData['branches'] != null && userData['branches'] is List) {
+        for (final raw in userData['branches'] as List) {
+          if (raw is! Map<String, dynamic>) continue;
+          final tile = _branchTileMap(raw);
+          final oid = _coerceInt(raw['id']);
+          if (mbId != null && oid == mbId) continue;
+          otherBranches.add(tile);
+        }
+      }
 
-              // Set main branch from database
-              mainBranchCode = firstUser['mainBranchCode'];
-              mainBranchCompanyName = firstUser['mainBranchName'];
-              mainBranchId = firstUser['mainBranchId'];
-
-              isProfileLoading = false;
-              isBranchesLoading = false;
-            });
-
-            // Fetch branches from database
-            await _fetchBranchesFromDatabase();
-          } else {
-            print("ProfileScreen: No users found in database");
-            setState(() {
-              isProfileLoading = false;
-              isBranchesLoading = false;
-            });
+      if ((mbName == null || mbName.isEmpty) &&
+          userData['branches'] is List &&
+          (userData['branches'] as List).isNotEmpty) {
+        final list = userData['branches'] as List;
+        final first = list.first;
+        if (first is Map<String, dynamic>) {
+          mbId = _coerceInt(first['id']);
+          mbName = first['name']?.toString() ?? first['companyName']?.toString();
+          mbCode = first['branchCode']?.toString();
+          otherBranches = [];
+          for (var i = 1; i < list.length; i++) {
+            final raw = list[i];
+            if (raw is Map<String, dynamic>) {
+              otherBranches.add(_branchTileMap(raw));
+            }
           }
         }
       }
-    } else {
-      print("ProfileScreen: No token found, checking database for any user");
-      // If no token, try to get any user from database
-      final dbHelper = DatabaseHelper();
-      final users = await dbHelper.getUsers();
 
-      print("kdfkdfkdjfjkdkjfjeuueurueurueueruur");
-      print(users);
-      if (users.isNotEmpty) {
-        final firstUser = users.first;
-        print("ProfileScreen: Using first user from database (no token)");
-        setState(() {
-          username = firstUser['username'] ?? firstUser['fullName'] ?? "User";
-          firstLetter = username.isNotEmpty ? username[0].toUpperCase() : '';
-          role = firstUser['role'] ?? '';
-          UserID = firstUser['userId'];
+      if (!mounted) return true;
+      setState(() {
+        username = displayName;
+        firstLetter =
+            displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+        role = roleStr;
+        userEmail = email;
+        UserID = _coerceInt(userData['userId'] ?? userData['id']);
+        mainBranchId = mbId;
+        mainBranchCompanyName = mbName;
+        mainBranchCode = mbCode;
+        branches = otherBranches.isNotEmpty ? otherBranches : null;
+        isProfileLoading = false;
+        isBranchesLoading = false;
+      });
+      return true;
+    } catch (e) {
+      print('ProfileScreen: /users/me failed: $e');
+      return false;
+    }
+  }
 
-          // Set main branch from database
-          mainBranchCode = firstUser['mainBranchCode'];
-          mainBranchCompanyName = firstUser['mainBranchName'];
-          mainBranchId = firstUser['mainBranchId'];
+  void _applyJwtProfile(String token) {
+    try {
+      final decodedToken =
+          Map<String, dynamic>.from(JwtDecoder.decode(token) as Map);
+      final branchList = List<Map<String, dynamic>>.from(
+          decodedToken['branch'] ?? []);
 
-          isProfileLoading = false;
-          isBranchesLoading = false;
-        });
+      final roleStr = _roleFromUserPayload(decodedToken);
 
-        // Fetch branches from database
-        await _fetchBranchesFromDatabase();
-      } else {
+      String displayName = decodedToken['sub']?.toString() ??
+          decodedToken['username']?.toString() ??
+          '';
+      if (displayName.isEmpty) displayName = 'User';
+
+      int? mbId;
+      String? mbName;
+      String? mbCode;
+      List<Map<String, dynamic>> otherBranches = [];
+
+      if (decodedToken['mainBranch'] is Map) {
+        final mb = Map<String, dynamic>.from(
+            decodedToken['mainBranch'] as Map);
+        if (mb.isNotEmpty) {
+          mbId = _coerceInt(mb['id']);
+          mbName = mb['companyName']?.toString() ?? mb['name']?.toString();
+          mbCode = mb['branchCode']?.toString();
+          for (final b in branchList) {
+            final bid = _coerceInt(b['id']);
+            if (mbId != null && bid == mbId) continue;
+            otherBranches.add(_branchTileMap(b));
+          }
+        }
+      }
+
+      if (mbName == null || mbName.isEmpty) {
+        if (branchList.isNotEmpty) {
+          final first = branchList.first;
+          mbId = _coerceInt(first['id']);
+          mbName = first['name']?.toString() ?? first['companyName']?.toString();
+          mbCode = first['branchCode']?.toString();
+          otherBranches = branchList.skip(1).map(_branchTileMap).toList();
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        username = displayName;
+        firstLetter =
+            displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+        role = roleStr;
+        userEmail = null;
+        UserID = _coerceInt(decodedToken['userId']);
+        mainBranchId = mbId;
+        mainBranchCompanyName = mbName;
+        mainBranchCode = mbCode;
+        branches = otherBranches.isNotEmpty ? otherBranches : null;
+        isProfileLoading = false;
+        isBranchesLoading = false;
+      });
+    } catch (e) {
+      print('ProfileScreen: JWT decoding failed: $e');
+      if (mounted) {
         setState(() {
           isProfileLoading = false;
           isBranchesLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _fetchToken() async {
+    final String? token = await storage.read(key: "token");
+    this.token = token;
+    print("ProfileScreen: Token found: ${token != null ? 'Yes' : 'No'}");
+
+    if (token == null || token.isEmpty) {
+      if (mounted) {
+        setState(() {
+          isProfileLoading = false;
+          isBranchesLoading = false;
+        });
+      }
+      return;
+    }
+
+    final ok = await _loadProfileFromApi();
+    if (!ok) {
+      _applyJwtProfile(token);
     }
 
     print(
         "ProfileScreen: Final data - username: $username, role: $role, UserID: $UserID");
-  }
-
-  Future<void> _fetchBranchesFromDatabase() async {
-    print("ProfileScreen: Fetching branches from database...");
-    final dbHelper = DatabaseHelper();
-
-    try {
-      // Get all branches from the Branches table
-      final db = await dbHelper.database;
-      final List<Map<String, dynamic>> branchResults =
-          await db.query('Branches');
-
-      print("ProfileScreen: Raw branches from database11: $branchResults");
-
-      if (branchResults.isNotEmpty) {
-        print("dfdkjfdk");
-        // Convert database results to the expected format
-        final List<Map<String, dynamic>> formattedBranches =
-            branchResults.map((branch) {
-          return {
-            'id': branch['id'],
-            "userId": branch['userId'],
-            'name': branch['branchName'] ?? 'Unnamed Branch',
-            'branchCode': branch['branchCode'] ?? '',
-            'companyName': branch['companyName'] ??
-                branch['branchName'] ??
-                'Unnamed Branch',
-          };
-        }).toList();
-
-        print("ProfileScreen: Formatted branchess: $formattedBranches");
-
-        setState(() {
-          branches = formattedBranches;
-          isBranchesLoading = false;
-        });
-      } else {
-        print("ProfileScreen: No branches found in database");
-        setState(() {
-          branches = [];
-          isBranchesLoading = false;
-        });
-      }
-    } catch (e) {
-      print("ProfileScreen: Error fetching branches: $e");
-      setState(() {
-        branches = [];
-        isBranchesLoading = false;
-      });
-    }
   }
 }

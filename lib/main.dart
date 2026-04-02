@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:coopengageplus/core/network/http_overrides.dart';
 import 'package:coopengageplus/core/l10n/app_localizations.dart';
-import 'package:coopengageplus/features/home/LoginPage.dart';
+import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/features/screens/SplashScreen.dart';
-import 'package:coopengageplus/core/database/database_helper.dart';
+// import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,17 +25,17 @@ int? TOTALINITIAL;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  DatabaseHelper dbHelper = DatabaseHelper();
+  // DatabaseHelper dbHelper = DatabaseHelper();
 
   HttpOverrides.global = MyHttpOverrides();
   String initialLanguage = 'en';
-  try {
-    await dbHelper.database;
-    await dbHelper.printTables();
-    initialLanguage = await dbHelper.getSelectedLanguage();
-  } catch (e) {
-    print("Error initializing the database: $e");
-  }
+  // try {
+  //   await dbHelper.database;
+  //   await dbHelper.printTables();
+  //   initialLanguage = await dbHelper.getSelectedLanguage();
+  // } catch (e) {
+  //   print("Error initializing the database: $e");
+  // }
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
@@ -74,7 +74,7 @@ class MyApp extends StatelessWidget {
 //
       routes: {
         '/home': (context) => const MainPage(),
-        '/login': (context) => const LoginPage(),
+        '/login': (context) => const Loginscreen(),
       },
 
       localizationsDelegates: [

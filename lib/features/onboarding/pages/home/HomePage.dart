@@ -1,6 +1,6 @@
 // ignore_for_file: file_names, non_constant_identifier_names, deprecated_member_use, use_build_context_synchronously
 
-import 'package:coopengageplus/features/home/LoginPage.dart';
+import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/features/home/UserListPage.dart';
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -432,7 +432,7 @@ class _HomepageState extends State<Homepage> {
     await storage.delete(key: "token");
     Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+        MaterialPageRoute(builder: (context) => const Loginscreen()),
         (route) => false);
   }
 }

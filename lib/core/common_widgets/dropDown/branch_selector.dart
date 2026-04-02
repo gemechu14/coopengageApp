@@ -1,4 +1,4 @@
-import 'package:coopengageplus/core/database/database_helper.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -34,126 +34,87 @@ class _BranchSelectorState extends State<BranchSelector> {
 
   void initializeBranches() async {
     try {
-      print("BranchSelector: Initializing branches from database...");
-      
-      final dbHelper = DatabaseHelper();
-      final db = await dbHelper.database;
-      
-      final List<Map<String, dynamic>> branchResults = await db.query('Branches');
-      print("BranchSelector: Raw branches from database: $branchResults");
-      
-      if (branchResults.isNotEmpty) {
-        final List<Map<String, dynamic>> formattedBranches = branchResults.map((branch) {
-          return {
-            'id': branch['id'],
-            'name': branch['branchName'] ?? 'Unnamed Branch',
-            'branchCode': branch['branchCode'] ?? '',
-            'companyName': branch['companyName'] ?? branch['branchName'] ?? 'Unnamed Branch',
-          };
-        }).toList();
-        
-        print("BranchSelector: Formatted branches: $formattedBranches");
-        
-        String? defaultBranchName;
-        Map<String, dynamic>? mainBranchData;
-        try {
-          String? token = await storage.read(key: "token");
-          print("BranchSelector: Token found: ${token != null ? 'Yes' : 'No'}");
-          
-          Map<String, dynamic>? currentUser;
-          
-          if (token != null && token.isNotEmpty) {
-            currentUser = await dbHelper.getUserByToken(token);
-            print("BranchSelector: User found by token: ${currentUser != null ? 'Yes' : 'No'}");
-          }
-          
-          if (currentUser == null) {
-            final users = await dbHelper.getUsers();
-            if (users.isNotEmpty) {
-              currentUser = users.first;
-              print("BranchSelector: Using first user from database as fallback");
-            }
-          }
-          
-          // Set main branch from current user
-          if (currentUser != null && currentUser['mainBranchName'] != null) {
-            defaultBranchName = currentUser['mainBranchName'];
-            mainBranchData = {
-              'id': currentUser['mainBranchId'] ?? 0,
-              'name': currentUser['mainBranchName'] ?? 'Main Branch',
-              'branchCode': currentUser['mainBranchCode'] ?? '',
-              'companyName': currentUser['mainBranchName'] ?? 'Main Branch',
-            };
-            print("BranchSelector: Main branch from current user: $defaultBranchName");
-          }
-        } catch (e) {
-          print("BranchSelector: Error getting main branch: $e");
-        }
-        
-        // Create final branches list including main branch
-        final List<Map<String, dynamic>> allBranchesList = [];
-        final Set<String> seenCompanyNames = {}; // Track unique company names
-        
-        // Add main branch first if it exists
-        if (mainBranchData != null) {
-          final mainCompanyName = mainBranchData['companyName'] as String;
-          allBranchesList.add(mainBranchData);
-          seenCompanyNames.add(mainCompanyName);
-          print("BranchSelector: Added main branch to list: $mainBranchData");
-        }
-        
-        // Add other branches, excluding duplicates by companyName
-        for (var branch in formattedBranches) {
-          final companyName = branch['companyName'] as String;
-          
-          // Skip if we've already seen this companyName
-          if (seenCompanyNames.contains(companyName)) {
-            print("BranchSelector: Skipping duplicate branch: $companyName");
-            continue;
-          }
-          
-          allBranchesList.add(branch);
-          seenCompanyNames.add(companyName);
-        }
-        print("BranchSelector: Final all branches list (${allBranchesList.length} branches): $allBranchesList");
-        
-        setState(() {
-          allBranches = allBranchesList;
-          
-          // Priority: initialValue > mainBranch > first branch
-          String? proposedBranch = widget.initialValue ?? 
-                                   defaultBranchName ?? 
-                                   (allBranchesList.isNotEmpty ? allBranchesList.first['companyName'] : null);
-          
-          // Ensure the proposed branch actually exists in our list
-          if (proposedBranch != null) {
-            bool branchExists = allBranchesList.any((branch) => branch['companyName'] == proposedBranch);
-            if (branchExists) {
-              selectedBranch = proposedBranch;
-            } else {
-              // Fallback to first branch if proposed branch doesn't exist
-              selectedBranch = allBranchesList.isNotEmpty ? allBranchesList.first['companyName'] : null;
-              print("BranchSelector: Proposed branch '$proposedBranch' not found in list, using first branch: $selectedBranch");
-            }
-          } else {
-            selectedBranch = null;
-          }
-          
-          isLoading = false;
-        });
-        
-        // Notify parent of initial value
-        widget.onChanged(selectedBranch);
-        
-      } else {
-        print("BranchSelector: No branches found in database");
+      print("BranchSelector: Initializing branches from JWT token...");
+
+      String? token = await storage.read(key: "token");
+      if (token == null || token.isEmpty) {
+        print("BranchSelector: No token found");
         setState(() {
           allBranches = [];
           selectedBranch = null;
           isLoading = false;
         });
+        return;
       }
-      
+
+      final parts = token.split(".");
+      final payload = json.decode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+      );
+
+      final branchList =
+          List<Map<String, dynamic>>.from(payload['branch'] ?? []);
+
+      if (branchList.isEmpty) {
+        print("BranchSelector: No branches found in token");
+        setState(() {
+          allBranches = [];
+          selectedBranch = null;
+          isLoading = false;
+        });
+        return;
+      }
+
+      final List<Map<String, dynamic>> formattedBranches =
+          branchList.map((branch) {
+        return {
+          'id': branch['id'],
+          'name': branch['name']?.toString() ?? 'Unnamed Branch',
+          'branchCode': branch['branchCode']?.toString() ?? '',
+          'companyName': branch['name']?.toString() ?? 'Unnamed Branch',
+        };
+      }).toList();
+
+      final List<Map<String, dynamic>> allBranchesList = [];
+      final Set<String> seenCompanyNames = {};
+
+      for (var branch in formattedBranches) {
+        final companyName = branch['companyName'] as String;
+        if (!seenCompanyNames.contains(companyName)) {
+          allBranchesList.add(branch);
+          seenCompanyNames.add(companyName);
+        }
+      }
+
+      print(
+          "BranchSelector: Final branches list (${allBranchesList.length} branches)");
+
+      setState(() {
+        allBranches = allBranchesList;
+
+        String? proposedBranch = widget.initialValue ??
+            (allBranchesList.isNotEmpty
+                ? allBranchesList.first['companyName']
+                : null);
+
+        if (proposedBranch != null) {
+          bool branchExists = allBranchesList
+              .any((branch) => branch['companyName'] == proposedBranch);
+          if (branchExists) {
+            selectedBranch = proposedBranch;
+          } else {
+            selectedBranch = allBranchesList.isNotEmpty
+                ? allBranchesList.first['companyName']
+                : null;
+          }
+        } else {
+          selectedBranch = null;
+        }
+
+        isLoading = false;
+      });
+
+      widget.onChanged(selectedBranch);
     } catch (e) {
       print("BranchSelector: Error initializing branches: $e");
       setState(() {

@@ -1,6 +1,6 @@
 import 'package:coopengageplus/features/hpc/Dashboard/dashboard.dart';
 import 'package:coopengageplus/features/hpc/presentation/profile/hpcProfile.dart';
-import 'package:coopengageplus/features/home/LoginPage.dart';
+import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -146,7 +146,7 @@ class _MainPageState extends State<HPCMainPage> {
     await storage.delete(key: "token");
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
+      MaterialPageRoute(builder: (context) => const Loginscreen()),
       (route) => false,
     );
   }

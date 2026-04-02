@@ -3,14 +3,14 @@ import 'package:coopengageplus/features/home/Dashboard/Dashboard.dart';
 import 'package:coopengageplus/features/home/AccountOpeningHomePage.dart';
 import 'package:coopengageplus/features/onboarding/customer/agent/AgentPage.dart';
 import 'package:coopengageplus/features/onboarding/screens/profile/profileScreen.dart';
-import 'package:coopengageplus/features/home/LoginPage.dart';
+import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:coopengageplus/shared/widgets/BeautifulLoadingScreen.dart';
 import 'package:coopengageplus/core/utils/language_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:coopengageplus/core/database/database_helper.dart';
-import 'package:coopengageplus/shared/services/token_service.dart';
+// import 'package:coopengageplus/core/database/database_helper.dart';
+// import 'package:coopengageplus/shared/services/token_service.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 // import 'package:coopengageplus/shared/widgets/mycard_share_fab.dart';
 
@@ -40,12 +40,6 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _pageController = PageController();
     _fetchToken();
-    // Initialize token monitoring
-    _initializeTokenService();
-  }
-
-  Future<void> _initializeTokenService() async {
-    await TokenService.initialize(context);
   }
 
   Future<void> _fetchToken() async {
@@ -54,50 +48,19 @@ class _MainPageState extends State<MainPage> {
     if (token != null && token.isNotEmpty) {
       try {
         var decodedToken = JwtDecoder.decode(token);
-        setState(() {
-          role = decodedToken['role'][0];
-          isLoading = false;
-        });
+        role = decodedToken['role']?[0] ?? '';
       } catch (e) {
-        final dbHelper = DatabaseHelper();
-        final user = await dbHelper.getUserByToken(token);
-        if (user != null && user['role'] != null) {
-          setState(() {
-            role = user['role'];
-            isLoading = false;
-          });
-        } else {
-          final users = await dbHelper.getUsers();
-          if (users.isNotEmpty && users.first['role'] != null) {
-            setState(() {
-              role = users.first['role'];
-              isLoading = false;
-            });
-          } else {
-            setState(() {
-              isLoading = false;
-            });
-            _redirectToLogin();
-          }
-        }
-      }
-    } else {
-      final dbHelper = DatabaseHelper();
-      final users = await dbHelper.getUsers();
-      if (users.isNotEmpty && users.first['role'] != null) {
-        setState(() {
-          role = users.first['role'];
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        // No users found in database, redirect to login
-        _redirectToLogin();
+        print("MainPage: JWT decode error: $e");
       }
     }
-    await Future.delayed(const Duration(milliseconds: 2000));
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+
+    await Future.delayed(const Duration(milliseconds: 1500));
     if (mounted) {
       setState(() {
         isInitializing = false;
@@ -242,20 +205,14 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  void _redirectToLogin() async {
-    // Stop token monitoring
-    TokenService.stopTokenMonitoring();
-    
-    // Navigate to login page
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-      (route) => false,
-    );
-  }
-
   void logout() async {
-    // Use TokenService for complete logout
-    await TokenService.forceLogoutWithContext(context);
+    await storage.delete(key: "token");
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const Loginscreen()),
+        (route) => false,
+      );
+    }
   }
 }

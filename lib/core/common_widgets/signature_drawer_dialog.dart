@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -143,7 +144,9 @@ class _SignatureDrawerPageState extends State<_SignatureDrawerPage> {
 
     final images = <ui.Image>[];
     for (final png in pngList) {
-      images.add(await decodeImageFromList(png));
+      final completer = Completer<ui.Image>();
+      ui.decodeImageFromList(png, (img) => completer.complete(img));
+      images.add(await completer.future);
     }
 
     const spacing = 10;

@@ -36,30 +36,15 @@ class TokenService {
     try {
       final token = await _globalData.storage.read(key: "token");
 
-      if (token == null || token.isEmpty) {
-        // No token found, user should be logged out
-        await _performLogout();
-        return;
-      }
+      if (token == null || token.isEmpty) return;
 
-      // Check if token is expired
       if (JwtDecoder.isExpired(token)) {
         print("Token expired, logging out user automatically");
         await _performLogout();
         return;
       }
-
-      // Check if token will expire soon (within 5 minutes)
-      final timeToExpiry = JwtDecoder.getRemainingTime(token);
-      if (timeToExpiry.inMinutes <= 5) {
-        print("Token will expire in ${timeToExpiry.inMinutes} minutes");
-        // You can show a warning notification here if needed
-        // _showTokenExpirationWarning();
-      }
     } catch (e) {
       print("Error checking token expiration: $e");
-      // If there's an error decoding the token, it's likely invalid
-      await _performLogout();
     }
   }
 
@@ -194,12 +179,6 @@ class TokenService {
       startTokenMonitoring();
       print("Token service initialized and monitoring started");
     } else {
-      //  await forceLogoutWithContext(context);
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const Loginscreen()),
-        (Route<dynamic> route) => false,
-      );
-
       print("No valid token found, token monitoring not started");
     }
   }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/shared/services/GlobalData.dart';
-import 'package:coopengageplus/shared/services/token_service.dart';
+// import 'package:coopengageplus/shared/services/token_service.dart';
 
 import 'constants/dashboard_constants.dart';
 import 'providers/dashboard_provider.dart';
@@ -30,8 +30,6 @@ class _DashboardState extends ConsumerState<Dashboard> {
   void initState() {
     super.initState();
     print("Dashboard initState called");
-    // Initialize token monitoring
-    TokenService.initialize(context);
 
     // Force loading state immediately before any data fetch
     Future.microtask(() {
@@ -56,8 +54,6 @@ class _DashboardState extends ConsumerState<Dashboard> {
 
   @override
   void dispose() {
-    // Clean up token monitoring when widget is disposed
-    TokenService.stopTokenMonitoring();
     super.dispose();
   }
 
@@ -158,19 +154,8 @@ class _DashboardState extends ConsumerState<Dashboard> {
   }
 
   void _handleError(dynamic error) {
-    // Check if error is token-related
     final errorString = error.toString();
-    if (errorString.contains("Token") ||
-        errorString.contains("Unauthorized") ||
-        errorString.contains("expired")) {
-      _showTokenErrorSnackBar();
-      // Force logout for token errors
-      Future.delayed(const Duration(seconds: 2), () {
-        TokenService.forceLogoutWithContext(context);
-      });
-    } else {
-      _showGenericErrorSnackBar(errorString);
-    }
+    print("Dashboard error: $errorString");
   }
 
   void _showTokenErrorSnackBar() {

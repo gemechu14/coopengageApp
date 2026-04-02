@@ -36,7 +36,7 @@ class AuthRepository {
       final token = output["access_token"] as String;
 
       await _secureStorage.write(key: "token", value: token);
-      await _dbHelper.insertToken(token);
+      // await _dbHelper.insertToken(token);
 
       final decodedToken = json.decode(utf8.decode(
         base64Url.decode(base64Url.normalize(token.split(".")[1])),
@@ -44,20 +44,20 @@ class AuthRepository {
 
       final user = User.fromMap(decodedToken);
 
-      bool userExists = await _dbHelper.userExists(username);
+      // bool userExists = await _dbHelper.userExists(username);
+      //
+      // if (!userExists) {
+      //   await _dbHelper.insertUser1(
+      //     username: username,
+      //     password: password,
+      //     userId: user.userId,
+      //     clientId: user.clientId,
+      //     role: user.role,
+      //     branches: user.branches,
+      //   );
+      // }
 
-      if (!userExists) {
-        await _dbHelper.insertUser1(
-          username: username,
-          password: password,
-          userId: user.userId,
-          clientId: user.clientId,
-          role: user.role,
-          branches: user.branches,
-        );
-      }
-
-      await _syncAccountTypes();
+      // await _syncAccountTypes();
 
       return user;
     } else {

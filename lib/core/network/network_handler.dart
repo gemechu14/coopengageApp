@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:coopengageplus/core/config/config.dart';
-import 'package:coopengageplus/core/database/database_helper.dart';
+// import 'package:coopengageplus/core/database/database_helper.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -559,14 +559,27 @@ class NetworkHandler {
 
   Future<List<Map<String, dynamic>>> fetchAccountTypesFromDatabase() async {
     try {
-      // Create an instance of DatabaseHelper
-      DatabaseHelper dbHelper = DatabaseHelper();
-
-      List<Map<String, dynamic>> accountTypes =
-          await dbHelper.getAllAccountTypes();
-      return accountTypes; // Return the list of account types
+      final result = await get('/api/v1/account-types');
+      if (result is List<dynamic>) {
+        return result.map((e) {
+          final m = e as Map<String, dynamic>;
+          return {
+            "id": m["id"].toString(),
+            "name": m["name"] ?? "",
+            "description": m["description"] ?? "",
+            "category": m["category"] ?? "",
+            "bankingType": m["bankingType"] ?? "",
+            "origin": m["origin"] ?? "",
+            "minAge": m["minAge"].toString(),
+            "maxAge": m["maxAge"].toString(),
+            "minBalance": m["minBalance"].toString(),
+          };
+        }).toList();
+      }
+      return [];
     } catch (error) {
-      return []; // Return an empty list in case of an error
+      print("Error fetching account types from API: $error");
+      return [];
     }
   }
 }

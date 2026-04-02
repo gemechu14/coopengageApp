@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:coopengageplus/core/config/config.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
-import 'package:coopengageplus/core/database/database_helper.dart';
 
 class BranchSelector extends StatefulWidget {
   final Function(String?) onChanged;
@@ -222,95 +221,71 @@ class _BranchSelectorState extends State<BranchSelector> {
     }
   }
 
-  /// Fallback method to initialize from database
+  /// Fallback method to initialize from JWT token
   Future<void> _initializeFromDatabase() async {
     try {
-      print("BranchSelector: Initializing branches from database (fallback)...");
-      
-      final dbHelper = DatabaseHelper();
-      final db = await dbHelper.database;
-      
-      // Get all branches from Branches table
-      final List<Map<String, dynamic>> branchResults = await db.query('Branches');
-      print("BranchSelector: Raw branches from database: $branchResults");
-      
-      if (branchResults.isNotEmpty) {
-        // Convert database results to the expected format
-        final List<Map<String, dynamic>> formattedBranches = branchResults.map((branch) {
-          return {
-            'id': branch['id'],
-            'name': branch['branchName'] ?? 'Unnamed Branch',
-            'branchCode': branch['branchCode'] ?? '',
-            'companyName': branch['branchName'] ?? 'Unnamed Branch',
-          };
-        }).toList();
-        
-        // Get main branch from database
-        String? defaultBranchName;
-        Map<String, dynamic>? mainBranchData;
-        try {
-          String? token = await storage.read(key: "token");
-          Map<String, dynamic>? currentUser;
-          
-          if (token != null && token.isNotEmpty) {
-            currentUser = await dbHelper.getUserByToken(token);
-          }
-          
-          if (currentUser == null) {
-            final users = await dbHelper.getUsers();
-            if (users.isNotEmpty) {
-              currentUser = users.first;
-            }
-          }
-          
-          if (currentUser != null && currentUser['mainBranchName'] != null) {
-            defaultBranchName = currentUser['mainBranchName'];
-            mainBranchData = {
-              'id': currentUser['mainBranchId'] ?? 0,
-              'name': currentUser['mainBranchName'] ?? 'Main Branch',
-              'branchCode': currentUser['mainBranchCode'] ?? '',
-              'companyName': currentUser['mainBranchName'] ?? 'Main Branch',
-            };
-          }
-        } catch (e) {
-          print("BranchSelector: Error getting main branch from database: $e");
-        }
-        
-        // Create final branches list
-        final List<Map<String, dynamic>> allBranchesList = [];
-        final Set<String> seenCompanyNames = {};
-        
-        if (mainBranchData != null) {
-          allBranchesList.add(mainBranchData);
-          seenCompanyNames.add(mainBranchData['companyName'] as String);
-        }
-        
-        for (var branch in formattedBranches) {
-          final companyName = branch['companyName'] as String;
-          if (!seenCompanyNames.contains(companyName)) {
-            allBranchesList.add(branch);
-            seenCompanyNames.add(companyName);
-          }
-        }
-        
-        setState(() {
-          allBranches = allBranchesList;
-          selectedBranch = widget.initialValue ?? 
-                          defaultBranchName ?? 
-                          (allBranchesList.isNotEmpty ? allBranchesList.first['companyName']?.toString().trim() : null);
-          isLoading = false;
-        });
-        
-        widget.onChanged(selectedBranch);
-      } else {
+      print("BranchSelector: Initializing branches from JWT token (fallback)...");
+
+      String? token = await storage.read(key: "token");
+      if (token == null || token.isEmpty) {
         setState(() {
           allBranches = [];
           selectedBranch = null;
           isLoading = false;
         });
+        return;
       }
+
+      final parts = token.split(".");
+      final payload = json.decode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+      );
+
+      final branchList =
+          List<Map<String, dynamic>>.from(payload['branch'] ?? []);
+
+      if (branchList.isEmpty) {
+        setState(() {
+          allBranches = [];
+          selectedBranch = null;
+          isLoading = false;
+        });
+        return;
+      }
+
+      final List<Map<String, dynamic>> formattedBranches =
+          branchList.map((branch) {
+        return {
+          'id': branch['id'],
+          'name': branch['name']?.toString() ?? 'Unnamed Branch',
+          'branchCode': branch['branchCode']?.toString() ?? '',
+          'companyName': branch['name']?.toString() ?? 'Unnamed Branch',
+        };
+      }).toList();
+
+      final List<Map<String, dynamic>> allBranchesList = [];
+      final Set<String> seenCompanyNames = {};
+
+      for (var branch in formattedBranches) {
+        final companyName = branch['companyName'] as String;
+        if (!seenCompanyNames.contains(companyName)) {
+          allBranchesList.add(branch);
+          seenCompanyNames.add(companyName);
+        }
+      }
+
+      setState(() {
+        allBranches = allBranchesList;
+        selectedBranch = widget.initialValue ??
+            (allBranchesList.isNotEmpty
+                ? allBranchesList.first['companyName']?.toString().trim()
+                : null);
+        isLoading = false;
+      });
+
+      widget.onChanged(selectedBranch);
     } catch (e) {
-      print("BranchSelector: Error initializing from database: $e");
+      print("BranchSelector: Error initializing from JWT: $e");
       setState(() {
         allBranches = [];
         selectedBranch = null;

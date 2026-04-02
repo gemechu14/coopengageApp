@@ -1,14 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
-import 'package:coopengageplus/core/common_widgets/signature_pad_card.dart';
+import 'package:coopengageplus/core/common_widgets/signature_drawer_dialog.dart';
 import '../providers/stepper_provider.dart';
-import 'package:signature/signature.dart';
 
 class SignatureStep extends ConsumerStatefulWidget {
   const SignatureStep({super.key});
@@ -22,50 +19,6 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   Uint8List? _localSignature;
   bool _isProcessing = false;
 
-  late final SignatureController _signatureController1;
-  late final SignatureController _signatureController2;
-  late final SignatureController _signatureController3;
-
-  static const _signatureLabels = [
-    'Signature 1',
-    'Signature 2',
-    'Signature 3',
-  ];
-
-  static const _signatureSubtitles = [
-    'Primary signature',
-    'Secondary signature',
-    'Tertiary signature',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _signatureController1 = SignatureController(
-      penColor: Colors.black,
-      penStrokeWidth: 3,
-      exportBackgroundColor: Colors.white,
-    );
-    _signatureController2 = SignatureController(
-      penColor: Colors.black,
-      penStrokeWidth: 3,
-      exportBackgroundColor: Colors.white,
-    );
-    _signatureController3 = SignatureController(
-      penColor: Colors.black,
-      penStrokeWidth: 3,
-      exportBackgroundColor: Colors.white,
-    );
-  }
-
-  @override
-  void dispose() {
-    _signatureController1.dispose();
-    _signatureController2.dispose();
-    _signatureController3.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentSignature =
@@ -77,13 +30,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          const SizedBox(height: 16),
-          _buildPads(),
-          if (currentSignature != null) ...[
-            const SizedBox(height: 16),
-            _buildPreview(currentSignature),
-            const SizedBox(height: 16),
-          ],
+          const SizedBox(height: 20),
+          _buildPreview(currentSignature),
+          const SizedBox(height: 20),
           _buildActions(),
           if (_isProcessing) ...[
             const SizedBox(height: 16),
@@ -144,34 +93,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     );
   }
 
-  Widget _buildPads() {
-    return Column(
-      children: [
-        SignaturePadCard(
-          controller: _signatureController1,
-          label: _signatureLabels[0],
-          subtitle: _signatureSubtitles[0],
-          onClear: () => setState(() {}),
-        ),
-        const SizedBox(height: 14),
-        SignaturePadCard(
-          controller: _signatureController2,
-          label: _signatureLabels[1],
-          subtitle: _signatureSubtitles[1],
-          onClear: () => setState(() {}),
-        ),
-        const SizedBox(height: 14),
-        SignaturePadCard(
-          controller: _signatureController3,
-          label: _signatureLabels[2],
-          subtitle: _signatureSubtitles[2],
-          onClear: () => setState(() {}),
-        ),
-      ],
-    );
-  }
-
-  // ── Signature preview ────────────────────────────────────────────────────
+  // ── Preview ──────────────────────────────────────────────────────────────
 
   Widget _buildPreview(Uint8List? signature) {
     return Container(
@@ -180,7 +102,12 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
       decoration: BoxDecoration(
         color: const Color(0xFFFCFDFE),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cyanblueColor.withOpacity(0.20), width: 1.5),
+        border: Border.all(
+          color: signature != null
+              ? cyanblueColor.withOpacity(0.30)
+              : cyanblueColor.withOpacity(0.15),
+          width: signature != null ? 1.5 : 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.06),
@@ -230,9 +157,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
       children: [
         Expanded(
           child: _ActionButton(
-            label: 'Save Signatures',
-            icon: Icons.check_rounded,
-            onPressed: _isProcessing ? null : _saveSignatures,
+            label: 'Draw Signature',
+            icon: Icons.draw_rounded,
+            onPressed: _isProcessing ? null : _openDrawer,
           ),
         ),
         const SizedBox(width: 10),
@@ -264,6 +191,24 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
         ],
       ),
     );
+  }
+
+  // ── Draw flow (opens full-screen dialog) ─────────────────────────────────
+
+  Future<void> _openDrawer() async {
+    final result = await SignatureDrawerDialog.show(
+      context: context,
+      pads: const [
+        SignaturePadConfig(label: 'Signature 1', subtitle: 'Primary signature'),
+        SignaturePadConfig(label: 'Signature 2', subtitle: 'Secondary signature'),
+        SignaturePadConfig(label: 'Signature 3', subtitle: 'Tertiary signature'),
+      ],
+    );
+
+    if (result != null && mounted) {
+      setState(() => _localSignature = result);
+      ref.read(stepperProvider.notifier).updateSignature(result);
+    }
   }
 
   // ── Upload flow ──────────────────────────────────────────────────────────
@@ -320,84 +265,6 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
-  }
-
-  Future<void> _saveSignatures() async {
-    final isComplete = _signatureController1.isNotEmpty &&
-        _signatureController2.isNotEmpty &&
-        _signatureController3.isNotEmpty;
-    if (!isComplete) {
-      _showSnackBar('Please complete all 3 signature pads', Colors.redAccent);
-      return;
-    }
-
-    setState(() => _isProcessing = true);
-    try {
-      final combined = await _combineSignatures();
-      if (combined == null) {
-        _showSnackBar('Failed to combine signatures', Colors.redAccent);
-        return;
-      }
-
-      if (!mounted) return;
-      setState(() => _localSignature = combined);
-      ref.read(stepperProvider.notifier).updateSignature(combined);
-      _showSnackBar('Signatures saved successfully', Colors.green);
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  Future<Uint8List?> _combineSignatures() async {
-    final signature1 = await _signatureController1.toPngBytes();
-    final signature2 = await _signatureController2.toPngBytes();
-    final signature3 = await _signatureController3.toPngBytes();
-
-    if (signature1 == null || signature2 == null || signature3 == null) {
-      return null;
-    }
-
-    final image1 = await _decodeImageFromList(signature1);
-    final image2 = await _decodeImageFromList(signature2);
-    final image3 = await _decodeImageFromList(signature3);
-
-    const spacing = 10;
-    final totalWidth =
-        image1.width + image2.width + image3.width + (spacing * 2);
-    final maxHeight =
-        [image1.height, image2.height, image3.height].reduce((a, b) => a > b ? a : b);
-
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(
-      recorder,
-      ui.Rect.fromLTWH(0, 0, totalWidth.toDouble(), maxHeight.toDouble()),
-    );
-
-    canvas.drawRect(
-      ui.Rect.fromLTWH(0, 0, totalWidth.toDouble(), maxHeight.toDouble()),
-      ui.Paint()..color = Colors.white,
-    );
-
-    double currentX = 0;
-    canvas.drawImage(image1, ui.Offset(currentX, 0), ui.Paint());
-    currentX += image1.width.toDouble() + spacing;
-
-    canvas.drawImage(image2, ui.Offset(currentX, 0), ui.Paint());
-    currentX += image2.width.toDouble() + spacing;
-
-    canvas.drawImage(image3, ui.Offset(currentX, 0), ui.Paint());
-
-    final picture = recorder.endRecording();
-    final combinedImage = await picture.toImage(totalWidth, maxHeight);
-    final byteData =
-        await combinedImage.toByteData(format: ui.ImageByteFormat.png);
-    return byteData?.buffer.asUint8List();
-  }
-
-  Future<ui.Image> _decodeImageFromList(Uint8List bytes) {
-    final completer = Completer<ui.Image>();
-    ui.decodeImageFromList(bytes, (image) => completer.complete(image));
-    return completer.future;
   }
 }
 
