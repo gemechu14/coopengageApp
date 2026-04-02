@@ -6,9 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coopengageplus/shared/widgets/dropDown/ReusableDropdown.dart';
 import 'package:coopengageplus/core/constants/listConstants.dart';
 import 'package:coopengageplus/shared/widgets/ReusableTextFormField.dart';
-import 'package:coopengageplus/shared/widgets/textField/PhoneNumberWidget.dart';
-import 'package:coopengageplus/shared/widgets/textField/emailWidget.dart';
-import 'package:coopengageplus/shared/widgets/dropDown/DatePickerField.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/providers/stepper_provider.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/services/tin_verification_service.dart';
 
@@ -110,6 +107,15 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
       final stepperState = ref.read(stepperProvider);
       if (stepperState.isTinVerified) {
         ref.read(stepperProvider.notifier).resetTinVerification();
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final stepperState = ref.read(stepperProvider);
+      if (stepperState.selectedProductType == null) {
+        ref
+            .read(stepperProvider.notifier)
+            .updateProductType(ListContants.productType.first);
       }
     });
   }
@@ -256,8 +262,7 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product Type
-            Text('Product Type', style: TextStyle(fontWeight: FontWeight.bold)),
+            _buildLabel('Product Type'),
             ReusableDropdown(
               selectedValue: stepperState.selectedProductType,
               items: ListContants.productType,
@@ -269,167 +274,109 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
               errorMessage: 'Please select a product type',
               isRequired: true,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            Text('TIN', style: TextStyle(fontWeight: FontWeight.bold)),
+            _buildLabel('TIN Number'),
             Padding(
-              padding: const EdgeInsets.only(top: 7, left: 3, right: 3),
+              padding: const EdgeInsets.only(top: 4, left: 3, right: 3),
               child: TextFormField(
                 controller: tinNumberController,
                 keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade900),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
                 onChanged: (value) {
                   notifier.updateCompanyTinNumber(value);
-                  setState(() {}); // Update button state
+                  setState(() {});
                 },
                 decoration: InputDecoration(
-                  hintText: 'TIN Number',
-                  hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                  hintText: 'Enter 10-digit TIN number',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.blueGrey.shade400.withOpacity(0.7),
+                  ),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                      vertical: 8.0, horizontal: 10.0),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  enabledBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide(color: Colors.blue),
-                  ),
-                  errorBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide(color: Colors.red),
-                  ),
-                  focusedErrorBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide(color: Colors.red),
-                  ),
-                  prefixIcon: const Icon(Icons.badge),
-                  suffixIcon: Padding(
-                    padding: const EdgeInsets.only(
-                        right: 4.0, top: 4.0, bottom: 4.0),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: (_isVerifyingTin || !_isTinValid)
-                              ? null
-                              : _verifyTinNumber,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              gradient: stepperState.isTinVerified
-                                  ? LinearGradient(
-                                      colors: [cyanblueColor, cyanblueColor],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                  : _isTinValid
-                                      ? LinearGradient(
-                                          colors: [
-                                            Colors.blue.shade500,
-                                            Colors.blue.shade700
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        )
-                                      : null,
-                              color: (!_isTinValid && !stepperState.isTinVerified)
-                                  ? Colors.grey.shade300
-                                  : null,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: (_isTinValid || stepperState.isTinVerified) &&
-                                      !_isVerifyingTin
-                                  ? [
-                                      BoxShadow(
-                                        color: stepperState.isTinVerified
-                                            ? cyanblueColor
-                                            : Colors.blue.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ]
-                                  : null,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  prefixIcon: Icon(Icons.badge_outlined,
+                      size: 20,
+                      color: cyanblueColor.withOpacity(0.7)),
+                  suffixIcon: _isVerifyingTin
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: cyanblueColor,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // ✅ Keep icon always present
-                                Icon(
-                                  stepperState.isTinVerified
-                                      ? Icons.check_circle_rounded
-                                      : Icons.verified_rounded,
-                                  size: 18,
-                                  color: (_isTinValid || stepperState.isTinVerified)
-                                      ? Colors.white
-                                      : Colors.grey.shade500,
-                                ),
-                                const SizedBox(width: 6),
-
-                                // ✅ Reserve space for both loader and text
-                                Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    // Loader
-                                    Visibility(
-                                      visible: _isVerifyingTin,
-                                      child: const SizedBox(
-                                        width: 14,
-                                        height: 14,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Colors.white),
-                                        ),
-                                      ),
+                          ),
+                        )
+                      : GestureDetector(
+                          onTap: (_isTinValid && !stepperState.isTinVerified)
+                              ? _verifyTinNumber
+                              : null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: stepperState.isTinVerified
+                                  ? const Icon(
+                                      Icons.check_circle_rounded,
+                                      key: ValueKey('verified'),
+                                      size: 24,
+                                      color: Colors.green,
+                                    )
+                                  : Icon(
+                                      _isTinValid
+                                          ? Icons.arrow_circle_right_outlined
+                                          : Icons.circle_outlined,
+                                      key: const ValueKey('unverified'),
+                                      size: 24,
+                                      color: _isTinValid
+                                          ? cyanblueColor
+                                          : Colors.blueGrey.shade300,
                                     ),
-                                    // Text
-                                    Visibility(
-                                      visible: !_isVerifyingTin,
-                                      child: Text(
-                                        stepperState.isTinVerified ? 'Verified' : 'Verify',
-                                        style: TextStyle(
-                                          color: (_isTinValid || stepperState.isTinVerified)
-                                              ? Colors.white
-                                              : Colors.grey.shade600,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
                             ),
                           ),
                         ),
-                      ),
-                    ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: cyanblueColor, width: 1.5),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.redAccent, width: 1.3),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.redAccent, width: 1.5),
                   ),
                 ),
-                validator: (value) {
-                  // Optional validation can be added here
-                  return null;
-                },
+                validator: (value) => null,
               ),
             ),
 
-            const SizedBox(height: 8),
-            // Company Name
-            Text('Company Name', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            _buildLabel('Company Name'),
             ReusableTextFormField(
               hintText: "Company Name",
               controller: companyNameController,
@@ -454,42 +401,240 @@ class _BasicInfoStepState extends ConsumerState<BasicInfoStep> {
                 }
               },
             ),
-            const SizedBox(height: 8),
-            // Phone Number
-            Text('Phone Number', style: TextStyle(fontWeight: FontWeight.bold)),
-            PhoneNumberWidget(
-              phoneNumberController: phoneNumberController,
-              isRequired: true,
-              onChanged: (value) {
-                notifier.updateCompanyPhoneNumber(value);
-              },
+            const SizedBox(height: 10),
+            _buildLabel('Phone Number'),
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 3, right: 3),
+              child: TextFormField(
+                controller: phoneNumberController,
+                keyboardType: TextInputType.phone,
+                style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade900),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(9),
+                ],
+                onChanged: (value) {
+                  notifier.updateCompanyPhoneNumber(value);
+                },
+                decoration: InputDecoration(
+                  hintText: 'Enter phone number',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.blueGrey.shade400.withOpacity(0.7),
+                  ),
+                  isDense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.phone_outlined,
+                            size: 20,
+                            color: cyanblueColor.withOpacity(0.7)),
+                        const SizedBox(width: 6),
+                        Text(
+                          '+251',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blueGrey.shade700,
+                          ),
+                        ),
+                        Container(
+                          height: 20,
+                          width: 1,
+                          margin: const EdgeInsets.only(left: 8),
+                          color: cyanblueColor.withOpacity(0.2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  prefixIconConstraints:
+                      const BoxConstraints(minWidth: 0, minHeight: 0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: cyanblueColor, width: 1.5),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.redAccent, width: 1.3),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.redAccent, width: 1.5),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Phone number is required';
+                  }
+                  if (value.length != 9) {
+                    return 'Phone number must be 9 digits';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildLabel('Email'),
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 3, right: 3),
+              child: TextFormField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade900),
+                onChanged: (value) {
+                  notifier.updateCompanyEmail(value);
+                },
+                decoration: InputDecoration(
+                  hintText: 'Enter email address',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.blueGrey.shade400.withOpacity(0.7),
+                  ),
+                  isDense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  prefixIcon: Icon(Icons.email_outlined,
+                      size: 20,
+                      color: cyanblueColor.withOpacity(0.7)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: cyanblueColor, width: 1.5),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.redAccent, width: 1.3),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.redAccent, width: 1.5),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                  if (!emailRegex.hasMatch(value)) {
+                    return 'Please enter a valid email address';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildLabel('Date of Establishment'),
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 3, right: 3),
+              child: TextFormField(
+                controller: dateOfEstabilishmentController,
+                readOnly: true,
+                style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade900),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate:
+                        DateTime.now().subtract(const Duration(days: 365)),
+                    firstDate: DateTime(1940),
+                    lastDate: DateTime.now(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: cyanblueColor,
+                            onPrimary: Colors.white,
+                            surface: Colors.white,
+                            onSurface: Colors.black87,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (picked != null) {
+                    dateOfEstabilishmentController.text =
+                        picked.toLocal().toString().split(' ')[0];
+                  }
+                },
+                decoration: InputDecoration(
+                  hintText: 'Select date of establishment',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.blueGrey.shade400.withOpacity(0.7),
+                  ),
+                  isDense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  prefixIcon: Icon(Icons.calendar_today_rounded,
+                      size: 20,
+                      color: cyanblueColor.withOpacity(0.7)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        BorderSide(color: cyanblueColor.withOpacity(0.30)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: cyanblueColor, width: 1.5),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 8),
-            // Email
-            Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
-            EmailWidget(
-              emailController: emailController,
-              onChanged: (value) {
-                notifier.updateCompanyEmail(value);
-              },
-            ),
-            const SizedBox(height: 8),
-            // Date of Establishment
-            Text('Date of Establishment',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            DatePickerField(
-              controller: dateOfEstabilishmentController,
-              hintText: 'Date of Establishment',
-              prefixIcon: Icons.date_range,
-              initialDate: DateTime.now().add(const Duration(days: -10000)),
-              firstDate: DateTime(1940),
-              lastDate: DateTime.now(),
-              isRequired: false,
-              isGreyBorder: true,
-              errorMessage: 'Please select a date of Establishment',
-            ),
-            const SizedBox(height: 4),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 2),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
         ),
       ),
     );

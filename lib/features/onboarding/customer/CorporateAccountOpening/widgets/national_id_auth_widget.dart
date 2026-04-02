@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:coopengageplus/core/config/config.dart';
+import 'package:coopengageplus/core/common_widgets/full_screen_auth_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -28,6 +29,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   bool _isWebViewLoading = true;
   String? _expectedFinalUrl;
   int? _selectedMemberIndex;
+  ValueNotifier<bool>? _pageLoadingNotifier;
+  bool _authWebViewInitialLoadDone = false;
 
   // WebSocket auth state
   static const String _wsUrl = AppConstants.webSocketUrl;
@@ -49,6 +52,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   @override
   void dispose() {
     _disposed = true;
+    _pageLoadingNotifier?.dispose();
+    _pageLoadingNotifier = null;
     _webViewController?.clearCache();
     _webViewController?.clearLocalStorage();
     _closeWebSocket();
@@ -89,119 +94,196 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   Widget _buildContent() {
     if (_disposed) return const SizedBox.shrink();
 
-    // Show member list first if no member is selected
     if (_selectedMemberIndex == null) {
       final stepperState = ref.watch(stepperProvider);
       final members = stepperState.members;
       if (members.isEmpty) {
         return const Center(child: Text('No members found.'));
       }
-      return ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: members.length,
-        itemBuilder: (context, index) {
-          final member = members[index];
-          final hasValidEmail = member.email != null && _isValidEmail(member.email!);
-          
-          // Determine icon based on state
-          IconData iconData;
-          Color iconColor;
-          if (member.isVerified && hasValidEmail) {
-            iconData = Icons.verified_user;
-            iconColor = Colors.green;
-          } else if (hasValidEmail) {
-            iconData = Icons.email;
-            iconColor = cyanblueColor;
-          } else {
-            iconData = Icons.warning_amber_rounded;
-            iconColor = Colors.orange;
-          }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child:
+                      const Icon(Icons.group, color: cyanblueColor, size: 20),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Authorize Members',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: cyanblueColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: members.length,
+            itemBuilder: (context, index) {
+              final member = members[index];
+              final hasValidEmail =
+                  member.email != null && _isValidEmail(member.email!);
 
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: member.isVerified
+                        ? cyanblueColor.withOpacity(0.3)
+                        : Colors.grey.shade200,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(iconData, color: iconColor, size: 32),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Member ${index + 1}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: member.isVerified
+                                  ? cyanblueColor.withOpacity(0.1)
+                                  : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              member.isVerified
+                                  ? Icons.verified
+                                  : Icons.person_outline,
+                              color: member.isVerified
+                                  ? cyanblueColor
+                                  : Colors.grey.shade400,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  member.fullName ?? 'Member ${index + 1}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  member.isVerified
+                                      ? 'Verified'
+                                      : 'Pending verification',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: member.isVerified
+                                        ? cyanblueColor
+                                        : Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (member.isVerified)
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                _showMemberDetailsDialog(context, member);
+                              },
+                              icon: const Icon(Icons.info_outline, size: 18),
+                              label: const Text('Details'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: cyanblueColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
                               ),
                             ),
-                            if (member.isVerified)
-                              Text(
-                                member.fullName ?? 'Verified',
-                                style: const TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 12,
-                                ),
-                              ),
-                          ],
-                        ),
+                        ],
                       ),
-                      if (member.isVerified)
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            _showMemberDetailsDialog(context, member);
-                          },
-                          icon: const Icon(Icons.info_outline, size: 18),
-                          label: const Text('Details'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: cyanblueColor,
-                            foregroundColor: whiteColor,
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: member.email ?? '',
+                        keyboardType: TextInputType.emailAddress,
+                        style: TextStyle(
+                            fontSize: 14, color: Colors.blueGrey.shade900),
+                        decoration: InputDecoration(
+                          labelText: 'Email Address *',
+                          hintText: 'Enter email address',
+                          prefixIcon: Icon(Icons.email_outlined,
+                              size: 20,
+                              color: cyanblueColor.withOpacity(0.7)),
+                          suffixIcon: hasValidEmail
+                              ? const Icon(Icons.check_circle,
+                                  color: Colors.green, size: 20)
+                              : null,
+                          errorText: member.email != null &&
+                                  member.email!.isNotEmpty &&
+                                  !_isValidEmail(member.email!)
+                              ? 'Invalid email format'
+                              : null,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                                color: cyanblueColor.withOpacity(0.30)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                                color: cyanblueColor.withOpacity(0.30)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                                color: cyanblueColor, width: 1.5),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    initialValue: member.email ?? '',
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email Address *',
-                      hintText: 'Enter email address',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      suffixIcon: hasValidEmail
-                          ? const Icon(Icons.check_circle, color: Colors.green)
-                          : null,
-                      errorText: member.email != null && 
-                                 member.email!.isNotEmpty && 
-                                 !_isValidEmail(member.email!)
-                          ? 'Invalid email format'
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        onChanged: (value) {
+                          ref
+                              .read(stepperProvider.notifier)
+                              .updateMemberEmail(index, value);
+                        },
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      ref.read(stepperProvider.notifier).updateMemberEmail(index, value);
-                    },
-                  ),
-                  if (hasValidEmail) ...[
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
+                      if (hasValidEmail) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
                             onPressed: () async {
-                              print('=== STARTING FRESH AUTHORIZATION FOR MEMBER ${index + 1} ===');
                               await _forceCloseEverything();
                               setState(() {
                                 _selectedMemberIndex = index;
@@ -216,33 +298,49 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
                               _webViewController?.clearCache();
                               _webViewController?.clearLocalStorage();
                               _webViewController = null;
-                              await Future.delayed(const Duration(milliseconds: 500));
-                              print('=== STARTING WEBSOCKET CONNECTION ===');
+                              await Future.delayed(
+                                  const Duration(milliseconds: 500));
                               _startWsAuth();
                             },
-                            icon: const Icon(Icons.verified_user_outlined, size: 18),
-                            label: Text(
-                              member.isVerified 
-                                  ? 'Re-verify National ID' 
-                                  : 'Optional: Verify with National ID',
-                              style: const TextStyle(fontSize: 12),
+                            icon: Icon(
+                              member.isVerified
+                                  ? Icons.refresh_rounded
+                                  : Icons.fingerprint,
+                              size: 18,
                             ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: cyanblueColor,
-                              side: BorderSide(
-                                color: member.isVerified ? Colors.green : cyanblueColor,
+                            label: Text(
+                              member.isVerified
+                                  ? 'Re-verify National ID'
+                                  : 'Verify with National ID',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: member.isVerified
+                                  ? Colors.white
+                                  : cyanblueColor,
+                              foregroundColor: member.isVerified
+                                  ? cyanblueColor
+                                  : Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: member.isVerified
+                                    ? const BorderSide(color: cyanblueColor)
+                                    : BorderSide.none,
                               ),
+                              elevation: 0,
                             ),
                           ),
                         ),
                       ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          );
-        },
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       );
     }
 
@@ -363,104 +461,24 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     if (_disposed) return;
 
     _expectedFinalUrl = url;
-    print('NationalIdAuthWidget: Showing WebView dialog with URL: $url');
 
-    showDialog(
+    _pageLoadingNotifier?.dispose();
+    _pageLoadingNotifier = ValueNotifier<bool>(true);
+    _authWebViewInitialLoadDone = false;
+
+    FullScreenAuthDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(16),
-          child: Container(
-            width: double.maxFinite,
-            height: MediaQuery.of(context).size.height * 0.9,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cyanblueColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(12),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.security, color: Colors.white, size: 24),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'National ID Authentication',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () async {
-                          print('=== WEBVIEW DIALOG CLOSE BUTTON CLICKED ===');
-                          Navigator.of(context).pop();
-                          await _forceCloseEverything();
-                          setState(() {
-                            _selectedMemberIndex = null;
-                            _authUrl = null;
-                          });
-                        },
-                        icon: const Icon(Icons.close, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(12),
-                          bottomRight: Radius.circular(12),
-                        ),
-                        child: WebViewWidget(
-                          controller: _createWebViewController(url),
-                        ),
-                      ),
-                      if (_isWebViewLoading)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.white.withOpacity(0.9),
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-                                ),
-                                SizedBox(height: 20),
-                                Text(
-                                  'Loading Authentication Page...',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black87,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+      webViewController: _createWebViewController(url),
+      title: 'National ID Authentication',
+      pageLoading: _pageLoadingNotifier,
+      onClose: () async {
+        await _forceCloseEverything();
+        setState(() {
+          _selectedMemberIndex = null;
+          _authUrl = null;
+        });
+        _pageLoadingNotifier?.dispose();
+        _pageLoadingNotifier = null;
       },
     );
   }
@@ -505,22 +523,22 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           },
           onPageStarted: (String url) {
             if (_disposed) return;
-            print('Page started loading: $url');
+            if (!_authWebViewInitialLoadDone) {
+              _pageLoadingNotifier?.value = true;
+            }
             setState(() {
               _isWebViewLoading = true;
             });
           },
           onPageFinished: (String url) {
             if (_disposed) return;
-            print('Page finished loading: $url');
             if (_expectedFinalUrl != null &&
                 Uri.parse(url).host == Uri.parse(_expectedFinalUrl!).host) {
-              print('Final auth page loaded — hiding loader');
+              _authWebViewInitialLoadDone = true;
+              _pageLoadingNotifier?.value = false;
               setState(() {
                 _isWebViewLoading = false;
               });
-            } else {
-              print('Intermediate redirect — keep showing loader');
             }
             _webViewController?.runJavaScript('''
             var meta = document.createElement('meta');
@@ -548,7 +566,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
           },
           onWebResourceError: (WebResourceError error) {
             if (_disposed) return;
-            print('Web resource error: ${error.description}');
+            _authWebViewInitialLoadDone = true;
+            _pageLoadingNotifier?.value = false;
             setState(() {
               _errorMessage = 'WebView error: ${error.description}';
             });
@@ -1045,130 +1064,275 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
   void _showMemberDetailsDialog(BuildContext context, dynamic member) {
     final data = member.verifiedData as Map<String, dynamic>?;
 
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(member.fullName ?? 'Member Details'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: data == null
-                ? const Text('No details available.')
-                : SingleChildScrollView(
-                    child: _buildKeyValueWidgets(_filterPreferredFields(data)),
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
+      barrierDismissible: true,
+      barrierLabel: 'Member Details',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (ctx, anim, secondAnim) {
+        return _MemberDetailsSheet(
+          memberName: member.fullName ?? 'Member',
+          data: data,
         );
       },
     );
   }
+}
 
-  Map<String, dynamic> _filterPreferredFields(Map<String, dynamic> original) {
-    final preferenceGroups = [
-      ['full_name', 'name'],
-      ['phone_number', 'phone'],
-      ['gender', 'sex'],
-    ];
+class _MemberDetailsSheet extends StatelessWidget {
+  final String memberName;
+  final Map<String, dynamic>? data;
 
-    final filtered = <String, dynamic>{};
-    final lowerKeys = original.map((k, v) => MapEntry(k.toLowerCase(), k));
+  const _MemberDetailsSheet({required this.memberName, this.data});
 
-    for (var group in preferenceGroups) {
-      for (var key in group) {
-        final match = lowerKeys[key];
-        if (match != null) {
-          filtered[group[0]] = original[match];
-          break;
+  static const _hiddenKeys = {
+    'raw',
+    'address',
+    'picture',
+    'photo',
+    'signature',
+  };
+
+  String _formatKey(String key) {
+    return key
+        .replaceAll('_', ' ')
+        .replaceAllMapped(
+          RegExp(r'([a-z])([A-Z])'),
+          (m) => '${m[1]} ${m[2]}',
+        )
+        .split(' ')
+        .map((w) => w.isEmpty
+            ? w
+            : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
+        .join(' ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final personalFields = <String, String>{};
+    final addressFields = <String, String>{};
+    String? pictureData;
+
+    if (data != null) {
+      final addressMap = data!['address'];
+
+      for (final entry in data!.entries) {
+        final k = entry.key.toLowerCase();
+        final v = entry.value;
+
+        if (_hiddenKeys.contains(k)) continue;
+        if (v == null || (v is String && v.trim().isEmpty)) continue;
+        if (v is Map || v is List) continue;
+
+        if (v is String && v.startsWith('data:image')) {
+          pictureData = v;
+          continue;
+        }
+
+        final isAddress = k.contains('country') ||
+            k.contains('state') ||
+            k.contains('region') ||
+            k.contains('zone') ||
+            k.contains('woreda') ||
+            k.contains('city') ||
+            k.contains('street') ||
+            k.contains('subcity');
+
+        if (isAddress) {
+          addressFields[entry.key] = v.toString();
+        } else {
+          personalFields[entry.key] = v.toString();
+        }
+      }
+
+      if (addressMap is Map<String, dynamic>) {
+        for (final entry in addressMap.entries) {
+          final v = entry.value;
+          if (v == null || (v is String && v.trim().isEmpty)) continue;
+          if (!addressFields.containsKey(entry.key)) {
+            addressFields[entry.key] = v.toString();
+          }
         }
       }
     }
 
-    final allExcludedKeys = preferenceGroups.expand((g) => g).toSet();
-
-    for (var entry in original.entries) {
-      final keyLower = entry.key.toLowerCase();
-      final alreadyAdded = filtered.containsValue(entry.value);
-
-      if (!allExcludedKeys.contains(keyLower) && !alreadyAdded) {
-        filtered[entry.key] = entry.value;
-      }
-    }
-
-    return filtered;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: cyanblueColor),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          memberName,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: cyanblueColor,
+          ),
+        ),
+      ),
+      body: data == null
+          ? const Center(child: Text('No details available.'))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          cyanblueColor,
+                          cyanblueColor.withOpacity(0.85)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildAvatar(pictureData),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.verified,
+                                      color: Colors.white, size: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Identity Verified',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                memberName,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (personalFields.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    _buildSection('Personal Information', personalFields),
+                  ],
+                  if (addressFields.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    _buildSection('Address Information', addressFields),
+                  ],
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+    );
   }
 
-  Widget _buildKeyValueWidgets(Map<String, dynamic> data) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: data.entries.map<Widget>((entry) {
-        final key = entry.key;
-        final value = entry.value;
+  Widget _buildAvatar(String? pictureBase64) {
+    Widget child;
+    if (pictureBase64 != null) {
+      try {
+        final bytes = base64Decode(pictureBase64.split(',').last);
+        child = ClipOval(
+          child: Image.memory(bytes, fit: BoxFit.cover, width: 62, height: 62),
+        );
+      } catch (_) {
+        child = const Icon(Icons.person, color: cyanblueColor, size: 30);
+      }
+    } else {
+      child = const Icon(Icons.person, color: cyanblueColor, size: 30);
+    }
 
-        if (value is String && value.startsWith('data:image')) {
-          try {
-            final base64String = value.split(',').last;
-            final imageBytes = base64Decode(base64String);
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Column(
+    return Container(
+      width: 62,
+      height: 62,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildSection(String title, Map<String, String> fields) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: blueColor,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...fields.entries.map(
+            (e) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${key.replaceAll('_', ' ').toUpperCase()}:',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      _formatKey(e.key),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: textInfoColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.memory(
-                      imageBytes,
-                      height: 200,
-                      fit: BoxFit.contain,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      e.value,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
-            );
-          } catch (e) {
-            return Text(
-              '${key.toUpperCase()}: [Invalid image]',
-              style: const TextStyle(color: Colors.red),
-            );
-          }
-        }
-
-        if (value is Map<String, dynamic>) {
-          final filteredMap = _filterPreferredFields(value);
-          return Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [],
             ),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${key.replaceAll('_', ' ').toUpperCase()}: ',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Expanded(child: Text(value.toString())),
-            ],
           ),
-        );
-      }).toList(),
+        ],
+      ),
     );
   }
-
 }

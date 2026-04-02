@@ -112,186 +112,263 @@ class _MemberAdditionalInfoStepState
     }
 
     return SingleChildScrollView(
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
-        child: Padding(
-          padding: const EdgeInsets.all(1.0),
-          child: ExpansionPanelList.radio(
-            elevation: 8,
-            expandedHeaderPadding: EdgeInsets.zero,
-            dividerColor: whiteColor,
-            children: List.generate(memberCount, (i) {
-              final member = stepperState.members[i];
-              return ExpansionPanelRadio(
-                value: i,
-                headerBuilder: (context, isExpanded) => ListTile(
-                  leading: const Icon(Icons.person, color: Colors.blueAccent),
-                  title: Text(
-                    'Member ${i + 1}',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: cyanblueColor.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cyanblueColor.withOpacity(0.15)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: const Icon(Icons.info_outline,
+                      color: cyanblueColor, size: 22),
                 ),
-                body: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                const SizedBox(width: 12),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // --- Mother Name ---
-                      TextLabel("Mother Name"),
-                      const SizedBox(height: 8),
-                      ReusableTextFormField(
-                        hintText: 'Enter Mother Name',
-                        controller: motherNameControllers[i],
-                        keyboardType: TextInputType.text,
-                        errorMessage: 'Mother Name cannot be empty',
-                        leadingIcon: Icons.person,
-                        isRequired: true,
-                        onChanged: (value) {
-                          notifier.updateMember(
-                            i,
-                            member.copyWith(motherName: value),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // --- Title ---
-                      TextLabel("Title"),
-                      const SizedBox(height: 8),
-                      ReusableDropdown(
-                        selectedValue: member.title,
-                        items: ListContants.title,
-                        hintText: 'Select Title',
-                        onChanged: (newStatus) {
-                          if (newStatus != null) {
-                            notifier.updateMember(
-                              i,
-                              member.copyWith(title: newStatus),
-                            );
-                          }
-                        },
-                        prefixIcon: Icons.badge,
-                        errorMessage: 'Please select a title',
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // --- Issue Date ---
-                      TextLabel("Issue Date"),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => _selectIssueDate(context, i),
-                        child: AbsorbPointer(
-                          child: ReusableTextFormField(
-                            hintText: "Issue Date",
-                            controller: issueDateControllers[i],
-                            keyboardType: TextInputType.none,
-                            errorMessage: validationErrors['issueDate'] ?? '',
-                            leadingIcon: Icons.calendar_today,
-                            isRequired: false,
-                            onChanged: (value) {
-                              notifier.updateMember(
-                                i,
-                                member.copyWith(issueDate: value),
-                              );
-                              if (value.isNotEmpty) _clearError('issueDate');
-                            },
-                          ),
+                      const Text(
+                        'Additional Information',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: cyanblueColor,
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // --- Expire Date ---
-                      TextLabel("Expire Date"),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => _selectExpireDate(context, i),
-                        child: AbsorbPointer(
-                          child: ReusableTextFormField(
-                            hintText: "Expire Date",
-                            controller: expireDateControllers[i],
-                            keyboardType: TextInputType.none,
-                            errorMessage: validationErrors['expireDate'] ?? '',
-                            leadingIcon: Icons.event_busy,
-                            isRequired: false,
-                            onChanged: (value) {
-                              notifier.updateMember(
-                                i,
-                                member.copyWith(expireDate: value),
-                              );
-                              if (value.isNotEmpty) _clearError('expireDate');
-                            },
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Complete the remaining details for each member',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Colors.blueGrey.shade400,
                         ),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      TextLabel("Legal ID *"),
-                      const SizedBox(height: 8),
-                      ReusableTextFormField(
-                        hintText: "Legal ID",
-                        controller: legalIdControllers[i],
-                        keyboardType: TextInputType.text,
-                        errorMessage: validationErrors['legalId'] ?? '',
-                        leadingIcon: Icons.badge,
-                        isRequired: true,
-                        onChanged: (value) {
-                          notifier.updateMember(
-                            i,
-                            member.copyWith(legalId: value),
-                          );
-                          if (value.isNotEmpty) _clearError('legalId');
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      TextLabel("Issue Authority"),
-                      const SizedBox(height: 8),
-                      ReusableTextFormField(
-                        hintText: "Issue Authority",
-                        controller: issueAuthorityControllers[i],
-                        keyboardType: TextInputType.text,
-                        errorMessage: validationErrors['issueAuthority'] ?? '',
-                        leadingIcon: Icons.verified,
-                        isRequired: false,
-                        onChanged: (value) {
-                          notifier.updateMember(
-                            i,
-                            member.copyWith(issueAuthority: value),
-                          );
-                          if (value.isNotEmpty) _clearError('issueAuthority');
-                        },
-                      ),
-
-                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-              );
-            }),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+
+          ...List.generate(memberCount, (i) {
+            final member = stepperState.members[i];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Theme(
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  initiallyExpanded: i == 0,
+                  tilePadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  childrenPadding:
+                      const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: cyanblueColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: cyanblueColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    member.fullName ?? 'Member ${i + 1}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  subtitle: Text(
+                    member.isVerified ? 'Verified' : 'Pending',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: member.isVerified
+                          ? cyanblueColor
+                          : Colors.grey.shade500,
+                    ),
+                  ),
+                  children: [
+                    const Divider(height: 1),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                    _buildFieldLabel('Mother Name'),
+                    const SizedBox(height: 6),
+                    ReusableTextFormField(
+                      hintText: 'Enter Mother Name',
+                      controller: motherNameControllers[i],
+                      keyboardType: TextInputType.text,
+                      errorMessage: 'Mother Name cannot be empty',
+                      leadingIcon: Icons.person,
+                      isRequired: true,
+                      onChanged: (value) {
+                        notifier.updateMember(
+                            i, member.copyWith(motherName: value));
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildFieldLabel('Title'),
+                    const SizedBox(height: 6),
+                    ReusableDropdown(
+                      selectedValue: member.title,
+                      items: ListContants.title,
+                      hintText: 'Select Title',
+                      onChanged: (newStatus) {
+                        if (newStatus != null) {
+                          notifier.updateMember(
+                              i, member.copyWith(title: newStatus));
+                        }
+                      },
+                      prefixIcon: Icons.badge,
+                      errorMessage: 'Please select a title',
+                      isRequired: true,
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildFieldLabel('Legal ID'),
+                    const SizedBox(height: 6),
+                    ReusableTextFormField(
+                      hintText: 'Legal ID',
+                      controller: legalIdControllers[i],
+                      keyboardType: TextInputType.text,
+                      errorMessage: validationErrors['legalId'] ?? '',
+                      leadingIcon: Icons.badge,
+                      isRequired: true,
+                      onChanged: (value) {
+                        notifier.updateMember(
+                            i, member.copyWith(legalId: value));
+                        if (value.isNotEmpty) _clearError('legalId');
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildFieldLabel('Issue Authority'),
+                    const SizedBox(height: 6),
+                    ReusableTextFormField(
+                      hintText: 'Issue Authority',
+                      controller: issueAuthorityControllers[i],
+                      keyboardType: TextInputType.text,
+                      errorMessage:
+                          validationErrors['issueAuthority'] ?? '',
+                      leadingIcon: Icons.verified,
+                      isRequired: false,
+                      onChanged: (value) {
+                        notifier.updateMember(
+                            i, member.copyWith(issueAuthority: value));
+                        if (value.isNotEmpty)
+                          _clearError('issueAuthority');
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildFieldLabel('Issue Date'),
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () => _selectIssueDate(context, i),
+                      child: AbsorbPointer(
+                        child: ReusableTextFormField(
+                          hintText: 'Issue Date',
+                          controller: issueDateControllers[i],
+                          keyboardType: TextInputType.none,
+                          errorMessage:
+                              validationErrors['issueDate'] ?? '',
+                          leadingIcon: Icons.calendar_today,
+                          isRequired: false,
+                          onChanged: (value) {
+                            notifier.updateMember(
+                                i, member.copyWith(issueDate: value));
+                            if (value.isNotEmpty) _clearError('issueDate');
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    _buildFieldLabel('Expire Date'),
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () => _selectExpireDate(context, i),
+                      child: AbsorbPointer(
+                        child: ReusableTextFormField(
+                          hintText: 'Expire Date',
+                          controller: expireDateControllers[i],
+                          keyboardType: TextInputType.none,
+                          errorMessage:
+                              validationErrors['expireDate'] ?? '',
+                          leadingIcon: Icons.event_busy,
+                          isRequired: false,
+                          onChanged: (value) {
+                            notifier.updateMember(
+                                i, member.copyWith(expireDate: value));
+                            if (value.isNotEmpty) _clearError('expireDate');
+                          },
+                        ),
+                      ),
+                    ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
 
-  // 🔹 Shared label builder
-  Padding TextLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 10, right: 3),
+  Widget _buildFieldLabel(String text) {
+    return SizedBox(
+      width: double.infinity,
       child: Text(
         text,
+        textAlign: TextAlign.left,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.w600,
+          color: Colors.black87,
         ),
       ),
     );

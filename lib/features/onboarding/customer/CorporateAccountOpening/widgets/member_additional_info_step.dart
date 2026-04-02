@@ -16,12 +16,11 @@ class MemberAdditionalInfoStep extends ConsumerStatefulWidget {
 
 class _MemberAdditionalInfoStepState
     extends ConsumerState<MemberAdditionalInfoStep> {
-  // Controllers for each member
   List<TextEditingController> legalIDControllers = [];
   List<TextEditingController> issueAuthorityControllers = [];
   List<TextEditingController> issueDateControllers = [];
   List<TextEditingController> expireDateControllers = [];
-  
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +41,8 @@ class _MemberAdditionalInfoStepState
       List<TextEditingController> controllers,
       int length,
       String? Function(int index) initialValue,
-      void Function(int index, TextEditingController controller) listenerFactory,
+      void Function(int index, TextEditingController controller)
+          listenerFactory,
     ) {
       while (controllers.length > length) {
         controllers.removeLast().dispose();
@@ -70,7 +70,9 @@ class _MemberAdditionalInfoStepState
       },
       (index, controller) {
         controller.addListener(() {
-          ref.read(stepperProvider.notifier).updateMemberLegalId(index, controller.text);
+          ref
+              .read(stepperProvider.notifier)
+              .updateMemberLegalId(index, controller.text);
         });
       },
     );
@@ -80,9 +82,7 @@ class _MemberAdditionalInfoStepState
       numberOfMembers,
       (index) {
         final authority = members[index].issueAuthority;
-        if (authority != null && authority.isNotEmpty) {
-          return authority;
-        }
+        if (authority != null && authority.isNotEmpty) return authority;
         return 'ET';
       },
       (index, controller) {
@@ -100,7 +100,9 @@ class _MemberAdditionalInfoStepState
       (index) => members[index].issueDate,
       (index, controller) {
         controller.addListener(() {
-          ref.read(stepperProvider.notifier).updateMemberIssueDate(index, controller.text);
+          ref
+              .read(stepperProvider.notifier)
+              .updateMemberIssueDate(index, controller.text);
         });
       },
     );
@@ -128,7 +130,6 @@ class _MemberAdditionalInfoStepState
           legalIDControllers[i].text = defaultLegalId;
         }
       }
-
       if (issueAuthorityControllers[i].text.isEmpty) {
         issueAuthorityControllers[i].text = 'ET';
       }
@@ -137,18 +138,10 @@ class _MemberAdditionalInfoStepState
 
   @override
   void dispose() {
-    for (final c in legalIDControllers) {
-      c.dispose();
-    }
-    for (final c in issueAuthorityControllers) {
-      c.dispose();
-    }
-    for (final c in issueDateControllers) {
-      c.dispose();
-    }
-    for (final c in expireDateControllers) {
-      c.dispose();
-    }
+    for (final c in legalIDControllers) c.dispose();
+    for (final c in issueAuthorityControllers) c.dispose();
+    for (final c in issueDateControllers) c.dispose();
+    for (final c in expireDateControllers) c.dispose();
     super.dispose();
   }
 
@@ -174,35 +167,51 @@ class _MemberAdditionalInfoStepState
       );
     }
 
-    // Filter only verified members
-    final verifiedMembers = members.asMap().entries
+    final verifiedMembers = members
+        .asMap()
+        .entries
         .where((entry) => entry.value.isVerified)
         .toList();
 
     if (verifiedMembers.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.info_outline, size: 64, color: Colors.orange),
-            const SizedBox(height: 16),
-            const Text(
-              'No Verified Members',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.info_outline,
+                    size: 48, color: Colors.orange.shade400),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              // 'Please complete National ID authentication for at least one member before proceeding.',
-              'There are no verified members yet. You can either go back to complete the verification process now, '
-                  'or finish the registration — we’ll send a verification link to your email so you can complete the process later.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Color.fromARGB(255, 80, 79, 79)),
-            ),
-          ],
+              const SizedBox(height: 20),
+              const Text(
+                'No Verified Members',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'There are no verified members yet. You can either go back to '
+                'complete the verification process now, or finish the registration '
+                '\u2014 we\u2019ll send a verification link to your email so you '
+                'can complete the process later.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    height: 1.5),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -211,25 +220,8 @@ class _MemberAdditionalInfoStepState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Padding(
-          //   padding: const EdgeInsets.all(0),
-          //   child: Text(
-          //     'Member Additional Information',
-          //     style: TextStyle(
-          //       fontSize: 20,
-          //       fontWeight: FontWeight.bold,
-          //       color: Colors.grey[800],
-          //     ),
-          //   ),
-          // ),
-          // const Padding(
-          //   padding: EdgeInsets.symmetric(horizontal: 16),
-          //   child: Text(
-          //     'Please provide additional information for each verified member.',
-          //     style: TextStyle(fontSize: 14, color: Colors.grey),
-          //   ),
-          // ),
-          // const SizedBox(height: 16),
+          _buildHeader(),
+          const SizedBox(height: 16),
           ...verifiedMembers.map((entry) {
             final index = entry.key;
             final member = entry.value;
@@ -241,77 +233,45 @@ class _MemberAdditionalInfoStepState
     );
   }
 
-  Widget _buildMemberCard(int index, dynamic member) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cyanblueColor.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cyanblueColor.withOpacity(0.15)),
       ),
-      child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: cyanblueColor,
-          child: Icon(
-            Icons.person,
-            color: whiteColor,
-          ),
-        ),
-        title: Text(
-          member.fullName ?? 'Member ${index + 1}',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Row(
-          children: [
-            const Icon(Icons.verified, color: Colors.green, size: 16),
-            const SizedBox(width: 4),
-            const Text(
-              'Verified',
-              style: TextStyle(color: Colors.green, fontSize: 12),
-            ),
-          ],
-        ),
-        initiallyExpanded: index == 0, // Expand first member by default
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: cyanblueColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.person_add_alt_1_rounded,
+                color: cyanblueColor, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTextField(
-                  label: 'Legal ID',
-                  controller: legalIDControllers[index],
-                  icon: Icons.badge,
-                  hint: 'Enter Legal ID',
+                const Text(
+                  'Member Details',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: cyanblueColor,
+                  ),
                 ),
-                const SizedBox(height: 16),
-                _buildTitleDropdown(index, member),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  label: 'Issue Authority',
-                  controller: issueAuthorityControllers[index],
-                  icon: Icons.business,
-                  hint: 'Enter Issue Authority',
-                ),
-                const SizedBox(height: 16),
-                _buildDateField(
-                  label: 'Issue Date',
-                  controller: issueDateControllers[index],
-                  icon: Icons.calendar_today,
-                  hint: 'Select Issue Date',
-                  firstDate: DateTime(1900),
-                  lastDate: DateTime.now(),
-                ),
-                const SizedBox(height: 16),
-                _buildDateField(
-                  label: 'Expire Date',
-                  controller: expireDateControllers[index],
-                  icon: Icons.event,
-                  hint: 'Select Expire Date',
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime(2100),
+                const SizedBox(height: 2),
+                Text(
+                  'Provide additional information for each verified member',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: Colors.blueGrey.shade400,
+                  ),
                 ),
               ],
             ),
@@ -321,149 +281,196 @@ class _MemberAdditionalInfoStepState
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    required String hint,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              Icon(icon, size: 18, color: cyanblueColor),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+  Widget _buildMemberCard(int index, dynamic member) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: cyanblueColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.person, color: cyanblueColor, size: 22),
+          ),
+          title: Text(
+            member.fullName ?? 'Member ${index + 1}',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: Colors.black87,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified,
+                          color: Colors.green.shade600, size: 13),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Verified',
+                        style: TextStyle(
+                          color: Colors.green.shade700,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          initiallyExpanded: index == 0,
+          children: [
+            const SizedBox(height: 8),
+            _buildFieldLabel('Legal ID'),
+            ReusableTextFormField(
+              hintText: 'Enter Legal ID',
+              controller: legalIDControllers[index],
+              keyboardType: TextInputType.text,
+              leadingIcon: Icons.badge_outlined,
+              isRequired: false,
+            ),
+            const SizedBox(height: 14),
+            _buildFieldLabel('Title'),
+            ReusableDropdown(
+              selectedValue: member.title,
+              items: ListContants.title,
+              hintText: 'Select Title',
+              onChanged: (newTitle) {
+                if (newTitle != null) {
+                  ref.read(stepperProvider.notifier).updateMember(
+                        index,
+                        member.copyWith(title: newTitle),
+                      );
+                }
+              },
+              prefixIcon: Icons.person_outline,
+              errorMessage: 'Please select a title',
+              isRequired: true,
+            ),
+            const SizedBox(height: 14),
+            _buildFieldLabel('Issue Authority'),
+            ReusableTextFormField(
+              hintText: 'Enter Issue Authority',
+              controller: issueAuthorityControllers[index],
+              keyboardType: TextInputType.text,
+              leadingIcon: Icons.account_balance_outlined,
+              isRequired: false,
+            ),
+            const SizedBox(height: 14),
+            _buildFieldLabel('Issue Date'),
+            _buildDatePicker(
+              controller: issueDateControllers[index],
+              hint: 'Issue Date',
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+            ),
+            const SizedBox(height: 14),
+            _buildFieldLabel('Expire Date'),
+            _buildDatePicker(
+              controller: expireDateControllers[index],
+              hint: 'Expire Date',
+              firstDate: DateTime.now(),
+              lastDate: DateTime(2100),
+            ),
+          ],
         ),
-        ReusableTextFormField(
-          hintText: hint,
-          controller: controller,
-          keyboardType: TextInputType.text,
-          leadingIcon: icon,
-          isRequired: false,
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildDateField({
-    required String label,
+  Widget _buildFieldLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          textAlign: TextAlign.start,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePicker({
     required TextEditingController controller,
-    required IconData icon,
     required String hint,
     required DateTime firstDate,
     required DateTime lastDate,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              Icon(icon, size: 18, color: cyanblueColor),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+    return GestureDetector(
+      onTap: () async {
+        final date = await showDatePicker(
+          context: context,
+          initialDate: controller.text.isNotEmpty
+              ? DateTime.tryParse(controller.text) ?? DateTime.now()
+              : DateTime.now(),
+          firstDate: firstDate,
+          lastDate: lastDate,
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: cyanblueColor,
+                  onPrimary: Colors.white,
+                  surface: Colors.white,
+                  onSurface: Colors.black87,
                 ),
               ),
-            ],
-          ),
-        ),
-        GestureDetector(
-          onTap: () async {
-            final date = await showDatePicker(
-              context: context,
-              initialDate: controller.text.isNotEmpty
-                  ? DateTime.tryParse(controller.text) ?? DateTime.now()
-                  : DateTime.now(),
-              firstDate: firstDate,
-              lastDate: lastDate,
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.light(
-                      primary: cyanblueColor,
-                      onPrimary: whiteColor,
-                      surface: whiteColor,
-                      onSurface: Colors.black87,
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
+              child: child!,
             );
-            if (date != null) {
-              controller.text = date.toString().split(' ')[0];
-            }
           },
-          child: AbsorbPointer(
-            child: ReusableTextFormField(
-              hintText: hint,
-              controller: controller,
-              keyboardType: TextInputType.text,
-              leadingIcon: icon,
-              isRequired: false,
-            ),
-          ),
+        );
+        if (date != null) {
+          controller.text = date.toString().split(' ')[0];
+        }
+      },
+      child: AbsorbPointer(
+        child: ReusableTextFormField(
+          hintText: hint,
+          controller: controller,
+          keyboardType: TextInputType.text,
+          leadingIcon: Icons.calendar_today_rounded,
+          isRequired: false,
         ),
-      ],
+      ),
     );
   }
-
-  Widget _buildTitleDropdown(int index, dynamic member) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              Icon(Icons.badge, size: 18, color: cyanblueColor),
-              const SizedBox(width: 8),
-              const Text(
-                'Title',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-        ReusableDropdown(
-          selectedValue: member.title,
-          items: ListContants.title,
-          hintText: 'Select Title',
-          onChanged: (newTitle) {
-            if (newTitle != null) {
-              ref.read(stepperProvider.notifier).updateMember(
-                index,
-                member.copyWith(title: newTitle),
-              );
-            }
-          },
-          prefixIcon: Icons.badge,
-          errorMessage: 'Please select a title',
-          isRequired: true,
-        ),
-      ],
-    );
-  }
-
 }
-

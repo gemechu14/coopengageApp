@@ -177,7 +177,7 @@ class _IndividualAccountByNationalIdState
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: Colors.transparent,
+          backgroundColor: const Color(0xFFF8FAFC),
           leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, color: cyanblueColor),
               onPressed: () => Navigator.pushAndRemoveUntil(
@@ -232,10 +232,12 @@ class _IndividualAccountByNationalIdState
                     defaultLineColor: Colors.grey.shade300,
                     finishedLineColor: cyanblueColor,
                     lineThickness: 2,
+                    
                   ),
                   stepShape: StepShape.circle,
                   stepBorderRadius: 15,
                   borderThickness: 2,
+                  
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   stepRadius: 15,

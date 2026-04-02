@@ -18,9 +18,11 @@ import 'package:coopengageplus/features/onboarding/customer/JointNationalIdentif
 
 import 'package:coopengageplus/features/home/main_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_stepper/easy_stepper.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/core/constants/listConstants.dart';
 import 'dart:typed_data';
 
 String? normalizeDate(String? input) {
@@ -139,6 +141,12 @@ class _IndividualAccountByNationalIdState
       if (!_disposed) {
         ref.read(stepperProvider.notifier).reset();
         ref.read(nationalIdProvider.notifier).reset();
+        ref
+            .read(stepperProvider.notifier)
+            .updateProductType(ListContants.productType.first);
+        ref
+            .read(stepperProvider.notifier)
+            .updateJointAccountType(ListContants.AccountTypeSelection.first);
       }
     });
   }
@@ -180,7 +188,12 @@ class _IndividualAccountByNationalIdState
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: Colors.transparent,
+          backgroundColor: const Color(0xFFF8FAFC),
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          ),
           leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, color: cyanblueColor),
               onPressed: () => Navigator.pushAndRemoveUntil(
@@ -752,14 +765,13 @@ class _IndividualAccountByNationalIdState
             actions: [
               TextButton(
                 onPressed: () {
-                  if (!_disposed) {
-                    Navigator.pop(context);
-                    // Navigator.pushAndRemoveUntil(
-                    //   context,
-                    //   MaterialPageRoute(builder: (_) => const MainPage()),
-                    //   (route) => false,
-                    // );
-                  }
+                  if (_disposed) return;
+                  final nav = Navigator.of(context);
+                  nav.pop();
+                  nav.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const MainPage()),
+                    (route) => false,
+                  );
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -773,15 +785,7 @@ class _IndividualAccountByNationalIdState
               ),
             ],
           ),
-        ).then((_) {
-          if (!_disposed) {
-            // Navigator.pushAndRemoveUntil(
-            //   context,
-            //   MaterialPageRoute(builder: (_) => const MainPage()),
-            //   (route) => false,
-            // );
-          }
-        });
+        );
       }
     } catch (e) {
       if (!_disposed && Navigator.canPop(context)) {
