@@ -483,11 +483,11 @@ class _IndividualAccountByNationalIdState
                           final hasAccount =
                               accounts is List && accounts.isNotEmpty;
 
-                          if (hasAccount) {
-                            await _showExistingAccountDialog(
-                                sanitizedPhone, accountResponse);
-                            return;
-                          }
+                          // if (hasAccount) {
+                          //   await _showExistingAccountDialog(
+                          //       sanitizedPhone, accountResponse);
+                          //   return;
+                          // }
 
                           _existingAccountChecked = true;
                           _lastCheckedPhone = sanitizedPhone;

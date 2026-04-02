@@ -625,7 +625,7 @@ class _StepDetailScreenState extends ConsumerState<StepDetailScreen> {
                   style: TextStyle(fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isLoading ? Colors.grey : Colors.blue,
+                  backgroundColor: _isLoading ? Colors.blueAccent : Colors.blue,
                   foregroundColor: Colors.white,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 1, vertical: 10),
