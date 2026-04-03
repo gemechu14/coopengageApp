@@ -108,7 +108,7 @@ class LoginNotifier extends StateNotifier<LoginScreenState> {
         .timeout(const Duration(seconds: 19));
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      _emitError('Invalid Username or Password.');
+      _emitError('Invalid username or password.');
       return;
     }
 

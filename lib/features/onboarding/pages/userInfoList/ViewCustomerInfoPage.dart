@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
+import 'package:coopengageplus/features/onboarding/pages/verifyCustomerInfo.dart';
+import 'package:coopengageplus/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -36,6 +38,15 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
     if (title.contains('Rejected')) return 'REJECTED';
     if (title.contains('Awaiting')) return 'PENDING';
     return 'NEW';
+  }
+
+  /// Same rules as verify in [UserListPage] popup: New Applicants + REGISTERED + online.
+  bool _shouldShowVerifyAction() {
+    if (!isOnline) return false;
+    if (widget.title != 'New Applicants') return false;
+    final s =
+        (widget.registrationData['status'] ?? '').toString().trim().toUpperCase();
+    return s == 'REGISTERED';
   }
 
   @override
@@ -83,6 +94,10 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
               child: Column(
                 children: [
                   const SizedBox(height: 16),
+                  if (_shouldShowVerifyAction()) ...[
+                    _buildVerifyAccountBanner(),
+                    const SizedBox(height: 12),
+                  ],
                   _buildSection(
                     'Personal Information',
                     Icons.person_outline,
@@ -236,6 +251,85 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerifyAccountBanner() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.verified_outlined, color: cyanblueColor, size: 20),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Account verification',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A1A2E),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Verify the customer to get the account number.',
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => Verifycustomerinfo(
+                      registrationData: widget.registrationData,
+                      title: widget.title,
+                      userId: widget.userId,
+                      className: widget.className,
+                    ),
+                  ),
+                );
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: cyanblueColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Verify',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+            ),
+          ],
         ),
       ),
     );
