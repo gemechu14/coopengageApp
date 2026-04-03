@@ -118,6 +118,8 @@ class _NationalIdRegistrationState
       return;
     }
 
+    // Existing account check on step 0 is disabled; uncomment the block below to restore.
+    /*
     final phone = controller.getPhoneNumber()!;
     if (controller.shouldCheckExistingAccount(phone)) {
       _showFullScreenLoader(
@@ -142,6 +144,7 @@ class _NationalIdRegistrationState
       }
       _dismissDialog();
     }
+    */
 
     ref.read(stepperProvider.notifier).nextStep();
   }
