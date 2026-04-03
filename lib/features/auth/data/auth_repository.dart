@@ -29,7 +29,7 @@ class AuthRepository {
 
     final response = await _networkHandler
         .post('${AppConstants.baseURL}/login', data)
-        .timeout(const Duration(seconds: 19));
+        .timeout(const Duration(seconds: 50));
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final output = json.decode(response.body);

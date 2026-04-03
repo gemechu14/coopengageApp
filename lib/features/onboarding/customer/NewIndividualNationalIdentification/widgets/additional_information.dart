@@ -72,10 +72,13 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
   Widget build(BuildContext context) {
     final stepperState = ref.watch(stepperProvider);
 
-    // Set CONVENTIONAL as default if not already set
+    // Set defaults if not already set
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (stepperState.selectedProductType == null || stepperState.selectedProductType!.isEmpty) {
         ref.read(stepperProvider.notifier).updateProductType('CONVENTIONAL');
+      }
+      if (stepperState.selectedMaritalStatus == null || stepperState.selectedMaritalStatus!.isEmpty) {
+        ref.read(stepperProvider.notifier).updateMaritalStatus('SINGLE');
       }
     });
 
@@ -96,14 +99,14 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
           errorMessage: 'Please select a product type',
           isRequired: true,
         ),
-        const AppLabel("Mother Name"),
+        const AppLabel("Mother Name", isRequired: true),
         ReusableTextFormField(
           hintText: "Mother Name",
           controller: motherNameController,
           keyboardType: TextInputType.text,
           errorMessage: "Mother Name cannot be empty",
           leadingIcon: Icons.person,
-          isRequired: false,
+          isRequired: true,
           onChanged: (value) {
             ref.read(stepperProvider.notifier).updateMotherName(value);
           },
@@ -145,7 +148,7 @@ class _PhoneFanWidgetState extends ConsumerState<PhoneFanWidget> {
         ),
         const AppLabel("Marital Status", isRequired: true),
         ReusableDropdown(
-          selectedValue: stepperState.selectedMaritalStatus,
+          selectedValue: stepperState.selectedMaritalStatus ?? 'SINGLE',
           items: ListContants.maritalStatuses,
           hintText: 'Select Marital status',
           onChanged: (newStatus) {

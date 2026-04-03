@@ -37,15 +37,30 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
     // Load existing data if available
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final stepperState = ref.read(stepperProvider);
-      final faydaState = ref.read(simpleNationalIdProvider); //
-      // final stepperState = ref.read(stepperProvider);
-      // legalIdController.text = stepperState.legalId ?? '';
-      // legalIdController.text =    ;
+      final faydaState = ref.read(simpleNationalIdProvider);
       legalIdController.text = faydaState.userData!.sub.toString();
       ref.read(stepperProvider.notifier).updateLegalId(legalIdController.text);
       issueAuthorityController.text = stepperState.issueAuthority ?? 'ET';
-      issueDateController.text = stepperState.issueDate ?? '';
-      expireDateController.text = stepperState.expireDate ?? '';
+
+      final now = DateTime.now();
+      final defaultIssueDate = DateTime(now.year - 1, now.month, now.day);
+      final defaultExpireDate = DateTime(defaultIssueDate.year + 7, defaultIssueDate.month, defaultIssueDate.day);
+      final dateFormat = DateFormat('yyyy-MM-dd');
+
+      if (stepperState.issueDate == null || stepperState.issueDate!.isEmpty) {
+        issueDateController.text = dateFormat.format(defaultIssueDate);
+        ref.read(stepperProvider.notifier).updateIssueDate(issueDateController.text);
+      } else {
+        issueDateController.text = stepperState.issueDate!;
+      }
+
+      if (stepperState.expireDate == null || stepperState.expireDate!.isEmpty) {
+        expireDateController.text = dateFormat.format(defaultExpireDate);
+        ref.read(stepperProvider.notifier).updateExpireDate(expireDateController.text);
+      } else {
+        expireDateController.text = stepperState.expireDate!;
+      }
+
       fanController.text = stepperState.fanNumber;
     });
   }
@@ -68,15 +83,19 @@ class _IdInformationStepState extends ConsumerState<IdInformationStep> {
       lastDate: DateTime.now(),
     );
     if (picked != null) {
+      final expireDate = DateTime(picked.year + 7, picked.month, picked.day);
       setState(() {
         issueDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+        expireDateController.text = DateFormat('yyyy-MM-dd').format(expireDate);
       });
-      // Update stepper provider
       ref
           .read(stepperProvider.notifier)
           .updateIssueDate(issueDateController.text);
-      // Clear validation error
+      ref
+          .read(stepperProvider.notifier)
+          .updateExpireDate(expireDateController.text);
       _clearError('issueDate');
+      _clearError('expireDate');
     }
   }
 
