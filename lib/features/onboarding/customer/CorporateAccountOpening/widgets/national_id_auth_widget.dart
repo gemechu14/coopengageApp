@@ -821,7 +821,9 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       print('NationalIdAuthWidget: === FORCE CLOSING EVERYTHING ===');
 
       _closeWebSocket();
-      Navigator.of(context).popUntil((route) => route.isFirst);
+
+      // Only close dialog/popup routes, preserve the main navigation stack
+      Navigator.of(context).popUntil((route) => route is! PopupRoute);
 
       _webViewController?.clearCache();
       _webViewController?.clearLocalStorage();
@@ -880,7 +882,8 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
       _closeWebSocket();
 
       if (!_disposed) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).popUntil((route) => route is! PopupRoute);
+
         _showAuthenticationSuccessDialog();
 
         setState(() {

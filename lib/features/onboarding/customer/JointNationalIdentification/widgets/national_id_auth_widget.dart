@@ -1217,18 +1217,15 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     try {
       print('NationalIdAuthWidget: === FORCE CLOSING EVERYTHING ===');
 
-      // Close WebSocket
       _closeWebSocket();
 
-      // Close any open dialogs
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Only close dialog/popup routes, preserve the main navigation stack
+      Navigator.of(context).popUntil((route) => route is! PopupRoute);
 
-      // Clear WebView
       _webViewController?.clearCache();
       _webViewController?.clearLocalStorage();
       _webViewController = null;
 
-      // Reset all state
       _authUrl = null;
       _errorMessage = null;
       _wsConnecting = false;
@@ -1281,17 +1278,13 @@ class _NationalIdAuthWidgetState extends ConsumerState<NationalIdAuthWidget> {
     } catch (e) {
       print('NationalIdAuthWidget: Error processing authentication result: $e');
     } finally {
-      // Close WebSocket first
       _closeWebSocket();
 
       if (!_disposed) {
-        // Close any open dialogs first
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).popUntil((route) => route is! PopupRoute);
 
-        // Show success message
         _showAuthenticationSuccessDialog();
 
-        // Close WebView and return to member list
         setState(() {
           _authUrl = null;
           _dialogShown = false;
