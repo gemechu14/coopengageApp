@@ -2,6 +2,7 @@ import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/home/Dashboard/models/dashboard_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:coopengageplus/shared/widgets/merchant_registration_fab.dart';
 import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:coopengageplus/shared/services/GlobalData.dart';
 // import 'package:coopengageplus/shared/services/token_service.dart';
@@ -89,6 +90,8 @@ class _DashboardState extends ConsumerState<Dashboard> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
+      floatingActionButton: const MerchantRegistrationFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
         child: SingleChildScrollView(

@@ -1,20 +1,25 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 class MyHttpOverrides extends HttpOverrides {
+  static bool _isCoopBankHost(String host) =>
+      host.endsWith('coopbankoromiasc.com');
+
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    // Create a secure HTTP client with proper SSL validation
     return super.createHttpClient(context)
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        // In production, NEVER bypass certificate validation
-        // This prevents man-in-the-middle attacks
-        print('Certificate validation failed for $host:$port');
-        print('Certificate subject: ${cert.subject}');
-        print('Certificate issuer: ${cert.issuer}');
-        print('Certificate valid from: ${cert.startValidity} to ${cert.endValidity}');
-        
-        // Return false to reject invalid certificates
-        // This ensures your app only connects to trusted servers
+        // Debug: trust coopbankoromiasc.com (eth-qr, coopengage, etc.) when
+        // corporate TLS inspection or incomplete chains break Android but not Postman.
+        if (kDebugMode && _isCoopBankHost(host)) {
+          debugPrint('[HttpOverrides] DEBUG trust TLS for $host:$port');
+          return true;
+        }
+
+        debugPrint('[HttpOverrides] TLS rejected for $host:$port');
+        debugPrint('[HttpOverrides] subject: ${cert.subject}');
+        debugPrint('[HttpOverrides] issuer: ${cert.issuer}');
         return false;
       };
   }

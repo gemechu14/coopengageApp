@@ -27,6 +27,10 @@ class AppConstants {
 /////************************************************ */
   static const baseURL = 'https://coopengage.coopbankoromiasc.com';
   static const baseUrl = "https://coopengage.coopbankoromiasc.com/api/v1";
+
+  /// eth-qr backend for branch-user merchant onboarding (New Entry flow).
+  static const ethQrBaseURL = 'https://ethqr.coopbankoromiasc.com';
+  static const ethQrApiUrl = '$ethQrBaseURL/api/v1';
   // static const webSocketUrl = 'http://10.12.53.33:9062/ws/fayda';
   static const webSocketUrl = 'wss://coopengage.coopbankoromiasc.com/ws/fayda';
 /////************************************************ */
