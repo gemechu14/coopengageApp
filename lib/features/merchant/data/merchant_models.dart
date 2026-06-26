@@ -83,11 +83,15 @@ class MerchantResponse {
     this.address,
     this.bankDetails = const [],
     this.readyForQrRequest = false,
+    this.qrRequested = false,
     this.portalAccountCreated = false,
     this.portalLoginEmail,
     this.wantsAcrylicQr = false,
     this.wantsStickerQr = false,
     this.qrPurposeCode,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
   });
 
   final String id;
@@ -101,11 +105,15 @@ class MerchantResponse {
   final Map<String, dynamic>? address;
   final List<Map<String, dynamic>> bankDetails;
   final bool readyForQrRequest;
+  final bool qrRequested;
   final bool portalAccountCreated;
   final String? portalLoginEmail;
   final bool wantsAcrylicQr;
   final bool wantsStickerQr;
   final String? qrPurposeCode;
+  final String? status;
+  final String? createdAt;
+  final String? updatedAt;
 
   factory MerchantResponse.fromJson(Map<String, dynamic> json) {
     final bank = json['bankDetails'];
@@ -128,11 +136,15 @@ class MerchantResponse {
               .toList()
           : const [],
       readyForQrRequest: _toBool(json['readyForQrRequest']),
+      qrRequested: _toBool(json['qrRequested']),
       portalAccountCreated: _toBool(json['portalAccountCreated']),
       portalLoginEmail: json['portalLoginEmail']?.toString(),
       wantsAcrylicQr: _toBool(json['wantsAcrylicQr']),
       wantsStickerQr: _toBool(json['wantsStickerQr']),
       qrPurposeCode: json['qrPurposeCode']?.toString(),
+      status: json['status']?.toString(),
+      createdAt: json['createdAt']?.toString(),
+      updatedAt: json['updatedAt']?.toString(),
     );
   }
 

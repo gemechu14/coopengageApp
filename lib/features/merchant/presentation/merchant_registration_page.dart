@@ -4,6 +4,7 @@ import 'package:coopengageplus/features/merchant/data/mcc_data.dart';
 import 'package:coopengageplus/features/merchant/data/merchant_qr_purpose_codes.dart';
 // import 'package:coopengageplus/features/merchant/data/merchant_direct_api.dart';
 import 'package:coopengageplus/features/merchant/data/merchant_models.dart';
+import 'package:coopengageplus/features/merchant/data/merchant_qr_poster_actions.dart';
 import 'package:coopengageplus/features/merchant/presentation/merchant_registration_controller.dart';
 import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:file_picker/file_picker.dart';
@@ -735,7 +736,7 @@ class _StepDetailsState extends State<_StepDetails> {
           MerchantFlowLabeledField(
             accentColor: coopCyan,
             mutedColor: muted,
-            label: 'Email (portal login)',
+            label: 'Email (optional)',
             hintText: 'merchant@example.com',
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
@@ -1026,7 +1027,7 @@ class _StepAddress extends StatelessWidget {
   }
 }
 
-class _StepSuccess extends StatelessWidget {
+class _StepSuccess extends ConsumerStatefulWidget {
   const _StepSuccess({
     required this.state,
     required this.coopCyan,
@@ -1039,14 +1040,134 @@ class _StepSuccess extends StatelessWidget {
   final Color muted;
   final VoidCallback onDone;
 
+  @override
+  ConsumerState<_StepSuccess> createState() => _StepSuccessState();
+}
+
+class _StepSuccessState extends ConsumerState<_StepSuccess> {
+  bool _isRequestingQr = false;
+  String? _qrError;
+  String? _qrSuccess;
+  bool _isPosterLoading = false;
+
   String _maskAccount(String? account) {
     if (account == null || account.length < 4) return '****';
     return '****${account.substring(account.length - 4)}';
   }
 
+  Future<void> _requestQrCode(MerchantResponse m, int acrylic, int sticker) async {
+    final branchCode = widget.state.branchCode.trim();
+    if (branchCode.isEmpty) {
+      setState(() => _qrError = 'Branch code is missing.');
+      return;
+    }
+    setState(() {
+      _isRequestingQr = true;
+      _qrError = null;
+      _qrSuccess = null;
+    });
+    try {
+      final service = ref.read(merchantRemoteServiceProvider);
+      final msg = await service.requestQrCodes(
+        branchCode: branchCode,
+        requests: [(
+          merchantId: m.id,
+          acrylicQuantity: acrylic,
+          stickerQuantity: sticker,
+        )],
+      );
+      if (mounted) {
+        setState(() {
+          _isRequestingQr = false;
+          _qrSuccess = msg;
+        });
+      }
+    } on MerchantApiException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isRequestingQr = false;
+          _qrError = e.message;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isRequestingQr = false;
+          _qrError = 'QR request failed. Please try again.';
+        });
+      }
+    }
+  }
+
+  Future<void> _viewPoster(MerchantResponse m, String templateType) async {
+    final branchCode = widget.state.branchCode.trim();
+    if (branchCode.isEmpty) {
+      setState(() => _qrError = 'Branch code is missing.');
+      return;
+    }
+    setState(() {
+      _isPosterLoading = true;
+      _qrError = null;
+    });
+    try {
+      final service = ref.read(merchantRemoteServiceProvider);
+      final bytes = await service.getQrPosterBytes(
+        merchantId: m.id,
+        branchCode: branchCode,
+        templateType: templateType,
+      );
+      if (!mounted) return;
+      setState(() => _isPosterLoading = false);
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _RegistrationQrPosterSheet(
+          bytes: bytes,
+          merchantName: m.dbaName ?? m.merchantName ?? 'Merchant',
+          puid: m.puid ?? '',
+          templateType: templateType,
+        ),
+      );
+    } on MerchantApiException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isPosterLoading = false;
+          _qrError = e.message;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isPosterLoading = false;
+          _qrError = 'Could not load QR poster.';
+        });
+      }
+    }
+  }
+
+  void _showQrRequestSheet(MerchantResponse m) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RegistrationQrRequestSheet(
+        merchant: m,
+        coopCyan: widget.coopCyan,
+        onSubmit: ({required int acrylic, required int sticker}) async {
+          Navigator.of(context).pop();
+          await _requestQrCode(m, acrylic, sticker);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final m = state.lastMerchantResponse;
+    final m = widget.state.lastMerchantResponse;
+    final coopCyan = widget.coopCyan;
+    final muted = widget.muted;
+
     if (m == null) {
       return MycardFlowCard(
         accentColor: coopCyan,
@@ -1114,29 +1235,29 @@ class _StepSuccess extends StatelessWidget {
               color: ready ? Colors.amber.shade800 : Colors.orange.shade800,
             ),
           ),
-          const SizedBox(height: 10),
+          // const SizedBox(height: 10),
           Text(
             ready
-                ? 'Thank you for registering this merchant. The profile is ready for QR request. '
-                    'Share portal login details with the merchant when applicable.'
+                ? ''
+                    
                 : 'The merchant was saved but some requirements may still be pending before a QR request.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: muted, height: 1.45),
           ),
-          const SizedBox(height: 8),
+          // const SizedBox(height: 8),
           Text(
             'Account ${_maskAccount(m.primaryAccountNumber)}',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: muted.withOpacity(0.85)),
           ),
-          const SizedBox(height: 16),
+          // const SizedBox(height: 16),
           MerchantFlowSubheading(
             accentColor: coopCyan,
             mutedColor: muted,
             title: 'Registration summary',
             icon: Icons.summarize_outlined,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 5),
           MerchantFlowSummaryTile(
             accentColor: coopCyan,
             mutedColor: muted,
@@ -1183,27 +1304,87 @@ class _StepSuccess extends StatelessWidget {
             label: 'QR types',
             value: qrTypes.isEmpty ? '—' : qrTypes,
           ),
-          MerchantFlowSummaryTile(
-            accentColor: coopCyan,
-            mutedColor: muted,
-            label: 'QR purpose',
-            value: qrPurposeByValue(m.qrPurposeCode)?.label ??
-                m.qrPurposeCode ??
-                '—',
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Need assistance? Call 609.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: coopCyan,
+          // MerchantFlowSummaryTile(
+          //   accentColor: coopCyan,
+          //   mutedColor: muted,
+          //   label: 'QR purpose',
+          //   value: qrPurposeByValue(m.qrPurposeCode)?.label ??
+          //       m.qrPurposeCode ??
+          //       '—',
+          // ),
+          const SizedBox(height: 12),
+          // QR feedback messages
+          if (_qrError != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline_rounded, color: Colors.red.shade700, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _qrError!,
+                      style: TextStyle(fontSize: 12.5, color: Colors.red.shade700),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 8),
+          ],
+          if (_qrSuccess != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_outline_rounded, color: Colors.green.shade700, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _qrSuccess!,
+                      style: TextStyle(fontSize: 12.5, color: Colors.green.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 5),
+          ],
+          // QR action buttons (only when ready and not yet requested)
+          if (ready) ...[
+            _QrActionRow(
+              coopCyan: coopCyan,
+              merchant: m,
+              isRequestingQr: _isRequestingQr,
+              isPosterLoading: _isPosterLoading,
+              onRequestQr: () => _showQrRequestSheet(m),
+              onViewPoster: (t) => _viewPoster(m, t),
+            ),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 2),
+          // Text(
+          //   'Need assistance? Call 609.',
+          //   textAlign: TextAlign.center,
+          //   style: TextStyle(
+          //     fontSize: 13,
+          //     fontWeight: FontWeight.w700,
+          //     color: coopCyan,
+          //   ),
+          // ),
           const SizedBox(height: 14),
           FilledButton(
-            onPressed: onDone,
+            onPressed: widget.onDone,
             style: FilledButton.styleFrom(
               backgroundColor: coopCyan,
               foregroundColor: Colors.white,
@@ -1216,6 +1397,633 @@ class _StepSuccess extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// QR action row — shown on the success step
+// ---------------------------------------------------------------------------
+
+class _QrActionRow extends StatelessWidget {
+  const _QrActionRow({
+    required this.coopCyan,
+    required this.merchant,
+    required this.isRequestingQr,
+    required this.isPosterLoading,
+    required this.onRequestQr,
+    required this.onViewPoster,
+  });
+
+  final Color coopCyan;
+  final MerchantResponse merchant;
+  final bool isRequestingQr;
+  final bool isPosterLoading;
+  final VoidCallback onRequestQr;
+  final void Function(String templateType) onViewPoster;
+
+  @override
+  Widget build(BuildContext context) {
+    const blue = Color(0xFF0D47A1);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          height: 1,
+          color: const Color(0xFFF1F5F9),
+          margin: const EdgeInsets.only(bottom: 12),
+        ),
+        Text(
+          'QR Actions',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: coopCyan,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _SuccessActionButton(
+          label: 'Request QR Code',
+          icon: Icons.send_rounded,
+          color: blue,
+          loading: isRequestingQr,
+          onTap: isRequestingQr ? null : onRequestQr,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            if (merchant.wantsAcrylicQr || !merchant.wantsStickerQr)
+              Expanded(
+                child: _SuccessActionButton(
+                  label: 'Acrylic Poster',
+                  icon: Icons.image_rounded,
+                  color: coopCyan,
+                  loading: isPosterLoading,
+                  onTap: isPosterLoading ? null : () => onViewPoster('acrylic'),
+                ),
+              ),
+            if (merchant.wantsAcrylicQr && merchant.wantsStickerQr)
+              const SizedBox(width: 8),
+            if (merchant.wantsStickerQr)
+              Expanded(
+                child: _SuccessActionButton(
+                  label: 'Sticker Poster',
+                  icon: Icons.image_outlined,
+                  color: const Color(0xFF6366F1),
+                  loading: isPosterLoading,
+                  onTap: isPosterLoading ? null : () => onViewPoster('sticker'),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SuccessActionButton extends StatelessWidget {
+  const _SuccessActionButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.loading = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (loading)
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2, color: color),
+              )
+            else
+              Icon(icon, size: 15, color: color),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// QR request sheet (used on the success / registration step)
+// ---------------------------------------------------------------------------
+
+class _RegistrationQrRequestSheet extends StatefulWidget {
+  const _RegistrationQrRequestSheet({
+    required this.merchant,
+    required this.coopCyan,
+    required this.onSubmit,
+  });
+
+  final MerchantResponse merchant;
+  final Color coopCyan;
+  final Future<void> Function({required int acrylic, required int sticker}) onSubmit;
+
+  @override
+  State<_RegistrationQrRequestSheet> createState() =>
+      _RegistrationQrRequestSheetState();
+}
+
+class _RegistrationQrRequestSheetState
+    extends State<_RegistrationQrRequestSheet> {
+  int _acrylic = 0;
+  int _sticker = 0;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.merchant.wantsAcrylicQr) _acrylic = 1;
+    if (widget.merchant.wantsStickerQr) _sticker = 1;
+  }
+
+  bool get _canSubmit => !_submitting && (_acrylic > 0 || _sticker > 0);
+
+  Future<void> _submit() async {
+    if (!_canSubmit) return;
+    setState(() => _submitting = true);
+    try {
+      await widget.onSubmit(acrylic: _acrylic, sticker: _sticker);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final cyan = widget.coopCyan;
+    const blue = Color(0xFF0D47A1);
+    final m = widget.merchant;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.send_rounded, color: blue, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Request QR Code',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    Text(
+                      m.dbaName ?? m.merchantName ?? '',
+                      style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Select quantities. At least one must be greater than 0.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          _RegQtyRow(
+            label: 'Acrylic Stand',
+            icon: Icons.qr_code_2_rounded,
+            color: cyan,
+            value: _acrylic,
+            onChanged: (v) => setState(() => _acrylic = v),
+          ),
+          const SizedBox(height: 10),
+          _RegQtyRow(
+            label: 'Sticker',
+            icon: Icons.qr_code_rounded,
+            color: const Color(0xFF6366F1),
+            value: _sticker,
+            onChanged: (v) => setState(() => _sticker = v),
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: _canSubmit ? _submit : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: blue,
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: _submitting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.send_rounded, size: 18),
+            label: Text(
+              _submitting ? 'Submitting…' : 'Submit QR Request',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RegQtyRow extends StatelessWidget {
+  const _RegQtyRow({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                  fontSize: 13.5, fontWeight: FontWeight.w600, color: color),
+            ),
+          ),
+          _Btn(
+            icon: Icons.remove_rounded,
+            color: color,
+            onTap: value > 0 ? () => onChanged(value - 1) : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Text(
+              '$value',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+          ),
+          _Btn(
+            icon: Icons.add_rounded,
+            color: color,
+            onTap: () => onChanged(value + 1),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Btn extends StatelessWidget {
+  const _Btn({required this.icon, required this.color, required this.onTap});
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: onTap != null ? color : Colors.grey.shade300,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+      );
+}
+
+// ---------------------------------------------------------------------------
+// QR Poster sheet (used on the success / registration step)
+// ---------------------------------------------------------------------------
+
+class _RegistrationQrPosterSheet extends StatefulWidget {
+  const _RegistrationQrPosterSheet({
+    required this.bytes,
+    required this.merchantName,
+    required this.puid,
+    required this.templateType,
+  });
+
+  final Uint8List bytes;
+  final String merchantName;
+  final String puid;
+  final String templateType;
+
+  @override
+  State<_RegistrationQrPosterSheet> createState() =>
+      _RegistrationQrPosterSheetState();
+}
+
+class _RegistrationQrPosterSheetState
+    extends State<_RegistrationQrPosterSheet> {
+  bool _downloading = false;
+  bool _sharing = false;
+
+  String get _fileName =>
+      '${widget.templateType}-${widget.puid.isNotEmpty ? widget.puid : 'poster'}.png';
+
+  bool get _busy => _downloading || _sharing;
+
+  Future<void> _download() async {
+    if (_busy) return;
+    setState(() => _downloading = true);
+    try {
+      final result = await MerchantQrPosterActions.downloadToDevice(
+        bytes: widget.bytes,
+        fileName: _fileName,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message ?? 'Download finished.'),
+          backgroundColor:
+              result.success ? Colors.green.shade700 : Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not download: $e'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  Future<void> _share() async {
+    if (_busy) return;
+    setState(() => _sharing = true);
+    try {
+      await MerchantQrPosterActions.sharePoster(
+        bytes: widget.bytes,
+        fileName: _fileName,
+        subject: '${widget.merchantName} QR Poster',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not share: $e'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  Widget _busyIcon() {
+    return const SizedBox(
+      width: 16,
+      height: 16,
+      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    const cyan = Color(0xFF00AEEF);
+    final label =
+        widget.templateType == 'acrylic' ? 'Acrylic Poster' : 'Sticker Poster';
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      expand: false,
+      builder: (_, controller) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF0F172A),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+              child: Column(
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade700,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.qr_code_2_rounded, color: cyan, size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.merchantName,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              label,
+                              style: const TextStyle(fontSize: 12, color: cyan),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: _sharing
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: cyan),
+                              )
+                            : const Icon(Icons.share_rounded,
+                                color: Colors.white),
+                        onPressed: _busy ? null : _share,
+                        tooltip: 'Share',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                controller: controller,
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + bottom),
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: InteractiveViewer(
+                      child: Image.memory(
+                        widget.bytes,
+                        fit: BoxFit.contain,
+                        gaplessPlayback: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _busy ? null : _download,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: cyan,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: _downloading
+                              ? _busyIcon()
+                              : const Icon(Icons.download_rounded, size: 18),
+                          label: Text(
+                            _downloading ? 'Saving…' : 'Download Poster',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 14),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _busy ? null : _share,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: cyan, width: 1.5),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: _sharing
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: cyan,
+                                  ),
+                                )
+                              : const Icon(Icons.share_rounded, size: 18),
+                          label: Text(
+                            _sharing ? 'Sharing…' : 'Share',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 14),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

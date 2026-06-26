@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:coopengageplus/core/config/config.dart';
 import 'package:dio/dio.dart';
@@ -230,5 +231,118 @@ class MerchantRemoteService {
     );
     final data = _unwrapEnvelope(res.data ?? {});
     return MerchantResponse.fromJson(data);
+  }
+
+  /// Lists merchants registered under a branch (paginated).
+  /// Pass [qrRequested] = false for ready-to-request, true for already requested, null for all.
+  Future<({List<MerchantResponse> merchants, int totalPages, int totalElements})>
+      listMerchantsByBranch({
+    required String branchCode,
+    bool? qrRequested,
+    int page = 0,
+    int size = 20,
+  }) async {
+    final params = <String, dynamic>{
+      'branchCode': branchCode,
+      'page': page,
+      'size': size,
+    };
+    if (qrRequested != null) params['qrRequested'] = qrRequested;
+
+    final res = await _dio.get<Map<String, dynamic>>(
+      '$_apiBase/merchants/mobile/by-branch',
+      queryParameters: params,
+      options: Options(headers: await _headers()),
+    );
+    final body = res.data ?? {};
+    final code = body['code']?.toString();
+    if (code != '0') {
+      throw MerchantApiException(
+        body['msg']?.toString() ?? 'Failed to load merchants',
+        code: code,
+      );
+    }
+    final data = body['data'];
+    final dataMap = data is Map<String, dynamic>
+        ? data
+        : (data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{});
+    final content = dataMap['content'];
+    final merchants = content is List
+        ? content
+            .whereType<Map>()
+            .map((e) => MerchantResponse.fromJson(Map<String, dynamic>.from(e)))
+            .toList()
+        : <MerchantResponse>[];
+    return (
+      merchants: merchants,
+      totalPages: (dataMap['totalPages'] as num?)?.toInt() ?? 1,
+      totalElements: (dataMap['totalElements'] as num?)?.toInt() ?? merchants.length,
+    );
+  }
+
+  /// Submits QR code requests for one or more merchants to Head Office for approval.
+  Future<String> requestQrCodes({
+    required String branchCode,
+    required List<({String merchantId, int acrylicQuantity, int stickerQuantity})> requests,
+  }) async {
+    final body = {
+      'requests': requests
+          .map((r) => {
+                'merchantId': r.merchantId,
+                'acrylicQuantity': r.acrylicQuantity,
+                'stickerQuantity': r.stickerQuantity,
+              })
+          .toList(),
+    };
+    final res = await _dio.post<Map<String, dynamic>>(
+      '$_apiBase/merchants/mobile/qr-request',
+      data: body,
+      options: Options(headers: await _headers(branchCode: branchCode)),
+    );
+    final resBody = res.data ?? {};
+    final code = resBody['code']?.toString();
+    if (code != '0') {
+      throw MerchantApiException(
+        resBody['msg']?.toString() ?? 'QR request failed',
+        code: code,
+      );
+    }
+    return resBody['data']?.toString() ?? 'QR request submitted successfully.';
+  }
+
+  /// Fetches the raw QR poster image bytes for a merchant.
+  /// [templateType]: 'acrylic' or 'sticker'. [fileType]: 'png', 'jpg', or 'jpeg'.
+  Future<Uint8List> getQrPosterBytes({
+    required String merchantId,
+    required String branchCode,
+    String templateType = 'acrylic',
+    String fileType = 'png',
+  }) async {
+    final headers = await _headers(branchCode: branchCode, jsonContent: false);
+    headers['Accept'] = 'image/*';
+
+    final res = await _dio.get<List<int>>(
+      '$_apiBase/merchants/$merchantId/qr-poster',
+      queryParameters: {'templateType': templateType, 'fileType': fileType},
+      options: Options(
+        headers: headers,
+        responseType: ResponseType.bytes,
+      ),
+    );
+    final statusCode = res.statusCode ?? 0;
+    if (statusCode == 401) throw MerchantApiException('Unauthorized. Check API key.', code: '401');
+    if (statusCode == 400) throw MerchantApiException('Branch code required.', code: '400');
+    if (statusCode == 403) {
+      throw MerchantApiException('Merchant does not belong to this branch.', code: '403');
+    }
+    if (statusCode == 404) throw MerchantApiException('Merchant not found.', code: '404');
+    if (statusCode < 200 || statusCode >= 300) {
+      throw MerchantApiException('Failed to load QR poster (HTTP $statusCode).', code: '$statusCode');
+    }
+    final bytes = res.data;
+    if (bytes == null || bytes.isEmpty) {
+      throw MerchantApiException('Empty QR poster response.');
+    }
+    return Uint8List.fromList(bytes);
   }
 }

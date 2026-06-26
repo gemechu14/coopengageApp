@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -67,7 +68,20 @@ class MerchantApiLogInterceptor extends Interceptor {
         final files = data.files.map((e) => e.key).join(', ');
         return 'FormData(fields: [$fields], files: [$files])';
       }
-      if (data is Map || data is List) {
+      if (data is Uint8List) {
+        return '(binary data, ${data.length} bytes)';
+      }
+      if (data is List<int>) {
+        return '(binary data, ${data.length} bytes)';
+      }
+      if (data is List) {
+        // Raw image bytes often arrive as List<dynamic> of ints from Dio.
+        if (data.isNotEmpty && data.every((e) => e is int)) {
+          return '(binary data, ${data.length} bytes)';
+        }
+        return const JsonEncoder.withIndent('  ').convert(data);
+      }
+      if (data is Map) {
         return const JsonEncoder.withIndent('  ').convert(data);
       }
       return data.toString();

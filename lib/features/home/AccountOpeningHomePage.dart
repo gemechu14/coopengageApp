@@ -1,5 +1,5 @@
 import 'package:coopengageplus/core/constants/kconstant.dart';
-import 'package:coopengageplus/features/merchant/presentation/merchant_registration_page.dart';
+import 'package:coopengageplus/features/merchant/presentation/merchant_qr_hub_page.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/views/CorporateAccountOpening.dart';
 import 'package:coopengageplus/features/onboarding/customer/JointNationalIdentification/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/views/individual_account_by_national_id.dart';
@@ -74,7 +74,7 @@ class AccountOnboardingScreen extends StatelessWidget {
       case _AccountRoute.merchant:
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const MerchantRegistrationPage(),
+            builder: (context) => const MerchantQrHubPage(),
           ),
         );
       // case _AccountRoute.agent:

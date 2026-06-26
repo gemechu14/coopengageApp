@@ -1,8 +1,8 @@
 import 'package:coopengageplus/core/constants/kconstant.dart';
-import 'package:coopengageplus/features/merchant/presentation/merchant_registration_page.dart';
+import 'package:coopengageplus/features/merchant/presentation/merchant_qr_hub_page.dart';
 import 'package:flutter/material.dart';
 
-/// Floating action button on Home — opens branch-user merchant registration.
+/// Floating action button on Home — opens the Merchant QR hub.
 class MerchantRegistrationFab extends StatelessWidget {
   const MerchantRegistrationFab({super.key});
 
@@ -17,7 +17,7 @@ class MerchantRegistrationFab extends StatelessWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const MerchantRegistrationPage(),
+              builder: (_) => const MerchantQrHubPage(),
             ),
           );
         },

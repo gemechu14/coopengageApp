@@ -121,7 +121,7 @@ class MerchantRegistrationState {
     if (branchCode.trim().isEmpty) return false;
     if (dbaName.trim().isEmpty) return false;
     if (!RegExp(r'^\d{10}$').hasMatch(phoneNumber.trim())) return false;
-    if (email.trim().isEmpty || !email.contains('@')) return false;
+    if (email.trim().isNotEmpty && !email.contains('@')) return false;
     if (!RegExp(r'^\d{4}$').hasMatch(merchantCategoryCode)) return false;
     if (businessType.trim().isEmpty) return false;
     if (!isValidQrPurposeCode(qrPurposeCode)) return false;
@@ -420,11 +420,11 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
         'businessType': state.businessType,
         'qrPurposeCode': state.qrPurposeCode,
         'phoneNumber': state.phoneNumber.trim(),
-        'email': state.email.trim(),
         'languageCode': state.languageCode,
         'wantsAcrylicQr': state.wantsAcrylicQr,
         'wantsStickerQr': state.wantsStickerQr,
       };
+      if (state.email.trim().isNotEmpty) body['email'] = state.email.trim();
       if (state.taxId.trim().isNotEmpty) body['taxId'] = state.taxId.trim();
       if (state.tinNumber.trim().isNotEmpty) {
         body['tinNumber'] = state.tinNumber.trim();

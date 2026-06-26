@@ -314,7 +314,7 @@ dependencies:
   country_picker: ^2.0.25
   file_picker: ^8.1.6
   # file_picker: ^10.2.2
-  # gallery_saver_plus: ^3.2.1
+  gallery_saver_plus: ^3.2.1
   shimmer: ^3.0.0
   crop_your_image: ^2.0.0
   enhance_stepper: ^1.0.2
