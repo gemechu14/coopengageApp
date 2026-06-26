@@ -13,7 +13,6 @@ class AccountOnboardingScreen extends StatelessWidget {
   static const Color _muted = Color(0xFF64748B);
   static const Color _titleColor = Color(0xFF0F172A);
   static const Color _pageBg = Color(0xFFF5F7F9);
-  static const Color _iconBg = Color(0xFFE1F5FE);
 
   static const List<_AccountTypeOption> _options = [
     _AccountTypeOption(
@@ -36,7 +35,7 @@ class AccountOnboardingScreen extends StatelessWidget {
     ),
     _AccountTypeOption(
       title: 'Merchant QR Registration',
-      description: 'Register your business and get a QR payment code',
+      description: 'Register  Merchants for QR payment code',
       icon: Icons.qr_code_2_outlined,
       route: _AccountRoute.merchant,
     ),
@@ -135,7 +134,7 @@ class AccountOnboardingScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 1.38,
+                  childAspectRatio: 1.22,
                 ),
                 itemCount: _options.length,
                 itemBuilder: (context, index) {
@@ -188,34 +187,25 @@ class _AccountTypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: cyanblueColor.withOpacity(0.22),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: cyanblueColor.withOpacity(0.12),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: Material(
+        color: whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+            padding: const EdgeInsets.all(14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -223,48 +213,47 @@ class _AccountTypeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 36,
-                      height: 36,
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AccountOnboardingScreen._iconBg,
+                        color: cyanblueColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         option.icon,
-                        size: 20,
+                        size: 18,
                         color: cyanblueColor,
                       ),
                     ),
                     const Spacer(),
                     Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: cyanblueColor.withOpacity(0.45),
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AccountOnboardingScreen._muted.withOpacity(0.5),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
                   option.title,
                   style: const TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AccountOnboardingScreen._titleColor,
-                    height: 1.1,
+                    height: 1.2,
                     letterSpacing: -0.2,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Expanded(
                   child: Text(
                     option.description,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 11,
                       fontWeight: FontWeight.w400,
                       color: AccountOnboardingScreen._muted.withOpacity(0.9),
-                      height: 1.3,
+                      height: 1.35,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
