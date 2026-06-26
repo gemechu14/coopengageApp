@@ -1,239 +1,276 @@
 import 'package:coopengageplus/core/constants/kconstant.dart';
+import 'package:coopengageplus/features/merchant/presentation/merchant_registration_page.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/views/CorporateAccountOpening.dart';
 import 'package:coopengageplus/features/onboarding/customer/JointNationalIdentification/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/customer/NewIndividualNationalIdentification/views/individual_account_by_national_id.dart';
 import 'package:coopengageplus/features/onboarding/customer/SendLink/link_generator_page.dart';
-
+// import 'package:coopengageplus/features/onboarding/customer/agent/AgentPage.dart';
 import 'package:flutter/material.dart';
-import 'package:coopengageplus/features/home/IndividualAccountTypeSelection.dart';
 
 class AccountOnboardingScreen extends StatelessWidget {
-  AccountOnboardingScreen({Key? key}) : super(key: key);
+  AccountOnboardingScreen({super.key});
+
+  static const Color _muted = Color(0xFF64748B);
+  static const Color _titleColor = Color(0xFF0F172A);
+  static const Color _pageBg = Color(0xFFF5F7F9);
+  static const Color _iconBg = Color(0xFFE1F5FE);
+
+  static const List<_AccountTypeOption> _options = [
+    _AccountTypeOption(
+      title: 'Individual',
+      description: 'Personal account for a single user',
+      icon: Icons.person_outline_rounded,
+      route: _AccountRoute.individual,
+    ),
+    _AccountTypeOption(
+      title: 'Joint',
+      description: 'Shared account for multiple users',
+      icon: Icons.groups_outlined,
+      route: _AccountRoute.joint,
+    ),
+    _AccountTypeOption(
+      title: 'Corporate',
+      description: 'Business and organizational accounts',
+      icon: Icons.apartment_outlined,
+      route: _AccountRoute.corporate,
+    ),
+    _AccountTypeOption(
+      title: 'Merchant QR Registration',
+      description: 'Register your business and get a QR payment code',
+      icon: Icons.qr_code_2_outlined,
+      route: _AccountRoute.merchant,
+    ),
+    // _AccountTypeOption(
+    //   title: 'Agent / Partner',
+    //   description: 'Onboard customers on behalf of the bank',
+    //   icon: Icons.support_agent_outlined,
+    //   route: _AccountRoute.agent,
+    // ),
+    _AccountTypeOption(
+      title: 'Send a Link',
+      description: 'Share a self-service registration link',
+      icon: Icons.link_rounded,
+      route: _AccountRoute.sendLink,
+    ),
+  ];
+
+  void _onOptionTap(BuildContext context, _AccountRoute route) {
+    switch (route) {
+      case _AccountRoute.individual:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NationalIdentificationWebSocket(),
+          ),
+          (route) => false,
+        );
+      case _AccountRoute.joint:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => JointNationalIdentification()),
+        );
+      case _AccountRoute.corporate:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => CorporateAccountOpening()),
+        );
+      case _AccountRoute.merchant:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const MerchantRegistrationPage(),
+          ),
+        );
+      // case _AccountRoute.agent:
+      //   Navigator.of(context).push(
+      //     MaterialPageRoute(builder: (context) => const AgentPage()),
+      //   );
+      case _AccountRoute.agent:
+        break;
+      case _AccountRoute.sendLink:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const LinkGeneratorPage()),
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: _pageBg,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        backgroundColor: _pageBg,
+        foregroundColor: cyanblueColor,
+        surfaceTintColor: Colors.transparent,
         title: const Text(
           'Choose Account Type',
           style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
             color: cyanblueColor,
+            letterSpacing: -0.2,
           ),
         ),
         centerTitle: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header section
-              const Text(
+              Text(
                 'Select the type of account you would like to open',
                 style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF64748B),
+                  fontSize: 14,
+                  color: _muted.withOpacity(0.95),
                   fontWeight: FontWeight.w400,
+                  height: 1.4,
                 ),
               ),
-              const SizedBox(height: 40),
-
-              // Account type cards
-              SizedBox(
-                height: 400, // Fixed height for GridView
-                child: GridView.count(
+              const SizedBox(height: 16),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.4,
-                  shrinkWrap: true, // Add this to prevent unbounded height
-                  physics:
-                      const NeverScrollableScrollPhysics(), // Disable GridView scrolling
-                  children: [
-                    _buildAccountCard(
-                      title: 'Individual',
-                      description: 'Personal account for single user',
-                      icon: Icons.person_outline,
-                      gradientColors: [
-                        const Color(0xFF3B82F6),
-                        // const Color(0xFF1E40AF),
-                        cyanblueColor
-                      ],
-
-                      
-                      onTap: () {
-                            Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  NationalIdentificationWebSocket()),
-                          (route) => false,
-                        );
-                        // Navigator.of(context).push(
-                        //   MaterialPageRoute(
-                        //       builder: (context) =>
-                        //           const IndividualAccountTypeSelection()),
-                        //   // const RegistrationScreen()),
-                        // );
-                      },
-                    ),
-                    _buildAccountCard(
-                      title: 'Joint',
-                      description: 'Shared account for multiple users',
-                      icon: Icons.group_outlined,
-                      gradientColors: [
-                        const Color(0xFF10B981),
-                        const Color(0xFF059669),
-                      ],
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                JointNationalIdentification(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildAccountCard(
-                      title: 'Corporate',
-                      description: 'Business and organizational accounts',
-                      icon: Icons.business_outlined,
-                      gradientColors: [
-                        const Color(0xFFF59E0B),
-                        const Color(0xFFD97706),
-                      ],
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => CorporateAccountOpening(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildAccountCard(
-                      title: 'Send a Link',
-                      description:
-                          'Share a link for a users to create an account.',
-                      icon: Icons.business_outlined,
-                      gradientColors: [
-                        // const Color.fromARGB(255, 11, 11, 11),
-                        // const Color.fromARGB(255, 33, 25, 16),
-                        const Color(0xFF0F172A),
-                        const Color(0xFF06B6D4),
-                      ],
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                              builder: (context) => const LinkGeneratorPage()),
-                          // const RegistrationScreen()),
-                        );
-                      },
-                    ),
-                  ],
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.38,
                 ),
+                itemCount: _options.length,
+                itemBuilder: (context, index) {
+                  final option = _options[index];
+                  return _AccountTypeCard(
+                    option: option,
+                    onTap: () => _onOptionTap(context, option.route),
+                  );
+                },
               ),
-              const SizedBox(height: 40),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildAccountCard({
-    required String title,
-    required String description,
-    required IconData icon,
-    required List<Color> gradientColors,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: gradientColors.first.withOpacity(0.25),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
+enum _AccountRoute {
+  individual,
+  joint,
+  corporate,
+  merchant,
+  agent,
+  sendLink,
+}
+
+class _AccountTypeOption {
+  const _AccountTypeOption({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.route,
+  });
+
+  final String title;
+  final String description;
+  final IconData icon;
+  final _AccountRoute route;
+}
+
+class _AccountTypeCard extends StatelessWidget {
+  const _AccountTypeCard({
+    required this.option,
+    required this.onTap,
+  });
+
+  final _AccountTypeOption option;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Stack(
-                children: [
-                  // Main content
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Description
-                      Expanded(
-                        child: Text(
-                          description,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white.withOpacity(0.9),
-                            height: 1.3,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Arrow indicator (positioned absolutely)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
+            border: Border.all(
+              color: cyanblueColor.withOpacity(0.22),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: cyanblueColor.withOpacity(0.12),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(6),
+                        color: AccountOnboardingScreen._iconBg,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: Colors.white,
+                      child: Icon(
+                        option.icon,
+                        size: 20,
+                        color: cyanblueColor,
                       ),
                     ),
+                    const Spacer(),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: cyanblueColor.withOpacity(0.45),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  option.title,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: AccountOnboardingScreen._titleColor,
+                    height: 1.1,
+                    letterSpacing: -0.2,
                   ),
-                ],
-              ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Expanded(
+                  child: Text(
+                    option.description,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w400,
+                      color: AccountOnboardingScreen._muted.withOpacity(0.9),
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

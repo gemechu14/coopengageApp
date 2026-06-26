@@ -2,6 +2,7 @@ import 'package:coopengageplus/features/home/widgets/mycard_registration/mycard_
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/mcc_data.dart';
 import '../data/merchant_api_log_interceptor.dart';
 import '../data/merchant_models.dart';
 import '../data/merchant_qr_purpose_codes.dart';
@@ -52,8 +53,8 @@ class MerchantRegistrationState {
     this.email = '',
     this.taxId = '',
     this.tinNumber = '',
-    this.merchantCategoryCode = '',
-    this.businessType = '',
+    this.merchantCategoryCode = defaultMerchantCategoryCode,
+    this.businessType = defaultMerchantBusinessType,
     this.qrPurposeCode = defaultQrPurposeCode,
     this.languageCode = 'en',
     this.wantsAcrylicQr = true,
@@ -247,41 +248,30 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
   Future<void> loadBranches() async {
     state = state.copyWith(isLoadingBranches: true, clearError: true);
     try {
-      var branches = await _service.fetchBranches();
-      if (branches.isEmpty) {
-        branches = await _branchesFromJwtFallback();
-      }
+      final branches = await _branchesFromLoggedInUser();
       var selected = state.branchCode;
-      if (selected.isEmpty && branches.length == 1) {
+      if (selected.isEmpty && branches.isNotEmpty) {
         selected = branches.first.branchCode;
       }
       state = state.copyWith(
         isLoadingBranches: false,
         branches: branches,
         branchCode: selected,
+        clearError: branches.isNotEmpty,
+        errorMessage: branches.isEmpty
+            ? 'No branch found on your profile. Try logging in again.'
+            : null,
       );
-    } catch (_) {
-      try {
-        final branches = await _branchesFromJwtFallback();
-        var selected = state.branchCode;
-        if (selected.isEmpty && branches.length == 1) {
-          selected = branches.first.branchCode;
-        }
-        state = state.copyWith(
-          isLoadingBranches: false,
-          branches: branches,
-          branchCode: selected,
-        );
-      } catch (e) {
-        state = state.copyWith(
-          isLoadingBranches: false,
-          errorMessage: 'Could not load branches. Pull to retry or log in again.',
-        );
-      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoadingBranches: false,
+        errorMessage: 'Could not load your branch. Try logging in again.',
+      );
     }
   }
 
-  Future<List<BranchOption>> _branchesFromJwtFallback() async {
+  /// Branches assigned to the logged-in user (JWT), not the full eth-qr branch list.
+  Future<List<BranchOption>> _branchesFromLoggedInUser() async {
     final jwtBranches = await MycardUserBranchesLoader.load();
     return jwtBranches
         .where((b) => (b['branchCode']?.toString() ?? '').isNotEmpty)
@@ -289,7 +279,9 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
           (b) => BranchOption(
             id: b['id']?.toString() ?? '',
             branchCode: b['branchCode']?.toString() ?? '',
-            name: b['name']?.toString() ?? 'Branch',
+            name: b['isMain'] == true
+                ? '${b['name']?.toString() ?? 'Branch'} (Main)'
+                : b['name']?.toString() ?? 'Branch',
           ),
         )
         .toList();

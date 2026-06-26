@@ -403,23 +403,23 @@ class _StepAccountState extends State<_StepAccount> {
             value: state.accountHolderName!,
           ),
         ],
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: state.canContinueFromStep1 && !state.isVerifying
-              ? notifier.goToStep2
-              : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: coopCyan,
-            disabledBackgroundColor: const Color(0xFFCBD5E1),
-            disabledForegroundColor: const Color(0xFF94A3B8),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        if (state.accountVerified) ...[
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: !state.isVerifying ? notifier.goToStep2 : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: coopCyan,
+              disabledBackgroundColor: const Color(0xFFCBD5E1),
+              disabledForegroundColor: const Color(0xFF94A3B8),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text(
+              'Continue',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
           ),
-          child: const Text(
-            'Continue',
-            style: TextStyle(fontWeight: FontWeight.w800),
-          ),
-        ),
+        ],
       ],
     );
   }
@@ -527,6 +527,7 @@ class _StepDetailsState extends State<_StepDetails> {
             accentColor: coopCyan,
             mutedColor: muted,
             title: 'Branch',
+            subtitle: 'Your branch from logged-in profile',
             icon: Icons.account_balance_outlined,
           ),
           const SizedBox(height: 10),
@@ -554,9 +555,9 @@ class _StepDetailsState extends State<_StepDetails> {
             MerchantFlowDropdown<String>(
               accentColor: coopCyan,
               mutedColor: muted,
-              label: 'Select branch',
-              sheetTitle: 'Pickup branch',
-              sheetSubtitle: 'Branch for this merchant registration',
+              label: 'Your branch',
+              sheetTitle: 'Your branch',
+              sheetSubtitle: 'Assigned to your logged-in profile',
               value: state.branchCode.isEmpty ? null : state.branchCode,
               prefixIcon: Icons.store_outlined,
               options: state.branches
@@ -1241,27 +1242,32 @@ class _MccPicker extends StatelessWidget {
     return MerchantFlowPickerField(
       accentColor: accentColor,
       mutedColor: mutedColor,
-      label: 'Business type / MCC',
-      placeholder: 'Select category',
+      label: 'MCC',
+      placeholder: 'Select MCC (4 digits)',
       prefixIcon: Icons.category_outlined,
-      displayText: match == null ? '' : '${match.code} — ${match.description}',
+      helperText:
+          '4-digit merchantCategoryCode · default $defaultMerchantCategoryCode',
+      displayText: match == null
+          ? ''
+          : 'MCC · ${match.code} · ${match.description}',
       onTap: () async {
         final picked = await showMerchantFlowSelectSheet<MccOption>(
           context: context,
           accentColor: accentColor,
           mutedColor: mutedColor,
-          title: 'Business type / MCC',
-          subtitle: 'Merchant category code',
+          title: 'MCC',
+          subtitle:
+              '4-digit merchantCategoryCode (default $defaultMerchantCategoryCode)',
           titleIcon: Icons.category_outlined,
           selectedValue: match,
           searchable: true,
-          searchHint: 'Search by name or code',
+          searchHint: 'Search by code or name',
           options: merchantMccOptions
               .map(
                 (m) => MerchantFlowSelectOption(
                   value: m,
-                  title: m.description,
-                  subtitle: m.code,
+                  title: '${m.code} — ${m.description}',
+                  subtitle: 'merchantCategoryCode',
                   icon: Icons.storefront_outlined,
                 ),
               )

@@ -1,5 +1,9 @@
 import 'merchant_models.dart';
 
+const String defaultMerchantCategoryCode = '7999';
+const String defaultMerchantBusinessType =
+    'Miscellaneous and Specialty Retail';
+
 /// Common MCC codes for merchant category picker (mirrors web categoryData subset).
 const List<MccOption> merchantMccOptions = [
   MccOption(code: '5411', description: 'Grocery Stores, Supermarkets'),
@@ -70,6 +74,10 @@ const List<MccOption> merchantMccOptions = [
   MccOption(code: '8699', description: 'Membership Organizations'),
   MccOption(code: '8931', description: 'Accounting, Auditing, Bookkeeping'),
   MccOption(code: '8999', description: 'Professional Services'),
+  MccOption(
+    code: defaultMerchantCategoryCode,
+    description: defaultMerchantBusinessType,
+  ),
 ];
 
 List<MccOption> searchMccOptions(String query) {

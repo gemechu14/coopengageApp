@@ -88,8 +88,22 @@ class DashboardConstants {
     return 37;
   }
 
-  // Images
-  static const String bannerImage = "assets/step3.png";
+  // Banner carousel — open_1.png (860×370), merchant_qr_banner.png (1024×503)
+  static const double openBannerAspectRatio = 860 / 370;
+  static const double merchantQrBannerAspectRatio = 1024 / 503;
+  static const double bannerAspectRatio = merchantQrBannerAspectRatio;
+  static const String openBannerImage = 'assets/open_1.png';
+  static const String merchantQrBannerImage = 'assets/merchant_qr_banner.png';
+  static const String ethQrFlyerImage = 'assets/ethqr_merchant_sample.png';
+
+  /// Gradient aligned with open_1.png (deeper blue left → lighter blue right).
+  static const List<Color> bannerGradientColors = [
+    Color(0xFF1A6FBF),
+    Color(0xFF4DA3E8),
+  ];
+
+  // Legacy single banner (unused — carousel uses [openBannerImage]).
+  static const String bannerImage = openBannerImage;
 
   // Loading placeholder
   static const String loadingPlaceholder = "-";
