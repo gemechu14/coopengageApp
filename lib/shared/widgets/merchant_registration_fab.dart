@@ -44,7 +44,7 @@ class MerchantRegistrationFab extends StatelessWidget {
                   'Merchant QR',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 17,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.1,
                   ),
