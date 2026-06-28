@@ -1,6 +1,10 @@
 import 'package:coopengageplus/features/home/widgets/mycard_registration/mycard_user_branches_loader.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
+import 'package:coopengageplus/shared/services/GlobalData.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../data/mcc_data.dart';
 import '../data/merchant_api_log_interceptor.dart';
@@ -30,9 +34,10 @@ final merchantRegistrationControllerProvider =
   MerchantRegistrationController.new,
 );
 
-enum PuidMode { auto, premium }
+enum PuidMode { auto, typed, premium }
 
 const puidStartDigitOptions = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const puidLengthOptions = [5, 6, 7, 8, 9, 10];
 
 class MerchantRegistrationState {
   const MerchantRegistrationState({
@@ -44,7 +49,9 @@ class MerchantRegistrationState {
     this.accountHolderName,
     this.accountVerified = false,
     this.puidMode = PuidMode.auto,
+    this.puidLength = 6,
     this.puidStartDigit = '6',
+    this.typedPuid = '',
     this.selectedPremiumPuid,
     this.merchantId,
     this.assignedPuid,
@@ -82,7 +89,9 @@ class MerchantRegistrationState {
   final String? accountHolderName;
   final bool accountVerified;
   final PuidMode puidMode;
+  final int puidLength;
   final String puidStartDigit;
+  final String typedPuid;
   final String? selectedPremiumPuid;
   final String? merchantId;
   final String? assignedPuid;
@@ -128,7 +137,11 @@ class MerchantRegistrationState {
     if (!wantsAcrylicQr && !wantsStickerQr) return false;
     if (puidMode == PuidMode.premium &&
         (selectedPremiumPuid == null ||
-            !RegExp(r'^\d{6}$').hasMatch(selectedPremiumPuid!))) {
+            !RegExp(r'^\d+$').hasMatch(selectedPremiumPuid!))) {
+      return false;
+    }
+    if (puidMode == PuidMode.typed &&
+        typedPuid.length != puidLength) {
       return false;
     }
     return true;
@@ -149,7 +162,10 @@ class MerchantRegistrationState {
     bool? accountVerified,
     bool clearAccountHolder = false,
     PuidMode? puidMode,
+    int? puidLength,
     String? puidStartDigit,
+    String? typedPuid,
+    bool clearTypedPuid = false,
     String? selectedPremiumPuid,
     bool clearPremiumPuid = false,
     String? merchantId,
@@ -194,7 +210,9 @@ class MerchantRegistrationState {
           clearAccountHolder ? null : (accountHolderName ?? this.accountHolderName),
       accountVerified: accountVerified ?? this.accountVerified,
       puidMode: puidMode ?? this.puidMode,
+      puidLength: puidLength ?? this.puidLength,
       puidStartDigit: puidStartDigit ?? this.puidStartDigit,
+      typedPuid: clearTypedPuid ? '' : (typedPuid ?? this.typedPuid),
       selectedPremiumPuid:
           clearPremiumPuid ? null : (selectedPremiumPuid ?? this.selectedPremiumPuid),
       merchantId: merchantId ?? this.merchantId,
@@ -318,9 +336,17 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
       state = state.copyWith(wantsStickerQr: value, clearError: true);
   void setPuidStartDigit(String value) =>
       state = state.copyWith(puidStartDigit: value, clearError: true);
+  void setPuidLength(int value) => state = state.copyWith(
+        puidLength: value,
+        clearTypedPuid: true,
+        clearError: true,
+      );
+  void setTypedPuid(String value) =>
+      state = state.copyWith(typedPuid: value, clearError: true);
   void setPuidMode(PuidMode mode) => state = state.copyWith(
         puidMode: mode,
-        clearPremiumPuid: mode == PuidMode.auto,
+        clearPremiumPuid: mode != PuidMode.premium,
+        clearTypedPuid: mode != PuidMode.typed,
         clearError: true,
       );
   void setSelectedPremiumPuid(String? value) =>
@@ -410,6 +436,33 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
       }
     }
 
+    if (state.puidMode == PuidMode.typed && state.typedPuid.isNotEmpty) {
+      state = state.copyWith(isLoading: true, clearError: true);
+      try {
+        final availability =
+            await _service.checkPremiumPuidAvailability(state.typedPuid);
+        if (availability['premium'] == true) {
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage:
+                '${state.typedPuid} is a reserved premium number. Please use a different number or contact your branch.',
+          );
+          return;
+        }
+        if (availability['available'] != true) {
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage: availability['message']?.toString() ??
+                'This PUID is already taken. Please enter a different number.',
+          );
+          return;
+        }
+      } on MerchantApiException catch (e) {
+        state = state.copyWith(isLoading: false, errorMessage: e.message);
+        return;
+      }
+    }
+
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final body = <String, dynamic>{
@@ -431,9 +484,19 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
       }
       if (state.puidMode == PuidMode.premium && state.selectedPremiumPuid != null) {
         body['puid'] = state.selectedPremiumPuid;
+        body['puidAssignmentMode'] = 'PREMIUM';
+      } else if (state.puidMode == PuidMode.typed && state.typedPuid.isNotEmpty) {
+        body['puid'] = state.typedPuid;
+        body['puidLength'] = state.puidLength;
+        body['puidAssignmentMode'] = 'TYPED';
       } else {
-        body['puidStartDigit'] = state.puidStartDigit;
+        body['puidLength'] = state.puidLength;
+        body['puidAssignmentMode'] = 'AUTO';
       }
+
+      // Fetch the logged-in user's email once and pass it as a query param
+      // on create so the backend can verify premium-assignment permission.
+      final requestingEmail = await _userEmailFromToken();
 
       final branchCode = state.branchCode.trim();
       MerchantResponse response;
@@ -446,7 +509,7 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
           branchCode: branchCode,
         );
       } else {
-        response = await _service.createMerchant(body);
+        response = await _service.createMerchant(body, email: requestingEmail);
       }
 
       var latest = response;
@@ -530,11 +593,60 @@ class MerchantRegistrationController extends AutoDisposeNotifier<MerchantRegistr
     state = const MerchantRegistrationState();
   }
 
-  Future<List<String>> searchPremiumPuids(String query) async {
+  Future<({List<String> puids, String? error})> searchPremiumPuids(
+    String query,
+  ) async {
+    final email = await _userEmailFromToken();
     try {
-      return await _service.searchPremiumPuids(search: query);
+      final puids = await _service.searchPremiumPuids(
+        search: query,
+        email: email,
+      );
+      return (puids: puids, error: null);
+    } on MerchantApiException catch (e) {
+      return (puids: <String>[], error: e.message);
     } catch (_) {
-      return [];
+      return (puids: <String>[], error: null);
     }
+  }
+
+  /// Returns `null` on network error; otherwise a map with `premium` and `available` booleans.
+  Future<Map<String, dynamic>?> checkTypedPuidAvailability(String puid) async {
+    try {
+      return await _service.checkPremiumPuidAvailability(puid);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Fetches the logged-in user's email exactly like the profile page:
+  /// calls /api/v1/users/me with the stored JWT Bearer token and reads
+  /// the `email` field from the response.
+  Future<String?> _userEmailFromToken() async {
+    try {
+      final handler = NetworkHandler();
+      final data = await handler.get('/api/v1/users/me');
+      if (data is Map) {
+        final email = data['email']?.toString();
+        if (email != null && email.isNotEmpty) return email;
+      }
+    } catch (_) {}
+    // Fallback: try JWT claims directly
+    try {
+      const storage = FlutterSecureStorage(
+        aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
+          storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+        ),
+      );
+      final token = await storage.read(key: 'token');
+      if (token != null && token.isNotEmpty) {
+        final claims =
+            Map<String, dynamic>.from(JwtDecoder.decode(token) as Map);
+        final email = claims['email']?.toString();
+        if (email != null && email.isNotEmpty) return email;
+      }
+    } catch (_) {}
+    return GlobalData().username;
   }
 }

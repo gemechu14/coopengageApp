@@ -90,10 +90,16 @@ class MerchantRemoteService {
     String search = '',
     int page = 0,
     int size = 48,
+    String? email,
   }) async {
+    // Build the URL manually so that '@' in the email is NOT percent-encoded
+    // to '%40' — Dio's queryParameters would encode it automatically.
+    final base = '$_apiBase/merchants/premium-puids'
+        '?search=$search&page=$page&size=$size';
+    final url =
+        (email != null && email.isNotEmpty) ? '$base&email=$email' : base;
     final res = await _dio.get<Map<String, dynamic>>(
-      '$_apiBase/merchants/premium-puids',
-      queryParameters: {'search': search, 'page': page, 'size': size},
+      url,
       options: Options(headers: await _headers()),
     );
     final data = _unwrapEnvelope(res.data ?? {});
@@ -113,12 +119,19 @@ class MerchantRemoteService {
     return _unwrapEnvelope(res.data ?? {});
   }
 
-  Future<MerchantResponse> createMerchant(Map<String, dynamic> body) async {
+  Future<MerchantResponse> createMerchant(
+    Map<String, dynamic> body, {
+    String? email,
+  }) async {
     final payload = Map<String, dynamic>.fromEntries(
       body.entries.where((e) => e.value != null),
     );
+    // Append email as a raw query param so '@' is not encoded to '%40'
+    final url = (email != null && email.isNotEmpty)
+        ? '$_apiBase/merchants?email=$email'
+        : '$_apiBase/merchants';
     final res = await _dio.post<Map<String, dynamic>>(
-      '$_apiBase/merchants',
+      url,
       data: payload,
       options: Options(headers: await _headers()),
     );

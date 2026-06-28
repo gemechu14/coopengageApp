@@ -126,26 +126,22 @@ class _MerchantListPageState extends ConsumerState<MerchantListPage> {
     final state = ref.watch(merchantListControllerProvider);
     final notifier = ref.read(merchantListControllerProvider.notifier);
 
-    // Show feedback snackbars
+    // Show feedback banners at the top
     ref.listen(merchantListControllerProvider, (prev, next) {
       if (next.successMessage != null &&
           next.successMessage != prev?.successMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.successMessage!),
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopBanner(
+          context,
+          message: next.successMessage!,
+          success: true,
         );
         notifier.clearMessages();
       } else if (next.errorMessage != null &&
           next.errorMessage != prev?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopBanner(
+          context,
+          message: next.errorMessage!,
+          success: false,
         );
         notifier.clearMessages();
       }
@@ -1057,44 +1053,22 @@ class _QrRequestSheetState extends State<_QrRequestSheet> {
             style: TextStyle(fontSize: 13, color: _muted, height: 1.4),
           ),
           const SizedBox(height: 20),
-          if (m.wantsAcrylicQr) ...[
-            _QuantityRow(
-              label: 'Acrylic Stand',
-              icon: Icons.qr_code_2_rounded,
-              color: _cyan,
-              value: _acrylic,
-              onChanged: (v) => setState(() => _acrylic = v),
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (m.wantsStickerQr) ...[
-            _QuantityRow(
-              label: 'Sticker',
-              icon: Icons.qr_code_rounded,
-              color: const Color(0xFF6366F1),
-              value: _sticker,
-              onChanged: (v) => setState(() => _sticker = v),
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (!m.wantsAcrylicQr && !m.wantsStickerQr) ...[
-            _QuantityRow(
-              label: 'Acrylic Stand',
-              icon: Icons.qr_code_2_rounded,
-              color: _cyan,
-              value: _acrylic,
-              onChanged: (v) => setState(() => _acrylic = v),
-            ),
-            const SizedBox(height: 12),
-            _QuantityRow(
-              label: 'Sticker',
-              icon: Icons.qr_code_rounded,
-              color: const Color(0xFF6366F1),
-              value: _sticker,
-              onChanged: (v) => setState(() => _sticker = v),
-            ),
-            const SizedBox(height: 12),
-          ],
+          _QuantityRow(
+            label: 'Acrylic Stand',
+            icon: Icons.qr_code_2_rounded,
+            color: _cyan,
+            value: _acrylic,
+            onChanged: (v) => setState(() => _acrylic = v),
+          ),
+          const SizedBox(height: 12),
+          _QuantityRow(
+            label: 'Sticker',
+            icon: Icons.qr_code_rounded,
+            color: const Color(0xFF6366F1),
+            value: _sticker,
+            onChanged: (v) => setState(() => _sticker = v),
+          ),
+          const SizedBox(height: 12),
           const SizedBox(height: 4),
           FilledButton.icon(
             onPressed: _canSubmit ? _submit : null,
@@ -1251,22 +1225,17 @@ class _QrPosterSheetState extends State<_QrPosterSheet> {
         fileName: _fileName,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message ?? 'Download finished.'),
-          backgroundColor:
-              result.success ? Colors.green.shade700 : Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
+      showTopBanner(
+        context,
+        message: result.message ?? 'Download finished.',
+        success: result.success,
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not download: $e'),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopBanner(
+          context,
+          message: 'Could not download: $e',
+          success: false,
         );
       }
     } finally {
@@ -1285,12 +1254,10 @@ class _QrPosterSheetState extends State<_QrPosterSheet> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not share: $e'),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopBanner(
+          context,
+          message: 'Could not share: $e',
+          success: false,
         );
       }
     } finally {

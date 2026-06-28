@@ -426,6 +426,237 @@ class _StepAccountState extends State<_StepAccount> {
   }
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Typed PUID field with inline availability check
+// ──────────────────────────────────────────────────────────────────────────────
+
+class _TypedPuidField extends StatefulWidget {
+  const _TypedPuidField({
+    required this.coopCyan,
+    required this.muted,
+    required this.puidLength,
+    required this.typedPuid,
+    required this.notifier,
+  });
+
+  final Color coopCyan;
+  final Color muted;
+  final int puidLength;
+  final String typedPuid;
+  final MerchantRegistrationController notifier;
+
+  @override
+  State<_TypedPuidField> createState() => _TypedPuidFieldState();
+}
+
+class _TypedPuidFieldState extends State<_TypedPuidField> {
+  late final TextEditingController _ctrl;
+  bool _checking = false;
+  bool? _isPremium;
+  bool? _isAvailable;
+  String? _checkMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.typedPuid);
+    _ctrl.selection =
+        TextSelection.collapsed(offset: _ctrl.text.length);
+  }
+
+  @override
+  void didUpdateWidget(_TypedPuidField old) {
+    super.didUpdateWidget(old);
+    if (old.puidLength != widget.puidLength) {
+      // Length changed — clear field and status
+      _ctrl.clear();
+      setState(() {
+        _isPremium = null;
+        _isAvailable = null;
+        _checkMessage = null;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _check() async {
+    final value = _ctrl.text.trim();
+    if (value.length != widget.puidLength) {
+      setState(() {
+        _checkMessage =
+            'Enter exactly ${widget.puidLength} digits to check availability.';
+        _isPremium = null;
+        _isAvailable = null;
+      });
+      return;
+    }
+    setState(() {
+      _checking = true;
+      _checkMessage = null;
+      _isPremium = null;
+      _isAvailable = null;
+    });
+    final result = await widget.notifier.checkTypedPuidAvailability(value);
+    if (!mounted) return;
+    if (result == null) {
+      setState(() {
+        _checking = false;
+        _checkMessage = 'Could not check availability. Please try again.';
+      });
+      return;
+    }
+    final premium = result['premium'] == true;
+    final available = result['available'] == true;
+    setState(() {
+      _checking = false;
+      _isPremium = premium;
+      _isAvailable = available;
+      _checkMessage = result['message']?.toString();
+    });
+    if (!premium && available) {
+      widget.notifier.setTypedPuid(value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final coopCyan = widget.coopCyan;
+    final muted = widget.muted;
+    final len = widget.puidLength;
+
+    Color? statusColor;
+    String? statusText;
+    IconData? statusIcon;
+
+    if (_isPremium == true) {
+      statusColor = Colors.orange.shade700;
+      statusIcon = Icons.star_rounded;
+      statusText = 'This is a reserved premium number. Use Auto mode or contact your branch.';
+    } else if (_isAvailable == false) {
+      statusColor = Colors.red.shade600;
+      statusIcon = Icons.cancel_outlined;
+      statusText = _checkMessage ?? 'This PUID is already taken.';
+    } else if (_isAvailable == true) {
+      statusColor = Colors.green.shade600;
+      statusIcon = Icons.check_circle_outline_rounded;
+      statusText = _checkMessage ?? 'Available!';
+    } else if (_checkMessage != null) {
+      statusColor = Colors.red.shade600;
+      statusIcon = Icons.info_outline;
+      statusText = _checkMessage;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _ctrl,
+                keyboardType: TextInputType.number,
+                maxLength: len,
+                style: const TextStyle(
+                  fontSize: 15,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w700,
+                ),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onChanged: (v) {
+                  widget.notifier.setTypedPuid(v);
+                  setState(() {
+                    _isPremium = null;
+                    _isAvailable = null;
+                    _checkMessage = null;
+                  });
+                },
+                onSubmitted: (_) => _check(),
+                decoration: merchantFlowInputDecoration(
+                  accentColor: coopCyan,
+                  mutedColor: muted,
+                  hintText: '0' * len,
+                  prefixIcon: Icons.pin_outlined,
+                  counterText: '',
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: _checking ? null : _check,
+                style: FilledButton.styleFrom(
+                  backgroundColor: coopCyan,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: _checking
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle_outline, size: 17),
+                          SizedBox(height: 2),
+                          Text(
+                            'Check',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ],
+        ),
+        if (statusText != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(statusIcon, size: 14, color: statusColor),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: statusColor,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ] else ...[
+          const SizedBox(height: 4),
+          Text(
+            'Enter $len digits, then tap Check to verify availability.',
+            style: TextStyle(fontSize: 11.5, color: muted, height: 1.3),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _StepDetails extends StatefulWidget {
   const _StepDetails({
     required this.state,
@@ -448,13 +679,18 @@ class _StepDetails extends StatefulWidget {
 class _StepDetailsState extends State<_StepDetails> {
   List<String> _premiumResults = [];
   bool _loadingPremium = false;
+  String? _premiumError;
 
   Future<void> _searchPremium(String query) async {
-    setState(() => _loadingPremium = true);
-    final results = await widget.notifier.searchPremiumPuids(query);
+    setState(() {
+      _loadingPremium = true;
+      _premiumError = null;
+    });
+    final result = await widget.notifier.searchPremiumPuids(query);
     if (!mounted) return;
     setState(() {
-      _premiumResults = results;
+      _premiumResults = result.puids;
+      _premiumError = result.error;
       _loadingPremium = false;
     });
   }
@@ -595,10 +831,33 @@ class _StepDetailsState extends State<_StepDetails> {
               accentColor: coopCyan,
               mutedColor: muted,
               title: 'PUID',
-              subtitle: 'Auto-assign from a block or pick a premium number',
+              subtitle: 'Choose PUID length and assignment mode',
               icon: Icons.tag_outlined,
             ),
             const SizedBox(height: 10),
+            // Digit-length picker
+            MerchantFlowDropdown<int>(
+              accentColor: coopCyan,
+              mutedColor: muted,
+              label: 'Number of digits',
+              sheetTitle: 'PUID length',
+              sheetSubtitle: 'How many digits should the PUID contain?',
+              value: state.puidLength,
+              prefixIcon: Icons.dialpad_outlined,
+              helperText: 'Default is 6 digits',
+              options: puidLengthOptions
+                  .map(
+                    (len) => MerchantFlowSelectOption(
+                      value: len,
+                      title: '$len digits',
+                      subtitle: '${'0' * len} – ${'9' * len}',
+                      icon: Icons.tag_outlined,
+                    ),
+                  )
+                  .toList(),
+              onChanged: notifier.setPuidLength,
+            ),
+            const SizedBox(height: 12),
             MerchantFlowSegmentedToggle<PuidMode>(
               accentColor: coopCyan,
               mutedColor: muted,
@@ -606,10 +865,29 @@ class _StepDetailsState extends State<_StepDetails> {
               onChanged: notifier.setPuidMode,
               segments: const [
                 (value: PuidMode.auto, label: 'Auto PUID'),
+                (value: PuidMode.typed, label: 'Type Number'),
                 (value: PuidMode.premium, label: 'Premium'),
               ],
             ),
-            if (state.puidMode == PuidMode.premium) ...[
+            if (state.puidMode == PuidMode.typed) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Enter ${state.puidLength}-digit PUID',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.blueGrey.shade800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              _TypedPuidField(
+                coopCyan: coopCyan,
+                muted: muted,
+                puidLength: state.puidLength,
+                typedPuid: state.typedPuid,
+                notifier: notifier,
+              ),
+            ] else if (state.puidMode == PuidMode.premium) ...[
               const SizedBox(height: 12),
               Text(
                 'Search premium PUID',
@@ -620,41 +898,97 @@ class _StepDetailsState extends State<_StepDetails> {
                 ),
               ),
               const SizedBox(height: 6),
-              TextField(
-                controller: widget.premiumSearchController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                style: const TextStyle(fontSize: 14, letterSpacing: 1),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: merchantFlowInputDecoration(
-                  accentColor: coopCyan,
-                  mutedColor: muted,
-                  hintText: '000000',
-                  prefixIcon: Icons.search_rounded,
-                  counterText: '',
-                ).copyWith(
-                  suffixIcon: IconButton(
-                    icon: _loadingPremium
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: coopCyan,
-                            ),
-                          )
-                        : Icon(Icons.search_rounded, color: coopCyan, size: 22),
-                    onPressed: () =>
-                        _searchPremium(widget.premiumSearchController.text),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: widget.premiumSearchController,
+                      keyboardType: TextInputType.number,
+                      maxLength: state.puidLength,
+                      style: const TextStyle(fontSize: 14, letterSpacing: 1),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: merchantFlowInputDecoration(
+                        accentColor: coopCyan,
+                        mutedColor: muted,
+                        hintText: '0' * state.puidLength,
+                        prefixIcon: Icons.star_outline_rounded,
+                        counterText: '',
+                      ),
+                      onSubmitted: _searchPremium,
+                    ),
                   ),
-                ),
-                onSubmitted: _searchPremium,
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: _loadingPremium
+                          ? null
+                          : () => _searchPremium(
+                                widget.premiumSearchController.text,
+                              ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: coopCyan,
+                        side: BorderSide(color: coopCyan),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: _loadingPremium
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: coopCyan,
+                              ),
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.search_rounded,
+                                    size: 18, color: coopCyan),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Search',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 10,
+                                    color: coopCyan,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 6),
-              Text(
-                'Enter 6 digits, then search and tap a result',
-                style: TextStyle(fontSize: 11.5, color: muted, height: 1.3),
-              ),
+              if (_premiumError != null)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.lock_outline,
+                        size: 13, color: Colors.orange.shade700),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        _premiumError!,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: Colors.orange.shade700,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Text(
+                  'Enter up to ${state.puidLength} digits, then tap Search and select a result',
+                  style: TextStyle(fontSize: 11.5, color: muted, height: 1.3),
+                ),
               if (_premiumResults.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Wrap(
@@ -676,29 +1010,6 @@ class _StepDetailsState extends State<_StepDetails> {
                   }).toList(),
                 ),
               ],
-            ] else ...[
-              const SizedBox(height: 12),
-              MerchantFlowDropdown<String>(
-                accentColor: coopCyan,
-                mutedColor: muted,
-                label: 'PUID block (leading digit)',
-                sheetTitle: 'PUID number block',
-                sheetSubtitle: 'Default 6 → 600000–699999',
-                value: state.puidStartDigit,
-                helperText: 'Default 6 → 600000–699999',
-                prefixIcon: Icons.numbers_rounded,
-                options: puidStartDigitOptions
-                    .map(
-                      (d) => MerchantFlowSelectOption(
-                        value: d,
-                        title: 'Block $d',
-                        subtitle: '${d}00000 – ${d}99999',
-                        icon: Icons.tag_outlined,
-                      ),
-                    )
-                    .toList(),
-                onChanged: notifier.setPuidStartDigit,
-              ),
             ],
           ],
           const SizedBox(height: 16),
@@ -1820,22 +2131,17 @@ class _RegistrationQrPosterSheetState
         fileName: _fileName,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message ?? 'Download finished.'),
-          backgroundColor:
-              result.success ? Colors.green.shade700 : Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
+      showTopBanner(
+        context,
+        message: result.message ?? 'Download finished.',
+        success: result.success,
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not download: $e'),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopBanner(
+          context,
+          message: 'Could not download: $e',
+          success: false,
         );
       }
     } finally {
@@ -1854,12 +2160,10 @@ class _RegistrationQrPosterSheetState
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not share: $e'),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopBanner(
+          context,
+          message: 'Could not share: $e',
+          success: false,
         );
       }
     } finally {
