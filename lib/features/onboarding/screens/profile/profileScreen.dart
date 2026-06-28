@@ -556,6 +556,12 @@ class _ProfileScreenState extends State<ProfileScreen>
               );
             },
           ),
+          _buildSettingsTile(
+            icon: Icons.logout_rounded,
+            title: "Logout",
+            subtitle: "Sign out of your account",
+            onTap: logout,
+          ),
         ],
       ),
     );
