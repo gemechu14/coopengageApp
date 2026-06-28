@@ -45,7 +45,7 @@ class MerchantQrHubPage extends StatelessWidget {
               const SizedBox(height: 24),
               // const _QuickActionsHeader(),
               const SizedBox(height: 14),
-              _HubActionCard(
+              MerchantHubActionCard(
                 icon: Icons.person_add_alt_1_rounded,
                 title: 'New Merchant Registration',
                 subtitle:
@@ -57,7 +57,7 @@ class MerchantQrHubPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              _HubActionCard(
+              MerchantHubActionCard(
                 icon: Icons.qr_code_2_rounded,
                 title: 'Registered Merchants',
                 subtitle:
@@ -235,8 +235,9 @@ class _QuickActionsHeader extends StatelessWidget {
 // Action card
 // ---------------------------------------------------------------------------
 
-class _HubActionCard extends StatelessWidget {
-  const _HubActionCard({
+class MerchantHubActionCard extends StatelessWidget {
+  const MerchantHubActionCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,

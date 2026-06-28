@@ -1,4 +1,3 @@
-import 'package:coopengageplus/core/constants/kconstant.dart';
 import 'package:coopengageplus/features/merchant/presentation/merchant_qr_hub_page.dart';
 import 'package:coopengageplus/features/onboarding/customer/CorporateAccountOpening/views/CorporateAccountOpening.dart';
 import 'package:coopengageplus/features/onboarding/customer/JointNationalIdentification/views/individual_account_by_national_id.dart';
@@ -8,11 +7,7 @@ import 'package:coopengageplus/features/onboarding/customer/SendLink/link_genera
 import 'package:flutter/material.dart';
 
 class AccountOnboardingScreen extends StatelessWidget {
-  AccountOnboardingScreen({super.key});
-
-  static const Color _muted = Color(0xFF64748B);
-  static const Color _titleColor = Color(0xFF0F172A);
-  static const Color _pageBg = Color(0xFFF5F7F9);
+  const AccountOnboardingScreen({super.key});
 
   static const List<_AccountTypeOption> _options = [
     _AccountTypeOption(
@@ -35,7 +30,7 @@ class AccountOnboardingScreen extends StatelessWidget {
     ),
     _AccountTypeOption(
       title: 'Merchant QR Registration',
-      description: 'Register  Merchants for QR payment code',
+      description: 'Register merchants for QR payment code',
       icon: Icons.qr_code_2_outlined,
       route: _AccountRoute.merchant,
     ),
@@ -93,19 +88,19 @@ class AccountOnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: _pageBg,
-        foregroundColor: cyanblueColor,
+        backgroundColor: Colors.white,
+        foregroundColor: MerchantFlowColors.coopCyan,
         surfaceTintColor: Colors.transparent,
         title: const Text(
           'Choose Account Type',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: cyanblueColor,
+            color: MerchantFlowColors.coopCyan,
             letterSpacing: -0.2,
           ),
         ),
@@ -113,15 +108,15 @@ class AccountOnboardingScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Select the type of account you would like to open',
                 style: TextStyle(
                   fontSize: 14,
-                  color: _muted.withOpacity(0.95),
+                  color: MerchantFlowColors.muted.withOpacity(0.95),
                   fontWeight: FontWeight.w400,
                   height: 1.4,
                 ),
@@ -132,15 +127,17 @@ class AccountOnboardingScreen extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.22,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 1.32,
                 ),
                 itemCount: _options.length,
                 itemBuilder: (context, index) {
                   final option = _options[index];
-                  return _AccountTypeCard(
-                    option: option,
+                  return _AccountTypeGridCard(
+                    icon: option.icon,
+                    title: option.title,
+                    subtitle: option.description,
                     onTap: () => _onOptionTap(context, option.route),
                   );
                 },
@@ -176,84 +173,99 @@ class _AccountTypeOption {
   final _AccountRoute route;
 }
 
-class _AccountTypeCard extends StatelessWidget {
-  const _AccountTypeCard({
-    required this.option,
+class _AccountTypeGridCard extends StatelessWidget {
+  const _AccountTypeGridCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
-  final _AccountTypeOption option;
+  static const Color _muted = Color(0xFF5A7184);
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return Material(
+      color: Colors.white,
+      elevation: 0,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: MerchantFlowColors.coopCyan.withOpacity(0.32),
+            width: 1,
           ),
-        ],
-      ),
-      child: Material(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
+        ),
         child: InkWell(
           onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          splashColor: MerchantFlowColors.coopCyan.withOpacity(0.14),
+          highlightColor: MerchantFlowColors.coopCyan.withOpacity(0.08),
           child: Padding(
-            padding: const EdgeInsets.all(14.0),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: cyanblueColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: MerchantFlowColors.bannerFill,
+                        shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        option.icon,
+                        icon,
+                        color: MerchantFlowColors.coopCyan,
                         size: 18,
-                        color: cyanblueColor,
                       ),
                     ),
                     const Spacer(),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: AccountOnboardingScreen._muted.withOpacity(0.5),
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: const BoxDecoration(
+                        color: MerchantFlowColors.coopCyan,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Text(
-                  option.title,
+                  title,
                   style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AccountOnboardingScreen._titleColor,
-                    height: 1.2,
-                    letterSpacing: -0.2,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w900,
+                    color: MerchantFlowColors.coopCyan,
+                    height: 1.15,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Expanded(
                   child: Text(
-                    option.description,
+                    subtitle,
                     style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      color: AccountOnboardingScreen._muted.withOpacity(0.9),
-                      height: 1.35,
+                      fontSize: 10.5,
+                      color: _muted.withOpacity(0.95),
+                      height: 1.3,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

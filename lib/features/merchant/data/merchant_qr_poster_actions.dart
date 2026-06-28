@@ -8,8 +8,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 const _coopCyan = Color(0xFF00AEEF);
+const _errorRed = Color(0xFFD32F2F);
 
-/// Bottom toast banner (cyan blue) — visible above bottom sheets via overlay.
+/// Bottom toast banner — cyan for success, red for errors.
 void showTopBanner(
   BuildContext context, {
   required String message,
@@ -88,6 +89,7 @@ class _MerchantToastBannerState extends State<_MerchantToastBanner>
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
     final isSuccess = widget.success;
+    final accent = isSuccess ? _coopCyan : _errorRed;
 
     return Positioned(
       bottom: bottom + 16,
@@ -102,7 +104,7 @@ class _MerchantToastBannerState extends State<_MerchantToastBanner>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: _coopCyan,
+                color: accent,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.25),
@@ -110,7 +112,7 @@ class _MerchantToastBannerState extends State<_MerchantToastBanner>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: _coopCyan.withOpacity(0.4),
+                    color: accent.withOpacity(0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
