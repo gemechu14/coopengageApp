@@ -39,12 +39,12 @@ class _UserInfoPageState extends State<UserListPage> {
 
   Map<String, List<String>> titleStatusMapping = isOnline
       ? {
-          "New Applicants": ["INITIAL", "REGISTERED"],
+          "New Applicants": ["REGISTERED", "INITIAL"],
           "Awaiting Action": [
-            "PENDING",
+            "UNSETTLED",
             "UNAUTHORIZED",
             "AUTHORIZED",
-            "UNSETTLED"
+            "PENDING",
           ],
           "Approved": ["APPROVED"],
           "Rejected": ["REJECTED"],
@@ -261,14 +261,14 @@ class _UserInfoPageState extends State<UserListPage> {
                 children: [
                   Icon(
                     _getStatusIcon(status),
-                    size: 14,
+                    size: 12,
                     color: isSelected ? Colors.white : color,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     status[0] + status.substring(1).toLowerCase(),
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: isSelected ? Colors.white : color,
                     ),
@@ -359,7 +359,7 @@ class _UserInfoPageState extends State<UserListPage> {
               child: Text(
                 selectedCategory!,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: cyanblueColor,
                 ),
@@ -624,7 +624,7 @@ class _UserInfoPageState extends State<UserListPage> {
                         child: Text(
                           status[0] + status.substring(1).toLowerCase(),
                           style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: FontWeight.w700,
                             color: cyanblueColor,
                           ),
@@ -883,7 +883,7 @@ class _UserInfoPageState extends State<UserListPage> {
                               child: Text(
                                 status[0] + status.substring(1).toLowerCase(),
                                 style: const TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 9,
                                   fontWeight: FontWeight.w700,
                                   color: cyanblueColor,
                                 ),
@@ -1040,7 +1040,7 @@ class _UserInfoPageState extends State<UserListPage> {
                               child: Text(
                                 status[0] + status.substring(1).toLowerCase(),
                                 style: const TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 9,
                                   fontWeight: FontWeight.w700,
                                   color: cyanblueColor,
                                 ),

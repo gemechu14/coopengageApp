@@ -242,7 +242,7 @@ class _ViewCustomerInfoState extends State<ViewCustomerInfo> {
                     status[0] + status.substring(1).toLowerCase(),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

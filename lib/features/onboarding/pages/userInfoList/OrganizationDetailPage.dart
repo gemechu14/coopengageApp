@@ -208,7 +208,7 @@ class OrganizationDetailPage extends StatelessWidget {
                           status[0] + status.substring(1).toLowerCase(),
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

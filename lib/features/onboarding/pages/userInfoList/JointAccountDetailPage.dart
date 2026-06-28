@@ -150,7 +150,7 @@ class JointAccountDetailPage extends StatelessWidget {
                               status[0] + status.substring(1).toLowerCase(),
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -261,7 +261,7 @@ class JointAccountDetailPage extends StatelessWidget {
                                 child: Text(
                                   item.value.toString(),
                                   style: const TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                     color: cyanblueColor,
                                   ),
