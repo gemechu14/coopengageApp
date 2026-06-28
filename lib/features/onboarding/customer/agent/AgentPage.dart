@@ -3,24 +3,15 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:coopengageplus/core/network/network_handler.dart';
-import 'package:coopengageplus/shared/widgets/textField/CustomTextFormField.dart';
-import 'package:coopengageplus/shared/widgets/textField/small_form_widgets.dart';
-import 'package:coopengageplus/core/config/config.dart';
-import 'package:coopengageplus/core/constants/text_styles.dart';
 import 'package:coopengageplus/core/database/database_helper.dart';
+import 'package:coopengageplus/core/network/network_handler.dart';
 import 'package:coopengageplus/features/home/main_page.dart';
+import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:coopengageplus/features/screens/LoginScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:multi_select_flutter/multi_select_flutter.dart';
-
-// import 'package:searchfield/searchfield.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
-import 'package:snippet_coder_utils/ProgressHUD.dart';
-import 'package:http/http.dart' as http; // For making API calls
 
 class AgentPage extends StatefulWidget {
   const AgentPage({super.key});
@@ -30,719 +21,356 @@ class AgentPage extends StatefulWidget {
 }
 
 class _AgentPageState extends State<AgentPage> {
+  static const Color _coopCyan = Color(0xFF00AEEF);
+  static const Color _muted = Color(0xFF64748B);
+
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
+    ),
+  );
+
+  final _formKey = GlobalKey<FormState>();
+  final _networkHandler = NetworkHandler();
+
+  final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _tinController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  bool _isSubmitting = false;
+  bool _hidePassword = true;
+  bool _hideConfirmPassword = true;
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
-    fetchBranches();
-    fetchMultipleBranches();
+    _resetForm();
   }
 
-  Set<String> selectedBranches = {};
-  List<MultiSelectItem<String>> branchItems = [];
-  List<dynamic> branches = []; // Store the fetched branches
-  List<dynamic> filteredBranches = [];
-  bool isApiCallProcess = false;
-  bool hidePassword = true;
-  bool hideConfirmPassword = true; // For Confirm Password
-  final TextEditingController _password = TextEditingController();
-  final TextEditingController _confirmPassword = TextEditingController();
-
-// Function to toggle password visibility
-  void togglePasswordVisibility(bool isPasswordField) {
-    setState(() {
-      if (isPasswordField) {
-        hidePassword = !hidePassword; // Toggle Password visibility
-      } else {
-        hideConfirmPassword =
-            !hideConfirmPassword; // Toggle Confirm Password visibility
-      }
-    });
+  void _resetForm() {
+    _fullNameController.clear();
+    _phoneController.clear();
+    _businessNameController.clear();
+    _tinController.clear();
+    _passwordController.clear();
+    _confirmPasswordController.clear();
+    _hidePassword = true;
+    _hideConfirmPassword = true;
+    _isSubmitting = false;
+    _errorMessage = null;
+    _formKey.currentState?.reset();
   }
 
-  late String errorText;
-  bool validate = false;
-  bool circular = false;
-  TextEditingController firstNameController = TextEditingController();
-  TextEditingController fullNameController = TextEditingController();
-  TextEditingController businessNameController = TextEditingController();
-  TextEditingController businessTypeController = TextEditingController();
-  TextEditingController businessAddressController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController phoneNumberController = TextEditingController();
-  TextEditingController addressController = TextEditingController();
-  TextEditingController streetController = TextEditingController();
-  TextEditingController tinController = TextEditingController();
-  GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
-  final TextEditingController _username = TextEditingController();
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _phoneController.dispose();
+    _businessNameController.dispose();
+    _tinController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final size = MediaQuery.sizeOf(context);
+    final compact = size.width < 360 || size.height < 700;
+    final fieldGap = compact ? 8.0 : 10.0;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: AppBar(
-          backgroundColor: Colors.white,
-          title: const Text(
-            "Agent Registration",
-            style: TextStyle(
-                fontSize: 21, fontWeight: FontWeight.bold, color: Colors.blue),
-          ),
-          // centerTitle: true,
-          elevation: 0,
-        ),
-      ),
-      body: Container(
-        color: Colors.white,
-        child: ProgressHUD(
-          key: UniqueKey(),
-          inAsyncCall: isApiCallProcess,
-          child: Form(
-            key: globalFormKey,
-            child: _loginUI(context),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: _coopCyan,
+        toolbarHeight: compact ? 44 : kToolbarHeight,
+        title: Text(
+          'Agent Registration',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: compact ? 16 : 18,
           ),
         ),
       ),
-    );
-  }
-
-  Widget _loginUI(BuildContext context) {
-    NetworkHandler networkHandler = NetworkHandler();
-    const storage = FlutterSecureStorage(
-      aOptions: AndroidOptions(
-          encryptedSharedPreferences: true,
-          storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding),
-    );
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
-
-    return Container(
-      color: Colors.white,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // _buildHeader(),
-            _buildFormContainer(
-                width, height, networkHandler, storage, context),
-          ],
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          compact ? 12 : 16,
+          10,
+          compact ? 12 : 16,
+          14 + bottom,
         ),
-      ),
-    );
-  }
-
-  Widget _buildFormContainer(
-      double width,
-      height,
-      NetworkHandler networkHandler,
-      FlutterSecureStorage storage,
-      BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        children: [
-          // ── Profile-style Form Card ──────────────────────────────────
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.08),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 6),
-                ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_errorMessage != null) ...[
+                _ErrorBanner(message: _errorMessage!, compact: compact),
+                SizedBox(height: fieldGap),
               ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Card header with avatar
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+              _AgentFlowCard(
+                accentColor: _coopCyan,
+                compact: compact,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.support_agent_outlined,
+                            color: _coopCyan, size: compact ? 16 : 18),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            compact
+                                ? 'Register new agent'
+                                : 'New agent — fill in details below',
+                            style: TextStyle(
+                              fontSize: compact ? 13 : 14,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.blueGrey.shade900,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                    SizedBox(height: fieldGap),
+                    _AgentFormField(
+                      accentColor: _coopCyan,
+                      mutedColor: _muted,
+                      compact: compact,
+                      label: 'Full name',
+                      hintText: 'Agent full name',
+                      prefixIcon: Icons.badge_outlined,
+                      controller: _fullNameController,
+                      validator: (v) =>
+                          v == null || v.trim().isEmpty ? 'Full name is required' : null,
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.6), width: 2),
-                        ),
-                        child: const Icon(Icons.person,
-                            size: 25, color: Colors.white),
+                    SizedBox(height: fieldGap),
+                    _AgentFormField(
+                      accentColor: _coopCyan,
+                      mutedColor: _muted,
+                      compact: compact,
+                      label: 'Phone or email',
+                      hintText: '0912345678 or email',
+                      prefixIcon: Icons.phone_outlined,
+                      controller: _phoneController,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9a-zA-Z@._-]')),
+                        LengthLimitingTextInputFormatter(50),
+                      ],
+                      validator: _validatePhoneOrEmail,
+                    ),
+                    SizedBox(height: fieldGap),
+                    _AgentFormField(
+                      accentColor: _coopCyan,
+                      mutedColor: _muted,
+                      compact: compact,
+                      label: 'Business name (optional)',
+                      hintText: 'Business name',
+                      prefixIcon: Icons.storefront_outlined,
+                      controller: _businessNameController,
+                    ),
+                    SizedBox(height: fieldGap),
+                    _AgentFormField(
+                      accentColor: _coopCyan,
+                      mutedColor: _muted,
+                      compact: compact,
+                      label: 'TIN',
+                      hintText: '10-digit TIN',
+                      prefixIcon: Icons.numbers_outlined,
+                      controller: _tinController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 10,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'TIN is required';
+                        if (v.length != 10) return 'TIN must be exactly 10 digits';
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: fieldGap),
+                    _AgentPasswordField(
+                      accentColor: _coopCyan,
+                      mutedColor: _muted,
+                      compact: compact,
+                      label: 'Password',
+                      controller: _passwordController,
+                      hidePassword: _hidePassword,
+                      onToggleVisibility: () =>
+                          setState(() => _hidePassword = !_hidePassword),
+                    ),
+                    SizedBox(height: fieldGap),
+                    _AgentPasswordField(
+                      accentColor: _coopCyan,
+                      mutedColor: _muted,
+                      compact: compact,
+                      label: 'Confirm password',
+                      controller: _confirmPasswordController,
+                      hidePassword: _hideConfirmPassword,
+                      onToggleVisibility: () => setState(
+                        () => _hideConfirmPassword = !_hideConfirmPassword,
                       ),
-                      const SizedBox(height: 5),
-                      const Text(
-                        "New Agent",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return 'Please confirm your password';
+                        }
+                        if (v != _passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: compact ? 12 : 14),
+                    FilledButton(
+                      onPressed: _isSubmitting ? null : _submit,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _coopCyan,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: const Color(0xFFCBD5E1),
+                        disabledForegroundColor: const Color(0xFF94A3B8),
+                        padding: EdgeInsets.symmetric(vertical: compact ? 12 : 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "Fill in  details below",
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-              // branchWidget(),
-              // branchesWidget(width),
-              SmallLabel(text: "Full Name"),
-              SmallTextFormField(
-                controller: fullNameController,
-                errorMessage: "Full Name cannot be empty",
-                hintText: "",
-              ),
-              SmallLabel(text: "PhoneNumber or Email"),
-              SmallTextFormField(
-                controller: phoneNumberController,
-                isPhoneOrEmail: true,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                      RegExp(r'[0-9a-zA-Z@._-]')),
-                  LengthLimitingTextInputFormatter(50),
-                ],
-                errorMessage: "PhoneNumber empty",
-                hintText: '',
-              ),
-              SmallLabel(text: "Business Name"),
-              SmallTextFormField(
-                controller: businessNameController,
-                errorMessage: "Business Name empty",
-                isRequired: false,
-                hintText: '',
-              ),
-              SmallLabel(text: "TIN"),
-              SmallTextFormField(
-                controller: tinController,
-                keyboardType: TextInputType.number,
-                errorMessage: "TIN cannot be empty",
-                isRequired: true,
-                exactLength: 10,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
-                hintText: "Enter TIN",
-              ),
-              // Padding(
-              //   padding: const EdgeInsets.only(left: 15, right: 15),
-              //   child: TextFormField(
-              //     controller: tinController,
-              //     keyboardType: TextInputType.number,
-              //     inputFormatters: [
-              //       FilteringTextInputFormatter.digitsOnly,
-              //       LengthLimitingTextInputFormatter(10), // Prevent typing > 10
-              //     ],
-              //     decoration: InputDecoration(
-              //       isDense: true,
-              //       hintText: '',
-              //       hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
-              //       labelStyle: const TextStyle(fontSize: 20),
-              //       contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
-              //       border: const OutlineInputBorder(
-              //         borderRadius: BorderRadius.all(Radius.circular(15)),
-              //         borderSide: BorderSide(color: Colors.grey),
-              //       ),
-              //       focusedBorder: const OutlineInputBorder(
-              //         borderRadius: BorderRadius.all(Radius.circular(15)),
-              //         borderSide: BorderSide(color: Colors.grey),
-              //       ),
-              //       errorBorder: const OutlineInputBorder(
-              //         borderRadius: BorderRadius.all(Radius.circular(15)),
-              //         borderSide: BorderSide(color: Colors.red),
-              //       ),
-              //     ),
-              //     validator: (value) {
-              //       if (value == null || value.isEmpty) {
-              //         return 'TIN cannot be empty';
-              //       }
-              //       if (value.length != 10) {
-              //         return 'TIN must be exactly 10 digits';
-              //       }
-              //       return null;
-              //     },
-              //   ),
-              // ),
-
-              // reusableTextFormField(
-              //   hintText: "Enter TIN",
-              //   controller: tinController,
-              //   errorMessage: "TIN cannot be empty",
-
-              //   // leadingIcon: Icons.account_box,
-              // ),
-              // TextLabel("Main Branch"),
-              // branchSelectorWidget(width),
-
-              // TextLabel("Additional Branches"),
-              // branchesWidget(width),
-              SmallLabel(text: "Password"),
-              SmallPasswordField(
-                controller: _password,
-                hidePassword: hidePassword,
-                togglePasswordVisibility: () => togglePasswordVisibility(true),
-                hintText: '',
-              ),
-              SmallLabel(text: "Confirm Password"),
-              SmallConfirmPasswordField(
-                controller: _confirmPassword,
-                passwordController: _password,
-                hidePassword: hideConfirmPassword,
-                togglePasswordVisibility: () => togglePasswordVisibility(false),
-                hintText: '',
-              ),
-
-              const SizedBox(
-                height: 16,
-              ),
-              SmallButton(
-                text: "Submit",
-                backgroundColor: Colors.blue,
-                textColor: Colors.white,
-                onPressed: () async {
-                    if (validateAndSave()) {
-                      setState(() {
-                        isApiCallProcess = true;
-                      });
-
-                      // Retrieve the text from the controllers
-                      String password = _password.text.trim();
-
-                      final int? mainBranchId =
-                          await _loggedInUserMainBranchId(storage);
-
-                      final List<int> branchIdsInts = selectedBranches
-                          .map((e) => int.tryParse(e))
-                          .whereType<int>()
-                          .toList();
-                      // API rejects empty branchIds; default to logged-in user's main branch.
-                      final List<int> branchIdsForApi = branchIdsInts.isNotEmpty
-                          ? branchIdsInts
-                          : (mainBranchId != null
-                              ? <int>[mainBranchId!]
-                              : <int>[]);
-
-                      final Map<String, dynamic> data = {
-                        "fullName": fullNameController.text.trim(),
-                        "phone": phoneNumberController.text.trim(),
-                        "business_name": businessNameController.text.trim(),
-                        "tin_number": tinController.text.trim(),
-                        "branchIds": branchIdsForApi,
-                        "password": password,
-                      };
-                      if (mainBranchId != null) {
-                        data["mainBranchId"] = mainBranchId;
-                      }
-
-                      try {
-                        var response = await networkHandler
-                            .postAgentRegistration("/api/v1/agents", data)
-                            .timeout(const Duration(seconds: 50));
-
-                        if (response.statusCode == 200 ||
-                            response.statusCode == 201) {
-                          setState(() {
-                            validate = true;
-                            circular = false;
-                          });
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Registered successfully ')),
-                          );
-
-                          Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const MainPage(),
+                      child: _isSubmitting
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white.withOpacity(0.95),
                               ),
-                              (route) => false);
-                        } else {
-                          var errorResponse = jsonDecode(response.body);
-                          errorText = errorResponse['message'] ??
-                              "Unable to register, please try later";
-                          setState(() {
-                            isApiCallProcess = false;
-                            validate = false;
-                            // errorText = "Unable to register try later";
-                            circular = false;
-                          });
-                          FormHelper.showSimpleAlertDialog(
-                            context,
-                            "Coop Engage +",
-                            errorText,
-                            "OK",
-                            () {
-                              Navigator.of(context).pop();
-                            },
-                          );
-                        }
-                      } on TimeoutException catch (_) {
-                        setState(() {
-                          isApiCallProcess = false;
-                          validate = false;
-                          errorText = "Request timed out. Please try again.";
-                          circular = false;
-                        });
-                        FormHelper.showSimpleAlertDialog(
-                          context,
-                          "Coop Engage +",
-                          errorText,
-                          "OK",
-                          () {
-                            Navigator.of(context).pop();
-                          },
-                        );
-                      } catch (e) {
-                        setState(() {
-                          isApiCallProcess = false;
-                          validate = false;
-                          circular = false;
-                        });
-
-                        // Handle token expiration specifically
-                        if (e.toString().contains('Token expired') ||
-                            e.toString().contains('Invalid token') ||
-                            e.toString().contains('please login again')) {
-                          // Show logout message
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('Session expired. Please login again.'),
-                              backgroundColor: Colors.orange,
-                              duration: Duration(seconds: 1),
+                            )
+                          : const Text(
+                              'Register agent',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
                             ),
-                          );
-
-                          // Navigate to login screen
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Loginscreen(),
-                            ),
-                            (route) => false,
-                          );
-                        } else {
-                          // Handle other errors
-                          errorText = "An error occurred. Please try again.";
-                          FormHelper.showSimpleAlertDialog(
-                            context,
-                            "Coop Engage +",
-                            errorText,
-                            "OK",
-                            () {
-                              Navigator.of(context).pop();
-                            },
-                          );
-                        }
-                      }
-                    }
-                },
+                    ),
+                  ],
+                ),
               ),
-                const SizedBox(height: 36),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // ── Info Card below the form card ────────────────────────────
-          // _buildInfoCard(),
-          // const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  // Widget _buildInfoCard() {
-  //   return Padding(
-  //     padding: const EdgeInsets.symmetric(horizontal: 15),
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //         gradient: const LinearGradient(
-  //           colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
-  //           begin: Alignment.topLeft,
-  //           end: Alignment.bottomRight,
-  //         ),
-  //         borderRadius: BorderRadius.circular(16),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.blue.withOpacity(0.25),
-  //             blurRadius: 12,
-  //             offset: const Offset(0, 6),
-  //           ),
-  //         ],
-  //       ),
-  //       child: Padding(
-  //         padding: const EdgeInsets.all(16),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Row(
-  //               children: [
-  //                 Container(
-  //                   padding: const EdgeInsets.all(8),
-  //                   decoration: BoxDecoration(
-  //                     color: Colors.white.withOpacity(0.2),
-  //                     borderRadius: BorderRadius.circular(10),
-  //                   ),
-  //                   child: const Icon(Icons.info_outline,
-  //                       color: Colors.white, size: 18),
-  //                 ),
-  //                 const SizedBox(width: 10),
-  //                 const Text(
-  //                   "Registration Requirements",
-  //                   style: TextStyle(
-  //                     color: Colors.white,
-  //                     fontSize: 13,
-  //                     fontWeight: FontWeight.bold,
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //             // const SizedBox(height: 14),
-  //             // _infoRow(Icons.check_circle_outline, "Full name must match your national ID"),
-  //             // const SizedBox(height: 8),
-  //             // _infoRow(Icons.check_circle_outline, "TIN must be exactly 10 digits"),
-  //             // const SizedBox(height: 8),
-  //             // _infoRow(Icons.check_circle_outline, "Phone number must be 10 digits or a valid email"),
-  //             // const SizedBox(height: 8),
-  //             // _infoRow(Icons.check_circle_outline, "Password must be kept confidential"),
-  //             // const SizedBox(height: 14),
-  //             // Container(
-  //             //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-  //             //   decoration: BoxDecoration(
-  //             //     color: Colors.white.withOpacity(0.15),
-  //             //     borderRadius: BorderRadius.circular(8),
-  //             //   ),
-  //             //   child: Row(
-  //             //     children: const [
-  //             //       Icon(Icons.support_agent, color: Colors.white, size: 16),
-  //             //       SizedBox(width: 8),
-  //             //       Expanded(
-  //             //         child: Text(
-  //             //           "Need help? Contact support at support@coopengageplus.com",
-  //             //           style: TextStyle(
-  //             //             color: Colors.white70,
-  //             //             fontSize: 11,
-  //             //           ),
-  //             //         ),
-  //             //       ),
-  //             //     ],
-  //             //   ),
-  //             // ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  Widget _infoRow(IconData icon, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: Colors.greenAccent, size: 15),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11.5,
-            ),
+            ],
           ),
         ),
-      ],
-    );
-  }
-
-  Padding passwordWidget(double width) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-      child: SizedBox(
-        width: width < 600
-            ? double.infinity
-            : width * 0.5, // Adjust width for tablet
-        child: TextFormField(
-          obscureText: hidePassword,
-          decoration: InputDecoration(
-            hintText: "Password",
-
-            suffixIcon: IconButton(
-              icon:
-                  Icon(hidePassword ? Icons.visibility_off : Icons.visibility),
-              onPressed: () {
-                setState(() {
-                  hidePassword = !hidePassword;
-                });
-              },
-            ),
-            labelStyle: const TextStyle(fontSize: 20),
-            contentPadding: const EdgeInsets.fromLTRB(20, 2, 2, 4),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.black),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.blue),
-            ),
-            errorBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: Colors.red),
-            ),
-            prefixIcon: const Icon(Icons.lock), // Leading icon
-          ),
-          controller: _password,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Password cannot be empty';
-            }
-            return null;
-          },
-        ),
       ),
     );
   }
 
-  // Method to create a reusable TextFormField
-  Padding reusableTextFormField({
-    required String hintText,
-    required TextEditingController controller,
-    String? errorMessage,
-    IconData? leadingIcon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    double width = MediaQuery.of(context).size.width;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-      child: SizedBox(
-        width: width < 600 ? double.infinity : width * 0.5,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: controller,
-              keyboardType: keyboardType,
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: subtitleStyle,
-                labelStyle: const TextStyle(fontSize: 5),
-                isDense: true,
-                // contentPadding:
-                //     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                errorBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
-                  borderSide: BorderSide(color: Colors.red),
-                ),
-                focusedErrorBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  borderSide: BorderSide(color: Colors.red),
-                ),
-                prefixIcon: leadingIcon != null ? Icon(leadingIcon) : null,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return errorMessage ?? 'This field is required';
-                }
-                // return errorMessage; // Return the error message if exists
-              },
-            ),
-          ],
-        ),
-      ),
+  String? _validatePhoneOrEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Phone number or email is required';
+    }
+    final trimmed = value.trim();
+    final phoneRegex = RegExp(r'^[0-9]{10}$');
+    final emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!phoneRegex.hasMatch(trimmed) && !emailRegex.hasMatch(trimmed)) {
+      return 'Enter a valid 10-digit phone number or email';
+    }
+    return null;
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final mainBranchId = await _loggedInUserMainBranchId();
+      final branchIds = mainBranchId != null ? <int>[mainBranchId] : <int>[];
+
+      final data = <String, dynamic>{
+        'fullName': _fullNameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'business_name': _businessNameController.text.trim(),
+        'tin_number': _tinController.text.trim(),
+        'branchIds': branchIds,
+        'password': _passwordController.text.trim(),
+      };
+      if (mainBranchId != null) {
+        data['mainBranchId'] = mainBranchId;
+      }
+
+      final response = await _networkHandler
+          .postAgentRegistration('/api/v1/agents', data)
+          .timeout(const Duration(seconds: 50));
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registered successfully')),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainPage()),
+          (_) => false,
+        );
+        return;
+      }
+
+      final body = jsonDecode(response.body);
+      _showError(body['message']?.toString() ??
+          'Unable to register. Please try again later.');
+    } on TimeoutException {
+      _showError('Request timed out. Please try again.');
+    } catch (e) {
+      if (_isSessionExpired(e)) {
+        _navigateToLogin();
+      } else {
+        _showError('An error occurred. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  void _showError(String message) {
+    setState(() => _errorMessage = message);
+    FormHelper.showSimpleAlertDialog(
+      context,
+      'Coop Engage +',
+      message,
+      'OK',
+      () => Navigator.of(context).pop(),
     );
   }
 
-  Padding branchesWidget(double width) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-      child: SizedBox(
-        width: width < 600 ? double.infinity : width * 0.5,
-        child: Column(
-          children: [
-            // const SizedBox(height: 20),
-            MultiSelectDialogField(
-              items: branchItems,
-              title: const Text("Branches"),
-              selectedColor: const Color.fromRGBO(33, 150, 243, 1),
+  bool _isSessionExpired(Object error) {
+    final msg = error.toString();
+    return msg.contains('Token expired') ||
+        msg.contains('Invalid token') ||
+        msg.contains('please login again');
+  }
 
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: Colors.black,
-                  // width: 2,
-                ),
-              ),
-// Add padding if needed for a 'dense' look
-              chipDisplay: MultiSelectChipDisplay(
-                chipColor: Colors.blue[50],
-                textStyle: const TextStyle(color: Colors.black),
-              ),
-              // isDismissible: true,
-              buttonIcon: const Icon(
-                Icons.arrow_drop_down,
-                color: Colors.black,
-              ),
-
-              buttonText: const Text(
-                "Select Branches",
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                ),
-              ),
-              searchable: true, // Enables the search field
-              onConfirm: (values) {
-                setState(() {
-                  selectedBranches =
-                      values.toSet().cast<String>(); // Ensures the correct type
-                });
-                print("Selected Branches: $selectedBranches");
-              },
-            ),
-          ],
-        ),
+  void _navigateToLogin() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Session expired. Please login again.'),
+        backgroundColor: Colors.orange,
+        duration: Duration(seconds: 1),
       ),
+    );
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const Loginscreen()),
+      (_) => false,
     );
   }
 
@@ -753,148 +381,237 @@ class _AgentPageState extends State<AgentPage> {
     return int.tryParse(raw.toString());
   }
 
-  /// Logged-in user's [Users.mainBranchId] from SQLite (ProfileScreen DB path).
-  Future<int?> _loggedInUserMainBranchId(FlutterSecureStorage storage) async {
-    final String? token = await storage.read(key: "token");
+  Future<int?> _loggedInUserMainBranchId() async {
+    final token = await _storage.read(key: 'token');
+    final dbHelper = DatabaseHelper();
+
     if (token != null && token.isNotEmpty) {
-      final dbHelper = DatabaseHelper();
       final user = await dbHelper.getUserByToken(token);
       if (user != null) {
         return _coerceStoredBranchId(user['mainBranchId']);
       }
-      final users = await dbHelper.getUsers();
-      if (users.isNotEmpty) {
-        return _coerceStoredBranchId(users.first['mainBranchId']);
-      }
-      return null;
     }
 
-    final users = await DatabaseHelper().getUsers();
+    final users = await dbHelper.getUsers();
     if (users.isEmpty) return null;
     return _coerceStoredBranchId(users.first['mainBranchId']);
   }
+}
 
-  bool validateAndSave() {
-    final form = globalFormKey.currentState;
-    if (form!.validate()) {
-      form.save();
-      return true;
-    }
-    return false;
+class _AgentFlowCard extends StatelessWidget {
+  const _AgentFlowCard({
+    required this.accentColor,
+    required this.compact,
+    required this.child,
+  });
+
+  final Color accentColor;
+  final bool compact;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(compact ? 12 : 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor.withOpacity(0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: child,
+    );
   }
+}
 
-  Future<bool> isOnline() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message, this.compact = false});
 
-    if (connectivityResult.contains(ConnectivityResult.mobile) ||
-        connectivityResult.contains(ConnectivityResult.wifi)) {
-      return true; // The device is online
-    }
+  final String message;
+  final bool compact;
 
-    return false; // The device is offline
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(compact ? 8 : 10),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline_rounded, color: Colors.red.shade700, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: Colors.red.shade900, height: 1.3),
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  Padding TextLabel(String text) {
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 1),
-        child: Text(text,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)));
+InputDecoration _agentInputDecoration({
+  required Color accentColor,
+  required Color mutedColor,
+  required bool compact,
+  String? hintText,
+  IconData? prefixIcon,
+}) {
+  final base = merchantFlowInputDecoration(
+    accentColor: accentColor,
+    mutedColor: mutedColor,
+    hintText: hintText,
+    prefixIcon: prefixIcon,
+    counterText: '',
+  );
+  return base.copyWith(
+    isDense: true,
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: 10,
+      vertical: compact ? 9 : 11,
+    ),
+    prefixIconConstraints: BoxConstraints(
+      minWidth: compact ? 36 : 40,
+      minHeight: compact ? 32 : 40,
+    ),
+  );
+}
+
+class _AgentFormField extends StatelessWidget {
+  const _AgentFormField({
+    required this.accentColor,
+    required this.mutedColor,
+    required this.compact,
+    required this.label,
+    required this.controller,
+    this.hintText,
+    this.prefixIcon,
+    this.keyboardType,
+    this.inputFormatters,
+    this.maxLength,
+    this.validator,
+  });
+
+  final Color accentColor;
+  final Color mutedColor;
+  final bool compact;
+  final String label;
+  final TextEditingController controller;
+  final String? hintText;
+  final IconData? prefixIcon;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
+  final String? Function(String?)? validator;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: compact ? 11 : 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.blueGrey.shade800,
+          ),
+        ),
+        SizedBox(height: compact ? 4 : 6),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLength: maxLength,
+          inputFormatters: inputFormatters,
+          style: TextStyle(fontSize: compact ? 13 : 14),
+          decoration: _agentInputDecoration(
+            accentColor: accentColor,
+            mutedColor: mutedColor,
+            compact: compact,
+            hintText: hintText ?? label,
+            prefixIcon: prefixIcon,
+          ),
+          validator: validator,
+        ),
+      ],
+    );
   }
+}
 
-  Future<void> fetchBranches() async {
-    const url = "${AppConstants.baseURL}/api/branches";
-    // const url =
-    //     'http://10.2.125.41:9061/api/branches'; // Replace with your actual URL
-    try {
-      // print(url);
-      final response = await http.get(Uri.parse(url));
+class _AgentPasswordField extends StatelessWidget {
+  const _AgentPasswordField({
+    required this.accentColor,
+    required this.mutedColor,
+    required this.compact,
+    required this.label,
+    required this.controller,
+    required this.hidePassword,
+    required this.onToggleVisibility,
+    this.validator,
+  });
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          branches = data; // Store the fetched branches
-        });
-      } else {
-        throw Exception('Failed to load branches');
-      }
-    } catch (error) {
-      print("Error fetching branches: $error");
+  final Color accentColor;
+  final Color mutedColor;
+  final bool compact;
+  final String label;
+  final TextEditingController controller;
+  final bool hidePassword;
+  final VoidCallback onToggleVisibility;
+  final String? Function(String?)? validator;
 
-      // Handle token expiration if it's a network error
-      if (error.toString().contains('Token expired') ||
-          error.toString().contains('Invalid token') ||
-          error.toString().contains('please login again')) {
-        // Show logout message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Session expired. Please login again.'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 1),
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: compact ? 11 : 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.blueGrey.shade800,
+          ),
+        ),
+        SizedBox(height: compact ? 4 : 6),
+        TextFormField(
+          controller: controller,
+          obscureText: hidePassword,
+          style: TextStyle(fontSize: compact ? 13 : 14),
+          decoration: _agentInputDecoration(
+            accentColor: accentColor,
+            mutedColor: mutedColor,
+            compact: compact,
+            hintText: label,
+            prefixIcon: Icons.lock_outline_rounded,
+          ).copyWith(
+            suffixIcon: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              icon: Icon(
+                hidePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                color: mutedColor,
+                size: compact ? 18 : 20,
+              ),
+              onPressed: onToggleVisibility,
             ),
-          );
-
-          // Navigate to login screen
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const Loginscreen(),
-            ),
-            (route) => false,
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> fetchMultipleBranches() async {
-    // const url = 'http://10.2.125.41:9060/api/branches';
-    const url = "${AppConstants.baseURL}/api/branches";
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        // Parse the JSON response
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          branches = data; // Store the branches
-          // Map fetched branches to MultiSelectItems
-          branchItems = branches.map((branch) {
-            return MultiSelectItem<String>(
-              branch['id'].toString(), // Use the ID as the unique identifier
-              branch['companyName'], // Use the company name for display
-            );
-          }).toList();
-        });
-      } else {
-        throw Exception('Failed to load branches');
-      }
-    } catch (error) {
-      print("Error fetching branches: $error");
-
-      // Handle token expiration if it's a network error
-      if (error.toString().contains('Token expired') ||
-          error.toString().contains('Invalid token') ||
-          error.toString().contains('please login again')) {
-        // Show logout message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Session expired. Please login again.'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 1),
-            ),
-          );
-
-          // Navigate to login screen
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const Loginscreen(),
-            ),
-            (route) => false,
-          );
-        }
-      }
-    }
+          ),
+          validator: validator ??
+              (v) => v == null || v.isEmpty ? 'Password is required' : null,
+        ),
+      ],
+    );
   }
 }

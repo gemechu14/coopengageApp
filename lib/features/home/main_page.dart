@@ -32,6 +32,28 @@ class _MainPageState extends State<MainPage> {
   bool isInitializing = true;
   String role = '';
   final List<Widget?> _cachedTabWidgets = List<Widget?>.filled(4, null);
+  int _agentPageGeneration = 0;
+
+  static const int _agentTabIndex = 2;
+
+  bool get _showsAgentTab => role != 'AGENT';
+
+  void _openAgentTabFresh() {
+    _agentPageGeneration++;
+    _cachedTabWidgets[_agentTabIndex] =
+        AgentPage(key: ValueKey('agent-$_agentPageGeneration'));
+  }
+
+  void _navigateToTab(int pageIndex) {
+    setState(() {
+      if (pageIndex == _agentTabIndex && _showsAgentTab) {
+        _openAgentTabFresh();
+      } else {
+        _cachedTabWidgets[pageIndex] ??= _getCurrentWidget(pageIndex);
+      }
+      currentState = pageIndex;
+    });
+  }
 
   /// Maps GNav's sequential tap index to our internal page index.
   /// Rebuilt whenever role changes.
@@ -81,18 +103,13 @@ class _MainPageState extends State<MainPage> {
   Widget _getCurrentWidget(int index) {
     switch (index) {
       case 0:
-        return Dashboard(onSettingsTap: () {
-          setState(() {
-            _cachedTabWidgets[2] ??= _getCurrentWidget(2);
-            currentState = 2;
-          });
-        });
+        return Dashboard(onSettingsTap: () => _navigateToTab(_agentTabIndex));
       case 1:
 
         return AccountOnboardingScreen();
       case 2:
-        if (role != 'AGENT') {
-          return const AgentPage();
+        if (_showsAgentTab) {
+          return AgentPage(key: ValueKey('agent-$_agentPageGeneration'));
         } else {
           return const ProfileScreen();
         }
@@ -100,12 +117,7 @@ class _MainPageState extends State<MainPage> {
       case 3:
         return const ProfileScreen();
       default:
-        return Dashboard(onSettingsTap: () {
-          setState(() {
-            _cachedTabWidgets[2] ??= _getCurrentWidget(2);
-            currentState = 2;
-          });
-        });
+        return Dashboard(onSettingsTap: () => _navigateToTab(_agentTabIndex));
     }
   }
 
@@ -157,11 +169,7 @@ class _MainPageState extends State<MainPage> {
                         color: Colors.black,
                         selectedIndex: _pageIndexToGNavIndex(currentState),
                         onTabChange: (gnavIndex) {
-                          final pageIndex = _tabIndexMap[gnavIndex];
-                          setState(() {
-                            _cachedTabWidgets[pageIndex] ??= _getCurrentWidget(pageIndex);
-                            currentState = pageIndex;
-                          });
+                          _navigateToTab(_tabIndexMap[gnavIndex]);
                         },
                         tabs: [
                           GButton(icon: Icons.home, text: translation(context).home),
