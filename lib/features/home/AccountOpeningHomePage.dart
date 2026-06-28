@@ -173,7 +173,7 @@ class _AccountTypeOption {
   final _AccountRoute route;
 }
 
-class _AccountTypeGridCard extends StatelessWidget {
+class _AccountTypeGridCard extends StatefulWidget {
   const _AccountTypeGridCard({
     required this.icon,
     required this.title,
@@ -181,97 +181,142 @@ class _AccountTypeGridCard extends StatelessWidget {
     required this.onTap,
   });
 
-  static const Color _muted = Color(0xFF5A7184);
-
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
 
   @override
+  State<_AccountTypeGridCard> createState() => _AccountTypeGridCardState();
+}
+
+class _AccountTypeGridCardState extends State<_AccountTypeGridCard> {
+  static const Color _muted = Color(0xFF5A7184);
+
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
+    return AnimatedScale(
+      scale: _pressed ? 0.97 : 1,
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: MerchantFlowColors.coopCyan.withOpacity(0.32),
+            color: MerchantFlowColors.coopCyan.withOpacity(_pressed ? 0.5 : 0.32),
             width: 1,
           ),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          splashColor: MerchantFlowColors.coopCyan.withOpacity(0.14),
-          highlightColor: MerchantFlowColors.coopCyan.withOpacity(0.08),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: MerchantFlowColors.bannerFill,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        icon,
-                        color: MerchantFlowColors.coopCyan,
-                        size: 18,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: const BoxDecoration(
-                        color: MerchantFlowColors.coopCyan,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w900,
-                    color: MerchantFlowColors.coopCyan,
-                    height: 1.15,
+          boxShadow: _pressed
+              ? [
+                  BoxShadow(
+                    color: MerchantFlowColors.coopCyan.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                    spreadRadius: -2,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 3),
-                Expanded(
-                  child: Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: _muted.withOpacity(0.95),
-                      height: 1.3,
+                ]
+              : [
+                  BoxShadow(
+                    color: MerchantFlowColors.coopCyan.withOpacity(0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                    spreadRadius: -2,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(2, 4),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: widget.onTap,
+            onHighlightChanged: (highlighted) {
+              setState(() => _pressed = highlighted);
+            },
+            borderRadius: BorderRadius.circular(18),
+            splashColor: MerchantFlowColors.coopCyan.withOpacity(0.14),
+            highlightColor: MerchantFlowColors.coopCyan.withOpacity(0.08),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: MerchantFlowColors.bannerFill,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          widget.icon,
+                          color: MerchantFlowColors.coopCyan,
+                          size: 18,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: MerchantFlowColors.coopCyan,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: MerchantFlowColors.coopCyan.withOpacity(0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w900,
+                      color: MerchantFlowColors.coopCyan,
+                      height: 1.15,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Expanded(
+                    child: Text(
+                      widget.subtitle,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: _muted.withOpacity(0.95),
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
