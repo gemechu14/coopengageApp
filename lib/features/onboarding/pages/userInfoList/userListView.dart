@@ -555,29 +555,7 @@ class _UserInfoPageState extends State<UserListPage> {
 
   Widget _buildBody() {
     if (isLoading1) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 40,
-              height: 40,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Loading...',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
+      return _buildLoadingState();
     }
 
     if (selectedCustomerType == 'ORGANIZATION') {
@@ -587,6 +565,38 @@ class _UserInfoPageState extends State<UserListPage> {
     } else {
       return _buildIndividualList();
     }
+  }
+
+  Widget _buildLoadingState() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Loading...',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptyState({required IconData icon, required String message}) {
