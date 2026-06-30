@@ -98,7 +98,7 @@ class _MerchantRegistrationPageState extends ConsumerState<MerchantRegistrationP
         leading: state.step == 4
             ? null
             : IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
                 onPressed: () {
                   if (state.step == 1) {
                     Navigator.pop(context);
@@ -107,6 +107,14 @@ class _MerchantRegistrationPageState extends ConsumerState<MerchantRegistrationP
                   }
                 },
               ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: _coopCyan.withOpacity(0.15),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(

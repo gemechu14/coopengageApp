@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:coopengageplus/features/home/AccountOpeningHomePage.dart';
-import 'package:coopengageplus/features/merchant/presentation/merchant_registration_page.dart';
+import 'package:coopengageplus/features/merchant/presentation/merchant_qr_hub_page.dart';
 import 'package:flutter/material.dart';
 import '../constants/dashboard_constants.dart';
 
@@ -62,7 +62,7 @@ class _DashboardBannerState extends State<DashboardBanner> {
       );
     }
     return _BannerSlide(
-      onTap: _openMerchantRegistration,
+      onTap: _openMerchantQrHub,
       child: Image.asset(
         DashboardConstants.merchantQrBannerImage,
         width: double.infinity,
@@ -87,10 +87,10 @@ class _DashboardBannerState extends State<DashboardBanner> {
     );
   }
 
-  void _openMerchantRegistration() {
+  void _openMerchantQrHub() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => const MerchantRegistrationPage(),
+        builder: (_) => const MerchantQrHubPage(),
       ),
     );
   }

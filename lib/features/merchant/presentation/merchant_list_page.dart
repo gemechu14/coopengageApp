@@ -158,6 +158,18 @@ class _MerchantListPageState extends ConsumerState<MerchantListPage> {
           'Registered Merchants',
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: _cyan.withOpacity(0.15),
+          ),
+        ),
         actions: [
           if (!state.isLoading)
             IconButton(

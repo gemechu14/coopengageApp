@@ -34,6 +34,18 @@ class MerchantQrHubPage extends StatelessWidget {
             color: MerchantFlowColors.coopCyan,
           ),
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: MerchantFlowColors.coopCyan.withOpacity(0.15),
+          ),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

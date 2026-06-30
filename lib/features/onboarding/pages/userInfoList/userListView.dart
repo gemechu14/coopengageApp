@@ -25,10 +25,18 @@ class UserListPage extends StatefulWidget {
 enum SampleItem { view, verify }
 
 class _UserInfoPageState extends State<UserListPage> {
+  static const int _pageSize = 20;
+
   final NetworkHandler networkHandler = NetworkHandler();
+  final ScrollController _scrollController = ScrollController();
   List<dynamic> users = [];
   List<dynamic> filteredUsers = [];
   bool isLoading1 = false;
+  bool _isLoadingMore = false;
+  int _currentPage = 0;
+  int _totalPages = 0;
+  int _totalElements = 0;
+  bool _hasMore = false;
   String searchQuery = '';
 
   SampleItem? selectedItem;
@@ -62,6 +70,7 @@ class _UserInfoPageState extends State<UserListPage> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _fetchToken();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -77,8 +86,22 @@ class _UserInfoPageState extends State<UserListPage> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     SystemChrome.setSystemUIOverlayStyle(systemUiForLightBackground);
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients || !isOnline) return;
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        _hasMore &&
+        !isLoading1 &&
+        selectedCategory != null) {
+      fetchUsers(selectedCategory!, loadMore: true);
+    }
   }
 
   IconData _getStatusIcon(String status) {
@@ -336,38 +359,198 @@ class _UserInfoPageState extends State<UserListPage> {
   }
 
   Widget _buildResultsHeader() {
+    final showingCount = searchQuery.isEmpty
+        ? users.length
+        : filteredUsers.length;
+    final totalLabel = _totalElements > 0
+        ? (searchQuery.isEmpty
+            ? 'Showing $showingCount of $_totalElements'
+            : '$showingCount of $_totalElements matches')
+        : '$showingCount ${showingCount == 1 ? 'result' : 'results'}';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            '${filteredUsers.length} ${filteredUsers.length == 1 ? 'result' : 'results'}',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
-          ),
-          if (selectedCategory != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: cyanblueColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                selectedCategory!,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: cyanblueColor,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                totalLabel,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
                 ),
               ),
-            ),
+              if (selectedCategory != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: cyanblueColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    selectedCategory!,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: cyanblueColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (isOnline && _totalPages > 1 && searchQuery.isEmpty) ...[
+            const SizedBox(height: 8),
+            _buildPaginationIndicator(),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _buildPaginationIndicator() {
+    final progress = _totalPages > 0
+        ? ((_currentPage + 1) / _totalPages).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+      // decoration: BoxDecoration(
+      //   color: Colors.white,
+      //   borderRadius: BorderRadius.circular(12),
+      //   border: Border.all(color: cyanblueColor.withOpacity(0.12)),
+      //   boxShadow: [
+      //     BoxShadow(
+      //       color: Colors.black.withOpacity(0.03),
+      //       blurRadius: 8,
+      //       offset: const Offset(0, 2),
+      //     ),
+      //   ],
+      // ),
+      // child: Column(
+      //   crossAxisAlignment: CrossAxisAlignment.stretch,
+      //   children: [
+      //     // Row(
+      //     //   children: [
+      //     //     Icon(Icons.layers_outlined, size: 16, color: cyanblueColor),
+      //     //     const SizedBox(width: 6),
+      //     //     Text(
+      //     //       'Page ${_currentPage + 1} of $_totalPages',
+      //     //       style: const TextStyle(
+      //     //         fontSize: 12,
+      //     //         fontWeight: FontWeight.w700,
+      //     //         color: Color(0xFF1A1A2E),
+      //     //       ),
+      //     //     ),
+      //     //     const Spacer(),
+      //     //     if (_hasMore)
+      //     //       Text(
+      //     //         'Scroll for more',
+      //     //         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+      //     //       )
+      //     //     else
+      //     //       Row(
+      //     //         mainAxisSize: MainAxisSize.min,
+      //     //         children: [
+      //     //           Icon(Icons.check_circle_outline,
+      //     //               size: 14, color: Colors.green.shade600),
+      //     //           const SizedBox(width: 4),
+      //     //           Text(
+      //     //             'All loaded',
+      //     //             style: TextStyle(
+      //     //               fontSize: 11,
+      //     //               fontWeight: FontWeight.w600,
+      //     //               color: Colors.green.shade600,
+      //     //             ),
+      //     //           ),
+      //     //         ],
+      //     //       ),
+      //     //   ],
+      //     // ),
+      //     // const SizedBox(height: 8),
+      //     // ClipRRect(
+      //     //   borderRadius: BorderRadius.circular(4),
+      //     //   child: LinearProgressIndicator(
+      //     //     value: progress,
+      //     //     minHeight: 5,
+      //     //     backgroundColor: cyanblueColor.withOpacity(0.1),
+      //     //     valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
+      //     //   ),
+      //     // ),
+      //   ],
+      // ),
+    );
+  }
+
+  bool get _showListFooter =>
+      _isLoadingMore ||
+      (!_hasMore && users.isNotEmpty && searchQuery.isEmpty);
+
+  int get _listItemCount =>
+      filteredUsers.length + (_showListFooter ? 1 : 0);
+
+  Widget _buildListFooter() {
+    if (_isLoadingMore) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(cyanblueColor),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Loading more…',
+                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!_hasMore && users.isNotEmpty && searchQuery.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.done_all_rounded, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 6),
+                Text(
+                  'All $_totalElements accounts loaded',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox(height: 16);
   }
 
   Widget _buildBody() {
@@ -462,9 +645,12 @@ class _UserInfoPageState extends State<UserListPage> {
         if (selectedCategory != null) await fetchUsers(selectedCategory!);
       },
       child: ListView.builder(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        itemCount: filteredUsers.length,
+        itemCount: _listItemCount,
         itemBuilder: (context, index) {
+          if (index >= filteredUsers.length) return _buildListFooter();
           final user = filteredUsers[index];
           return _buildIndividualCard(user, index);
         },
@@ -724,9 +910,12 @@ class _UserInfoPageState extends State<UserListPage> {
         if (selectedCategory != null) await fetchUsers(selectedCategory!);
       },
       child: ListView.builder(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        itemCount: filteredUsers.length,
+        itemCount: _listItemCount,
         itemBuilder: (context, index) {
+          if (index >= filteredUsers.length) return _buildListFooter();
           final org = filteredUsers[index];
           final List customers = org['customersInfo'] ?? [];
           final String companyName = org['companyName'] ?? 'Unknown Company';
@@ -921,9 +1110,12 @@ class _UserInfoPageState extends State<UserListPage> {
         if (selectedCategory != null) await fetchUsers(selectedCategory!);
       },
       child: ListView.builder(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        itemCount: filteredUsers.length,
+        itemCount: _listItemCount,
         itemBuilder: (context, index) {
+          if (index >= filteredUsers.length) return _buildListFooter();
           final jointAccount = filteredUsers[index];
           final String accountId = jointAccount['id']?.toString() ?? '';
           final String accountType = jointAccount['accountType'] ?? '';
@@ -1064,10 +1256,36 @@ class _UserInfoPageState extends State<UserListPage> {
 
   // ─── Data Methods ───
 
-  Future<void> fetchUsers(String status) async {
-    setState(() {
-      isLoading1 = true;
-    });
+  int? _headerInt(dynamic response, String name) {
+    final headers = response.headers;
+    final value = headers[name] ?? headers[name.toLowerCase()];
+    if (value == null) return null;
+    return int.tryParse(value);
+  }
+
+  void _applyPaginationHeaders(dynamic response, int requestedPage) {
+    _currentPage = _headerInt(response, 'x-page-number') ?? requestedPage;
+    _totalPages = _headerInt(response, 'x-total-pages') ?? 1;
+    _totalElements =
+        _headerInt(response, 'x-total-elements') ?? users.length;
+    _hasMore = _currentPage < _totalPages - 1;
+  }
+
+  Future<void> fetchUsers(String status, {bool loadMore = false}) async {
+    if (loadMore) {
+      if (_isLoadingMore || !_hasMore || isLoading1) return;
+      setState(() => _isLoadingMore = true);
+    } else {
+      setState(() {
+        isLoading1 = true;
+        _currentPage = 0;
+        _totalPages = 0;
+        _totalElements = 0;
+        _hasMore = false;
+        users = [];
+        filteredUsers = [];
+      });
+    }
 
     const storage = FlutterSecureStorage(
       aOptions: AndroidOptions(
@@ -1078,41 +1296,60 @@ class _UserInfoPageState extends State<UserListPage> {
     String? token = await storage.read(key: "token");
     if (token != null && token.isNotEmpty) {
       var decodedToken = JwtDecoder.decode(token);
-      setState(() {
-        userId = decodedToken['userId'];
-      });
+      if (mounted) {
+        setState(() {
+          userId = decodedToken['userId'];
+        });
+      }
     }
 
-    String url =
-        '/api/v1/accounts?customerType=$selectedCustomerType&status=$status&onlyUserCreated=true&size=100000';
+    final page = loadMore ? _currentPage + 1 : 0;
+    final url =
+        '/api/v1/accounts?customerType=$selectedCustomerType&status=$status&onlyUserCreated=true&page=$page&size=$_pageSize';
 
     if (isOnline) {
       try {
         var response = await networkHandler.getUserData(url);
         if (response.statusCode == 200) {
-          List<dynamic> fetchedUsers = jsonDecode(response.body);
+          final fetchedUsers = jsonDecode(response.body) as List<dynamic>;
+          if (!mounted) return;
           setState(() {
-            users = fetchedUsers;
+            if (loadMore) {
+              users = [...users, ...fetchedUsers];
+            } else {
+              users = fetchedUsers;
+            }
+            _applyPaginationHeaders(response, page);
             filterUsers();
             isLoading1 = false;
+            _isLoadingMore = false;
           });
         } else {
           throw Exception('Failed to load users');
         }
       } catch (error) {
         print('Error fetching users: $error');
-        setState(() {
-          isLoading1 = false;
-        });
+        if (mounted) {
+          setState(() {
+            isLoading1 = false;
+            _isLoadingMore = false;
+          });
+        }
       }
     } else {
       DatabaseHelper dbHelper = DatabaseHelper();
       List<Map<String, dynamic>> localUsers =
           await dbHelper.getCustomersByStatus(status, userId!);
+      if (!mounted) return;
       setState(() {
         users = localUsers;
+        _currentPage = 0;
+        _totalPages = 1;
+        _totalElements = localUsers.length;
+        _hasMore = false;
         filterUsers();
         isLoading1 = false;
+        _isLoadingMore = false;
       });
     }
   }
