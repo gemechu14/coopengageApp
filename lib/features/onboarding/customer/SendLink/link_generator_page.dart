@@ -1,18 +1,16 @@
 /// Link Generator Page
 /// Main UI for generating and sharing invitation links
 
-import 'package:coopengageplus/core/constants/kconstant.dart';
-import 'package:coopengageplus/shared/widgets/text/custom_nav_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'constants/form_styles.dart';
+import 'helpers/contact_picker_helper.dart';
+import 'helpers/link_flow_modal.dart';
 import 'models/link_generator_models.dart';
 import 'providers/link_generator_provider.dart';
-import 'widgets/form_card.dart';
-import 'widgets/link_result_card.dart';
-import 'widgets/email_success_card.dart';
-import 'helpers/contact_picker_helper.dart';
-import 'helpers/snackbar_helper.dart';
+import 'utils/error_messages.dart';
 import 'utils/phone_formatter.dart';
+import 'widgets/form_card.dart';
 
 class LinkGeneratorPage extends ConsumerStatefulWidget {
   const LinkGeneratorPage({super.key});
@@ -32,9 +30,18 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
   AccountType _selectedAccountType = AccountType.individual;
   SharePlatform _selectedPlatform = SharePlatform.whatsapp;
 
-  // Track if link has been generated to lock fields
-  bool _isLinkGenerated = false;
-  bool _isEmailSent = false;
+  void _resetForm() {
+    _nameController.clear();
+    _phoneController.clear();
+    _emailController.clear();
+    _notesController.clear();
+    _formKey.currentState?.reset();
+    ref.read(linkGeneratorProvider.notifier).reset();
+    setState(() {
+      _selectedAccountType = AccountType.individual;
+      _selectedPlatform = SharePlatform.whatsapp;
+    });
+  }
 
   @override
   void dispose() {
@@ -98,31 +105,33 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
 
     // Check result and show appropriate message
     final state = ref.read(linkGeneratorProvider);
-    if (mounted) {
-      if (!state.hasError && !state.isLoading) {
-        // Lock fields after successful email send
-        setState(() {
-          _isEmailSent = true;
-          _isLinkGenerated = true;
-        });
+    if (!mounted) return;
 
-        SnackbarHelper.showSuccess(
-          context,
-          'Email invitation sent successfully!',
-        );
-      } else if (state.hasError) {
-        SnackbarHelper.showError(
-          context,
-          state.errorMessage ?? 'Failed to send email invitation',
-        );
-      }
+    if (!state.hasError && !state.isLoading) {
+      await LinkFlowModal.showEmailSuccess(
+        context,
+        recipientName: _nameController.text.trim(),
+        recipientEmail: _emailController.text.trim(),
+        accountType: _selectedAccountType,
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
+      );
+      if (mounted) _resetForm();
+    } else if (state.hasError) {
+      await LinkFlowModal.showError(
+        context,
+        title: 'Unable to send invitation',
+        message: LinkFlowErrorMessages.forEmailInvitation(state.errorMessage),
+      );
     }
   }
 
   /// Handle link generation (WhatsApp/Telegram)
   Future<void> _handleLinkGeneration() async {
     // Format phone number for API
-    final formattedPhone = PhoneFormatter.formatForApi(_phoneController.text.trim());
+    final formattedPhone =
+        PhoneFormatter.formatForApi(_phoneController.text.trim());
 
     // Create request
     final request = LinkGenerationRequest(
@@ -142,29 +151,29 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
 
     // Check result and show appropriate message
     final state = ref.read(linkGeneratorProvider);
-    if (mounted) {
-      if (state.hasResult && !state.hasError) {
-        // Lock fields after successful generation
-        setState(() {
-          _isLinkGenerated = true;
-        });
+    if (!mounted) return;
 
-        SnackbarHelper.showSuccess(
-          context,
-          'Social media shareable link generated successfully.',
-        );
-      } else if (state.hasError) {
-        SnackbarHelper.showError(
-          context,
-          'Failed to generate or link already generated',
-        );
-      }
+    if (state.hasResult && !state.hasError) {
+      await LinkFlowModal.showLinkSuccess(
+        context,
+        result: state.result!,
+        platform: _selectedPlatform,
+      );
+      if (mounted) _resetForm();
+    } else if (state.hasError) {
+      await LinkFlowModal.showError(
+        context,
+        title: 'Unable to generate link',
+        message: LinkFlowErrorMessages.forLinkGeneration(state.errorMessage),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(linkGeneratorProvider);
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final compact = MediaQuery.sizeOf(context).width < 360;
 
     return PopScope(
       canPop: true,
@@ -174,70 +183,57 @@ class _LinkGeneratorPageState extends ConsumerState<LinkGeneratorPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: whiteColor,
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: whiteColor,
+          backgroundColor: Colors.white,
           elevation: 0,
-          title:  CustomNavHeading(
-            text: 'Generate Link',
+          foregroundColor: FormStyles.coopCyan,
+          title: const Text(
+            'Generate Link',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: cyanblueColor),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
             onPressed: () => Navigator.pop(context),
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: FormStyles.coopCyan.withOpacity(0.15),
+            ),
           ),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Form Card
-                FormCard(
-                  formKey: _formKey,
-                  selectedAccountType: _selectedAccountType,
-                  selectedPlatform: _selectedPlatform,
-                  nameController: _nameController,
-                  phoneController: _phoneController,
-                  emailController: _emailController,
-                  notesController: _notesController,
-                  onAccountTypeChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedAccountType = value);
-                    }
-                  },
-                  onPlatformChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedPlatform = value);
-                    }
-                  },
-                  onPickContact: _handlePickContact,
-                  onSubmit: _onSubmit,
-                  state: state,
-                  isLinkGenerated: _isLinkGenerated,
-                  isEmailSent: _isEmailSent,
-                ),
-                const SizedBox(height: 16),
-
-                // Result Card (only for WhatsApp/Telegram, not Email)
-                if (_isLinkGenerated && !_isEmailSent)
-                  if (state.hasResult)
-                    LinkResultCard(
-                      result: state.result!,
-                      platform: _selectedPlatform,
-                    ),
-
-                // Email Success Card
-                if (_isEmailSent)
-                  EmailSuccessCard(
-                    recipientName: _nameController.text.trim(),
-                    recipientEmail: _emailController.text.trim(),
-                    accountType: _selectedAccountType,
-                    notes: _notesController.text.trim().isEmpty
-                        ? null
-                        : _notesController.text.trim(),
-                  ),
-              ],
+            padding: EdgeInsets.fromLTRB(
+              compact ? 16 : 20,
+              20,
+              compact ? 16 : 20,
+              20 + bottom,
+            ),
+            child: FormCard(
+              formKey: _formKey,
+              selectedAccountType: _selectedAccountType,
+              selectedPlatform: _selectedPlatform,
+              nameController: _nameController,
+              phoneController: _phoneController,
+              emailController: _emailController,
+              notesController: _notesController,
+              onAccountTypeChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedAccountType = value);
+                }
+              },
+              onPlatformChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedPlatform = value);
+                }
+              },
+              onPickContact: _handlePickContact,
+              onSubmit: _onSubmit,
+              state: state,
             ),
           ),
         ),

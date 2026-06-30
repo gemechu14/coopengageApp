@@ -1,6 +1,7 @@
+import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:flutter/material.dart';
-import '../models/link_generator_models.dart';
 import '../constants/form_styles.dart';
+import '../models/link_generator_models.dart';
 
 /// Platform dropdown widget
 class PlatformDropdown extends StatelessWidget {
@@ -19,42 +20,34 @@ class PlatformDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<SharePlatform>(
+    final dropdown = MerchantFlowDropdown<SharePlatform>(
+      accentColor: FormStyles.coopCyan,
+      mutedColor: FormStyles.muted,
+      label: 'Platform',
+      sheetTitle: 'Delivery platform',
+      sheetSubtitle: 'How the invitation will be sent',
+      prefixIcon: Icons.send_outlined,
       value: value,
-      onChanged: enabled
-          ? (newValue) {
-              if (newValue != null) {
-                onChanged?.call(newValue);
-                onPlatformChanged?.call();
-              }
-            }
-          : null,
-      decoration: InputDecoration(
-        labelText: 'Platform',
-        isDense: true,
-        contentPadding: FormStyles.fieldContentPadding,
-        labelStyle: FormStyles.fieldLabelStyle,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: false,
-      ),
-      items: SharePlatform.values.map((platform) {
-        return DropdownMenuItem(
-          value: platform,
-          child: Row(
-            children: [
-              Icon(platform.iconData, color: platform.color, size: 20),
-              const SizedBox(width: 12),
-              Text(
-                platform.displayName,
-                style: const TextStyle(fontSize: FormStyles.fieldFontSize),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+      options: SharePlatform.values
+          .map(
+            (platform) => MerchantFlowSelectOption(
+              value: platform,
+              title: platform.displayName,
+              icon: platform.iconData,
+            ),
+          )
+          .toList(),
+      onChanged: (platform) {
+        onChanged?.call(platform);
+        onPlatformChanged?.call();
+      },
+    );
+
+    if (enabled) return dropdown;
+
+    return Opacity(
+      opacity: 0.55,
+      child: IgnorePointer(child: dropdown),
     );
   }
 }
-

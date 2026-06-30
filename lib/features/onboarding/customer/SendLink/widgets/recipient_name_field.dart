@@ -1,6 +1,7 @@
+import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:flutter/material.dart';
-import '../models/link_generator_models.dart';
 import '../constants/form_styles.dart';
+import '../models/link_generator_models.dart';
 import '../utils/form_validators.dart';
 
 /// Recipient name input field
@@ -20,28 +21,32 @@ class RecipientNameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      enabled: enabled,
-      decoration: InputDecoration(
-        labelText: platform == SharePlatform.email
-            ? 'Recipient Name *'
-            : 'Recipient Name (Optional)',
-        hintText: 'Enter recipient name',
-        isDense: true,
-        contentPadding: FormStyles.fieldContentPadding,
-        labelStyle: FormStyles.fieldLabelStyle,
-        hintStyle: FormStyles.fieldHintStyle,
-        prefixIcon: const Icon(Icons.person_outline),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    final isRequired = platform == SharePlatform.email;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          isRequired ? 'Recipient name *' : 'Recipient name (optional)',
+          style: FormStyles.fieldLabelStyle,
         ),
-        filled: false,
-      ),
-      textCapitalization: TextCapitalization.words,
-      validator: (value) => FormValidators.validateNameForEmail(value, platform),
-      autovalidateMode: AutovalidateMode.onUserInteraction,
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          style: const TextStyle(fontSize: 14),
+          decoration: merchantFlowInputDecoration(
+            accentColor: FormStyles.coopCyan,
+            mutedColor: FormStyles.muted,
+            hintText: 'Enter recipient name',
+            prefixIcon: Icons.person_outline,
+          ),
+          textCapitalization: TextCapitalization.words,
+          validator: (value) =>
+              FormValidators.validateNameForEmail(value, platform),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+        ),
+      ],
     );
   }
 }
-

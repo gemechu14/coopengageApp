@@ -1,9 +1,9 @@
+import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:coopengageplus/core/constants/kconstant.dart';
 import '../constants/form_styles.dart';
-import '../utils/form_validators.dart';
 import '../models/link_generator_models.dart';
+import '../utils/form_validators.dart';
 
 /// Phone number input field with contact picker button
 class PhoneNumberField extends StatelessWidget {
@@ -22,39 +22,45 @@ class PhoneNumberField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      enabled: enabled,
-      keyboardType: TextInputType.phone,
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(10),
-      ],
-      decoration: InputDecoration(
-        labelText: 'Phone Number*',
-        hintText: '09xxxxxxxx or 07xxxxxxxx',
-        isDense: true,
-        contentPadding: FormStyles.fieldContentPadding,
-        labelStyle: FormStyles.fieldLabelStyle,
-        hintStyle: FormStyles.fieldHintStyle,
-        prefixIcon: const Icon(Icons.phone_outlined),
-        suffixIcon: IconButton(
-          tooltip: 'Pick from contacts',
-          onPressed: enabled ? onPickContact : null,
-          icon: const Icon(
-            Icons.contacts_rounded,
-            color: cyanblueColor,
-            size: 20,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Phone number *',
+          style: FormStyles.fieldLabelStyle,
+        ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          keyboardType: TextInputType.phone,
+          style: const TextStyle(fontSize: 14),
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10),
+          ],
+          decoration: merchantFlowInputDecoration(
+            accentColor: FormStyles.coopCyan,
+            mutedColor: FormStyles.muted,
+            hintText: '0912345678',
+            helperText: '10 digits only',
+            prefixIcon: Icons.phone_outlined,
+            counterText: '',
+          ).copyWith(
+            suffixIcon: IconButton(
+              tooltip: 'Pick from contacts',
+              onPressed: enabled ? onPickContact : null,
+              icon: Icon(
+                Icons.contacts_rounded,
+                color: enabled ? FormStyles.coopCyan : FormStyles.muted,
+                size: 20,
+              ),
+            ),
           ),
+          validator: (value) => FormValidators.validatePhone(value, platform),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: false,
-      ),
-      validator: (value) => FormValidators.validatePhone(value, platform),
-      autovalidateMode: AutovalidateMode.onUserInteraction,
+      ],
     );
   }
 }
-

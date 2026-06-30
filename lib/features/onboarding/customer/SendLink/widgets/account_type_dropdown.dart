@@ -1,6 +1,7 @@
+import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:flutter/material.dart';
-import '../models/link_generator_models.dart';
 import '../constants/form_styles.dart';
+import '../models/link_generator_models.dart';
 
 /// Account type dropdown widget
 class AccountTypeDropdown extends StatelessWidget {
@@ -17,33 +18,32 @@ class AccountTypeDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<AccountType>(
+    final dropdown = MerchantFlowDropdown<AccountType>(
+      accentColor: FormStyles.coopCyan,
+      mutedColor: FormStyles.muted,
+      label: 'Account type',
+      sheetTitle: 'Account type',
+      sheetSubtitle: 'Type of account for the invitation',
+      prefixIcon: Icons.account_circle_outlined,
       value: value,
-      onChanged: enabled ? onChanged : null,
-      decoration: InputDecoration(
-        labelText: 'Account Type',
-        isDense: true,
-        contentPadding: FormStyles.fieldContentPadding,
-        labelStyle: FormStyles.fieldLabelStyle,
-        prefixIcon: const Icon(Icons.account_circle_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: false,
-      ),
-      items: AccountType.values.map((type) {
+      options: AccountType.values.map((type) {
         final displayName = type == AccountType.organization
             ? 'CORPORATE'
             : type.displayName;
-        return DropdownMenuItem(
+        return MerchantFlowSelectOption(
           value: type,
-          child: Text(
-            displayName,
-            style: const TextStyle(fontSize: FormStyles.fieldFontSize),
-          ),
+          title: displayName,
+          icon: Icons.badge_outlined,
         );
       }).toList(),
+      onChanged: (type) => onChanged?.call(type),
+    );
+
+    if (enabled) return dropdown;
+
+    return Opacity(
+      opacity: 0.55,
+      child: IgnorePointer(child: dropdown),
     );
   }
 }
-

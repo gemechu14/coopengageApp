@@ -1,3 +1,4 @@
+import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:flutter/material.dart';
 import '../constants/form_styles.dart';
 
@@ -14,23 +15,26 @@ class NotesField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      enabled: enabled,
-      maxLines: 3,
-      decoration: InputDecoration(
-        labelText: 'Notes (Optional)',
-        hintText: 'e.g., High potential customer',
-        isDense: true,
-        contentPadding: FormStyles.fieldContentPadding,
-        labelStyle: FormStyles.fieldLabelStyle,
-        hintStyle: FormStyles.fieldHintStyle,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Notes (optional)',
+          style: FormStyles.fieldLabelStyle,
         ),
-        filled: false,
-      ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          maxLines: 3,
+          style: const TextStyle(fontSize: 14),
+          decoration: merchantFlowInputDecoration(
+            accentColor: FormStyles.coopCyan,
+            mutedColor: FormStyles.muted,
+            hintText: 'e.g., High potential customer',
+          ),
+        ),
+      ],
     );
   }
 }
-

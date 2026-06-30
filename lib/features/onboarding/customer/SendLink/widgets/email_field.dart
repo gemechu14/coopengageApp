@@ -1,7 +1,8 @@
+import 'package:coopengageplus/features/merchant/widgets/merchant_mycard_form_fields.dart';
 import 'package:flutter/material.dart';
 import '../constants/form_styles.dart';
-import '../utils/form_validators.dart';
 import '../models/link_generator_models.dart';
+import '../utils/form_validators.dart';
 
 /// Email input field
 class EmailField extends StatelessWidget {
@@ -16,26 +17,30 @@ class EmailField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      enabled: enabled,
-      keyboardType: TextInputType.emailAddress,
-      decoration: InputDecoration(
-        labelText: 'Email Address *',
-        hintText: 'example@email.com',
-        isDense: true,
-        contentPadding: FormStyles.fieldContentPadding,
-        labelStyle: FormStyles.fieldLabelStyle,
-        hintStyle: FormStyles.fieldHintStyle,
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Email address *',
+          style: FormStyles.fieldLabelStyle,
         ),
-        filled: false,
-      ),
-      validator: (value) => FormValidators.validateEmail(value, SharePlatform.email),
-      autovalidateMode: AutovalidateMode.onUserInteraction,
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          keyboardType: TextInputType.emailAddress,
+          style: const TextStyle(fontSize: 14),
+          decoration: merchantFlowInputDecoration(
+            accentColor: FormStyles.coopCyan,
+            mutedColor: FormStyles.muted,
+            hintText: 'merchant@example.com',
+            prefixIcon: Icons.email_outlined,
+          ),
+          validator: (value) =>
+              FormValidators.validateEmail(value, SharePlatform.email),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+        ),
+      ],
     );
   }
 }
-
