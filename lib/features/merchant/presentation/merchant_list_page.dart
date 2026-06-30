@@ -4,6 +4,7 @@ import 'package:coopengageplus/features/home/widgets/mycard_registration/mycard_
 import 'package:coopengageplus/features/merchant/data/merchant_models.dart';
 import 'package:coopengageplus/features/merchant/data/merchant_qr_poster_actions.dart';
 import 'package:coopengageplus/features/merchant/data/merchant_qr_purpose_codes.dart';
+import 'package:coopengageplus/features/merchant/presentation/merchant_edit_page.dart';
 import 'package:coopengageplus/features/merchant/presentation/merchant_list_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -282,6 +283,7 @@ class _MerchantListPageState extends ConsumerState<MerchantListPage> {
             onRequestQr: () => _showQrRequestSheet(context, merchant, notifier),
             onViewPoster: (templateType) =>
                 _viewPoster(context, merchant, state.branchCode, notifier, templateType),
+            onEdit: () => _openEditPage(context, merchant, state.branchCode, notifier),
           );
         },
       ),
@@ -333,6 +335,23 @@ class _MerchantListPageState extends ConsumerState<MerchantListPage> {
         merchantName: merchant.dbaName ?? merchant.merchantName ?? 'Merchant',
         puid: merchant.puid ?? '',
         templateType: templateType,
+      ),
+    );
+  }
+
+  Future<void> _openEditPage(
+    BuildContext context,
+    MerchantResponse merchant,
+    String branchCode,
+    MerchantListController notifier,
+  ) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => MerchantEditPage(
+          merchant: merchant,
+          branchCode: branchCode,
+          onSaved: () => notifier.refresh(),
+        ),
       ),
     );
   }
@@ -573,6 +592,7 @@ class _MerchantCard extends StatelessWidget {
     required this.posterLoadingTemplate,
     required this.onRequestQr,
     required this.onViewPoster,
+    required this.onEdit,
   });
 
   final MerchantResponse merchant;
@@ -581,6 +601,7 @@ class _MerchantCard extends StatelessWidget {
   final String? posterLoadingTemplate;
   final VoidCallback onRequestQr;
   final void Function(String templateType) onViewPoster;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -740,57 +761,70 @@ class _MerchantCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
             child: Column(
               children: [
-                if (!requested && ready)
+                // Incomplete merchant → show Edit button only
+                if (!ready)
                   _ActionButton(
-                    label: 'Request QR Code',
-                    icon: Icons.send_rounded,
-                    color: _blue,
-                    loading: isRequesting,
-                    onTap: isRequesting ? null : onRequestQr,
+                    label: 'Edit Profile',
+                    icon: Icons.edit_outlined,
+                    color: Colors.orange.shade700,
+                    loading: false,
+                    onTap: onEdit,
                   ),
-                if (!requested && ready) const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (m.wantsAcrylicQr)
-                      Expanded(
-                        child: _ActionButton(
-                          label: 'View Acrylic Poster',
-                          icon: Icons.image_rounded,
-                          color: _cyan,
-                          loading: posterLoadingTemplate == 'acrylic',
-                          onTap: posterLoadingTemplate != null
-                              ? null
-                              : () => onViewPoster('acrylic'),
+
+                // Ready / requested merchant → show QR request + poster buttons
+                if (ready) ...[
+                  if (!requested)
+                    _ActionButton(
+                      label: 'Request QR Code',
+                      icon: Icons.send_rounded,
+                      color: _blue,
+                      loading: isRequesting,
+                      onTap: isRequesting ? null : onRequestQr,
+                    ),
+                  if (!requested) const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      if (m.wantsAcrylicQr)
+                        Expanded(
+                          child: _ActionButton(
+                            label: 'View Acrylic Poster',
+                            icon: Icons.image_rounded,
+                            color: _cyan,
+                            loading: posterLoadingTemplate == 'acrylic',
+                            onTap: posterLoadingTemplate != null
+                                ? null
+                                : () => onViewPoster('acrylic'),
+                          ),
                         ),
-                      ),
-                    if (m.wantsAcrylicQr && m.wantsStickerQr)
-                      const SizedBox(width: 8),
-                    if (m.wantsStickerQr)
-                      Expanded(
-                        child: _ActionButton(
-                          label: 'View Sticker Poster',
-                          icon: Icons.image_outlined,
-                          color: const Color(0xFF6366F1),
-                          loading: posterLoadingTemplate == 'sticker',
-                          onTap: posterLoadingTemplate != null
-                              ? null
-                              : () => onViewPoster('sticker'),
+                      if (m.wantsAcrylicQr && m.wantsStickerQr)
+                        const SizedBox(width: 8),
+                      if (m.wantsStickerQr)
+                        Expanded(
+                          child: _ActionButton(
+                            label: 'View Sticker Poster',
+                            icon: Icons.image_outlined,
+                            color: const Color(0xFF6366F1),
+                            loading: posterLoadingTemplate == 'sticker',
+                            onTap: posterLoadingTemplate != null
+                                ? null
+                                : () => onViewPoster('sticker'),
+                          ),
                         ),
-                      ),
-                    if (!m.wantsAcrylicQr && !m.wantsStickerQr)
-                      Expanded(
-                        child: _ActionButton(
-                          label: 'View QR Poster',
-                          icon: Icons.image_rounded,
-                          color: _cyan,
-                          loading: posterLoadingTemplate == 'acrylic',
-                          onTap: posterLoadingTemplate != null
-                              ? null
-                              : () => onViewPoster('acrylic'),
+                      if (!m.wantsAcrylicQr && !m.wantsStickerQr)
+                        Expanded(
+                          child: _ActionButton(
+                            label: 'View QR Poster',
+                            icon: Icons.image_rounded,
+                            color: _cyan,
+                            loading: posterLoadingTemplate == 'acrylic',
+                            onTap: posterLoadingTemplate != null
+                                ? null
+                                : () => onViewPoster('acrylic'),
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -1373,17 +1407,9 @@ class _QrPosterSheetState extends State<_QrPosterSheet> {
                         ),
                       ),
                       IconButton(
-                        icon: _sharing
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: _cyan),
-                              )
-                            : const Icon(Icons.share_rounded,
-                                color: Colors.white),
-                        onPressed: _busy ? null : _share,
-                        tooltip: 'Share',
+                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                        tooltip: 'Close',
                       ),
                     ],
                   ),

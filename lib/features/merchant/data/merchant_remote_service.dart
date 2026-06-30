@@ -205,22 +205,29 @@ class MerchantRemoteService {
       options: Options(headers: {'Accept': 'application/json'}),
     );
     final body = res.data;
+    List<RegionOption> parseList(List list) => list
+        .whereType<Map>()
+        .map((e) => RegionOption.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+
     if (body is List) {
-      return body
-          .whereType<Map>()
-          .map((e) => RegionOption.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      return _regionsWithAddisAbabaFirst(parseList(body));
     }
     if (body is String) {
       final decoded = jsonDecode(body);
       if (decoded is List) {
-        return decoded
-            .whereType<Map>()
-            .map((e) => RegionOption.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
+        return _regionsWithAddisAbabaFirst(parseList(decoded));
       }
     }
     return [];
+  }
+
+  /// Puts Addis Ababa first; remaining regions stay in API order.
+  List<RegionOption> _regionsWithAddisAbabaFirst(List<RegionOption> regions) {
+    const addisCode = 'ADDIS_ABABA';
+    final addis = regions.where((r) => r.code == addisCode).toList();
+    final rest = regions.where((r) => r.code != addisCode).toList();
+    return [...addis, ...rest];
   }
 
   Future<MerchantResponse> addAddress(
