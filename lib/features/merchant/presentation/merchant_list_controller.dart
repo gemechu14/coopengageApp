@@ -238,7 +238,10 @@ class MerchantListController extends AutoDisposeNotifier<MerchantListState> {
     String templateType = 'acrylic',
     String fileType = 'png',
   }) async {
-    state = state.copyWith(posterLoadingId: merchantId, clearError: true);
+    state = state.copyWith(
+      posterLoadingId: '$merchantId|$templateType',
+      clearError: true,
+    );
     try {
       final bytes = await _service.getQrPosterBytes(
         merchantId: merchantId,

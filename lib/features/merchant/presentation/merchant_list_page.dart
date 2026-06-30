@@ -277,7 +277,8 @@ class _MerchantListPageState extends ConsumerState<MerchantListPage> {
             merchant: merchant,
             branchCode: state.branchCode,
             isRequesting: state.requestingIds.contains(merchant.id),
-            isPosterLoading: state.posterLoadingId == merchant.id,
+            posterLoadingTemplate:
+                _posterLoadingTemplate(state.posterLoadingId, merchant.id),
             onRequestQr: () => _showQrRequestSheet(context, merchant, notifier),
             onViewPoster: (templateType) =>
                 _viewPoster(context, merchant, state.branchCode, notifier, templateType),
@@ -553,6 +554,13 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
+String? _posterLoadingTemplate(String? loadingKey, String merchantId) {
+  if (loadingKey == null) return null;
+  final prefix = '$merchantId|';
+  if (!loadingKey.startsWith(prefix)) return null;
+  return loadingKey.substring(prefix.length);
+}
+
 // ---------------------------------------------------------------------------
 // Merchant card
 // ---------------------------------------------------------------------------
@@ -562,7 +570,7 @@ class _MerchantCard extends StatelessWidget {
     required this.merchant,
     required this.branchCode,
     required this.isRequesting,
-    required this.isPosterLoading,
+    required this.posterLoadingTemplate,
     required this.onRequestQr,
     required this.onViewPoster,
   });
@@ -570,7 +578,7 @@ class _MerchantCard extends StatelessWidget {
   final MerchantResponse merchant;
   final String branchCode;
   final bool isRequesting;
-  final bool isPosterLoading;
+  final String? posterLoadingTemplate;
   final VoidCallback onRequestQr;
   final void Function(String templateType) onViewPoster;
 
@@ -749,8 +757,8 @@ class _MerchantCard extends StatelessWidget {
                           label: 'View Acrylic Poster',
                           icon: Icons.image_rounded,
                           color: _cyan,
-                          loading: isPosterLoading,
-                          onTap: isPosterLoading
+                          loading: posterLoadingTemplate == 'acrylic',
+                          onTap: posterLoadingTemplate != null
                               ? null
                               : () => onViewPoster('acrylic'),
                         ),
@@ -763,8 +771,8 @@ class _MerchantCard extends StatelessWidget {
                           label: 'View Sticker Poster',
                           icon: Icons.image_outlined,
                           color: const Color(0xFF6366F1),
-                          loading: isPosterLoading,
-                          onTap: isPosterLoading
+                          loading: posterLoadingTemplate == 'sticker',
+                          onTap: posterLoadingTemplate != null
                               ? null
                               : () => onViewPoster('sticker'),
                         ),
@@ -775,8 +783,8 @@ class _MerchantCard extends StatelessWidget {
                           label: 'View QR Poster',
                           icon: Icons.image_rounded,
                           color: _cyan,
-                          loading: isPosterLoading,
-                          onTap: isPosterLoading
+                          loading: posterLoadingTemplate == 'acrylic',
+                          onTap: posterLoadingTemplate != null
                               ? null
                               : () => onViewPoster('acrylic'),
                         ),
@@ -968,21 +976,30 @@ class _QrRequestSheetState extends State<_QrRequestSheet> {
   int _sticker = 0;
   bool _submitting = false;
 
+  bool get _showAcrylic => widget.merchant.wantsAcrylicQr;
+  bool get _showSticker => widget.merchant.wantsStickerQr;
+  bool get _hasSelectedProduct => _showAcrylic || _showSticker;
+
   @override
   void initState() {
     super.initState();
-    if (widget.merchant.wantsAcrylicQr) _acrylic = 1;
-    if (widget.merchant.wantsStickerQr) _sticker = 1;
+    if (_showAcrylic) _acrylic = 1;
+    if (_showSticker) _sticker = 1;
   }
 
   bool get _canSubmit =>
-      !_submitting && (_acrylic > 0 || _sticker > 0);
+      !_submitting &&
+      _hasSelectedProduct &&
+      ((_showAcrylic && _acrylic > 0) || (_showSticker && _sticker > 0));
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
     setState(() => _submitting = true);
     try {
-      await widget.onSubmit(acrylic: _acrylic, sticker: _sticker);
+      await widget.onSubmit(
+        acrylic: _showAcrylic ? _acrylic : 0,
+        sticker: _showSticker ? _sticker : 0,
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -1048,28 +1065,50 @@ class _QrRequestSheetState extends State<_QrRequestSheet> {
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Select quantities to request. At least one must be greater than 0.',
-            style: TextStyle(fontSize: 13, color: _muted, height: 1.4),
-          ),
-          const SizedBox(height: 20),
-          _QuantityRow(
-            label: 'Acrylic Stand',
-            icon: Icons.qr_code_2_rounded,
-            color: _cyan,
-            value: _acrylic,
-            onChanged: (v) => setState(() => _acrylic = v),
-          ),
-          const SizedBox(height: 12),
-          _QuantityRow(
-            label: 'Sticker',
-            icon: Icons.qr_code_rounded,
-            color: const Color(0xFF6366F1),
-            value: _sticker,
-            onChanged: (v) => setState(() => _sticker = v),
-          ),
-          const SizedBox(height: 12),
-          const SizedBox(height: 4),
+          if (!_hasSelectedProduct) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Text(
+                'No QR products were selected for this merchant during registration.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.orange.shade900,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ] else ...[
+            Text(
+              _showAcrylic && _showSticker
+                  ? 'Select quantities for the QR products chosen at registration.'
+                  : 'Select quantity for the QR product chosen at registration.',
+              style: const TextStyle(fontSize: 13, color: _muted, height: 1.4),
+            ),
+            const SizedBox(height: 20),
+            if (_showAcrylic)
+              _QuantityRow(
+                label: 'Acrylic Stand',
+                icon: Icons.qr_code_2_rounded,
+                color: _cyan,
+                value: _acrylic,
+                onChanged: (v) => setState(() => _acrylic = v),
+              ),
+            if (_showAcrylic && _showSticker) const SizedBox(height: 12),
+            if (_showSticker)
+              _QuantityRow(
+                label: 'Sticker',
+                icon: Icons.qr_code_rounded,
+                color: const Color(0xFF6366F1),
+                value: _sticker,
+                onChanged: (v) => setState(() => _sticker = v),
+              ),
+          ],
+          const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: _canSubmit ? _submit : null,
             style: FilledButton.styleFrom(

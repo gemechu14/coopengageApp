@@ -65,7 +65,7 @@ class MerchantRegistrationState {
     this.qrPurposeCode = defaultQrPurposeCode,
     this.languageCode = 'en',
     this.wantsAcrylicQr = true,
-    this.wantsStickerQr = false,
+    this.wantsStickerQr = true,
     this.tradeLicense,
     this.tradeRegistration,
     this.plcEstablishment,

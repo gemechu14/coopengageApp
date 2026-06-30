@@ -1359,7 +1359,7 @@ class _StepSuccessState extends ConsumerState<_StepSuccess> {
   bool _isRequestingQr = false;
   String? _qrError;
   String? _qrSuccess;
-  bool _isPosterLoading = false;
+  String? _posterLoadingTemplate;
 
   String _maskAccount(String? account) {
     if (account == null || account.length < 4) return '****';
@@ -1417,7 +1417,7 @@ class _StepSuccessState extends ConsumerState<_StepSuccess> {
       return;
     }
     setState(() {
-      _isPosterLoading = true;
+      _posterLoadingTemplate = templateType;
       _qrError = null;
     });
     try {
@@ -1428,7 +1428,7 @@ class _StepSuccessState extends ConsumerState<_StepSuccess> {
         templateType: templateType,
       );
       if (!mounted) return;
-      setState(() => _isPosterLoading = false);
+      setState(() => _posterLoadingTemplate = null);
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
@@ -1443,14 +1443,14 @@ class _StepSuccessState extends ConsumerState<_StepSuccess> {
     } on MerchantApiException catch (e) {
       if (mounted) {
         setState(() {
-          _isPosterLoading = false;
+          _posterLoadingTemplate = null;
           _qrError = e.message;
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _isPosterLoading = false;
+          _posterLoadingTemplate = null;
           _qrError = 'Could not load QR poster.';
         });
       }
@@ -1677,7 +1677,7 @@ class _StepSuccessState extends ConsumerState<_StepSuccess> {
               coopCyan: coopCyan,
               merchant: m,
               isRequestingQr: _isRequestingQr,
-              isPosterLoading: _isPosterLoading,
+              posterLoadingTemplate: _posterLoadingTemplate,
               onRequestQr: () => _showQrRequestSheet(m),
               onViewPoster: (t) => _viewPoster(m, t),
             ),
@@ -1722,7 +1722,7 @@ class _QrActionRow extends StatelessWidget {
     required this.coopCyan,
     required this.merchant,
     required this.isRequestingQr,
-    required this.isPosterLoading,
+    required this.posterLoadingTemplate,
     required this.onRequestQr,
     required this.onViewPoster,
   });
@@ -1730,7 +1730,7 @@ class _QrActionRow extends StatelessWidget {
   final Color coopCyan;
   final MerchantResponse merchant;
   final bool isRequestingQr;
-  final bool isPosterLoading;
+  final String? posterLoadingTemplate;
   final VoidCallback onRequestQr;
   final void Function(String templateType) onViewPoster;
 
@@ -1772,8 +1772,10 @@ class _QrActionRow extends StatelessWidget {
                   label: 'Acrylic Poster',
                   icon: Icons.image_rounded,
                   color: coopCyan,
-                  loading: isPosterLoading,
-                  onTap: isPosterLoading ? null : () => onViewPoster('acrylic'),
+                  loading: posterLoadingTemplate == 'acrylic',
+                  onTap: posterLoadingTemplate != null
+                      ? null
+                      : () => onViewPoster('acrylic'),
                 ),
               ),
             if (merchant.wantsAcrylicQr && merchant.wantsStickerQr)
@@ -1784,8 +1786,10 @@ class _QrActionRow extends StatelessWidget {
                   label: 'Sticker Poster',
                   icon: Icons.image_outlined,
                   color: const Color(0xFF6366F1),
-                  loading: isPosterLoading,
-                  onTap: isPosterLoading ? null : () => onViewPoster('sticker'),
+                  loading: posterLoadingTemplate == 'sticker',
+                  onTap: posterLoadingTemplate != null
+                      ? null
+                      : () => onViewPoster('sticker'),
                 ),
               ),
           ],

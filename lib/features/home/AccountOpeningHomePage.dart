@@ -214,8 +214,8 @@ class _AccountTypeGridCardState extends State<_AccountTypeGridCard> {
           boxShadow: _pressed
               ? [
                   BoxShadow(
-                    color: MerchantFlowColors.coopCyan.withOpacity(0.08),
-                    blurRadius: 10,
+                    color: MerchantFlowColors.coopCyan.withOpacity(0.01),
+                    blurRadius: 4,
                     offset: const Offset(0, 3),
                     spreadRadius: -2,
                   ),
